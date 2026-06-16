@@ -1,0 +1,176 @@
+import { useState } from 'react'
+
+const ALL_TAGS = ['Vegan', 'Vegetarian', 'Gluten-Free', 'Nut-Free', 'Dairy-Free', 'Halal', 'Kosher']
+
+export default function SignupModal({ slot, itemNoun, dishName, signup, onClose, onSave, onRemove }) {
+  const [name, setName]   = useState(signup?.name ?? '')
+  const [dish, setDish]   = useState(dishName ?? '')
+  const [tags, setTags]   = useState(signup?.dietary_tags ?? [])
+  const [notes, setNotes] = useState(signup?.notes ?? '')
+  const [saving, setSaving]         = useState(false)
+  const [error, setError]           = useState(null)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  const [removing, setRemoving]     = useState(false)
+
+  function toggleTag(tag) {
+    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave({ name: name.trim(), dish: dish.trim(), dietary_tags: tags, notes: notes.trim() })
+    } catch (err) {
+      setError(err.message ?? 'Something went wrong. Please try again.')
+      setSaving(false)
+    }
+  }
+
+  async function handleRemove() {
+    setRemoving(true)
+    setError(null)
+    try {
+      await onRemove()
+    } catch (err) {
+      setError(err.message ?? 'Could not remove sign-up.')
+      setRemoving(false)
+      setConfirmRemove(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-6 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-stone-800">
+              {signup ? 'Edit Sign-Up' : 'Sign Up'}
+            </h2>
+            <p className="text-sm text-stone-500 mt-0.5">Slot {slot}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Editable dish name */}
+        <div className="mx-6 mb-4">
+          <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
+          <input
+            type="text"
+            value={dish}
+            onChange={e => setDish(e.target.value)}
+            placeholder="e.g. Caesar salad"
+            className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          />
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Your Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Jane Smith"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Dietary tags</label>
+            <div className="flex flex-wrap gap-2">
+              {ALL_TAGS.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${
+                    tags.includes(tag)
+                      ? 'bg-jade text-white border-jade'
+                      : 'bg-white text-stone-600 border-stone-300 hover:border-coral'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              Notes <span className="text-stone-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Serves 8–10, needs to be refrigerated..."
+              rows={2}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none"
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+          >
+            {saving ? 'Saving…' : signup ? 'Update' : 'Sign Up'}
+          </button>
+
+          {signup && (
+            !confirmRemove ? (
+              <button
+                type="button"
+                onClick={() => setConfirmRemove(true)}
+                disabled={saving}
+                className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors text-sm font-medium"
+              >
+                Remove my name
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                <span className="text-sm text-red-700 flex-1">Remove your sign-up?</span>
+                <button
+                  type="button"
+                  onClick={() => setConfirmRemove(false)}
+                  disabled={removing}
+                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-2 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  disabled={removing}
+                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-1 rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  {removing ? 'Removing…' : 'Remove'}
+                </button>
+              </div>
+            )
+          )}
+        </form>
+      </div>
+    </div>
+  )
+}
