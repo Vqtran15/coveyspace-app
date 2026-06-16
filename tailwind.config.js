@@ -37,6 +37,46 @@ export default {
           900:   '#5A3A08',
         },
       },
+      keyframes: {
+        'modal-in': {
+          '0%':   { opacity: '0', transform: 'translateY(100%)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'modal-out': {
+          '0%':   { opacity: '1', transform: 'translateY(0)' },
+          '100%': { opacity: '0', transform: 'translateY(100%)' },
+        },
+        'overlay-in': {
+          '0%':   { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'overlay-out': {
+          '0%':   { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        'slide-in-right': {
+          '0%':   { opacity: '0', transform: 'translateX(36px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'slide-in-left': {
+          '0%':   { opacity: '0', transform: 'translateX(-36px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'card-pulse': {
+          '0%':   { boxShadow: '0 0 0 0 rgba(196,98,45,0.45)' },
+          '70%':  { boxShadow: '0 0 0 10px rgba(196,98,45,0)' },
+          '100%': { boxShadow: '0 0 0 0 rgba(196,98,45,0)' },
+        },
+      },
+      animation: {
+        'modal-in':       'modal-in 0.32s cubic-bezier(0.32,0.72,0,1)',
+        'modal-out':      'modal-out 0.22s cubic-bezier(0.32,0.72,0,1) forwards',
+        'overlay-in':     'overlay-in 0.28s ease-out',
+        'overlay-out':    'overlay-out 0.22s ease-in forwards',
+        'slide-in-right': 'slide-in-right 0.28s ease-out',
+        'slide-in-left':  'slide-in-left 0.28s ease-out',
+        'card-pulse':     'card-pulse 0.8s ease-out',
+      },
     },
   },
   plugins: [],

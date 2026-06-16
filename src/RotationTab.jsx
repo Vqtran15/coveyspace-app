@@ -80,7 +80,9 @@ export default function RotationTab({ config }) {
       if (!rotation) {
         const { data, error: err } = await supabase.from(tables.pages).select('*').order('week_date')
         if (err) { setError(err.message); setLoading(false); return }
-        setPages(data ?? [])
+        const loadedPages = data ?? []
+        setPages(loadedPages)
+        setViewIndex(resolveCurrentIndex(loadedPages, null, rotation))
         setLoading(false)
         return
       }
@@ -97,6 +99,7 @@ export default function RotationTab({ config }) {
 
       setPages(filled)
       setSettings(filledSettings)
+      setViewIndex(resolveCurrentIndex(filled, filledSettings, rotation))
       setLoading(false)
     }
     load()

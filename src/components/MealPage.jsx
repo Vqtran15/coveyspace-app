@@ -88,6 +88,43 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, onPa
     setSelectedSlot(null)
   }
 
+  async function handleDeleteItem(slotNumber) {
+    const { error: delErr } = await supabase
+      .from(tables.signups)
+      .delete()
+      .eq('meal_page_id', page.id)
+      .eq('slot_number', slotNumber)
+    if (delErr) throw new Error(delErr.message)
+
+    const toShift = signups
+      .filter(s => s.slot_number > slotNumber)
+      .sort((a, b) => a.slot_number - b.slot_number)
+    for (const s of toShift) {
+      const { error } = await supabase
+        .from(tables.signups)
+        .update({ slot_number: s.slot_number - 1 })
+        .eq('id', s.id)
+      if (error) throw new Error(error.message)
+    }
+
+    const newDishes = (page.slot_dishes ?? []).filter((_, i) => i !== slotNumber - 1)
+    const { data, error } = await supabase
+      .from(tables.pages)
+      .update({ slot_count: page.slot_count - 1, slot_dishes: newDishes })
+      .eq('id', page.id)
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+
+    onPageUpdate(data)
+    setSignups(s =>
+      s
+        .filter(r => r.slot_number !== slotNumber)
+        .map(r => (r.slot_number > slotNumber ? { ...r, slot_number: r.slot_number - 1 } : r))
+    )
+    setSelectedSlot(null)
+  }
+
   async function handleSaveDishes({ newTitle, newDate, newDishes, removedOrigSlots, renames }) {
     if (removedOrigSlots.length > 0) {
       const { error } = await supabase
@@ -151,7 +188,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, onPa
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {slots.map(n => (
             <SlotCard
-              key={n}
+              key={`${page.id}-${n}`}
               slotNumber={n}
               noun={noun}
               itemNoun={itemNoun}
@@ -172,6 +209,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, onPa
           onClose={() => setSelectedSlot(null)}
           onSave={data => handleSave(selectedSlot, data)}
           onRemove={() => handleRemove(selectedSlot)}
+          onDeleteItem={() => handleDeleteItem(selectedSlot)}
         />
       )}
 

@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useModalClose } from '../hooks/useModalClose.js'
 
 export default function EditDishesModal({ page, noun, signups, onClose, onSave, onDelete }) {
+  const [closing, close] = useModalClose(onClose)
   const [title, setTitle]   = useState(page.title)
   const [date, setDate]     = useState(page.week_date)
   const [entries, setEntries] = useState(() =>
@@ -79,17 +81,17 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      onClick={close}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col"
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4 shrink-0">
           <h2 className="text-xl font-bold text-stone-800">Edit {noun === 'Item' ? 'Items' : `${noun}s`}</h2>
           <button
-            onClick={onClose}
+            onClick={close}
             className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
             &times;
@@ -187,7 +189,7 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={close}
                 className="flex-1 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors font-medium"
               >
                 Cancel

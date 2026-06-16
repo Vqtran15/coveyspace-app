@@ -1,5 +1,19 @@
+import { useEffect, useRef, useState } from 'react'
+
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup, onClick }) {
   const filled = Boolean(signup)
+  const [pulse, setPulse] = useState(false)
+  const prevRef = useRef({ dishName, signupId: signup?.id, signupName: signup?.name })
+
+  useEffect(() => {
+    const prev = prevRef.current
+    const changed = prev.dishName !== dishName || prev.signupId !== signup?.id || prev.signupName !== signup?.name
+    prevRef.current = { dishName, signupId: signup?.id, signupName: signup?.name }
+    if (!changed) return
+    setPulse(true)
+    const t = setTimeout(() => setPulse(false), 800)
+    return () => clearTimeout(t)
+  }, [dishName, signup?.id, signup?.name])
 
   return (
     <button
@@ -8,7 +22,7 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup,
         filled
           ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
           : 'bg-sunrise-50 border-stone-200 hover:border-jade'
-      }`}
+      } ${pulse ? 'animate-card-pulse' : ''}`}
     >
       {filled && <span className="absolute left-0 top-0 h-full w-1 bg-jade" />}
 

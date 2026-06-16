@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useModalClose } from '../hooks/useModalClose.js'
 
-export default function SignupModal({ slot, itemNoun, dishName, signup, onClose, onSave, onRemove }) {
+export default function SignupModal({ slot, itemNoun, dishName, signup, onClose, onSave, onRemove, onDeleteItem }) {
+  const [closing, close] = useModalClose(onClose)
   const [name, setName]   = useState(signup?.name ?? '')
   const [dish, setDish]   = useState(dishName ?? '')
   const [notes, setNotes] = useState(signup?.notes ?? '')
@@ -8,6 +10,8 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
   const [error, setError]           = useState(null)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving]     = useState(false)
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState(false)
+  const [deletingItem, setDeletingItem]           = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -33,13 +37,25 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
     }
   }
 
+  async function handleDeleteItem() {
+    setDeletingItem(true)
+    setError(null)
+    try {
+      await onDeleteItem()
+    } catch (err) {
+      setError(err.message ?? `Could not delete this ${itemNoun.toLowerCase()}.`)
+      setDeletingItem(false)
+      setConfirmDeleteItem(false)
+    }
+  }
+
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      onClick={close}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">
@@ -49,7 +65,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={close}
             className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
             &times;
@@ -112,7 +128,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
             !confirmRemove ? (
               <button
                 type="button"
-                onClick={() => setConfirmRemove(true)}
+                onClick={() => { setConfirmDeleteItem(false); setConfirmRemove(true) }}
                 disabled={saving}
                 className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors text-sm font-medium"
               >
@@ -139,6 +155,39 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
                 </button>
               </div>
             )
+          )}
+
+          {!confirmDeleteItem ? (
+            <button
+              type="button"
+              onClick={() => { setConfirmRemove(false); setConfirmDeleteItem(true) }}
+              disabled={saving}
+              className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors text-sm font-medium"
+            >
+              Delete this {itemNoun.toLowerCase()}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <span className="text-sm text-red-700 flex-1">
+                Delete this {itemNoun.toLowerCase()}{signup ? ' and its sign-up' : ''}?
+              </span>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteItem(false)}
+                disabled={deletingItem}
+                className="text-sm text-stone-500 hover:text-stone-700 font-medium px-2 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteItem}
+                disabled={deletingItem}
+                className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-1 rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {deletingItem ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
           )}
         </form>
       </div>

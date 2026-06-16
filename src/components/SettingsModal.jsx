@@ -1,13 +1,16 @@
 import { GearSix, Pause, Play, Plus } from '@phosphor-icons/react'
+import { useModalClose } from '../hooks/useModalClose.js'
 
 export default function SettingsModal({ rotation, isPaused, onTogglePause, onAddPage, onClose }) {
+  const [closing, close] = useModalClose(onClose)
+
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      onClick={close}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-sm"
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 pb-4">
@@ -16,7 +19,7 @@ export default function SettingsModal({ rotation, isPaused, onTogglePause, onAdd
             <h2 className="text-lg font-bold text-stone-800">Settings</h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={close}
             className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
             &times;

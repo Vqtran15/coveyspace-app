@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ForkKnife, HandHeart, Confetti } from '@phosphor-icons/react'
 import { formatDate } from './utils/dates.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
@@ -47,8 +47,12 @@ const TABS = [
   },
 ]
 
+const TAB_ORDER = TABS.map(t => t.id)
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('meal')
+  const [enterFrom, setEnterFrom] = useState('right')
+  const prevIndexRef = useRef(TAB_ORDER.indexOf('meal'))
   const [birthdays, setBirthdays] = useState([])
 
   useEffect(() => {
@@ -75,15 +79,25 @@ export default function App() {
   const upcoming = getUpcomingBirthdays(birthdays)
   const tab = TABS.find(t => t.id === activeTab)
 
+  function handleTabChange(id) {
+    const newIndex = TAB_ORDER.indexOf(id)
+    setEnterFrom(newIndex > prevIndexRef.current ? 'right' : 'left')
+    prevIndexRef.current = newIndex
+    setActiveTab(id)
+  }
+
   return (
     <div className="min-h-screen bg-sunrise-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <BirthdayBanner upcoming={upcoming} />
 
-      <div className="pb-24">
+      <div
+        key={activeTab}
+        className={`pb-24 ${enterFrom === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
+      >
         {activeTab === 'birthdays' ? (
           <BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} />
         ) : (
-          <RotationTab key={activeTab} config={tab.config} />
+          <RotationTab config={tab.config} />
         )}
       </div>
 
@@ -94,7 +108,7 @@ export default function App() {
         {TABS.map(t => (
           <button
             key={t.id}
-            onClick={() => setActiveTab(t.id)}
+            onClick={() => handleTabChange(t.id)}
             className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors ${
               activeTab === t.id ? '' : 'text-stone-400 hover:text-stone-600'
             }`}
