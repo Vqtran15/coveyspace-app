@@ -6,7 +6,7 @@ import SlotCard from './SlotCard.jsx'
 import SignupModal from './SignupModal.jsx'
 import EditDishesModal from './EditDishesModal.jsx'
 
-export default function MealPage({ page, noun, itemNoun, editLabel, tables, revealKey, onPageUpdate, onPageDelete }) {
+export default function MealPage({ page, noun, itemNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -163,21 +163,40 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
 
   return (
     <main className="max-w-3xl mx-auto px-4 pb-12">
-      <div className={`mb-6 relative overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100 p-4 flex items-start justify-between gap-4 ${headerEntranceClass}`}>
+      <div className={`mb-6 relative overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100 ${headerEntranceClass}`}>
         <span className="absolute top-0 left-0 right-0 h-1 bg-coral" />
-        <div>
-          <h1 className="text-2xl font-bold text-stone-800">{page.title}</h1>
-          <p className="text-stone-500 mt-1">{formatDate(page.week_date)}</p>
-          <p className="text-sm text-stone-400 mt-0.5">
-            {filledCount} / {page.slot_count} {noun.toLowerCase()}s filled
-          </p>
+
+        <div className="p-4 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              {pageCount > 1 && (
+                <button
+                  onClick={onPrevPage}
+                  disabled={!canGoPrev}
+                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >‹</button>
+              )}
+              <h1 className="text-2xl font-bold text-stone-800 truncate">{page.title}</h1>
+              {pageCount > 1 && (
+                <button
+                  onClick={onNextPage}
+                  disabled={!canGoNext}
+                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >›</button>
+              )}
+            </div>
+            <p className="text-stone-500 mt-1">{formatDate(page.week_date)}</p>
+            <p className="text-sm text-stone-400 mt-0.5">
+              {filledCount} / {page.slot_count} {noun.toLowerCase()}s filled
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEditDishes(true)}
+            className="shrink-0 mt-1 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-stone-600 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
+          >
+            ✎ {editLabel}
+          </button>
         </div>
-        <button
-          onClick={() => setShowEditDishes(true)}
-          className="shrink-0 mt-1 flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-stone-600 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
-        >
-          ✎ {editLabel}
-        </button>
       </div>
 
       {loading ? (

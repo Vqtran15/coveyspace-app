@@ -1,23 +1,3 @@
-// Returns the most recent Wednesday <= today (local time).
-// Used internally: the page advances the day after Tuesday (i.e. Wednesday).
-function getMostRecentWednesday(from = new Date()) {
-  const d = new Date(from)
-  const day = d.getDay() // 0=Sun, 3=Wed
-  const diff = day >= 3 ? day - 3 : day + 4
-  d.setDate(d.getDate() - diff)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-// Returns the current "active" potluck Tuesday.
-// The page advances on Wednesday (day after the potluck), so the active Tuesday
-// is always the one that follows the most recent Wednesday.
-export function getCurrentPotluckTuesday(from = new Date()) {
-  const wed = getMostRecentWednesday(from)
-  wed.setDate(wed.getDate() + 6)
-  return wed
-}
-
 // Returns the next Tuesday after today (7 days ahead if today is already Tuesday).
 export function getNextTuesday(from = new Date()) {
   const d = new Date(from)
@@ -45,4 +25,11 @@ export function formatDate(dateStr) {
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+// Replaces an old formatted date embedded in a title with the new one, if present.
+export function patchTitleDate(title, oldDateStr, newDateStr) {
+  const oldFormatted = formatDate(oldDateStr)
+  if (!title.includes(oldFormatted)) return title
+  return title.replace(oldFormatted, formatDate(newDateStr))
 }
