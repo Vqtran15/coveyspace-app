@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
+import BirthdayCard from './BirthdayCard.jsx'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 function daysInMonth(m) { return [0,31,29,31,30,31,30,31,31,30,31,30,31][m] ?? 31 }
@@ -162,7 +163,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
   )
 }
 
-export default function BirthdayTab({ birthdays, onBirthdaysChange }) {
+export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey }) {
   const [modal, setModal] = useState(null) // null | 'add' | birthday object
 
   const sorted = [...birthdays].sort((a, b) => daysUntilNext(a.birthday) - daysUntilNext(b.birthday))
@@ -222,46 +223,16 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {sorted.map(b => {
-            const days = daysUntilNext(b.birthday)
-            return (
-              <button
-                key={b.id}
-                onClick={() => setModal(b)}
-                className={`w-full text-left p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
-                  days <= 14
-                    ? 'bg-coral-light border-coral-100 hover:border-coral'
-                    : days <= 30
-                    ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
-                    : 'bg-white border-stone-200 hover:border-stone-300'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="font-semibold text-stone-800">{b.name}</div>
-                    <div className="text-sm text-stone-500 mt-0.5">{formatBirthdayDate(b.birthday)}</div>
-                  </div>
-                  {days === 0 ? (
-                    <span className="text-xs font-medium bg-jade text-white px-2.5 py-1 rounded-full shrink-0">
-                      Today! 🎉
-                    </span>
-                  ) : days <= 14 ? (
-                    <span className="text-xs font-medium bg-coral-100 text-coral-700 px-2.5 py-1 rounded-full shrink-0">
-                      in {days} day{days !== 1 ? 's' : ''}
-                    </span>
-                  ) : days <= 30 ? (
-                    <span className="text-xs font-medium bg-lagoon-100 text-jade px-2.5 py-1 rounded-full shrink-0">
-                      in {days} days
-                    </span>
-                  ) : (
-                    <span className="text-xs text-stone-400 shrink-0">
-                      in {days} days
-                    </span>
-                  )}
-                </div>
-              </button>
-            )
-          })}
+          {sorted.map((b, i) => (
+            <BirthdayCard
+              key={b.id}
+              index={i}
+              birthday={b}
+              days={daysUntilNext(b.birthday)}
+              revealKey={revealKey}
+              onClick={() => setModal(b)}
+            />
+          ))}
         </div>
       )}
 

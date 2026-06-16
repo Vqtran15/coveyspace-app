@@ -78,7 +78,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
             type="text"
             value={dish}
             onChange={e => setDish(e.target.value)}
-            placeholder=""
+            placeholder={`Add a new ${itemNoun.toLowerCase()}`}
             autoFocus
             className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
           />
@@ -91,7 +91,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Jane Smith"
+              placeholder="Chipotle"
               className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
               required
             />

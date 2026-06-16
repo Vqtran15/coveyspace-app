@@ -62,7 +62,7 @@ async function autoFillPages(pages, settings, tables, defaultTitle) {
   return { pages: current, settings: updatedSettings }
 }
 
-export default function RotationTab({ config }) {
+export default function RotationTab({ config, revealKey }) {
   const { label, Icon, editLabel, noun, itemNoun, tables, defaultTitle, rotation = true } = config
 
   const [pages, setPages]       = useState([])
@@ -203,6 +203,7 @@ export default function RotationTab({ config }) {
             itemNoun={itemNoun}
             editLabel={editLabel}
             tables={tables}
+            revealKey={revealKey}
             onPageUpdate={p => setPages(prev => prev.map(x => x.id === p.id ? p : x))}
             onPageDelete={handlePageDeleted}
           />

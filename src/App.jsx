@@ -10,11 +10,11 @@ import BirthdayBanner from './components/BirthdayBanner.jsx'
 const TABS = [
   {
     id: 'meal',
-    label: 'Meal Rotation',
+    label: 'Meal Sign-up',
     shortLabel: 'Meals',
     Icon: ForkKnife,
     config: {
-      label: 'Meal Rotation',
+      label: 'Meal Sign-up',
       Icon: ForkKnife,
       editLabel: 'Edit Meal',
       noun: 'Ingredient',
@@ -95,9 +95,9 @@ export default function App() {
         className={`pb-24 ${enterFrom === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
       >
         {activeTab === 'birthdays' ? (
-          <BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} />
+          <BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} revealKey={activeTab} />
         ) : (
-          <RotationTab config={tab.config} />
+          <RotationTab config={tab.config} revealKey={activeTab} />
         )}
       </div>
 

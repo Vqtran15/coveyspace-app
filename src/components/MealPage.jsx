@@ -5,11 +5,18 @@ import SlotCard from './SlotCard.jsx'
 import SignupModal from './SignupModal.jsx'
 import EditDishesModal from './EditDishesModal.jsx'
 
-export default function MealPage({ page, noun, itemNoun, editLabel, tables, onPageUpdate, onPageDelete }) {
+export default function MealPage({ page, noun, itemNoun, editLabel, tables, revealKey, onPageUpdate, onPageDelete }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [showEditDishes, setShowEditDishes] = useState(false)
+  const [headerEntering, setHeaderEntering] = useState(true)
+
+  useEffect(() => {
+    setHeaderEntering(true)
+    const t = setTimeout(() => setHeaderEntering(false), 1100)
+    return () => clearTimeout(t)
+  }, [revealKey, page?.id])
 
   useEffect(() => {
     if (!page) return
@@ -161,7 +168,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, onPa
 
   return (
     <main className="max-w-3xl mx-auto px-4 pb-12">
-      <div className="mb-6 relative overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100 p-4 flex items-start justify-between gap-4">
+      <div className={`mb-6 relative overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100 p-4 flex items-start justify-between gap-4 ${headerEntering ? 'animate-card-slide-left' : ''}`}>
         <span className="absolute top-0 left-0 right-0 h-1 bg-coral" />
         <div>
           <h1 className="text-2xl font-bold text-stone-800">{page.title}</h1>
@@ -194,6 +201,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, onPa
               itemNoun={itemNoun}
               dishName={page.slot_dishes?.[n - 1] ?? ''}
               signup={signups.find(s => s.slot_number === n)}
+              revealKey={revealKey}
               onClick={() => setSelectedSlot(n)}
             />
           ))}
