@@ -147,7 +147,7 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
                       type="text"
                       value={entry.dish}
                       onChange={e => updateDish(entry.key, e.target.value)}
-                      placeholder="e.g. Caesar salad"
+                      placeholder=""
                       className="w-full border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
                     />
                     {signup && (

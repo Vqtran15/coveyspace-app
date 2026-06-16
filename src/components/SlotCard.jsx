@@ -1,13 +1,3 @@
-const TAG_STYLES = {
-  'Vegan':        'bg-green-100 text-green-700',
-  'Vegetarian':   'bg-emerald-100 text-emerald-700',
-  'Gluten-Free':  'bg-yellow-100 text-yellow-700',
-  'Nut-Free':     'bg-orange-100 text-orange-700',
-  'Dairy-Free':   'bg-blue-100 text-blue-700',
-  'Halal':        'bg-teal-100 text-teal-700',
-  'Kosher':       'bg-purple-100 text-purple-700',
-}
-
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup, onClick }) {
   const filled = Boolean(signup)
 
@@ -21,27 +11,16 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup,
       }`}
     >
       {filled && <span className="absolute left-0 top-0 h-full w-1 bg-jade" />}
+
       {dishName ? (
         <div className="font-semibold text-stone-800 truncate mb-1">{dishName}</div>
       ) : (
-        <div className="text-sm text-stone-400 italic mb-1">No {itemNoun.toLowerCase()} set</div>
+        <div className="text-sm text-stone-400 italic mb-1">Add a new {itemNoun.toLowerCase()}</div>
       )}
 
       {filled ? (
         <>
           <div className="text-sm text-jade font-medium truncate">→ {signup.name}</div>
-          {signup.dietary_tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {signup.dietary_tags.map(tag => (
-                <span
-                  key={tag}
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${TAG_STYLES[tag] ?? 'bg-stone-100 text-stone-600'}`}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
           {signup.notes && (
             <div className="text-xs text-stone-400 mt-1.5 line-clamp-1 italic">{signup.notes}</div>
           )}

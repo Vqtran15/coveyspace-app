@@ -1,27 +1,20 @@
 import { useState } from 'react'
 
-const ALL_TAGS = ['Vegan', 'Vegetarian', 'Gluten-Free', 'Nut-Free', 'Dairy-Free', 'Halal', 'Kosher']
-
 export default function SignupModal({ slot, itemNoun, dishName, signup, onClose, onSave, onRemove }) {
   const [name, setName]   = useState(signup?.name ?? '')
   const [dish, setDish]   = useState(dishName ?? '')
-  const [tags, setTags]   = useState(signup?.dietary_tags ?? [])
   const [notes, setNotes] = useState(signup?.notes ?? '')
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState(null)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving]     = useState(false)
 
-  function toggleTag(tag) {
-    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-  }
-
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name: name.trim(), dish: dish.trim(), dietary_tags: tags, notes: notes.trim() })
+      await onSave({ name: name.trim(), dish: dish.trim(), notes: notes.trim() })
     } catch (err) {
       setError(err.message ?? 'Something went wrong. Please try again.')
       setSaving(false)
@@ -64,15 +57,15 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
           </button>
         </div>
 
-        {/* Editable dish name */}
         <div className="mx-6 mb-4">
           <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
           <input
             type="text"
             value={dish}
             onChange={e => setDish(e.target.value)}
-            placeholder="e.g. Caesar salad"
-            className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            placeholder=""
+            autoFocus
+            className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
           />
         </div>
 
@@ -86,28 +79,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
               placeholder="Jane Smith"
               className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
               required
-              autoFocus
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">Dietary tags</label>
-            <div className="flex flex-wrap gap-2">
-              {ALL_TAGS.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${
-                    tags.includes(tag)
-                      ? 'bg-jade text-white border-jade'
-                      : 'bg-white text-stone-600 border-stone-300 hover:border-coral'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div>
@@ -117,9 +89,9 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Serves 8–10, needs to be refrigerated..."
+              placeholder=""
               rows={2}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none"
             />
           </div>
 

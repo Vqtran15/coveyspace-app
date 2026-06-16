@@ -205,10 +205,12 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange }) {
               <button
                 key={b.id}
                 onClick={() => setModal(b)}
-                className={`w-full text-left p-4 rounded-xl border-2 bg-white shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
+                className={`w-full text-left p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
                   days <= 14
-                    ? 'border-lagoon-200 hover:border-lagoon'
-                    : 'border-stone-200 hover:border-stone-300'
+                    ? 'bg-coral-light border-coral-100 hover:border-coral'
+                    : days <= 30
+                    ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
+                    : 'bg-white border-stone-200 hover:border-stone-300'
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -221,8 +223,12 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange }) {
                       Today! 🎉
                     </span>
                   ) : days <= 14 ? (
-                    <span className="text-xs font-medium bg-lagoon-100 text-jade px-2.5 py-1 rounded-full shrink-0">
+                    <span className="text-xs font-medium bg-coral-100 text-coral-700 px-2.5 py-1 rounded-full shrink-0">
                       in {days} day{days !== 1 ? 's' : ''}
+                    </span>
+                  ) : days <= 30 ? (
+                    <span className="text-xs font-medium bg-lagoon-100 text-jade px-2.5 py-1 rounded-full shrink-0">
+                      in {days} days
                     </span>
                   ) : (
                     <span className="text-xs text-stone-400 shrink-0">
