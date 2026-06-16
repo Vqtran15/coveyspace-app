@@ -87,7 +87,7 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4 shrink-0">
-          <h2 className="text-xl font-bold text-stone-800">Edit {noun}s</h2>
+          <h2 className="text-xl font-bold text-stone-800">Edit {noun === 'Item' ? 'Items' : `${noun}s`}</h2>
           <button
             onClick={onClose}
             className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"

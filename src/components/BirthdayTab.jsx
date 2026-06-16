@@ -2,20 +2,26 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
 
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+function daysInMonth(m) { return [0,31,29,31,30,31,30,31,31,30,31,30,31][m] ?? 31 }
+
 function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
-  const [name, setName]           = useState(birthday?.name ?? '')
-  const [date, setDate]           = useState(birthday?.birthday ?? '')
-  const [saving, setSaving]       = useState(false)
-  const [error, setError]         = useState(null)
+  const [name, setName]     = useState(birthday?.name ?? '')
+  const [month, setMonth]   = useState(birthday?.birthday ? parseInt(birthday.birthday.split('-')[1]) : '')
+  const [day, setDay]       = useState(birthday?.birthday ? parseInt(birthday.birthday.split('-')[2]) : '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting]   = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!month || !day) { setError('Please select a month and day.'); return }
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name: name.trim(), birthday: date })
+      const dateStr = `2000-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+      await onSave({ name: name.trim(), birthday: dateStr })
     } catch (err) {
       setError(err.message ?? 'Could not save.')
       setSaving(false)
@@ -70,13 +76,30 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
 
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">Birthday</label>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-              required
-            />
+            <div className="flex gap-2">
+              <select
+                value={month}
+                onChange={e => { setMonth(Number(e.target.value)); setDay('') }}
+                className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+                required
+              >
+                <option value="">Month</option>
+                {MONTHS.map((m, i) => (
+                  <option key={i} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={day}
+                onChange={e => setDay(Number(e.target.value))}
+                className="w-24 border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+                required
+              >
+                <option value="">Day</option>
+                {Array.from({ length: month ? daysInMonth(month) : 31 }, (_, i) => (
+                  <option key={i} value={i + 1}>{i + 1}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {error && (

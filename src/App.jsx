@@ -32,7 +32,7 @@ const TABS = [
       label: 'Service Night',
       Icon: HandHeart,
       editLabel: 'Edit Items',
-      noun: 'Product',
+      noun: 'Item',
       itemNoun: 'Item',
       tables: { pages: 'serving_pages', signups: 'serving_signups', settings: 'serving_settings' },
       defaultTitle: dateStr => `Service Night — ${formatDate(dateStr)}`,

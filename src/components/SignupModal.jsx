@@ -47,7 +47,6 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
             <h2 className="text-xl font-bold text-stone-800">
               {signup ? 'Edit Sign-Up' : 'Sign Up'}
             </h2>
-            <p className="text-sm text-stone-500 mt-0.5">Slot {slot}</p>
           </div>
           <button
             onClick={onClose}
