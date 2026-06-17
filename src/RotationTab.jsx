@@ -176,7 +176,6 @@ export default function RotationTab({ config, revealKey, groupName = '', display
           onClick={() => setShowSettings(true)}
           className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
         >
-          {displayName && <span className="text-sm font-semibold text-jade">{displayName}</span>}
           <GearSix size={20} weight="regular" />
         </button>
       </div>

@@ -18,7 +18,7 @@ const TABS = [
     shortLabel: 'Meals',
     Icon: ForkKnife,
     config: {
-      label: 'Meal Sign-up',
+      label: 'Meal Signup',
       Icon: ForkKnife,
       editLabel: 'Edit Meal',
       noun: 'Ingredient',
