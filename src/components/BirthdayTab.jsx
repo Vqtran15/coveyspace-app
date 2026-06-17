@@ -3,11 +3,13 @@ import { Cake } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
 import BirthdayCard from './BirthdayCard.jsx'
+import { useModalClose } from '../hooks/useModalClose.js'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 function daysInMonth(m) { return [0,31,29,31,30,31,30,31,31,30,31,30,31][m] ?? 31 }
 
 function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
+  const [closing, close] = useModalClose(onClose)
   const [name, setName]     = useState(birthday?.name ?? '')
   const [month, setMonth]   = useState(birthday?.birthday ? parseInt(birthday.birthday.split('-')[1]) : '')
   const [day, setDay]       = useState(birthday?.birthday ? parseInt(birthday.birthday.split('-')[2]) : '')
@@ -43,11 +45,11 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      onClick={close}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-sm"
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">
@@ -55,7 +57,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
             {birthday ? 'Edit Birthday' : 'Add Birthday'}
           </h2>
           <button
-            onClick={onClose}
+            onClick={close}
             className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
             &times;
@@ -113,7 +115,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
           <div className="flex gap-3 pt-1">
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
               className="flex-1 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors font-medium"
             >
               Cancel
