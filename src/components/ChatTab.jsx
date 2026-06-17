@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PaperPlaneTilt, Image as ImageIcon, X } from '@phosphor-icons/react'
+import { ChatCircleDots, PaperPlaneTilt, Image as ImageIcon, X, MagnifyingGlass, NotePencil } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
+import NotesModal from './NotesModal.jsx'
 
 const AVATAR_COLORS = ['bg-jade', 'bg-coral', 'bg-lagoon-700']
 function avatarColor(userId) {
@@ -36,15 +37,34 @@ function dateSeparator(iso) {
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 }
 
+function highlightText(text, query) {
+  if (!query.trim() || !text) return text
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1
+          ? <mark key={i} className="bg-yellow-200 text-stone-900 rounded-sm">{part}</mark>
+          : part
+      )}
+    </>
+  )
+}
+
 export default function ChatTab({ session, displayName, groupId, onRead }) {
-  const [messages, setMessages]       = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [text, setText]               = useState('')
-  const [sending, setSending]         = useState(false)
-  const [imagePreview, setImagePreview] = useState(null)
-  const scrollRef    = useRef(null)
-  const fileInputRef = useRef(null)
-  const textareaRef  = useRef(null)
+  const [messages, setMessages]           = useState([])
+  const [loading, setLoading]             = useState(true)
+  const [text, setText]                   = useState('')
+  const [sending, setSending]             = useState(false)
+  const [imagePreview, setImagePreview]   = useState(null)
+  const [searchOpen, setSearchOpen]       = useState(false)
+  const [searchQuery, setSearchQuery]     = useState('')
+  const [notesOpen, setNotesOpen]         = useState(false)
+  const scrollRef      = useRef(null)
+  const fileInputRef   = useRef(null)
+  const textareaRef    = useRef(null)
+  const searchInputRef = useRef(null)
   const { className: headerClass } = useEntranceAnimation('/chat', 0, { direction: 'left' })
 
   useEffect(() => {
@@ -78,6 +98,28 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
     if (!scrollRef.current) return
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages])
+
+  // Close search on Escape
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false)
+        setSearchQuery('')
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [searchOpen])
+
+  function toggleSearch() {
+    if (searchOpen) {
+      setSearchOpen(false)
+      setSearchQuery('')
+    } else {
+      setSearchOpen(true)
+      setTimeout(() => searchInputRef.current?.focus(), 50)
+    }
+  }
 
   async function handleSend(e) {
     e?.preventDefault()
@@ -139,10 +181,17 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
 
   const myId = session.user.id
 
-  // Build display list with date separators
+  // Filter messages by search query, then build display list with date separators
+  const filteredMsgs = searchQuery.trim()
+    ? messages.filter(m =>
+        m.body?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : messages
+
   const items = []
   let lastDate = null
-  for (const msg of messages) {
+  for (const msg of filteredMsgs) {
     const d = new Date(msg.created_at).toDateString()
     if (d !== lastDate) { items.push({ type: 'date', label: dateSeparator(msg.created_at), key: `date-${msg.created_at}` }); lastDate = d }
     items.push({ type: 'msg', msg })
@@ -154,10 +203,56 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
     >
       {/* Header */}
-      <div className={`max-w-3xl mx-auto w-full px-4 pt-6 pb-3 shrink-0 flex items-center gap-3 ${headerClass}`}>
-        <ChatCircleDots size={32} weight="fill" className="text-jade shrink-0" />
-        <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
+      <div className={`max-w-3xl mx-auto w-full px-4 pt-6 pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
+        <div className="flex items-center gap-3">
+          <ChatCircleDots size={32} weight="fill" className="text-jade shrink-0" />
+          <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleSearch}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-jade text-white' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'}`}
+          >
+            <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
+          </button>
+          <button
+            onClick={() => setNotesOpen(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          >
+            <NotePencil size={20} />
+          </button>
+        </div>
       </div>
+
+      {/* Search bar */}
+      {searchOpen && (
+        <div className="max-w-3xl mx-auto w-full px-4 pb-2 shrink-0 animate-overlay-in">
+          <div className="relative">
+            <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search messages…"
+              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              >
+                <X size={14} weight="bold" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-stone-400 mt-1.5 px-1">
+              {filteredMsgs.length} {filteredMsgs.length === 1 ? 'message' : 'messages'} found
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 max-w-3xl mx-auto w-full">
@@ -165,10 +260,19 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
           <div className="flex justify-center py-16">
             <p className="text-stone-400 text-sm animate-pulse">Loading messages…</p>
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMsgs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
-            <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />
-            <p className="text-sm">No messages yet. Say hello!</p>
+            {searchQuery ? (
+              <>
+                <MagnifyingGlass size={48} className="text-stone-300 mb-3" />
+                <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
+              </>
+            ) : (
+              <>
+                <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />
+                <p className="text-sm">No messages yet. Say hello!</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-0.5 py-2 pb-4">
@@ -218,7 +322,9 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
                         </a>
                       )}
                       {msg.body && (
-                        <p className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.body}</p>
+                        <p className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                          {searchQuery.trim() ? highlightText(msg.body, searchQuery) : msg.body}
+                        </p>
                       )}
                     </div>
                     {isLastInGroup && (
@@ -285,6 +391,10 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
           </button>
         </form>
       </div>
+
+      {notesOpen && (
+        <NotesModal session={session} onClose={() => setNotesOpen(false)} />
+      )}
     </div>
   )
 }
