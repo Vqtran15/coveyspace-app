@@ -50,7 +50,7 @@ async function autoFillPages(existingPages, tables, defaultTitle) {
 }
 
 export default function RotationTab({ config, revealKey, groupName = '', displayName = '' }) {
-  const { label, Icon, editLabel, noun, itemNoun, tables, defaultTitle, autoFill = false } = config
+  const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false } = config
 
   const [pages, setPages]       = useState([])
   const [viewIndex, setViewIndex] = useState(0)
@@ -204,7 +204,7 @@ export default function RotationTab({ config, revealKey, groupName = '', display
           <div className="max-w-3xl mx-auto px-4 py-20 text-center">
             <div className="flex justify-center mb-4"><Icon size={56} weight="fill" className="text-stone-300" /></div>
             <h2 className="text-xl font-semibold text-stone-700 mb-2">No pages yet</h2>
-            <p className="text-stone-500 text-sm mb-2">Add your first page to get started.</p>
+            <p className="text-stone-500 text-sm mb-2">Add your first {pageNoun.toLowerCase()} to get started.</p>
             {autoFill && (
               <p className="text-stone-400 text-xs mb-6 max-w-xs mx-auto">
                 Once you have pages, new meals are automatically scheduled each week using your existing meals as a rotating template — so upcoming weeks are always ready.
@@ -224,6 +224,8 @@ export default function RotationTab({ config, revealKey, groupName = '', display
       {showSettings && (
         <SettingsModal
           editLabel={editLabel}
+          pageNoun={pageNoun}
+          pageNounPlural={pageNounPlural}
           groupName={groupName}
           displayName={displayName}
           onEditPage={viewedPage ? () => { setShowSettings(false); setShowEditPage(true) } : undefined}
@@ -235,6 +237,8 @@ export default function RotationTab({ config, revealKey, groupName = '', display
       {showManagePages && (
         <ManagePagesModal
           pages={pages}
+          pageNoun={pageNoun}
+          pageNounPlural={pageNounPlural}
           onReorder={handleReorderPages}
           onAddPage={() => { setShowManagePages(false); setShowAddModal(true) }}
           onClose={() => setShowManagePages(false)}
@@ -244,6 +248,7 @@ export default function RotationTab({ config, revealKey, groupName = '', display
       {showAddModal && (
         <AddPageModal
           noun={noun}
+          pageNoun={pageNoun}
           defaultTitle={defaultTitle}
           pages={pages}
           onClose={() => setShowAddModal(false)}

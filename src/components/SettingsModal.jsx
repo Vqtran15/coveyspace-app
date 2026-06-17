@@ -3,7 +3,7 @@ import { GearSix, ListBullets, PencilSimple, SignOut, Trash } from '@phosphor-ic
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 
-export default function SettingsModal({ editLabel, groupName, displayName, onEditPage, onManagePages, onClose }) {
+export default function SettingsModal({ editLabel, pageNoun, pageNounPlural, groupName, displayName, onEditPage, onManagePages, onClose }) {
   const [closing, close] = useModalClose(onClose)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -45,7 +45,7 @@ export default function SettingsModal({ editLabel, groupName, displayName, onEdi
 
         <div className="px-5 pb-6 space-y-2">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-1">
-            Pages
+            {pageNounPlural}
           </p>
           {onEditPage && (
             <button
@@ -72,8 +72,8 @@ export default function SettingsModal({ editLabel, groupName, displayName, onEdi
                 <ListBullets size={16} weight="bold" className="text-lagoon-700" />
               </div>
               <div className="text-left">
-                <div className="text-sm font-semibold text-stone-800">Manage pages</div>
-                <div className="text-xs text-stone-400 mt-0.5">Add, view, and reorder pages</div>
+                <div className="text-sm font-semibold text-stone-800">Manage {pageNounPlural.toLowerCase()}</div>
+                <div className="text-xs text-stone-400 mt-0.5">Add, view, and reorder {pageNounPlural.toLowerCase()}</div>
               </div>
             </div>
           </button>

@@ -10,7 +10,7 @@ function findNextAvailableTuesday(existingDates) {
   return d
 }
 
-export default function AddPageModal({ noun, defaultTitle, pages = [], onClose, onSave, existingDates }) {
+export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [], onClose, onSave, existingDates }) {
   const [closing, close] = useModalClose(onClose)
   const defaultDate = findNextAvailableTuesday(existingDates)
   const defaultDateStr = toDateString(defaultDate)
@@ -54,7 +54,7 @@ export default function AddPageModal({ noun, defaultTitle, pages = [], onClose, 
   async function handleSubmit(e) {
     e.preventDefault()
     if (existingDates.includes(date)) {
-      setError('A page already exists for this date. Pick a different date.')
+      setError(`A ${pageNoun.toLowerCase()} already exists for this date. Pick a different date.`)
       return
     }
     setSaving(true)
@@ -67,7 +67,7 @@ export default function AddPageModal({ noun, defaultTitle, pages = [], onClose, 
         slot_dishes: dishes.map(d => d.trim()),
       })
     } catch (err) {
-      setError(err.message ?? 'Could not create page.')
+      setError(err.message ?? `Could not create ${pageNoun.toLowerCase()}.`)
       setSaving(false)
     }
   }
@@ -82,7 +82,7 @@ export default function AddPageModal({ noun, defaultTitle, pages = [], onClose, 
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-0 shrink-0">
-          <h2 className="text-xl font-bold text-stone-800">Add Page</h2>
+          <h2 className="text-xl font-bold text-stone-800">Add {pageNoun}</h2>
           <button
             onClick={close}
             className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
@@ -190,7 +190,7 @@ export default function AddPageModal({ noun, defaultTitle, pages = [], onClose, 
               disabled={saving}
               className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
             >
-              {saving ? 'Adding…' : 'Add Page'}
+              {saving ? 'Adding…' : `Add ${pageNoun}`}
             </button>
           </div>
         </form>

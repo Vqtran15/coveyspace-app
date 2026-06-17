@@ -9,7 +9,7 @@ function shortDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function ManagePagesModal({ pages, onReorder, onAddPage, onClose }) {
+export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onReorder, onAddPage, onClose }) {
   const [closing, close] = useModalClose(onClose)
   const [list, setList] = useState(pages)
   const [draggingId, setDraggingId] = useState(null)
@@ -106,7 +106,7 @@ export default function ManagePagesModal({ pages, onReorder, onAddPage, onClose 
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 pb-4 shrink-0">
-          <h2 className="text-lg font-bold text-stone-800">Manage Pages</h2>
+          <h2 className="text-lg font-bold text-stone-800">Manage {pageNounPlural}</h2>
           <div className="flex items-center gap-1">
             <button
               onClick={onAddPage}
@@ -125,12 +125,12 @@ export default function ManagePagesModal({ pages, onReorder, onAddPage, onClose 
 
         {list.length === 0 ? (
           <div className="px-5 pb-8 text-center">
-            <p className="text-stone-500 text-sm mb-4">No pages yet.</p>
+            <p className="text-stone-500 text-sm mb-4">No {pageNounPlural.toLowerCase()} yet.</p>
             <button
               onClick={onAddPage}
               className="px-5 py-2.5 bg-jade hover:bg-jade-700 text-white font-medium rounded-lg transition-colors"
             >
-              + Add Page
+              + Add {pageNoun}
             </button>
           </div>
         ) : (
