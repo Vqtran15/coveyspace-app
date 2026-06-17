@@ -21,7 +21,7 @@ begin
   -- Delete user-scoped data first to avoid FK constraint errors.
   -- Tables scoped to community_groups (meal_pages, signups, etc.) are left intact.
   delete from reactions    where user_id   = uid;
-  delete from messages     where sender_id = uid;
+  delete from messages     where user_id   = uid;
   delete from birthdays    where user_id   = uid;
   delete from profiles     where user_id   = uid;
 
