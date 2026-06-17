@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
-  MagnifyingGlass, ArrowDown, Trash, ArrowLeft, NotePencil,
+  MagnifyingGlass, ArrowDown, Trash, ArrowLeft, Notepad,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import NotesModal from './NotesModal.jsx'
@@ -417,7 +417,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             onClick={() => setNotesOpen(true)}
             className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
           >
-            <NotePencil size={20} />
+            <Notepad size={20} />
           </button>
         )}
         <button
