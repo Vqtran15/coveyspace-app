@@ -1,8 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PaperPlaneTilt, Image as ImageIcon, X, MagnifyingGlass, NotePencil } from '@phosphor-icons/react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import {
+  ChatCircleDots, PaperPlaneTilt, Image as ImageIcon, X,
+  MagnifyingGlass, NotePencil, ArrowDown, Trash,
+} from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import NotesModal from './NotesModal.jsx'
+
+const PAGE_SIZE = 50
+const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
 
 const AVATAR_COLORS = ['bg-jade', 'bg-coral', 'bg-lagoon-700']
 function avatarColor(userId) {
@@ -22,13 +28,12 @@ function Initials({ name, userId }) {
 function formatTime(iso) {
   const d = new Date(iso)
   const now = new Date()
-  if (d.toDateString() === now.toDateString()) {
+  if (d.toDateString() === now.toDateString())
     return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  }
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
-function dateSeparator(iso) {
+function dateSeparatorLabel(iso) {
   const d = new Date(iso)
   const now = new Date()
   const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1)
@@ -52,81 +57,232 @@ function highlightText(text, query) {
   )
 }
 
+function typingLabel(users) {
+  if (!users.length) return ''
+  if (users.length === 1) return `${users[0]} is typing…`
+  if (users.length === 2) return `${users[0]} and ${users[1]} are typing…`
+  return `${users.length} people are typing…`
+}
+
 export default function ChatTab({ session, displayName, groupId, onRead }) {
-  const [messages, setMessages]           = useState([])
-  const [loading, setLoading]             = useState(true)
-  const [text, setText]                   = useState('')
-  const [sending, setSending]             = useState(false)
-  const [imagePreview, setImagePreview]   = useState(null)
-  const [searchOpen, setSearchOpen]       = useState(false)
-  const [searchQuery, setSearchQuery]     = useState('')
-  const [notesOpen, setNotesOpen]         = useState(false)
-  const scrollRef      = useRef(null)
-  const fileInputRef   = useRef(null)
-  const textareaRef    = useRef(null)
-  const searchInputRef = useRef(null)
+  const [messages, setMessages]         = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [hasMore, setHasMore]           = useState(false)
+  const [loadingMore, setLoadingMore]   = useState(false)
+  const [text, setText]                 = useState('')
+  const [sending, setSending]           = useState(false)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [searchOpen, setSearchOpen]     = useState(false)
+  const [searchQuery, setSearchQuery]   = useState('')
+  const [notesOpen, setNotesOpen]       = useState(false)
+  const [isAtBottom, setIsAtBottom]     = useState(true)
+  const [typingUsers, setTypingUsers]   = useState([])
+  const [reactions, setReactions]       = useState({})
+  const [activeMsg, setActiveMsg]       = useState(null)
+  const [menuPos, setMenuPos]           = useState(null)
+
+  const scrollRef          = useRef(null)
+  const fileInputRef       = useRef(null)
+  const textareaRef        = useRef(null)
+  const searchInputRef     = useRef(null)
+  const presenceChannelRef = useRef(null)
+  const typingTimeoutRef   = useRef(null)
+  const longPressTimerRef  = useRef(null)
+  const preserveScrollRef  = useRef(null)
+
   const { className: headerClass } = useEntranceAnimation('/chat', 0, { direction: 'left' })
 
+  // ── Data: messages + reactions + realtime subscriptions ──────────────────
   useEffect(() => {
     if (!groupId) return
     onRead?.()
 
+    // Last PAGE_SIZE messages, newest-first then reversed
     supabase
       .from('messages')
       .select('*')
       .eq('community_group_id', groupId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE)
       .then(({ data }) => {
-        setMessages(data ?? [])
+        setMessages((data ?? []).reverse())
+        setHasMore((data ?? []).length === PAGE_SIZE)
         setLoading(false)
       })
 
-    const channel = supabase
-      .channel(`messages:${groupId}`)
+    // Reactions for the group
+    supabase
+      .from('reactions')
+      .select('*')
+      .eq('community_group_id', groupId)
+      .then(({ data }) => {
+        const map = {}
+        for (const r of data ?? []) {
+          if (!map[r.message_id]) map[r.message_id] = {}
+          if (!map[r.message_id][r.emoji]) map[r.message_id][r.emoji] = []
+          map[r.message_id][r.emoji].push(r)
+        }
+        setReactions(map)
+      })
+
+    const msgCh = supabase
+      .channel(`chat-msg:${groupId}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages',
         filter: `community_group_id=eq.${groupId}`,
       }, ({ new: msg }) => {
-        // Skip if already added optimistically by handleSend
         setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, { ...msg, _isNew: true }])
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'messages',
+      }, ({ old: msg }) => {
+        setMessages(prev => prev.filter(m => m.id !== msg.id))
       })
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
+    const rxCh = supabase
+      .channel(`chat-rx:${groupId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'reactions',
+        filter: `community_group_id=eq.${groupId}`,
+      }, ({ new: r }) => {
+        setReactions(prev => ({
+          ...prev,
+          [r.message_id]: {
+            ...(prev[r.message_id] ?? {}),
+            [r.emoji]: [...(prev[r.message_id]?.[r.emoji] ?? []), r],
+          },
+        }))
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'reactions',
+      }, ({ old: r }) => {
+        setReactions(prev => {
+          if (!prev[r.message_id]) return prev
+          const byEmoji = { ...prev[r.message_id] }
+          const filtered = (byEmoji[r.emoji] ?? []).filter(x => x.id !== r.id)
+          if (filtered.length) byEmoji[r.emoji] = filtered
+          else delete byEmoji[r.emoji]
+          return { ...prev, [r.message_id]: byEmoji }
+        })
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(msgCh)
+      supabase.removeChannel(rxCh)
+    }
   }, [groupId])
 
+  // ── Typing presence ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (!scrollRef.current) return
+    if (!groupId || !displayName) return
+    const channel = supabase.channel(`presence:${groupId}`, {
+      config: { presence: { key: session.user.id } },
+    })
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState()
+        const others = Object.entries(state)
+          .filter(([k]) => k !== session.user.id)
+          .flatMap(([, p]) => p)
+          .filter(p => p.typing)
+          .map(p => p.display_name)
+        setTypingUsers(others)
+      })
+      .subscribe(async status => {
+        if (status === 'SUBSCRIBED')
+          await channel.track({ display_name: displayName, typing: false })
+      })
+    presenceChannelRef.current = channel
+    return () => {
+      supabase.removeChannel(channel)
+      presenceChannelRef.current = null
+    }
+  }, [groupId, displayName])
+
+  // ── Auto-scroll on new messages (only when already at bottom) ─────────────
+  useEffect(() => {
+    if (!scrollRef.current || !isAtBottom) return
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages])
 
-  // Close search on Escape
+  // ── Restore scroll position after prepending older messages ───────────────
+  useLayoutEffect(() => {
+    if (!preserveScrollRef.current || !scrollRef.current) return
+    scrollRef.current.scrollTop =
+      scrollRef.current.scrollHeight - preserveScrollRef.current
+    preserveScrollRef.current = null
+  }, [messages])
+
+  // ── Close search on Escape ────────────────────────────────────────────────
   useEffect(() => {
-    function onKeyDown(e) {
-      if (e.key === 'Escape' && searchOpen) {
-        setSearchOpen(false)
-        setSearchQuery('')
-      }
+    function onKey(e) {
+      if (e.key === 'Escape' && searchOpen) { setSearchOpen(false); setSearchQuery('') }
     }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
   }, [searchOpen])
 
+  // ── Scroll handler: track bottom + trigger pagination ────────────────────
+  function handleScroll() {
+    const el = scrollRef.current
+    if (!el) return
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80)
+    if (el.scrollTop < 60 && hasMore && !loadingMore) loadMore()
+  }
+
+  async function loadMore() {
+    if (loadingMore || !hasMore || !messages.length) return
+    setLoadingMore(true)
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('community_group_id', groupId)
+      .lt('created_at', messages[0].created_at)
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE)
+    const older = (data ?? []).reverse()
+    if (older.length) {
+      preserveScrollRef.current = scrollRef.current?.scrollHeight ?? 0
+      setMessages(prev => [...older, ...prev])
+    }
+    setHasMore(older.length === PAGE_SIZE)
+    setLoadingMore(false)
+  }
+
+  // ── Search ────────────────────────────────────────────────────────────────
   function toggleSearch() {
-    if (searchOpen) {
-      setSearchOpen(false)
-      setSearchQuery('')
-    } else {
-      setSearchOpen(true)
-      setTimeout(() => searchInputRef.current?.focus(), 50)
+    if (searchOpen) { setSearchOpen(false); setSearchQuery('') }
+    else { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50) }
+  }
+
+  // ── Text input + typing indicator ─────────────────────────────────────────
+  function handleTextInput(e) {
+    setText(e.target.value)
+    e.target.style.height = 'auto'
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+    if (presenceChannelRef.current) {
+      presenceChannelRef.current.track({ display_name: displayName, typing: true })
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = setTimeout(() => {
+        presenceChannelRef.current?.track({ display_name: displayName, typing: false })
+      }, 3000)
     }
   }
 
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+  }
+
+  // ── Send message ──────────────────────────────────────────────────────────
   async function handleSend(e) {
     e?.preventDefault()
     const trimmed = text.trim()
     if (!trimmed && !imagePreview) return
     setSending(true)
+    clearTimeout(typingTimeoutRef.current)
+    presenceChannelRef.current?.track({ display_name: displayName, typing: false })
 
     try {
       let imageUrl = null
@@ -149,29 +305,17 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
         image_url: imageUrl,
       }).select().single()
 
-      if (newMsg) setMessages(prev => [...prev, { ...newMsg, _isNew: true }])
-
+      if (newMsg) {
+        setIsAtBottom(true)
+        setMessages(prev => [...prev, { ...newMsg, _isNew: true }])
+      }
       setText('')
       setImagePreview(null)
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
       console.error('Send failed:', err)
     }
-
     setSending(false)
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
-  function handleTextInput(e) {
-    setText(e.target.value)
-    e.target.style.height = 'auto'
-    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
   }
 
   function handleFileChange(e) {
@@ -182,9 +326,57 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
     e.target.value = ''
   }
 
+  // ── Reactions ─────────────────────────────────────────────────────────────
+  async function toggleReaction(messageId, emoji) {
+    const existing = reactions[messageId]?.[emoji]?.find(r => r.user_id === myId)
+    setActiveMsg(null)
+    setMenuPos(null)
+    if (existing) {
+      await supabase.from('reactions').delete().eq('id', existing.id)
+    } else {
+      await supabase.from('reactions').insert({
+        message_id: messageId,
+        community_group_id: groupId,
+        user_id: myId,
+        emoji,
+      })
+    }
+  }
+
+  // ── Delete message ────────────────────────────────────────────────────────
+  async function deleteMessage(msgId) {
+    setActiveMsg(null)
+    setMenuPos(null)
+    setMessages(prev => prev.filter(m => m.id !== msgId))
+    await supabase.from('messages').delete().eq('id', msgId)
+  }
+
+  // ── Action menu (long-press / right-click) ────────────────────────────────
+  function openMenu(e, msgId, isOwn) {
+    e.preventDefault?.()
+    clearTimeout(longPressTimerRef.current)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const bottom = window.innerHeight - rect.top + 8
+    setMenuPos({
+      bottom: Math.min(bottom, window.innerHeight - 72),
+      ...(isOwn
+        ? { right: Math.max(8, window.innerWidth - rect.right) }
+        : { left: Math.max(8, rect.left + 32) }),
+    })
+    setActiveMsg(msgId)
+  }
+
+  function startLongPress(e, msgId, isOwn) {
+    longPressTimerRef.current = setTimeout(() => openMenu(e, msgId, isOwn), 500)
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimerRef.current)
+  }
+
+  // ── Derived data ──────────────────────────────────────────────────────────
   const myId = session.user.id
 
-  // Filter messages by search query, then build display list with date separators
   const filteredMsgs = searchQuery.trim()
     ? messages.filter(m =>
         m.body?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -196,10 +388,16 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
   let lastDate = null
   for (const msg of filteredMsgs) {
     const d = new Date(msg.created_at).toDateString()
-    if (d !== lastDate) { items.push({ type: 'date', label: dateSeparator(msg.created_at), key: `date-${msg.created_at}` }); lastDate = d }
+    if (d !== lastDate) {
+      items.push({ type: 'date', label: dateSeparatorLabel(msg.created_at), key: `date-${msg.created_at}` })
+      lastDate = d
+    }
     items.push({ type: 'msg', msg })
   }
 
+  const typing = typingLabel(typingUsers)
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div
       className="flex flex-col bg-sunrise-50"
@@ -241,10 +439,7 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
               className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-              >
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
                 <X size={14} weight="bold" />
               </button>
             )}
@@ -258,7 +453,13 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
       )}
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 max-w-3xl mx-auto w-full">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 max-w-3xl mx-auto w-full">
+        {loadingMore && (
+          <div className="flex justify-center py-3">
+            <p className="text-xs text-stone-400 animate-pulse">Loading earlier messages…</p>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-16">
             <p className="text-stone-400 text-sm animate-pulse">Loading messages…</p>
@@ -289,22 +490,31 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
                   </div>
                 )
               }
+
               const { msg } = item
               const isOwn = msg.user_id === myId
-              const nextMsg = items[i + 1]
-              const nextIsMsg = nextMsg?.type === 'msg'
-              const isLastInGroup = !nextIsMsg || nextMsg.msg.user_id !== msg.user_id
-              const prevMsg = items[i - 1]
-              const prevIsMsg = prevMsg?.type === 'msg'
-              const isFirstInGroup = !prevIsMsg || prevMsg.msg.user_id !== msg.user_id
+              const nextItem = items[i + 1]
+              const prevItem = items[i - 1]
+              const isLastInGroup  = nextItem?.type !== 'msg' || nextItem.msg.user_id !== msg.user_id
+              const isFirstInGroup = prevItem?.type !== 'msg' || prevItem.msg.user_id !== msg.user_id
+              const msgReactions = reactions[msg.id]
+              const hasReactions = msgReactions && Object.keys(msgReactions).length > 0
 
               return (
-                <div key={msg.id} className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
+                <div
+                  key={msg.id}
+                  className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
+                  onContextMenu={e => openMenu(e, msg.id, isOwn)}
+                  onTouchStart={e => startLongPress(e, msg.id, isOwn)}
+                  onTouchEnd={cancelLongPress}
+                  onTouchMove={cancelLongPress}
+                >
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
                       {isFirstInGroup && <Initials name={msg.display_name} userId={msg.user_id} />}
                     </div>
                   )}
+
                   <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? 'animate-message-in' : ''}`}>
                     {!isOwn && isFirstInGroup && (
                       <p className="text-xs font-semibold text-stone-500 mb-1 ml-1">{msg.display_name}</p>
@@ -316,12 +526,7 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
                     }`}>
                       {msg.image_url && (
                         <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                          <img
-                            src={msg.image_url}
-                            alt="shared"
-                            className="block max-w-full"
-                            style={{ maxHeight: 280 }}
-                          />
+                          <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
                         </a>
                       )}
                       {msg.body && (
@@ -330,10 +535,31 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
                         </p>
                       )}
                     </div>
+
                     {isLastInGroup && (
                       <p className={`text-[10px] text-stone-400 mt-1 ${isOwn ? 'mr-1' : 'ml-1'}`}>
                         {formatTime(msg.created_at)}
                       </p>
+                    )}
+
+                    {/* Reactions */}
+                    {hasReactions && (
+                      <div className={`flex flex-wrap gap-1 mt-1 ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
+                        {Object.entries(msgReactions).map(([emoji, users]) => (
+                          <button
+                            key={emoji}
+                            onClick={() => toggleReaction(msg.id, emoji)}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                              users.some(u => u.user_id === myId)
+                                ? 'bg-jade/10 border-jade/40 text-jade font-medium'
+                                : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                            }`}
+                          >
+                            <span>{emoji}</span>
+                            <span>{users.length}</span>
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -343,15 +569,18 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
         )}
       </div>
 
+      {/* Typing indicator */}
+      {typing && (
+        <div className="shrink-0 px-5 pb-1 max-w-3xl mx-auto w-full">
+          <p className="text-xs text-stone-400 italic">{typing}</p>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full">
         {imagePreview && (
           <div className="relative inline-block mb-2">
-            <img
-              src={imagePreview.previewUrl}
-              alt="preview"
-              className="h-20 w-20 object-cover rounded-xl border border-stone-200"
-            />
+            <img src={imagePreview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
             <button
               onClick={() => setImagePreview(null)}
               className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
@@ -368,13 +597,7 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
           >
             <ImageIcon size={22} />
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           <textarea
             ref={textareaRef}
             value={text}
@@ -394,6 +617,60 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
           </button>
         </form>
       </div>
+
+      {/* Scroll-to-bottom button */}
+      {!isAtBottom && !searchOpen && (
+        <button
+          onClick={() => {
+            setIsAtBottom(true)
+            if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          }}
+          className="fixed right-4 w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center z-10 animate-overlay-in"
+          style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
+        >
+          <ArrowDown size={16} weight="bold" />
+        </button>
+      )}
+
+      {/* Action menu (emoji picker + delete) */}
+      {activeMsg && menuPos && (
+        <div
+          className="fixed z-30 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 flex items-center gap-0.5"
+          style={{
+            bottom: menuPos.bottom,
+            ...('left' in menuPos ? { left: menuPos.left } : { right: menuPos.right }),
+          }}
+        >
+          {EMOJIS.map(emoji => {
+            const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
+            return (
+              <button
+                key={emoji}
+                onClick={() => toggleReaction(activeMsg, emoji)}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-colors ${reacted ? 'bg-jade/10' : 'hover:bg-stone-100'}`}
+              >
+                {emoji}
+              </button>
+            )
+          })}
+          {messages.find(m => m.id === activeMsg)?.user_id === myId && (
+            <>
+              <div className="w-px h-6 bg-stone-100 mx-0.5" />
+              <button
+                onClick={() => deleteMessage(activeMsg)}
+                className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
+              >
+                <Trash size={14} weight="bold" />
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Click-away to close action menu */}
+      {activeMsg && (
+        <div className="fixed inset-0 z-20" onClick={() => { setActiveMsg(null); setMenuPos(null) }} />
+      )}
 
       {notesOpen && (
         <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />
