@@ -9,6 +9,11 @@ import NotesModal from './NotesModal.jsx'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+const MORE_EMOJIS = [
+  '🔥', '🎉', '👏', '🤔', '😍', '🥰',
+  '😅', '🤣', '😊', '🤩', '😎', '👀',
+  '💯', '✅', '⭐', '💪', '🙌', '🤦',
+]
 
 const AVATAR_COLORS = ['bg-jade', 'bg-coral', 'bg-lagoon-700']
 function avatarColor(userId) {
@@ -80,6 +85,7 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
   const [reactions, setReactions]       = useState({})
   const [activeMsg, setActiveMsg]       = useState(null)
   const [menuPos, setMenuPos]           = useState(null)
+  const [showMoreEmojis, setShowMoreEmojis] = useState(false)
 
   const scrollRef          = useRef(null)
   const fileInputRef       = useRef(null)
@@ -625,7 +631,7 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
             setIsAtBottom(true)
             if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
           }}
-          className="fixed right-4 w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center z-10 animate-overlay-in"
+          className="fixed left-1/2 -translate-x-1/2 w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center z-10 animate-overlay-in"
           style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
         >
           <ArrowDown size={16} weight="bold" />
@@ -635,41 +641,68 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
       {/* Action menu (emoji picker + delete) */}
       {activeMsg && menuPos && (
         <div
-          className="fixed z-30 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 flex items-center gap-0.5"
+          className="fixed z-30 bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5"
           style={{
             bottom: menuPos.bottom,
             ...('left' in menuPos ? { left: menuPos.left } : { right: menuPos.right }),
           }}
         >
-          {EMOJIS.map(emoji => {
-            const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
-            return (
-              <button
-                key={emoji}
-                onClick={() => toggleReaction(activeMsg, emoji)}
-                className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-colors ${reacted ? 'bg-jade/10' : 'hover:bg-stone-100'}`}
-              >
-                {emoji}
-              </button>
-            )
-          })}
-          {messages.find(m => m.id === activeMsg)?.user_id === myId && (
-            <>
-              <div className="w-px h-6 bg-stone-100 mx-0.5" />
-              <button
-                onClick={() => deleteMessage(activeMsg)}
-                className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
-              >
-                <Trash size={14} weight="bold" />
-              </button>
-            </>
+          {/* Main emoji row */}
+          <div className="flex items-center gap-0.5">
+            {EMOJIS.map(emoji => {
+              const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
+              return (
+                <button
+                  key={emoji}
+                  onClick={() => toggleReaction(activeMsg, emoji)}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-colors ${reacted ? 'bg-jade/10' : 'hover:bg-stone-100'}`}
+                >
+                  {emoji}
+                </button>
+              )
+            })}
+            <button
+              onClick={() => setShowMoreEmojis(v => !v)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-colors ${showMoreEmojis ? 'bg-jade text-white' : 'text-stone-400 hover:bg-stone-100'}`}
+            >
+              {showMoreEmojis ? '×' : '+'}
+            </button>
+            {messages.find(m => m.id === activeMsg)?.user_id === myId && (
+              <>
+                <div className="w-px h-6 bg-stone-100 mx-0.5" />
+                <button
+                  onClick={() => deleteMessage(activeMsg)}
+                  className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
+                >
+                  <Trash size={14} weight="bold" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Expanded emoji grid */}
+          {showMoreEmojis && (
+            <div className="grid grid-cols-6 gap-0.5 mt-1 pt-1 border-t border-stone-100">
+              {MORE_EMOJIS.map(emoji => {
+                const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => toggleReaction(activeMsg, emoji)}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-colors ${reacted ? 'bg-jade/10' : 'hover:bg-stone-100'}`}
+                  >
+                    {emoji}
+                  </button>
+                )
+              })}
+            </div>
           )}
         </div>
       )}
 
       {/* Click-away to close action menu */}
       {activeMsg && (
-        <div className="fixed inset-0 z-20" onClick={() => { setActiveMsg(null); setMenuPos(null) }} />
+        <div className="fixed inset-0 z-20" onClick={() => { setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false) }} />
       )}
 
       {notesOpen && (
