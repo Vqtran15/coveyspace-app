@@ -44,7 +44,7 @@ export default function WelcomeSplash({ groupName, onDone }) {
         className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up"
         style={{ animationDelay: '0.4s' }}
       >
-        {groupName || 'Let's get started'}
+        {groupName || 'Let’s get started'}
       </h1>
       <p
         className="text-stone-400 text-sm text-center max-w-xs mb-10 animate-fade-up"
