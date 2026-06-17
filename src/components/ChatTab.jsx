@@ -299,13 +299,13 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
               const isFirstInGroup = !prevIsMsg || prevMsg.msg.user_id !== msg.user_id
 
               return (
-                <div key={msg.id} className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-2' : 'mb-0'} ${msg._isNew ? 'animate-message-in' : ''}`}>
+                <div key={msg.id} className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
                       {isFirstInGroup && <Initials name={msg.display_name} userId={msg.user_id} />}
                     </div>
                   )}
-                  <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
+                  <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? 'animate-message-in' : ''}`}>
                     {!isOwn && isFirstInGroup && (
                       <p className="text-xs font-semibold text-stone-500 mb-1 ml-1">{msg.display_name}</p>
                     )}

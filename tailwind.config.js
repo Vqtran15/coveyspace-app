@@ -78,8 +78,8 @@ export default {
           '100%': { opacity: '1', transform: 'translateX(0) scale(1) rotate(0)' },
         },
         'message-in': {
-          '0%':   { opacity: '0', transform: 'translateY(10px) scale(0.97)' },
-          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+          '0%':   { opacity: '0', transform: 'scale(0.8)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },
       animation: {
@@ -92,7 +92,7 @@ export default {
         'card-pulse':       'card-pulse 0.65s ease-out',
         'card-slide-left':  'card-slide-left 0.85s cubic-bezier(0.16,1,0.3,1) backwards',
         'card-slide-right': 'card-slide-right 0.85s cubic-bezier(0.16,1,0.3,1) backwards',
-        'message-in':       'message-in 0.22s cubic-bezier(0.16,1,0.3,1)',
+        'message-in':       'message-in 0.3s cubic-bezier(0.16,1,0.3,1)',
       },
     },
   },
