@@ -41,7 +41,7 @@ begin
   for grp in select id from community_groups loop
     insert into conversations (community_group_id, type, name, updated_at)
     values (
-      grp.id, 'group', 'Main Chat',
+      grp.id, 'group', 'Main Group Chat',
       coalesce((select max(created_at) from messages where community_group_id = grp.id), now())
     )
     returning id into conv_id;

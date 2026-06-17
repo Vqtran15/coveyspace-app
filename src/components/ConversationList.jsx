@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChatCircleDots, NotePencil, PencilSimple } from '@phosphor-icons/react'
+import { ChatCircleDots, NotePencil, PencilSimple, Users } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import NotesModal from './NotesModal.jsx'
@@ -41,7 +41,7 @@ export default function ConversationList({ session, groupId, members, onSelect, 
         .select('*, conversation_members(user_id)')
         .order('updated_at', { ascending: false })
 
-      if (error) throw error
+if (error) throw error
       if (!convs?.length) return
 
       setConversations(convs)
@@ -192,7 +192,7 @@ export default function ConversationList({ session, groupId, members, onSelect, 
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/70 transition-colors text-left"
                 >
                   <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white text-sm font-bold ${isDm ? avatarColor(otherId ?? '') : 'bg-jade'}`}>
-                    {isDm ? initials(name) : '👥'}
+                    {isDm ? initials(name) : <Users size={22} weight="fill" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
