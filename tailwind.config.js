@@ -87,6 +87,15 @@ export default {
           '0%':   { opacity: '0', transform: 'translateY(16px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'icon-wiggle': {
+          '0%':   { transform: 'rotate(0deg) scale(1)' },
+          '8%':   { transform: 'rotate(16deg) scale(1.1)' },
+          '16%':  { transform: 'rotate(-12deg) scale(1.06)' },
+          '24%':  { transform: 'rotate(10deg) scale(1.04)' },
+          '32%':  { transform: 'rotate(-6deg) scale(1.01)' },
+          '40%':  { transform: 'rotate(0deg) scale(1)' },
+          '100%': { transform: 'rotate(0deg) scale(1)' },
+        },
         'message-in': {
           '0%':   { opacity: '0', transform: 'scale(0.8)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
@@ -104,6 +113,7 @@ export default {
         'card-slide-right': 'card-slide-right 0.65s cubic-bezier(0.16,1,0.3,1) backwards',
         'welcome-pop':      'welcome-pop 0.6s cubic-bezier(0.16,1,0.3,1) both',
         'fade-up':          'fade-up 0.5s ease-out both',
+        'icon-wiggle':      'icon-wiggle 3s ease-in-out infinite',
         'message-in':       'message-in 0.3s cubic-bezier(0.16,1,0.3,1)',
       },
     },

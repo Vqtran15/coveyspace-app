@@ -1,15 +1,16 @@
+import { Confetti } from '@phosphor-icons/react'
+import { useEffect, useState } from 'react'
 import { useModalClose } from '../hooks/useModalClose.js'
-
-const FLOATIES = [
-  { emoji: '🎉', style: { top: '10%',  left:  '8%'  }, delay: '0.25s' },
-  { emoji: '✨', style: { top: '12%',  right: '10%' }, delay: '0.4s'  },
-  { emoji: '🙏', style: { bottom: '28%', left: '6%' }, delay: '0.55s' },
-  { emoji: '❤️', style: { bottom: '24%', right: '8%'}, delay: '0.5s'  },
-  { emoji: '🎂', style: { top: '38%',  right: '5%'  }, delay: '0.65s' },
-]
 
 export default function WelcomeSplash({ groupName, onDone }) {
   const [closing, close] = useModalClose(onDone)
+  const [iconClass, setIconClass] = useState('animate-welcome-pop')
+
+  useEffect(() => {
+    // Switch to looping wiggle after the pop finishes (100ms delay + 600ms duration)
+    const t = setTimeout(() => setIconClass('animate-icon-wiggle'), 750)
+    return () => clearTimeout(t)
+  }, [])
 
   return (
     <div
@@ -17,21 +18,11 @@ export default function WelcomeSplash({ groupName, onDone }) {
         closing ? 'animate-overlay-out' : 'animate-overlay-in'
       }`}
     >
-      {FLOATIES.map(({ emoji, style, delay }) => (
-        <span
-          key={emoji}
-          className="absolute text-3xl animate-fade-up select-none pointer-events-none"
-          style={{ ...style, animationDelay: delay }}
-        >
-          {emoji}
-        </span>
-      ))}
-
       <div
-        className="text-7xl mb-6 animate-welcome-pop"
-        style={{ animationDelay: '0.1s' }}
+        className={`mb-6 text-jade ${iconClass}`}
+        style={iconClass === 'animate-welcome-pop' ? { animationDelay: '0.1s' } : undefined}
       >
-        👋
+        <Confetti size={80} weight="fill" />
       </div>
 
       <p
@@ -58,7 +49,7 @@ export default function WelcomeSplash({ groupName, onDone }) {
         className="px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
         style={{ animationDelay: '0.65s' }}
       >
-        Let's go! 🙌
+        Join my group!
       </button>
     </div>
   )
