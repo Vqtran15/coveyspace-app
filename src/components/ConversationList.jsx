@@ -164,7 +164,7 @@ export default function ConversationList({ session, groupId, members, enterClass
 
   async function deleteConversation(conv) {
     setDeletingConvId(conv.id)
-    closeDeleteConfirm()
+    setConfirmDeleteConv(null)
     const { error } = await supabase.rpc('delete_conversation', { conv_id: conv.id })
     if (!error) {
       setConversations(prev => prev.filter(c => c.id !== conv.id))
