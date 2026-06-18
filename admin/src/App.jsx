@@ -1,6 +1,50 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase.js'
 
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
+
+function PasswordGate({ onUnlock }) {
+  const [value, setValue] = useState('')
+  const [error, setError] = useState(false)
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (value === ADMIN_PASSWORD) {
+      sessionStorage.setItem('admin_unlocked', '1')
+      onUnlock()
+    } else {
+      setError(true)
+      setValue('')
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8">
+        <h1 className="text-xl font-bold text-slate-800 mb-1">Community Admin</h1>
+        <p className="text-sm text-slate-400 mb-6">Enter password to continue</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            autoFocus
+            type="password"
+            value={value}
+            onChange={e => { setValue(e.target.value); setError(false) }}
+            placeholder="Password"
+            className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 ${error ? 'border-red-400 bg-red-50' : 'border-slate-200'}`}
+          />
+          {error && <p className="text-xs text-red-500">Incorrect password</p>}
+          <button
+            type="submit"
+            className="w-full bg-slate-900 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-slate-700 transition-colors"
+          >
+            Unlock
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
@@ -10,7 +54,7 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-export default function App() {
+function AdminApp() {
   const [groups, setGroups]             = useState([])
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [members, setMembers]           = useState([])
@@ -343,4 +387,12 @@ export default function App() {
       <ConfirmDialog />
     </div>
   )
+}
+
+export default function App() {
+  const [unlocked, setUnlocked] = useState(
+    () => sessionStorage.getItem('admin_unlocked') === '1'
+  )
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />
+  return <AdminApp />
 }
