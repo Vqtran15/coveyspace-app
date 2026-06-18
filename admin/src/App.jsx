@@ -109,9 +109,19 @@ function AdminApp() {
         .from('profiles').select('user_id').eq('community_group_id', group.id)
       const userIds = (profiles ?? []).map(p => p.user_id)
 
+      // Delete children before parents (no-cascade FKs must be cleared manually)
       await supabase.from('reactions').delete().eq('community_group_id', group.id)
       await supabase.from('messages').delete().eq('community_group_id', group.id)
-      await supabase.from('profiles').delete().eq('community_group_id', group.id)
+      await Promise.all([
+        supabase.from('signups').delete().eq('community_group_id', group.id),
+        supabase.from('serving_signups').delete().eq('community_group_id', group.id),
+        supabase.from('birthdays').delete().eq('community_group_id', group.id),
+      ])
+      await Promise.all([
+        supabase.from('meal_pages').delete().eq('community_group_id', group.id),
+        supabase.from('serving_pages').delete().eq('community_group_id', group.id),
+        supabase.from('profiles').delete().eq('community_group_id', group.id),
+      ])
       await Promise.all(userIds.map(id => supabase.auth.admin.deleteUser(id)))
       await supabase.from('community_groups').delete().eq('id', group.id)
 
