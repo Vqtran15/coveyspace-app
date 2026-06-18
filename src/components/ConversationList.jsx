@@ -122,6 +122,8 @@ export default function ConversationList({ session, groupId, members, enterClass
       const otherId = conv.conversation_members?.find(m => m.user_id !== myId)?.user_id
       return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
     }
+    // If this conversation has all group members, use the stored name (Main Group Chat)
+    if ((conv.conversation_members?.length ?? 0) >= members.length) return conv.name || 'Group Chat'
     const otherIds = conv.conversation_members
       ?.filter(m => m.user_id !== myId)
       ?.map(m => m.user_id) ?? []
