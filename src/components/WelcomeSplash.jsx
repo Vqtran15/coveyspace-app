@@ -1,4 +1,4 @@
-import { Confetti } from '@phosphor-icons/react'
+import { Confetti, BoxArrowUp, DotsThreeVertical } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
@@ -51,6 +51,34 @@ export default function WelcomeSplash({ groupName, onDone }) {
       >
         Join my group!
       </button>
+
+      {/* Install instructions */}
+      <div
+        className="mt-8 w-full max-w-xs animate-fade-up"
+        style={{ animationDelay: '0.78s' }}
+      >
+        <p className="text-xs text-stone-400 uppercase tracking-wide font-semibold text-center mb-3">
+          Save to your home screen
+        </p>
+        <div className="bg-white/70 border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <BoxArrowUp size={18} className="shrink-0 text-stone-400" />
+            <p className="text-xs text-stone-600">
+              <span className="font-semibold">iOS</span>
+              {' '}— tap the share button, then{' '}
+              <span className="font-medium">"Add to Home Screen"</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <DotsThreeVertical size={18} className="shrink-0 text-stone-400" weight="bold" />
+            <p className="text-xs text-stone-600">
+              <span className="font-semibold">Android</span>
+              {' '}— tap the browser menu, then{' '}
+              <span className="font-medium">"Add to Home Screen"</span>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
