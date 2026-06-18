@@ -29,6 +29,7 @@ export default function ChatTab({ session, displayName, groupId, onRead }) {
       setChatExiting(false)
       setActiveConv(null)
       setListClass('animate-slide-in-left')
+      setTimeout(() => setListClass(''), 250)
     }, 200)
   }
 
