@@ -111,6 +111,7 @@ function AdminApp() {
 
       await supabase.from('reactions').delete().eq('community_group_id', group.id)
       await supabase.from('messages').delete().eq('community_group_id', group.id)
+      await supabase.from('profiles').delete().eq('community_group_id', group.id)
       await Promise.all(userIds.map(id => supabase.auth.admin.deleteUser(id)))
       await supabase.from('community_groups').delete().eq('id', group.id)
 
