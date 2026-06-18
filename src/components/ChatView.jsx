@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
   MagnifyingGlass, ArrowDown, Trash, ArrowLeft, Notepad,
+  Users, ArrowBendUpLeft,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { useModalClose } from '../hooks/useModalClose.js'
 import NotesModal from './NotesModal.jsx'
 
 const PAGE_SIZE = 50
@@ -20,11 +22,14 @@ function avatarColor(userId) {
   return AVATAR_COLORS[n % AVATAR_COLORS.length]
 }
 
+function initials(name) {
+  return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
 function Initials({ name, userId }) {
-  const ini = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   return (
     <div className={`w-8 h-8 rounded-full ${avatarColor(userId)} flex items-center justify-center shrink-0 text-white text-xs font-bold`}>
-      {ini}
+      {initials(name)}
     </div>
   )
 }
@@ -85,6 +90,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [menuPos, setMenuPos]           = useState(null)
   const [showMoreEmojis, setShowMoreEmojis] = useState(false)
   const [notesOpen, setNotesOpen]           = useState(false)
+  const [replyingTo, setReplyingTo]         = useState(null)
+  const [infoOpen, setInfoOpen]             = useState(false)
+  const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
 
   const scrollRef          = useRef(null)
   const fileInputRef       = useRef(null)
@@ -98,11 +106,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const myId = session.user.id
   const convId = conversation.id
 
-  // ── Conversation title ────────────────────────────────────────────────────
   function convTitle() {
-    if (conversation.type === 'group') return conversation.name || 'Group Chat'
-    const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
-    return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
+    if (conversation.type === 'direct') {
+      const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
+      return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
+    }
+    const otherIds = conversation.conversation_members
+      ?.filter(m => m.user_id !== myId)
+      ?.map(m => m.user_id) ?? []
+    const names = otherIds
+      .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
+      .filter(Boolean)
+    if (!names.length) return conversation.name || 'Group Chat'
+    if (names.length <= 3) return names.join(', ')
+    return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
   }
 
   // ── Messages + reactions + realtime ──────────────────────────────────────
@@ -110,10 +127,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     onRead?.()
     setLoading(true)
     setMessages([])
+    setReplyingTo(null)
 
     supabase
       .from('messages')
-      .select('*')
+      .select('*, reply_message:reply_to_id(id, body, display_name, image_url)')
       .eq('conversation_id', convId)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE)
@@ -183,6 +201,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => {
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
+      // Mark read when leaving the conversation
+      supabase.from('conversation_members')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', convId)
+        .eq('user_id', myId)
+        .then(() => {})
     }
   }, [convId])
 
@@ -245,7 +269,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setLoadingMore(true)
     const { data } = await supabase
       .from('messages')
-      .select('*')
+      .select('*, reply_message:reply_to_id(id, body, display_name, image_url)')
       .eq('conversation_id', convId)
       .lt('created_at', messages[0].created_at)
       .order('created_at', { ascending: false })
@@ -291,6 +315,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     clearTimeout(typingTimeoutRef.current)
     presenceChannelRef.current?.track({ display_name: displayName, typing: false })
 
+    const replyId = replyingTo?.id ?? null
+    setReplyingTo(null)
+
     try {
       let imageUrl = null
       if (imagePreview) {
@@ -311,7 +338,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         display_name: displayName || 'Member',
         body: trimmed || null,
         image_url: imageUrl,
-      }).select().single()
+        reply_to_id: replyId,
+      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
         setIsAtBottom(true)
@@ -368,12 +396,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         : { left: Math.max(8, rect.left + 32) }),
     })
     setActiveMsg(msgId)
+    setShowMoreEmojis(false)
   }
 
   function startLongPress(e, msgId, isOwn) {
     longPressTimerRef.current = setTimeout(() => openMenu(e, msgId, isOwn), 500)
   }
   function cancelLongPress() { clearTimeout(longPressTimerRef.current) }
+
+  function handleReply(msgId) {
+    const msg = messages.find(m => m.id === msgId)
+    if (msg) {
+      setReplyingTo(msg)
+      setTimeout(() => textareaRef.current?.focus(), 50)
+    }
+    setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false)
+  }
+
+  function scrollToMessage(msgId) {
+    document.getElementById(`msg-${msgId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const filteredMsgs = searchQuery.trim()
@@ -396,6 +438,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const typing = typingLabel(typingUsers)
   const title = convTitle()
+  const activeMessage = messages.find(m => m.id === activeMsg)
+
+  const dmOtherMember = conversation.type === 'direct'
+    ? members.find(m => m.user_id !== myId)
+    : null
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -411,7 +458,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         >
           <ArrowLeft size={20} weight="bold" />
         </button>
-        <h1 className="text-xl font-bold text-stone-800 flex-1 truncate">{title}</h1>
+        <button
+          onClick={() => setInfoOpen(true)}
+          className="flex-1 min-w-0 text-left hover:opacity-75 transition-opacity"
+        >
+          <h1 className="text-xl font-bold text-stone-800 truncate">{title}</h1>
+        </button>
         {conversation.type === 'group' && (
           <button
             onClick={() => setNotesOpen(true)}
@@ -475,9 +527,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
               </>
             ) : (
-              <>
-                <p className="text-sm">No messages yet. Say hello!</p>
-              </>
+              <p className="text-sm">No messages yet. Say hello!</p>
             )}
           </div>
         ) : (
@@ -504,6 +554,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
               return (
                 <div
+                  id={`msg-${msg.id}`}
                   key={msg.id}
                   className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
                   onContextMenu={e => openMenu(e, msg.id, isOwn)}
@@ -526,6 +577,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         ? `bg-jade text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-bl-2xl rounded-br-sm' : 'rounded-b-md'}`
                         : `bg-white border border-stone-200 text-stone-800 ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-br-2xl rounded-bl-sm' : 'rounded-b-md'}`
                     }`}>
+                      {/* Reply quote */}
+                      {msg.reply_message && (
+                        <button
+                          onClick={() => scrollToMessage(msg.reply_message.id)}
+                          className={`w-full text-left mx-0 px-3 pt-2.5 pb-1.5 border-b ${isOwn ? 'border-white/20' : 'border-stone-100'}`}
+                        >
+                          <div className={`pl-2 border-l-2 ${isOwn ? 'border-white/60' : 'border-jade'}`}>
+                            <p className={`text-[11px] font-semibold truncate ${isOwn ? 'text-white/90' : 'text-jade'}`}>
+                              {msg.reply_message.display_name}
+                            </p>
+                            <p className={`text-[11px] truncate ${isOwn ? 'text-white/70' : 'text-stone-500'}`}>
+                              {msg.reply_message.image_url && !msg.reply_message.body ? '📷 Photo' : msg.reply_message.body}
+                            </p>
+                          </div>
+                        </button>
+                      )}
                       {msg.image_url && (
                         <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
                           <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
@@ -579,6 +646,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {/* Input bar */}
       <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full">
+        {/* Reply preview */}
+        {replyingTo && (
+          <div className="flex items-center gap-2 bg-jade/5 border border-jade/20 rounded-xl px-3 py-2 mb-2">
+            <div className="w-0.5 self-stretch bg-jade rounded-full shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-jade truncate">{replyingTo.display_name}</p>
+              <p className="text-xs text-stone-400 truncate">
+                {replyingTo.image_url && !replyingTo.body ? '📷 Photo' : replyingTo.body}
+              </p>
+            </div>
+            <button onClick={() => setReplyingTo(null)} className="text-stone-400 hover:text-stone-600 shrink-0">
+              <X size={14} weight="bold" />
+            </button>
+          </div>
+        )}
         {imagePreview && (
           <div className="relative inline-block mb-2">
             <img src={imagePreview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
@@ -658,7 +740,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             >
               {showMoreEmojis ? '×' : '+'}
             </button>
-            {messages.find(m => m.id === activeMsg)?.user_id === myId && (
+            <div className="w-px h-6 bg-stone-100 mx-0.5" />
+            <button
+              onClick={() => handleReply(activeMsg)}
+              className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-colors"
+            >
+              <ArrowBendUpLeft size={15} weight="bold" />
+            </button>
+            {activeMessage?.user_id === myId && (
               <>
                 <div className="w-px h-6 bg-stone-100 mx-0.5" />
                 <button
@@ -691,6 +780,65 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {activeMsg && (
         <div className="fixed inset-0 z-20" onClick={() => { setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false) }} />
+      )}
+
+      {/* Conversation info panel */}
+      {infoOpen && (
+        <div
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          onClick={closeInfo}
+        >
+          <div
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto max-h-[70vh] overflow-y-auto ${infoClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-2">
+              <h2 className="text-lg font-bold text-stone-800">
+                {conversation.type === 'group' ? 'Group Info' : 'Contact Info'}
+              </h2>
+              <button
+                onClick={closeInfo}
+                className="text-stone-400 hover:text-stone-600 text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Avatar + name */}
+            <div className="flex flex-col items-center py-5 px-5">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ${conversation.type === 'group' ? 'bg-jade' : avatarColor(dmOtherMember?.user_id ?? '')}`}>
+                {conversation.type === 'group'
+                  ? <Users size={40} weight="fill" className="text-white" />
+                  : <span className="text-white text-2xl font-bold">{initials(title)}</span>
+                }
+              </div>
+              <h3 className="text-xl font-bold text-stone-800 text-center">{title}</h3>
+              <p className="text-sm text-stone-400 mt-1">
+                {conversation.type === 'group' ? `${members.length} member${members.length !== 1 ? 's' : ''}` : 'Direct Message'}
+              </p>
+            </div>
+
+            {/* Member list (group only) */}
+            {conversation.type === 'group' && (
+              <div className="px-5 pb-8">
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Members</p>
+                <div className="space-y-1">
+                  {members.map(m => (
+                    <div key={m.user_id} className="flex items-center gap-3 py-2">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
+                        {initials(m.display_name)}
+                      </div>
+                      <span className="text-sm text-stone-800">
+                        {m.display_name}
+                        {m.user_id === myId && <span className="text-stone-400 ml-1.5 text-xs">(You)</span>}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}

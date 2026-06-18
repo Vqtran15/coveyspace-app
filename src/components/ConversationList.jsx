@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -26,13 +26,17 @@ function formatTime(iso) {
 export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
+  const [lastReadAt, setLastReadAt]       = useState(null)
   const [loading, setLoading]             = useState(true)
   const [newDmOpen, setNewDmOpen]         = useState(false)
   const [starting, setStarting]           = useState(false)
   const [dmClosing, closeDm]              = useModalClose(() => setNewDmOpen(false))
   const [searchOpen, setSearchOpen]       = useState(false)
   const [searchQuery, setSearchQuery]     = useState('')
-  const searchInputRef                    = useRef(null)
+  const [newChatMode, setNewChatMode]         = useState('dm')
+  const [selectedMembers, setSelectedMembers] = useState(new Set())
+  const [creating, setCreating]               = useState(false)
+  const searchInputRef                        = useRef(null)
 
   const myId = session.user.id
   const { className: headerClass } = useEntranceAnimation('/chat', 0, { direction: 'left' })
@@ -44,23 +48,37 @@ export default function ConversationList({ session, groupId, members, enterClass
         .select('*, conversation_members(user_id)')
         .order('updated_at', { ascending: false })
 
-if (error) throw error
+      if (error) throw error
       if (!convs?.length) return
 
       setConversations(convs)
 
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('conversation_id, body, display_name, image_url, created_at')
-        .in('conversation_id', convs.map(c => c.id))
-        .order('created_at', { ascending: false })
-        .limit(200)
+      const convIds = convs.map(c => c.id)
+      const [{ data: msgs }, { data: myMemberships }] = await Promise.all([
+        supabase
+          .from('messages')
+          .select('conversation_id, body, display_name, image_url, created_at, user_id')
+          .in('conversation_id', convIds)
+          .order('created_at', { ascending: false })
+          .limit(200),
+        supabase
+          .from('conversation_members')
+          .select('conversation_id, last_read_at')
+          .eq('user_id', myId)
+          .in('conversation_id', convIds),
+      ])
 
-      const map = {}
+      const msgMap = {}
       for (const msg of msgs ?? []) {
-        if (!map[msg.conversation_id]) map[msg.conversation_id] = msg
+        if (!msgMap[msg.conversation_id]) msgMap[msg.conversation_id] = msg
       }
-      setLastMessages(map)
+      setLastMessages(msgMap)
+
+      const readMap = {}
+      for (const m of myMemberships ?? []) {
+        readMap[m.conversation_id] = m.last_read_at
+      }
+      setLastReadAt(readMap)
     } catch (err) {
       console.error('loadConversations:', err)
     } finally {
@@ -100,17 +118,58 @@ if (error) throw error
   }, [groupId])
 
   function convName(conv) {
-    if (conv.type === 'group') return conv.name || 'Group Chat'
-    const otherId = conv.conversation_members?.find(m => m.user_id !== myId)?.user_id
-    return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
+    if (conv.type === 'direct') {
+      const otherId = conv.conversation_members?.find(m => m.user_id !== myId)?.user_id
+      return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
+    }
+    const otherIds = conv.conversation_members
+      ?.filter(m => m.user_id !== myId)
+      ?.map(m => m.user_id) ?? []
+    const names = otherIds
+      .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
+      .filter(Boolean)
+    if (!names.length) return conv.name || 'Group Chat'
+    if (names.length <= 3) return names.join(', ')
+    return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
   }
 
   function lastPreview(conv) {
     const msg = lastMessages[conv.id]
     if (!msg) return 'No messages yet'
-    if (msg.image_url && !msg.body) return '📷 Photo'
-    if (msg.image_url) return `📷 ${msg.body}`
-    return msg.body || ''
+    const body = msg.image_url && !msg.body ? '📷 Photo'
+      : msg.image_url ? `📷 ${msg.body}`
+      : (msg.body || '')
+    if (conv.type === 'group') return `${msg.display_name}: ${body}`
+    return body
+  }
+
+  function isUnread(conv) {
+    if (!lastReadAt) return false
+    const lastMsg = lastMessages[conv.id]
+    if (!lastMsg || lastMsg.user_id === myId) return false
+    const readAt = lastReadAt[conv.id]
+    if (!readAt) return true
+    return new Date(lastMsg.created_at) > new Date(readAt)
+  }
+
+  function openModal() {
+    setNewChatMode('dm')
+    setSelectedMembers(new Set())
+    setNewDmOpen(true)
+  }
+
+  function switchMode(mode) {
+    setNewChatMode(mode)
+    if (mode === 'group') setSelectedMembers(new Set())
+  }
+
+  function toggleMember(userId) {
+    setSelectedMembers(prev => {
+      const next = new Set(prev)
+      if (next.has(userId)) next.delete(userId)
+      else next.add(userId)
+      return next
+    })
   }
 
   async function startDm(otherId) {
@@ -134,6 +193,34 @@ if (error) throw error
 
     closeDm()
     setStarting(false)
+    if (conv) {
+      setConversations(prev => [conv, ...prev])
+      onSelect(conv)
+    }
+  }
+
+  async function createGroupChat() {
+    if (selectedMembers.size === 0) return
+    setCreating(true)
+    const memberIds = Array.from(selectedMembers)
+    const chatName = memberIds
+      .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
+      .filter(Boolean)
+      .join(', ') || 'Group Chat'
+    const { data: convId, error } = await supabase.rpc('create_group_chat', {
+      chat_name: chatName,
+      member_ids: memberIds,
+    })
+    if (error || !convId) { setCreating(false); return }
+
+    const { data: conv } = await supabase
+      .from('conversations')
+      .select('*, conversation_members(user_id)')
+      .eq('id', convId)
+      .single()
+
+    closeDm()
+    setCreating(false)
     if (conv) {
       setConversations(prev => [conv, ...prev])
       onSelect(conv)
@@ -165,7 +252,7 @@ if (error) throw error
             <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
           </button>
           <button
-            onClick={() => setNewDmOpen(true)}
+            onClick={openModal}
             className="flex items-center gap-1.5 px-3 h-9 rounded-xl bg-jade text-white text-sm font-medium hover:bg-jade-700 transition-colors"
           >
             <PencilSimple size={16} weight="bold" />
@@ -220,6 +307,7 @@ if (error) throw error
               const otherId = isDm
                 ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id
                 : null
+              const unread = isUnread(conv)
               return (
                 <button
                   key={conv.id}
@@ -227,17 +315,26 @@ if (error) throw error
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/70 transition-colors text-left animate-fade-up"
                   style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
                 >
-                  <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white text-sm font-bold ${isDm ? avatarColor(otherId ?? '') : 'bg-jade'}`}>
-                    {isDm ? initials(name) : <Users size={22} weight="fill" />}
+                  <div className="relative shrink-0">
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDm ? avatarColor(otherId ?? '') : 'bg-jade'}`}>
+                      {isDm ? initials(name) : <Users size={22} weight="fill" />}
+                    </div>
+                    {unread && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-jade rounded-full border-2 border-sunrise-50" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-sm font-semibold text-stone-800 truncate">{name}</span>
-                      <span className="text-xs text-stone-400 shrink-0">
+                      <span className={`text-sm truncate ${unread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
+                        {name}
+                      </span>
+                      <span className={`text-xs shrink-0 ${unread ? 'font-semibold text-jade' : 'text-stone-400'}`}>
                         {formatTime(lastMessages[conv.id]?.created_at)}
                       </span>
                     </div>
-                    <p className="text-xs text-stone-400 truncate mt-0.5">{lastPreview(conv)}</p>
+                    <p className={`text-xs truncate mt-0.5 ${unread ? 'text-stone-700 font-medium' : 'text-stone-400'}`}>
+                      {lastPreview(conv)}
+                    </p>
                   </div>
                 </button>
               )
@@ -246,17 +343,18 @@ if (error) throw error
         )}
       </div>
 
-      {/* New DM sheet */}
+      {/* New message sheet */}
       {newDmOpen && (
         <div
           className={`fixed inset-0 bg-black/50 flex items-end z-50 ${dmClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
           onClick={closeDm}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${dmClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
               <h2 className="text-lg font-bold text-stone-800">New Message</h2>
               <button
                 onClick={closeDm}
@@ -265,25 +363,99 @@ if (error) throw error
                 &times;
               </button>
             </div>
-            <div className="px-4 pb-8 space-y-1 max-h-72 overflow-y-auto">
-              {otherMembers.length === 0 ? (
-                <p className="text-stone-400 text-sm text-center py-6">
-                  No other members in this group yet.
-                </p>
-              ) : otherMembers.map(m => (
-                <button
-                  key={m.user_id}
-                  onClick={() => startDm(m.user_id)}
-                  disabled={starting}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-stone-50 transition-colors disabled:opacity-50"
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
-                    {initials(m.display_name)}
-                  </div>
-                  <span className="text-sm font-medium text-stone-800">{m.display_name}</span>
-                </button>
-              ))}
+
+            {/* Mode switcher */}
+            <div className="mx-5 mb-4 flex bg-stone-100 rounded-xl p-1">
+              <button
+                onClick={() => switchMode('dm')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${newChatMode === 'dm' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+              >
+                Direct message
+              </button>
+              <button
+                onClick={() => switchMode('group')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${newChatMode === 'group' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+              >
+                Group chat
+              </button>
             </div>
+
+            {/* Mode content — keyed so it remounts and animates on tab switch */}
+            <div key={newChatMode} className="animate-fade-up">
+
+            {/* DM mode */}
+            {newChatMode === 'dm' && (
+              <div className="px-4 pb-8 space-y-1 max-h-72 overflow-y-auto">
+                {otherMembers.length === 0 ? (
+                  <p className="text-stone-400 text-sm text-center py-6">
+                    No other members in this group yet.
+                  </p>
+                ) : otherMembers.map(m => (
+                  <button
+                    key={m.user_id}
+                    onClick={() => startDm(m.user_id)}
+                    disabled={starting}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-stone-50 transition-colors disabled:opacity-50"
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
+                      {initials(m.display_name)}
+                    </div>
+                    <span className="text-sm font-medium text-stone-800">{m.display_name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Group chat mode */}
+            {newChatMode === 'group' && (
+              <div className="px-5 pb-8">
+                {otherMembers.length === 0 ? (
+                  <p className="text-stone-400 text-sm text-center py-4">
+                    No other members in this group yet.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                      Add members
+                      {selectedMembers.size > 0 && (
+                        <span className="ml-2 text-jade normal-case font-semibold">
+                          {selectedMembers.size} selected
+                        </span>
+                      )}
+                    </p>
+                    <div className="space-y-0.5 max-h-48 overflow-y-auto mb-4">
+                      {otherMembers.map(m => {
+                        const selected = selectedMembers.has(m.user_id)
+                        return (
+                          <button
+                            key={m.user_id}
+                            onClick={() => toggleMember(m.user_id)}
+                            className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
+                          >
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
+                              {initials(m.display_name)}
+                            </div>
+                            <span className="flex-1 text-sm font-medium text-stone-800 text-left">{m.display_name}</span>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-jade border-jade' : 'border-stone-300'}`}>
+                              {selected && <Check size={11} weight="bold" className="text-white" />}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+                <button
+                  onClick={createGroupChat}
+                  disabled={creating || selectedMembers.size === 0}
+                  className="w-full py-3 rounded-xl bg-jade text-white font-semibold text-sm hover:bg-jade-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {creating ? 'Creating…' : 'Create group chat'}
+                </button>
+              </div>
+            )}
+
+            </div>{/* end keyed animation wrapper */}
           </div>
         </div>
       )}
