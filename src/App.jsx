@@ -47,9 +47,9 @@ const TABS = [
       defaultTitle: dateStr => `Service Night — ${formatDate(dateStr)}`,
     },
   },
+  { path: '/prayer',    shortLabel: 'Prayer',    Icon: HandsPraying },
   { path: '/chat',      shortLabel: 'Chat',      Icon: ChatCircleDots },
   { path: '/birthdays', shortLabel: 'Birthdays', Icon: Confetti },
-  { path: '/prayer',    shortLabel: 'Prayer',    Icon: HandsPraying },
 ]
 
 const PATHS = TABS.map(t => t.path)
