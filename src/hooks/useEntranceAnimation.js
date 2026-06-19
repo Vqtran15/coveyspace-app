@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const STAGGER_MS = 140
+const STAGGER_MS = 70
 const MAX_STAGGER_STEPS = 10
 const DURATION_MS = 600
 const BUFFER_MS = 150
