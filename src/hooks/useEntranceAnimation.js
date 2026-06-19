@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-const STAGGER_MS = 170
+const STAGGER_MS = 140
 const MAX_STAGGER_STEPS = 10
-const DURATION_MS = 850
+const DURATION_MS = 600
 const BUFFER_MS = 150
 
 export function useEntranceAnimation(revealKey, index = 0, { direction = 'auto' } = {}) {
@@ -15,8 +15,7 @@ export function useEntranceAnimation(revealKey, index = 0, { direction = 'auto' 
     return () => clearTimeout(t)
   }, [revealKey])
 
-  const fromLeft = direction === 'left' ? true : direction === 'right' ? false : index % 2 === 0
-  const className = entering ? (fromLeft ? 'animate-card-slide-left' : 'animate-card-slide-right') : ''
+  const className = entering ? 'animate-stack-in' : ''
   const style = entering ? { animationDelay: `${delay}ms` } : undefined
 
   return { entering, className, style }

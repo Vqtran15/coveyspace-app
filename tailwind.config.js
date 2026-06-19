@@ -81,6 +81,11 @@ export default {
           '65%':  { opacity: '1', transform: 'translateX(-4px) scale(1.01) rotate(-0.5deg)' },
           '100%': { opacity: '1', transform: 'translateX(0) scale(1) rotate(0)' },
         },
+        'stack-in': {
+          '0%':   { opacity: '0', transform: 'translateY(22px) scale(0.96)' },
+          '60%':  { opacity: '1', transform: 'translateY(-4px) scale(1.008)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
         'welcome-pop': {
           '0%':   { opacity: '0', transform: 'scale(0.3)' },
           '60%':  { opacity: '1', transform: 'scale(1.15)' },
@@ -116,6 +121,7 @@ export default {
         'card-pulse':       'card-pulse 0.65s ease-out',
         'card-slide-left':  'card-slide-left 0.65s cubic-bezier(0.16,1,0.3,1) backwards',
         'card-slide-right': 'card-slide-right 0.65s cubic-bezier(0.16,1,0.3,1) backwards',
+        'stack-in':         'stack-in 0.5s cubic-bezier(0.34,1.4,0.64,1) backwards',
         'welcome-pop':      'welcome-pop 0.6s cubic-bezier(0.16,1,0.3,1) both',
         'fade-up':          'fade-up 0.5s ease-out both',
         'icon-wiggle':      'icon-wiggle 3s ease-in-out infinite',

@@ -1,3 +1,4 @@
+import { Cake } from '@phosphor-icons/react'
 import { formatBirthdayDate } from '../utils/birthdays.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 
@@ -18,7 +19,10 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="font-semibold text-stone-800">{birthday.name}</div>
+          <div className="flex items-center gap-1.5 font-semibold text-stone-800">
+            {birthday.name}
+            {days <= 7 && <Cake size={15} weight="fill" className={days === 0 ? 'text-jade' : 'text-coral'} />}
+          </div>
           <div className="text-sm text-stone-500 mt-0.5">{formatBirthdayDate(birthday.birthday)}</div>
         </div>
         {days === 0 ? (
