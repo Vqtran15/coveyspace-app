@@ -37,6 +37,7 @@ function AddFriendModal({ onClose, onSave }) {
     setError(null)
     try {
       await onSave(name.trim())
+      close()
     } catch (err) {
       setError(err.message ?? 'Could not save.')
       setSaving(false)
@@ -461,7 +462,6 @@ export default function PrayerTab({ displayName }) {
       .single()
     if (error) throw new Error(error.message)
     setFriends(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
-    setAddOpen(false)
   }
 
   function handleFriendDelete(id) {
@@ -503,7 +503,7 @@ export default function PrayerTab({ displayName }) {
           onClick={() => setAddOpen(true)}
           className="flex items-center gap-1.5 px-4 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg text-sm font-medium transition-colors"
         >
-          + Add a Friend
+          + Friend
         </button>
       </div>
 
