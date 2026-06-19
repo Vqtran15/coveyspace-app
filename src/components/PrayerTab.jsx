@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { HandsPraying, X, Plus, Trash } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -8,6 +8,21 @@ function formatDate(dateStr) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
+}
+
+function formatLastUpdated(requests) {
+  if (!requests?.length) return null
+  const latest = requests.reduce((a, b) =>
+    new Date(a.created_at) > new Date(b.created_at) ? a : b
+  )
+  const d = new Date(latest.created_at)
+  const now = new Date()
+  const diffMs = now - d
+  const diffDays = Math.floor(diffMs / 86400000)
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7)  return `${diffDays} days ago`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function AddFriendModal({ onClose, onSave }) {
@@ -84,7 +99,7 @@ function AddFriendModal({ onClose, onSave }) {
   )
 }
 
-function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChange }) {
+function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRename, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
   const [requests, setRequests]           = useState([])
   const [loading, setLoading]             = useState(true)
@@ -94,6 +109,13 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChan
   const [error, setError]                 = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting]           = useState(false)
+  const [editingName, setEditingName]     = useState(false)
+  const [nameValue, setNameValue]         = useState(friend.name)
+  const [renamingSaving, setRenamingSaving] = useState(false)
+  const [editingId, setEditingId]         = useState(null)
+  const [editDate, setEditDate]           = useState('')
+  const [editText, setEditText]           = useState('')
+  const [newId, setNewId]                 = useState(null)
 
   useEffect(() => {
     supabase
@@ -120,6 +142,8 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChan
       .single()
     if (err) { setError(err.message); setSaving(false); return }
     setRequests(prev => [data, ...prev])
+    setNewId(data.id)
+    setTimeout(() => setNewId(null), 500)
     setRequestText('')
     setDate(new Date().toISOString().split('T')[0])
     setSaving(false)
@@ -142,6 +166,42 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChan
     onClose()
   }
 
+  async function handleRenameFriend(e) {
+    e.preventDefault()
+    if (!nameValue.trim() || nameValue.trim() === friend.name) { setEditingName(false); return }
+    setRenamingSaving(true)
+    const { error: err } = await supabase
+      .from('prayer_friends')
+      .update({ name: nameValue.trim() })
+      .eq('id', friend.id)
+    setRenamingSaving(false)
+    if (!err) {
+      onFriendRename(friend.id, nameValue.trim())
+      setEditingName(false)
+    }
+  }
+
+  function startEditRequest(r) {
+    setEditingId(r.id)
+    setEditDate(r.date)
+    setEditText(r.request)
+  }
+
+  async function handleSaveRequest(e) {
+    e.preventDefault()
+    if (!editText.trim()) return
+    const { data, error: err } = await supabase
+      .from('prayer_requests')
+      .update({ date: editDate, request: editText.trim() })
+      .eq('id', editingId)
+      .select()
+      .single()
+    if (!err) {
+      setRequests(prev => prev.map(r => r.id === editingId ? data : r))
+      setEditingId(null)
+    }
+  }
+
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
@@ -152,14 +212,50 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChan
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 shrink-0">
-          <h2 className="text-xl font-bold text-stone-800">{friend.name}</h2>
-          <button
-            onClick={close}
-            className="text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
-          >
-            <X size={20} />
-          </button>
+        <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
+          {editingName ? (
+            <form onSubmit={handleRenameFriend} className="flex items-center gap-2 flex-1 min-w-0">
+              <input
+                value={nameValue}
+                onChange={e => setNameValue(e.target.value)}
+                className="flex-1 min-w-0 border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                autoFocus
+                required
+              />
+              <button
+                type="submit"
+                disabled={renamingSaving}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-jade text-white hover:bg-jade-700 disabled:opacity-50 transition-colors"
+              >
+                <Check size={16} weight="bold" />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEditingName(false); setNameValue(friend.name) }}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+              >
+                <X size={16} />
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 className="text-xl font-bold text-stone-800 truncate">{nameValue}</h2>
+              <button
+                onClick={() => setEditingName(true)}
+                className="shrink-0 text-stone-300 hover:text-stone-500 transition-colors"
+              >
+                <PencilSimple size={16} />
+              </button>
+            </div>
+          )}
+          {!editingName && (
+            <button
+              onClick={close}
+              className="shrink-0 text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Scrollable body */}
@@ -206,22 +302,67 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChan
               <p className="text-sm text-stone-400 text-center py-4">No requests yet. Add one above!</p>
             ) : (
               requests.map(r => (
-                <div key={r.id} className="bg-stone-50 rounded-xl p-3">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <div>
-                      <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
-                      {r.added_by && (
-                        <span className="text-xs text-stone-400"> · {r.added_by}</span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteRequest(r.id)}
-                      className="shrink-0 text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
-                    >
-                      <Trash size={14} />
-                    </button>
-                  </div>
-                  <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                <div key={r.id} className={`bg-stone-50 rounded-xl p-3 ${newId === r.id ? 'animate-fade-up' : ''}`}>
+                  {editingId === r.id ? (
+                    <form onSubmit={handleSaveRequest} className="space-y-2">
+                      <input
+                        type="date"
+                        value={editDate}
+                        onChange={e => setEditDate(e.target.value)}
+                        className="w-full border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                      />
+                      <textarea
+                        value={editText}
+                        onChange={e => setEditText(e.target.value)}
+                        rows={3}
+                        className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                        required
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(null)}
+                          className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!editText.trim()}
+                          className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-50 transition-colors"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div>
+                          <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
+                          {r.added_by && (
+                            <span className="text-xs text-stone-400"> · {r.added_by}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => startEditRequest(r)}
+                            className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
+                          >
+                            <PencilSimple size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRequest(r.id)}
+                            className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
+                          >
+                            <Trash size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                    </>
+                  )}
                 </div>
               ))
             )}
@@ -267,7 +408,7 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onCountChan
 
 function FriendCard({ friend, index, onClick }) {
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
-  const count = friend.prayer_requests?.length ?? 0
+  const lastUpdated = formatLastUpdated(friend.prayer_requests)
 
   return (
     <button
@@ -287,9 +428,9 @@ function FriendCard({ friend, index, onClick }) {
             )}
           </div>
         </div>
-        <span className="text-xs text-stone-400 shrink-0">
-          {count === 0 ? 'No requests' : `${count} request${count !== 1 ? 's' : ''}`}
-        </span>
+        {lastUpdated && (
+          <span className="text-xs text-stone-400 shrink-0">{lastUpdated}</span>
+        )}
       </div>
     </button>
   )
@@ -304,7 +445,7 @@ export default function PrayerTab({ displayName }) {
   useEffect(() => {
     supabase
       .from('prayer_friends')
-      .select('*, prayer_requests(id)')
+      .select('*, prayer_requests(id, created_at)')
       .order('name')
       .then(({ data }) => {
         setFriends(data ?? [])
@@ -316,7 +457,7 @@ export default function PrayerTab({ displayName }) {
     const { data, error } = await supabase
       .from('prayer_friends')
       .insert({ name, added_by: displayName })
-      .select('*, prayer_requests(id)')
+      .select('*, prayer_requests(id, created_at)')
       .single()
     if (error) throw new Error(error.message)
     setFriends(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
@@ -328,11 +469,19 @@ export default function PrayerTab({ displayName }) {
     setSelectedFriend(null)
   }
 
+  function handleFriendRename(id, newName) {
+    setFriends(prev =>
+      prev.map(f => f.id === id ? { ...f, name: newName } : f)
+         .sort((a, b) => a.name.localeCompare(b.name))
+    )
+    setSelectedFriend(prev => prev?.id === id ? { ...prev, name: newName } : prev)
+  }
+
   function handleCountChange(friendId, delta) {
     setFriends(prev => prev.map(f => {
       if (f.id !== friendId) return f
       const updated = delta > 0
-        ? [...(f.prayer_requests ?? []), { id: 'temp' }]
+        ? [...(f.prayer_requests ?? []), { id: 'temp', created_at: new Date().toISOString() }]
         : (f.prayer_requests ?? []).slice(1)
       return { ...f, prayer_requests: updated }
     }))
@@ -390,6 +539,7 @@ export default function PrayerTab({ displayName }) {
           displayName={displayName}
           onClose={() => setSelectedFriend(null)}
           onFriendDelete={handleFriendDelete}
+          onFriendRename={handleFriendRename}
           onCountChange={handleCountChange}
         />
       )}
