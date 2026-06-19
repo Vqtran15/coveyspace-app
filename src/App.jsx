@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, Confetti, ChatCircleDots } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Confetti, ChatCircleDots, HandsPraying } from '@phosphor-icons/react'
 import { formatDate } from './utils/dates.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import RotationTab from './RotationTab.jsx'
 import BirthdayTab from './components/BirthdayTab.jsx'
+import PrayerTab from './components/PrayerTab.jsx'
 import BirthdayBanner from './components/BirthdayBanner.jsx'
 import ChatTab from './components/ChatTab.jsx'
 import AuthPage from './components/AuthPage.jsx'
@@ -48,6 +49,7 @@ const TABS = [
   },
   { path: '/chat',      shortLabel: 'Chat',      Icon: ChatCircleDots },
   { path: '/birthdays', shortLabel: 'Birthdays', Icon: Confetti },
+  { path: '/prayer',    shortLabel: 'Prayer',    Icon: HandsPraying },
 ]
 
 const PATHS = TABS.map(t => t.path)
@@ -177,6 +179,7 @@ export default function App() {
           <Route path="/services"  element={<RotationTab config={TABS[1].config} revealKey="/services"  groupName={groupName} displayName={displayName} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} onRead={() => setHasUnreadChat(false)} />} />
           <Route path="/birthdays" element={<BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} revealKey="/birthdays" />} />
+          <Route path="/prayer"    element={<PrayerTab />} />
         </Routes>
       </div>
 
