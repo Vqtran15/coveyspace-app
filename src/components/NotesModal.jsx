@@ -24,10 +24,7 @@ export default function NotesModal({ groupId, onClose }) {
 
   async function handleSave() {
     setSaving(true)
-    await supabase
-      .from('community_groups')
-      .update({ notes: content })
-      .eq('id', groupId)
+    await supabase.rpc('update_group_notes', { p_notes: content })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
