@@ -49,7 +49,7 @@ async function autoFillPages(existingPages, tables, defaultTitle) {
   return result
 }
 
-export default function RotationTab({ config, revealKey, groupName = '', displayName = '' }) {
+export default function RotationTab({ config, revealKey, groupName = '', displayName = '', groupId, isAdmin }) {
   const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false } = config
 
   const [pages, setPages]       = useState([])
@@ -227,6 +227,8 @@ export default function RotationTab({ config, revealKey, groupName = '', display
           pageNounPlural={pageNounPlural}
           groupName={groupName}
           displayName={displayName}
+          groupId={groupId}
+          isAdmin={isAdmin}
           onEditPage={viewedPage ? () => { setShowSettings(false); setShowEditPage(true) } : undefined}
           onManagePages={() => { setShowSettings(false); setShowManagePages(true) }}
           onClose={() => setShowSettings(false)}

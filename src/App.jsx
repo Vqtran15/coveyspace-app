@@ -176,8 +176,8 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/meals" replace />} />
-          <Route path="/meals"     element={<RotationTab config={TABS[0].config} revealKey="/meals"     groupName={groupName} displayName={displayName} />} />
-          <Route path="/services"  element={<RotationTab config={TABS[1].config} revealKey="/services"  groupName={groupName} displayName={displayName} />} />
+          <Route path="/meals"     element={<RotationTab config={TABS[0].config} revealKey="/meals"     groupName={groupName} displayName={displayName} groupId={groupId} isAdmin={isAdmin} />} />
+          <Route path="/services"  element={<RotationTab config={TABS[1].config} revealKey="/services"  groupName={groupName} displayName={displayName} groupId={groupId} isAdmin={isAdmin} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setHasUnreadChat(false)} />} />
           <Route path="/birthdays" element={<BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} revealKey="/birthdays" />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} />} />

@@ -1,13 +1,41 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GearSix, ListBullets, PencilSimple, SignOut, Trash } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 
-export default function SettingsModal({ editLabel, pageNoun, pageNounPlural, groupName, displayName, onEditPage, onManagePages, onClose }) {
+export default function SettingsModal({ editLabel, pageNoun, pageNounPlural, groupName, displayName, groupId, isAdmin, onEditPage, onManagePages, onClose }) {
   const [closing, close] = useModalClose(onClose)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [inviteCode, setInviteCode] = useState(null)
+  const [codeCopied, setCodeCopied] = useState(false)
+  const [codeRotating, setCodeRotating] = useState(false)
+
+  useEffect(() => {
+    if (!groupId) return
+    supabase
+      .from('community_groups')
+      .select('invite_code')
+      .eq('id', groupId)
+      .single()
+      .then(({ data }) => setInviteCode(data?.invite_code ?? null))
+  }, [groupId])
+
+  function copyCode() {
+    if (!inviteCode) return
+    navigator.clipboard.writeText(inviteCode)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
+  }
+
+  async function handleRotate() {
+    if (!window.confirm('Generate a new invite code? The old code will stop working immediately.')) return
+    setCodeRotating(true)
+    const { data, error } = await supabase.rpc('rotate_invite_code')
+    if (!error) setInviteCode(data)
+    setCodeRotating(false)
+  }
 
   async function handleDeleteAccount() {
     setDeleting(true)
@@ -77,6 +105,30 @@ export default function SettingsModal({ editLabel, pageNoun, pageNounPlural, gro
               </div>
             </div>
           </button>
+
+          {inviteCode && (
+            <div className="pt-2 border-t border-stone-100">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>
+              <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
+                <span className="font-mono font-bold text-xl tracking-widest text-stone-800 flex-1">
+                  {codeRotating ? '……' : inviteCode}
+                </span>
+                <button onClick={copyCode} className="text-xs font-semibold text-jade shrink-0">
+                  {codeCopied ? 'Copied!' : 'Copy'}
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleRotate}
+                    disabled={codeRotating}
+                    className="text-xs font-semibold text-stone-400 hover:text-red-500 transition-colors shrink-0 disabled:opacity-40"
+                  >
+                    Rotate
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-stone-400 mt-1.5">Share this code with people you want to invite.</p>
+            </div>
+          )}
 
           <div className="pt-2 border-t border-stone-100">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">
