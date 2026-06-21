@@ -93,6 +93,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [replyingTo, setReplyingTo]         = useState(null)
   const [infoOpen, setInfoOpen]             = useState(false)
   const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
+  const [inviteCode, setInviteCode]         = useState(null)
+  const [codeCopied, setCodeCopied]         = useState(false)
 
   const scrollRef          = useRef(null)
   const fileInputRef       = useRef(null)
@@ -423,6 +425,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   function scrollToMessage(msgId) {
     document.getElementById(`msg-${msgId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  // ── Invite code (fetched when group info panel opens) ─────────────────────
+  useEffect(() => {
+    if (!infoOpen || conversation.type !== 'group') return
+    supabase
+      .from('community_groups')
+      .select('invite_code')
+      .eq('id', groupId)
+      .single()
+      .then(({ data }) => setInviteCode(data?.invite_code ?? null))
+  }, [infoOpen])
+
+  function copyInviteCode() {
+    if (!inviteCode) return
+    navigator.clipboard.writeText(inviteCode)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -823,6 +843,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 {conversation.type === 'group' ? `${members.length} member${members.length !== 1 ? 's' : ''}` : 'Direct Message'}
               </p>
             </div>
+
+            {/* Invite code (group only) */}
+            {conversation.type === 'group' && inviteCode && (
+              <div className="px-5 pb-4">
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Invite Code</p>
+                <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
+                  <span className="font-mono font-bold text-xl tracking-widest text-stone-800 flex-1">{inviteCode}</span>
+                  <button
+                    onClick={copyInviteCode}
+                    className="text-xs font-semibold text-jade shrink-0 transition-opacity"
+                  >
+                    {codeCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <p className="text-xs text-stone-400 mt-1.5">Share this code with people you want to invite.</p>
+              </div>
+            )}
 
             {/* Member list (group only) */}
             {conversation.type === 'group' && (

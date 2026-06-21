@@ -1,36 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { UsersThree, ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 
 const MODE_ORDER = { signin: 0, forgot: 1, signup: 2 }
 
 export default function AuthPage() {
-  const [mode, setMode] = useState('signin')
+  const [mode, setMode]             = useState('signin')
+  const [joinMode, setJoinMode]     = useState('join') // 'join' | 'create'
   const [displayName, setDisplayName] = useState('')
-  const [groupName, setGroupName] = useState('')
-  const [groupMode, setGroupMode] = useState('select') // 'select' | 'new'
-  const [existingGroups, setExistingGroups] = useState([])
-  const [groupsLoaded, setGroupsLoaded] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [newGroupName, setNewGroupName] = useState('')
+  const [email, setEmail]           = useState('')
+  const [password, setPassword]     = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [notice, setNotice] = useState(null)
-  const [animKey, setAnimKey] = useState(0)
-  const [animDir, setAnimDir] = useState(null)
-
-  useEffect(() => {
-    if (mode !== 'signup') return
-    supabase
-      .from('community_groups')
-      .select('name')
-      .order('name')
-      .then(({ data }) => {
-        setExistingGroups((data ?? []).map(g => g.name))
-        setGroupsLoaded(true)
-      })
-  }, [mode])
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState(null)
+  const [notice, setNotice]         = useState(null)
+  const [animKey, setAnimKey]       = useState(0)
+  const [animDir, setAnimDir]       = useState(null)
 
   function switchMode(next) {
     setAnimDir(MODE_ORDER[next] > MODE_ORDER[mode] ? 'right' : 'left')
@@ -38,20 +25,10 @@ export default function AuthPage() {
     setMode(next)
     setError(null)
     setNotice(null)
-    // Reset group fields when going to signup
     if (next === 'signup') {
-      setGroupName('')
-      setGroupMode('select')
-    }
-  }
-
-  function handleGroupSelect(value) {
-    if (value === '__new__') {
-      setGroupMode('new')
-      setGroupName('')
-    } else {
-      setGroupMode('select')
-      setGroupName(value)
+      setJoinMode('join')
+      setInviteCode('')
+      setNewGroupName('')
     }
   }
 
@@ -81,21 +58,39 @@ export default function AuthPage() {
         setLoading(false)
         return
       }
-      if (!groupName.trim()) {
-        setError('Please select or enter a Community Group Name.')
+      if (!displayName.trim()) {
+        setError('Please enter your name.')
         setLoading(false)
         return
       }
-      const { error: err } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: displayName.trim(), community_group_name: groupName.trim() } },
-      })
+
+      let metadata
+      if (joinMode === 'join') {
+        if (!inviteCode.trim()) {
+          setError('Please enter an invite code.')
+          setLoading(false)
+          return
+        }
+        metadata = { display_name: displayName.trim(), invite_code: inviteCode.trim().toUpperCase() }
+      } else {
+        if (!newGroupName.trim()) {
+          setError('Please enter a group name.')
+          setLoading(false)
+          return
+        }
+        metadata = { display_name: displayName.trim(), community_group_name: newGroupName.trim() }
+      }
+
+      const { error: err } = await supabase.auth.signUp({ email, password, options: { data: metadata } })
       if (err) {
         setError(err.message)
       } else {
         switchMode('signin')
-        setNotice('Account created! Check your email to confirm, then sign in.')
+        setNotice(
+          joinMode === 'create'
+            ? 'Group created! Check your email to confirm, then sign in. Find your invite code in the group chat.'
+            : 'Account created! Check your email to confirm, then sign in.'
+        )
       }
     } else {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
@@ -108,13 +103,8 @@ export default function AuthPage() {
   const inputClass =
     'w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition-shadow text-sm'
 
-  const selectClass =
-    'w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition-shadow text-sm bg-white cursor-pointer'
-
   const animClass =
     animDir === 'right' ? 'animate-slide-in-right' : animDir === 'left' ? 'animate-slide-in-left' : ''
-
-  const showDropdown = mode === 'signup' && groupsLoaded && existingGroups.length > 0
 
   return (
     <div
@@ -143,7 +133,7 @@ export default function AuthPage() {
               className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${
                 mode === 'signin' || mode === 'forgot'
                   ? 'text-jade border-b-2 border-jade -mb-px'
-                  : 'text-stone-400 hover:text-stone-600'
+                  : 'text-stone-400'
               }`}
             >
               Sign In
@@ -154,7 +144,7 @@ export default function AuthPage() {
               className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${
                 mode === 'signup'
                   ? 'text-jade border-b-2 border-jade -mb-px'
-                  : 'text-stone-400 hover:text-stone-600'
+                  : 'text-stone-400'
               }`}
             >
               Create Account
@@ -171,7 +161,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => switchMode('signin')}
-                    className="text-stone-400 hover:text-stone-700 transition-colors p-1 -ml-1 rounded-lg hover:bg-stone-100"
+                    className="text-stone-400 transition-colors p-1 -ml-1 rounded-lg hover:bg-stone-100"
                   >
                     <ArrowLeft size={16} weight="bold" />
                   </button>
@@ -197,47 +187,65 @@ export default function AuthPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
-                      Community Group
-                    </label>
-                    {showDropdown ? (
-                      <>
-                        <select
-                          value={groupMode === 'new' ? '__new__' : groupName}
-                          onChange={e => handleGroupSelect(e.target.value)}
-                          className={selectClass}
-                        >
-                          <option value="">Select your group…</option>
-                          {existingGroups.map(name => (
-                            <option key={name} value={name}>{name}</option>
-                          ))}
-                          <option disabled>──────────────</option>
-                          <option value="__new__">+ Create a new group</option>
-                        </select>
-                        {groupMode === 'new' && (
-                          <input
-                            type="text"
-                            value={groupName}
-                            onChange={e => setGroupName(e.target.value)}
-                            placeholder="New group name…"
-                            autoFocus
-                            className={`${inputClass} mt-2`}
-                          />
-                        )}
-                      </>
-                    ) : (
+                  {/* Join vs Create toggle */}
+                  <div className="flex rounded-xl border border-stone-200 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setJoinMode('join')}
+                      className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+                        joinMode === 'join' ? 'bg-jade text-white' : 'text-stone-400'
+                      }`}
+                    >
+                      Join a Group
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setJoinMode('create')}
+                      className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+                        joinMode === 'create' ? 'bg-jade text-white' : 'text-stone-400'
+                      }`}
+                    >
+                      Start New Group
+                    </button>
+                  </div>
+
+                  {joinMode === 'join' ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
+                        Invite Code
+                      </label>
                       <input
                         type="text"
-                        value={groupName}
-                        onChange={e => setGroupName(e.target.value)}
+                        value={inviteCode}
+                        onChange={e => setInviteCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+                        placeholder="e.g. A3B7C2"
+                        required
+                        autoComplete="off"
+                        className={`${inputClass} font-mono tracking-widest text-center text-base`}
+                      />
+                      <p className="text-xs text-stone-400 mt-1.5">
+                        Ask your group leader for the 6-character invite code.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
+                        Group Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newGroupName}
+                        onChange={e => setNewGroupName(e.target.value)}
                         placeholder="e.g. Lake Oswego & SE"
                         required
                         autoComplete="organization"
                         className={inputClass}
                       />
-                    )}
-                  </div>
+                      <p className="text-xs text-stone-400 mt-1.5">
+                        Once signed in, find your invite code in the group chat to share with members.
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -306,7 +314,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => switchMode('forgot')}
-                    className="text-xs text-stone-400 hover:text-jade transition-colors"
+                    className="text-xs text-stone-400 transition-colors"
                   >
                     Forgot password?
                   </button>
@@ -327,7 +335,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full py-3 bg-jade active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {loading
                   ? 'Please wait…'
@@ -335,19 +343,13 @@ export default function AuthPage() {
                   ? 'Sign In'
                   : mode === 'forgot'
                   ? 'Send Reset Link'
-                  : 'Create Account'}
+                  : joinMode === 'join'
+                  ? 'Join Group'
+                  : 'Create Group & Account'}
               </button>
             </form>
           </div>
         </div>
-
-        {mode === 'signup' && (
-          <p className="text-center text-xs text-stone-400 mt-4 px-4">
-            {showDropdown && groupMode !== 'new'
-              ? 'Select your group from the list, or create a new one.'
-              : 'Everyone in your group creates their own account using the same Community Group Name.'}
-          </p>
-        )}
       </div>
     </div>
   )
