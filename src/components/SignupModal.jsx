@@ -1,18 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
 export default function SignupModal({ slot, itemNoun, dishName, signup, onClose, onSave, onRemove, onDeleteItem }) {
   const [closing, close] = useModalClose(onClose)
   const [name, setName]   = useState(signup?.name ?? '')
   const [dish, setDish]   = useState(dishName ?? '')
-  const dishInputRef = useRef(null)
-
-  useEffect(() => {
-    const input = dishInputRef.current
-    if (!input) return
-    input.focus()
-    if (dishName) input.select()
-  }, [])
   const [notes, setNotes] = useState(signup?.notes ?? '')
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState(null)
@@ -83,11 +75,11 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
         <div className="mx-6 mb-4">
           <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
           <input
-            ref={dishInputRef}
             type="text"
             value={dish}
             onChange={e => setDish(e.target.value)}
             placeholder={`Add a new ${itemNoun.toLowerCase()}`}
+            autoFocus={!dishName}
             className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
           />
         </div>
@@ -100,6 +92,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Chipotle"
+              autoFocus={!!dishName}
               className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
               required
             />
