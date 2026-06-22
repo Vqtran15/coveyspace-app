@@ -510,7 +510,7 @@ export default function PrayerTab({ displayName, onOpenSettings }) {
             onClick={() => setAddOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
           >
-            + Friend
+            + Add Friend
           </button>
         </div>
       </div>
