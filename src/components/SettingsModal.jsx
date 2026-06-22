@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GearSix, SignOut, Trash, Crown, X } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, Crown, X, BookOpen, CaretRight } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 
@@ -7,7 +7,7 @@ function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
-export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onClose }) {
+export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onOpenGuide, onClose }) {
   const [closing, close] = useModalClose(onClose)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -106,6 +106,17 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
         </div>
 
         <div className="px-5 pb-6 space-y-2">
+          <div className="pt-2 border-t border-stone-100">
+            <button
+              onClick={() => { onClose(); onOpenGuide?.() }}
+              className="w-full flex items-center gap-3 px-1 py-2.5 text-sm text-stone-700 hover:text-stone-900 transition-colors"
+            >
+              <BookOpen size={18} weight="fill" className="text-jade shrink-0" />
+              <span className="flex-1 text-left font-medium">Guide</span>
+              <CaretRight size={14} className="text-stone-300" />
+            </button>
+          </div>
+
           {inviteCode && (
             <div className="pt-2 border-t border-stone-100">
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>

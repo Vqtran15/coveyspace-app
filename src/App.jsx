@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, Confetti, ChatCircleDots, HandsPraying } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, Confetti } from '@phosphor-icons/react'
 import { formatDate } from './utils/dates.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
@@ -9,6 +9,7 @@ import BirthdayTab from './components/BirthdayTab.jsx'
 import PrayerTab from './components/PrayerTab.jsx'
 import BirthdayBanner from './components/BirthdayBanner.jsx'
 import ChatTab from './components/ChatTab.jsx'
+import GuideTab from './components/GuideTab.jsx'
 import AuthPage from './components/AuthPage.jsx'
 import ResetPasswordPage from './components/ResetPasswordPage.jsx'
 import WelcomeSplash from './components/WelcomeSplash.jsx'
@@ -69,6 +70,13 @@ export default function App() {
   const [isRecovery, setIsRecovery] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(false)
+  const [guideClosing, setGuideClosing] = useState(false)
+
+  function closeGuide() {
+    setGuideClosing(true)
+    setTimeout(() => { setGuideOpen(false); setGuideClosing(false) }, 200)
+  }
 
   useEffect(() => { locationRef.current = location.pathname }, [location.pathname])
 
@@ -159,6 +167,7 @@ export default function App() {
 
   const upcoming = getUpcomingBirthdays(birthdays)
   const isChat = location.pathname === '/chat'
+  const isFullHeight = isChat
 
   function handleTabChange(path) {
     const newIndex = PATHS.indexOf(path)
@@ -170,19 +179,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-sunrise-50 overflow-x-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      {!isChat && <BirthdayBanner upcoming={upcoming} />}
+      {!isFullHeight && <BirthdayBanner upcoming={upcoming} />}
 
       <div
         key={location.pathname}
-        className={`${isChat ? '' : 'pb-24'} ${enterFrom === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
+        className={`${isFullHeight ? '' : 'pb-24'} ${enterFrom === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
       >
         <Routes>
           <Route path="/" element={<Navigate to="/meals" replace />} />
           <Route path="/meals"     element={<RotationTab config={TABS[0].config} revealKey="/meals"     groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/services"  element={<RotationTab config={TABS[1].config} revealKey="/services"  groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setHasUnreadChat(false)} onOpenSettings={() => setSettingsOpen(true)} />} />
-          <Route path="/birthdays" element={<BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} revealKey="/birthdays" onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/birthdays" element={<BirthdayTab birthdays={birthdays} onBirthdaysChange={setBirthdays} revealKey="/birthdays" onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>
       </div>
 
@@ -224,8 +233,18 @@ export default function App() {
           groupId={groupId}
           isAdmin={isAdmin}
           userId={session.user.id}
+          onOpenGuide={() => setGuideOpen(true)}
           onClose={() => setSettingsOpen(false)}
         />
+      )}
+
+      {guideOpen && (
+        <div
+          className={`fixed inset-0 z-50 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <GuideTab onClose={closeGuide} />
+        </div>
       )}
     </div>
   )
