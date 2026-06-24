@@ -96,11 +96,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
   const [renamingGroup, setRenamingGroup]   = useState(false)
   const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false)
+  const [editingMsgId, setEditingMsgId]         = useState(null)
+  const [editText, setEditText]                 = useState('')
   const toast = useToast()
   const [renameValue, setRenameValue]       = useState('')
   const [renameSaving, setRenameSaving]     = useState(false)
 
   const scrollRef          = useRef(null)
+  const editTextareaRef    = useRef(null)
   const fileInputRef       = useRef(null)
   const textareaRef        = useRef(null)
   const searchInputRef     = useRef(null)
@@ -412,10 +415,31 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const last = lastTapRef.current
     if (last && last.msgId === msgId && now - last.time < 300) {
       lastTapRef.current = null
-      openMenu(e, msgId, isOwn)
+      if (isOwn) startEdit(msgId)
+      else openMenu(e, msgId, isOwn)
     } else {
       lastTapRef.current = { time: now, msgId }
     }
+  }
+
+  function startEdit(msgId) {
+    const msg = messages.find(m => m.id === msgId)
+    if (!msg?.body) return
+    setEditingMsgId(msgId)
+    setEditText(msg.body)
+    setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false); setConfirmDeleteMsg(false)
+    setTimeout(() => editTextareaRef.current?.focus(), 50)
+  }
+
+  async function handleSaveEdit(e) {
+    e?.preventDefault()
+    const original = messages.find(m => m.id === editingMsgId)?.body
+    if (!editText.trim() || editText.trim() === original) { setEditingMsgId(null); return }
+    const id = editingMsgId
+    setEditingMsgId(null)
+    const { error } = await supabase.from('messages').update({ body: editText.trim() }).eq('id', id)
+    if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editText.trim() } : m))
+    else toast('Failed to edit message', 'error')
   }
 
   function handleReply(msgId) {
@@ -620,7 +644,30 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
                         </a>
                       )}
-                      {msg.body && (
+                      {editingMsgId === msg.id ? (
+                        <form onSubmit={handleSaveEdit} className="px-3 py-2">
+                          <textarea
+                            ref={editTextareaRef}
+                            value={editText}
+                            onChange={e => setEditText(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(e) }
+                              if (e.key === 'Escape') setEditingMsgId(null)
+                            }}
+                            rows={1}
+                            className="w-full text-sm bg-transparent border-0 outline-none text-white resize-none placeholder:text-white/50"
+                            style={{ minWidth: 140 }}
+                          />
+                          <div className="flex gap-3 mt-1.5">
+                            <button type="button" onClick={() => setEditingMsgId(null)} className="text-[11px] text-white/60 hover:text-white font-medium transition-colors">
+                              Cancel
+                            </button>
+                            <button type="submit" disabled={!editText.trim()} className="text-[11px] text-white font-semibold disabled:opacity-40 transition-opacity">
+                              Save
+                            </button>
+                          </div>
+                        </form>
+                      ) : msg.body && (
                         <p className="px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words">
                           {searchQuery.trim() ? highlightText(msg.body, searchQuery) : msg.body}
                         </p>
@@ -772,6 +819,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             {activeMessage?.user_id === myId && (
               <>
                 <div className="w-px h-6 bg-stone-100 mx-0.5" />
+                {activeMessage?.body && (
+                  <button
+                    onClick={() => startEdit(activeMsg)}
+                    className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
+                  >
+                    <PencilSimple size={14} weight="bold" />
+                  </button>
+                )}
                 <button
                   onClick={() => setConfirmDeleteMsg(true)}
                   className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
