@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -79,6 +80,22 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
       </div>
       <CaretRight size={16} className="text-stone-300 shrink-0 relative" />
     </button>
+  )
+}
+
+function CardSkeleton({ delay = 0 }) {
+  return (
+    <div
+      className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-pulse"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-2.5 bg-stone-100 rounded w-1/4" />
+        <div className="h-4 bg-stone-200 rounded w-3/5" />
+      </div>
+      <div className="w-4 h-4 rounded bg-stone-100 shrink-0" />
+    </div>
   )
 }
 
@@ -158,34 +175,19 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [funFact, setFunFact]               = useState(null)
 
-  useEffect(() => {
+  async function load() {
     const today = toDateString(new Date())
 
-    supabase
-      .from('meal_pages')
-      .select('id, title, week_date, is_paused')
-      .gte('week_date', mealCutoffDate())
-      .order('week_date')
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setNextMeal(data ?? null))
-
-    supabase
-      .from('serving_pages')
-      .select('title, week_date, is_paused')
-      .gte('week_date', today)
-      .order('week_date')
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setNextService(data ?? null))
+    const [mealRes, serviceRes] = await Promise.all([
+      supabase.from('meal_pages').select('id, title, week_date, is_paused').gte('week_date', mealCutoffDate()).order('week_date').limit(1).maybeSingle(),
+      supabase.from('serving_pages').select('title, week_date, is_paused').gte('week_date', today).order('week_date').limit(1).maybeSingle(),
+    ])
+    setNextMeal(mealRes.data ?? null)
+    setNextService(serviceRes.data ?? null)
 
     if (groupId) {
-      supabase
-        .from('community_groups')
-        .select('announcement')
-        .eq('id', groupId)
-        .single()
-        .then(({ data }) => setAnnouncement(data?.announcement ?? null))
+      const { data } = await supabase.from('community_groups').select('announcement').eq('id', groupId).single()
+      setAnnouncement(data?.announcement ?? null)
     }
 
     const cached = JSON.parse(localStorage.getItem('fun_fact_v2') ?? 'null')
@@ -193,9 +195,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       setFunFact(cached.text)
     } else {
       const useDog = new Date().getDate() % 2 === 0
-      const url = useDog
-        ? 'https://dogapi.dog/api/v2/facts'
-        : 'https://catfact.ninja/fact'
+      const url = useDog ? 'https://dogapi.dog/api/v2/facts' : 'https://catfact.ninja/fact'
       fetch(url)
         .then(r => r.json())
         .then(d => {
@@ -205,7 +205,11 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         })
         .catch(() => setFunFact(null))
     }
-  }, [groupId])
+  }
+
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
+
+  useEffect(() => { load() }, [groupId])
 
   async function handleSaveAnnouncement(text) {
     await supabase.rpc('update_announcement', { p_text: text })
@@ -239,6 +243,18 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   return (
     <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+      {/* Pull-to-refresh indicator */}
+      {pullDistance > 0 && (
+        <div
+          className="fixed inset-x-0 z-30 flex justify-center transition-transform"
+          style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
+        >
+          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
+            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          </div>
+        </div>
+      )}
+
       <div className="mb-7 animate-fade-up flex items-start justify-between" style={{ animationDelay: '0ms' }}>
         <div>
           <h1 className="text-3xl font-bold text-stone-800">
@@ -302,24 +318,30 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           )
         )}
 
-        <Card
-          onClick={() => navigate('/meals')}
-          icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
-          iconBg="bg-jade/10"
-          label="Next Meal"
-          primary={nextMeal === undefined ? 'Loading…' : nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? 'No upcoming meals'}
-          secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
-          delay={showAnnouncement ? 140 : 70}
-        />
-        <Card
-          onClick={() => navigate('/services')}
-          icon={<HandHeart size={24} weight="fill" className="text-coral" />}
-          iconBg="bg-coral/10"
-          label="Next Service"
-          primary={nextService === undefined ? 'Loading…' : nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? 'No upcoming services'}
-          secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
-          delay={showAnnouncement ? 210 : 140}
-        />
+        {nextMeal === undefined
+          ? <CardSkeleton delay={showAnnouncement ? 140 : 70} />
+          : <Card
+              onClick={() => navigate('/meals')}
+              icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
+              iconBg="bg-jade/10"
+              label="Next Meal"
+              primary={nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? 'No upcoming meals'}
+              secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
+              delay={showAnnouncement ? 140 : 70}
+            />
+        }
+        {nextService === undefined
+          ? <CardSkeleton delay={showAnnouncement ? 210 : 140} />
+          : <Card
+              onClick={() => navigate('/services')}
+              icon={<HandHeart size={24} weight="fill" className="text-coral" />}
+              iconBg="bg-coral/10"
+              label="Next Service"
+              primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? 'No upcoming services'}
+              secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
+              delay={showAnnouncement ? 210 : 140}
+            />
+        }
         <Card
           onClick={onOpenBirthdays}
           icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}

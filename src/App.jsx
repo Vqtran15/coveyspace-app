@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash } from '@phosphor-icons/react'
+import { haptic } from './lib/haptic.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { formatDate } from './utils/dates.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
@@ -68,7 +69,8 @@ export default function App() {
   const [session, setSession]           = useState(null)
   const [authLoading, setAuthLoading]   = useState(true)
   const [profile, setProfile]           = useState(null)
-  const [hasUnreadChat, setHasUnreadChat] = useState(false)
+  const [unreadChatCount, setUnreadChatCount] = useState(0)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isRecovery, setIsRecovery] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -89,6 +91,14 @@ export default function App() {
   }
 
   useEffect(() => { locationRef.current = location.pathname }, [location.pathname])
+
+  useEffect(() => {
+    const up   = () => setIsOnline(true)
+    const down = () => setIsOnline(false)
+    window.addEventListener('online',  up)
+    window.addEventListener('offline', down)
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -155,15 +165,14 @@ export default function App() {
         event: 'INSERT', schema: 'public', table: 'messages',
         filter: `community_group_id=eq.${groupId}`,
       }, () => {
-        if (locationRef.current !== '/chat') setHasUnreadChat(true)
+        if (locationRef.current !== '/chat') setUnreadChatCount(c => c + 1)
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [groupId])
 
-  // Clear unread dot when visiting chat
   useEffect(() => {
-    if (location.pathname === '/chat') setHasUnreadChat(false)
+    if (location.pathname === '/chat') setUnreadChatCount(0)
   }, [location.pathname])
 
   if (authLoading) {
@@ -182,15 +191,23 @@ export default function App() {
   const isFullHeight = isChat
 
   function handleTabChange(path) {
+    haptic()
     const newIndex = PATHS.indexOf(path)
     setEnterFrom(newIndex > prevIndexRef.current ? 'right' : 'left')
     prevIndexRef.current = newIndex
-    if (path === '/chat') setHasUnreadChat(false)
+    if (path === '/chat') setUnreadChatCount(0)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     navigate(path)
   }
 
   return (
     <div className="min-h-screen bg-sunrise-50 overflow-x-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      {!isOnline && (
+        <div className="fixed inset-x-0 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
+          <WifiSlash size={14} weight="bold" />
+          You're offline
+        </div>
+      )}
       {!isFullHeight && location.pathname !== '/home' && <BirthdayBanner upcoming={upcoming} />}
 
       <div
@@ -202,7 +219,7 @@ export default function App() {
           <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/meals"     element={<RotationTab config={TABS[1].config} revealKey="/meals"     groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
           <Route path="/services"  element={<RotationTab config={TABS[2].config} revealKey="/services"  groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
-          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setHasUnreadChat(false)} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>
       </div>
@@ -225,8 +242,12 @@ export default function App() {
             >
               <span className={`relative px-3 py-1 rounded-2xl transition-colors ${active ? 'bg-jade text-white' : ''}`}>
                 <t.Icon size={26} weight={active ? 'fill' : 'regular'} />
-                {t.path === '/chat' && hasUnreadChat && (
-                  <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white" />
+                {t.path === '/chat' && unreadChatCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-coral rounded-full border-2 border-white flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-white leading-none px-0.5">
+                      {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                    </span>
+                  </span>
                 )}
               </span>
               <span className={`text-[10px] font-medium tracking-wide ${active ? 'text-jade' : ''}`}>{t.shortLabel}</span>

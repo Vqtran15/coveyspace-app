@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
+import { useToast } from '../lib/toast.jsx'
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -9,6 +10,7 @@ function initials(name) {
 
 export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onClose, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [closing, close] = useModalClose(onClose)
+  const toast = useToast()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
@@ -60,7 +62,7 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   async function handleSetRole(targetId, newRole) {
     setSettingRoleId(targetId)
     const { error } = await supabase.rpc('set_member_role', { target_user_id: targetId, new_role: newRole })
-    if (error) alert(error.message)
+    if (error) toast(error.message, 'error')
     else setMembers(prev => prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m))
     setSettingRoleId(null)
   }

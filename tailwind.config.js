@@ -119,6 +119,10 @@ export default {
           '60%':  { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(0deg)' },
         },
+        'toast-in': {
+          '0%':   { opacity: '0', transform: 'translateY(-8px) scale(0.96)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
         'confetti-float': {
           '0%':   { opacity: '0', transform: 'scale(0)' },
           '50%':  { opacity: '1', transform: 'scale(1)' },
@@ -142,6 +146,7 @@ export default {
         'icon-wiggle':      'icon-wiggle 3s ease-in-out infinite',
         'message-in':       'message-in 0.3s cubic-bezier(0.16,1,0.3,1)',
         'wave':             'wave 2.5s ease-in-out infinite',
+        'toast-in':        'toast-in 0.2s cubic-bezier(0.16,1,0.3,1)',
         'confetti-float':  'confetti-float 2s ease-in-out infinite backwards',
       },
     },

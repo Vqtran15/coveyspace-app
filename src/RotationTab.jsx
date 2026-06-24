@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ListBullets, GearSix } from '@phosphor-icons/react'
 import { supabase } from './lib/supabase.js'
 import { patchTitleDate, toDateString } from './utils/dates.js'
+import { haptic } from './lib/haptic.js'
 import MealPage from './components/MealPage.jsx'
 import AddPageModal from './components/AddPageModal.jsx'
 import PagesModal from './components/PagesModal.jsx'
@@ -137,6 +138,36 @@ export default function RotationTab({ config, revealKey, groupName = '', display
   const canGoPrev = viewIndex > 0
   const canGoNext = viewIndex < pages.length - 1
   const viewedPage = pages[viewIndex]
+  const canGoNextRef = useRef(canGoNext)
+  const canGoPrevRef = useRef(canGoPrev)
+  useEffect(() => { canGoNextRef.current = canGoNext }, [canGoNext])
+  useEffect(() => { canGoPrevRef.current = canGoPrev }, [canGoPrev])
+
+  const swipeTouchXRef = useRef(null)
+  const swipeTouchYRef = useRef(null)
+
+  function handleSwipeTouchStart(e) {
+    swipeTouchXRef.current = e.touches[0].clientX
+    swipeTouchYRef.current = e.touches[0].clientY
+  }
+
+  function handleSwipeTouchEnd(e) {
+    if (swipeTouchXRef.current === null) return
+    const dx = e.changedTouches[0].clientX - swipeTouchXRef.current
+    const dy = e.changedTouches[0].clientY - swipeTouchYRef.current
+    swipeTouchXRef.current = null
+    swipeTouchYRef.current = null
+    if (Math.abs(dy) > Math.abs(dx) * 0.8 || Math.abs(dx) < 55) return
+    if (dx < 0 && canGoNextRef.current) {
+      setViewIndex(i => i + 1)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      haptic()
+    } else if (dx > 0 && canGoPrevRef.current) {
+      setViewIndex(i => i - 1)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      haptic()
+    }
+  }
 
   if (loading) {
     return (
@@ -194,7 +225,7 @@ export default function RotationTab({ config, revealKey, groupName = '', display
         </div>
       </div>
 
-      <div className="pt-2">
+      <div className="pt-2" onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
         {viewedPage ? (
           <MealPage
             page={viewedPage}
@@ -206,8 +237,8 @@ export default function RotationTab({ config, revealKey, groupName = '', display
             pageCount={pages.length}
             canGoPrev={canGoPrev}
             canGoNext={canGoNext}
-            onPrevPage={() => { setViewIndex(i => i - 1); window.scrollTo({ top: 0, behavior: 'instant' }) }}
-            onNextPage={() => { setViewIndex(i => i + 1); window.scrollTo({ top: 0, behavior: 'instant' }) }}
+            onPrevPage={() => { setViewIndex(i => i - 1); window.scrollTo({ top: 0, behavior: 'instant' }); haptic() }}
+            onNextPage={() => { setViewIndex(i => i + 1); window.scrollTo({ top: 0, behavior: 'instant' }); haptic() }}
             onPageUpdate={p => setPages(prev => prev.map(x => x.id === p.id ? p : x))}
             onPageDelete={handlePageDeleted}
             editOpen={showEditPage}

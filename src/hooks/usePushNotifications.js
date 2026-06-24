@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { useToast } from '../lib/toast.jsx'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
@@ -11,6 +12,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export function usePushNotifications(userId, groupId) {
+  const toast = useToast()
   const supported = typeof window !== 'undefined'
     && 'serviceWorker' in navigator
     && 'PushManager' in window
@@ -72,7 +74,7 @@ export function usePushNotifications(userId, groupId) {
       setSubscribed(true)
     } catch (err) {
       console.error('Push subscribe error:', err)
-      alert(`Notification setup failed: ${err?.message ?? err}`)
+      toast(`Notification setup failed: ${err?.message ?? err}`, 'error')
     } finally {
       setToggling(false)
     }

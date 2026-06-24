@@ -6,6 +6,7 @@ import {
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
 
 const PAGE_SIZE = 50
@@ -95,6 +96,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
   const [renamingGroup, setRenamingGroup]   = useState(false)
   const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false)
+  const toast = useToast()
   const [renameValue, setRenameValue]       = useState('')
   const [renameSaving, setRenameSaving]     = useState(false)
 
@@ -363,7 +365,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function handleFileChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10 MB'); return }
+    if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); return }
     setImagePreview({ file, previewUrl: URL.createObjectURL(file) })
     e.target.value = ''
   }

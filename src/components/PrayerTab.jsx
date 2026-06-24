@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { HandsPraying, X, Plus, Trash, PencilSimple, Check, GearSix, UserPlus } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, Check, GearSix, UserPlus, MagnifyingGlass } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
+import { useToast } from '../lib/toast.jsx'
+import { haptic } from '../lib/haptic.js'
+import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 
 function formatDate(dateStr) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
@@ -103,6 +106,7 @@ function AddFriendModal({ onClose, onSave }) {
 
 function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, onFriendRename, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
+  const toast = useToast()
   const [requests, setRequests]           = useState([])
   const [loading, setLoading]             = useState(true)
   const [animDone, setAnimDone]           = useState(false)
@@ -158,12 +162,13 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
     setRequestText('')
     setDate(new Date().toISOString().split('T')[0])
     setSaving(false)
+    haptic()
     onCountChange(friend.id, +1)
   }
 
   async function handleDeleteRequest(id) {
     const { error: err } = await supabase.from('prayer_requests').delete().eq('id', id)
-    if (err) { alert('Failed to delete: ' + err.message); return }
+    if (err) { toast('Failed to delete: ' + err.message, 'error'); return }
     setRequests(prev => prev.filter(r => r.id !== id))
     setConfirmRequestId(null)
     onCountChange(friend.id, -1)
@@ -479,17 +484,20 @@ export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
   const [loading, setLoading]           = useState(true)
   const [addOpen, setAddOpen]           = useState(false)
   const [selectedFriend, setSelectedFriend] = useState(null)
+  const [searchQuery, setSearchQuery]   = useState('')
 
-  useEffect(() => {
-    supabase
+  async function load() {
+    const { data } = await supabase
       .from('prayer_friends')
       .select('*, prayer_requests(id, created_at)')
       .order('name')
-      .then(({ data }) => {
-        setFriends(data ?? [])
-        setLoading(false)
-      })
-  }, [])
+    setFriends(data ?? [])
+    setLoading(false)
+  }
+
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedFriend && !addOpen)
+
+  useEffect(() => { load() }, [])
 
   async function handleAddFriend(name) {
     const { data, error } = await supabase
@@ -524,8 +532,24 @@ export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
     }))
   }
 
+  const filteredFriends = searchQuery.trim()
+    ? friends.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : friends
+
   return (
     <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+      {/* Pull-to-refresh indicator */}
+      {pullDistance > 0 && (
+        <div
+          className="fixed inset-x-0 z-30 flex justify-center transition-transform"
+          style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
+        >
+          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
+            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
@@ -555,8 +579,35 @@ export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
         </div>
       </div>
 
+      {/* Search bar */}
+      {!loading && friends.length > 0 && (
+        <div className="relative mb-4">
+          <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search friends…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          />
+        </div>
+      )}
+
       {loading ? (
-        <div className="text-center py-16 text-stone-400 text-sm animate-pulse">Loading…</div>
+        <div className="space-y-2">
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="bg-white border-2 border-stone-200 rounded-xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-stone-200 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-stone-200 rounded w-2/5" />
+                  <div className="h-3 bg-stone-100 rounded w-1/4" />
+                </div>
+                <div className="h-3 bg-stone-100 rounded w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : friends.length === 0 ? (
         <div className="text-center py-16 text-stone-400">
           <div className="flex justify-center mb-3">
@@ -564,9 +615,14 @@ export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
           </div>
           <p className="text-sm">Add a friend to keep track of prayer requests</p>
         </div>
+      ) : filteredFriends.length === 0 ? (
+        <div className="text-center py-12 text-stone-400">
+          <MagnifyingGlass size={32} className="mx-auto mb-2 text-stone-300" />
+          <p className="text-sm">No friends match "{searchQuery}"</p>
+        </div>
       ) : (
         <div className="space-y-2">
-          {friends.map((friend, i) => (
+          {filteredFriends.map((friend, i) => (
             <FriendCard
               key={friend.id}
               friend={friend}
