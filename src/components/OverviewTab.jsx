@@ -7,7 +7,6 @@ import { daysUntilNext } from '../utils/birthdays.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 const CONFETTI = [
   { left: '8%',  top: '20%', color: '#B85A3A', delay: 0,    size: 10 },
@@ -50,11 +49,16 @@ function mealCutoffDate() {
 
 function timeGreeting() {
   const now = new Date()
-  const h = now.getHours()
-  const day = DAYS[now.getDay()]
-  if (h < 12) return `Happy ${day} morning`
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
+  const h   = now.getHours()
+  const d   = now.getDay()
+
+  const morning   = ['Rise and shine', 'Wakey wakey', 'Top of the morning', 'Look who\'s up', 'Another blessed morning']
+  const afternoon = ['Hey there', 'Afternoon, legend', 'Still standing', 'Made it to afternoon', 'Post-lunch mode']
+  const evening   = ['Evening, superstar', 'You survived today', 'Day well spent', 'Winding down', 'Almost bedtime']
+
+  if (h < 12) return morning[d % morning.length]
+  if (h < 17) return afternoon[d % afternoon.length]
+  return evening[d % evening.length]
 }
 
 function shortDate(dateStr) {
