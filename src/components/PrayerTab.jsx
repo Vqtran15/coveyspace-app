@@ -298,7 +298,15 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
           {/* Prayer request list */}
           <div className="py-4 space-y-3">
             {loading ? (
-              <p className="text-sm text-stone-400 text-center animate-pulse py-4">Loading…</p>
+              <div className="space-y-3">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="bg-stone-50 rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
+                    <div className="h-3 bg-stone-200 rounded w-1/3 mb-2" />
+                    <div className="h-3 bg-stone-200 rounded w-full mb-1.5" />
+                    <div className="h-3 bg-stone-200 rounded w-4/5" />
+                  </div>
+                ))}
+              </div>
             ) : requests.length === 0 ? (
               <p className="text-sm text-stone-400 text-center py-4">No requests yet. Add one above!</p>
             ) : (

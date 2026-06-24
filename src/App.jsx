@@ -241,7 +241,6 @@ export default function App() {
           groupId={groupId}
           isAdmin={isAdmin}
           userId={session.user.id}
-          onOpenGuide={() => setGuideOpen(true)}
           onClose={() => setSettingsOpen(false)}
           pushSupported={push.supported}
           pushSubscribed={push.subscribed}
