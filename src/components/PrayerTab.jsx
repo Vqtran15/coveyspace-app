@@ -101,7 +101,7 @@ function AddFriendModal({ onClose, onSave }) {
 }
 
 function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRename, onCountChange }) {
-  const [closing, close] = useModalClose(onClose)
+  const [closing, close, mounted] = useModalClose(onClose)
   const [requests, setRequests]           = useState([])
   const [loading, setLoading]             = useState(true)
   const [date, setDate]                   = useState(new Date().toISOString().split('T')[0])
@@ -209,7 +209,8 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
       onClick={close}
     >
       <div
-        className={`bg-white rounded-t-2xl shadow-xl w-full flex flex-col max-h-[90vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl shadow-xl w-full flex flex-col max-h-[90vh] ${mounted ? (closing ? 'animate-modal-out' : 'animate-modal-in') : ''}`}
+        style={!mounted ? { opacity: 0, transform: 'translateY(100%)' } : undefined}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
