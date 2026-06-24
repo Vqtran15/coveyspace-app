@@ -8,6 +8,16 @@ import { useModalClose } from '../hooks/useModalClose.js'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+// After 9 pm PT on Tuesdays, roll the meal cutoff forward to Wednesday
+// so the current Tuesday's meal is no longer shown as "next".
+function mealCutoffDate() {
+  const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  if (pst.getDay() === 2 && pst.getHours() >= 21) {
+    pst.setDate(pst.getDate() + 1)
+  }
+  return toDateString(pst)
+}
+
 function timeGreeting() {
   const now = new Date()
   const h = now.getHours()
@@ -124,7 +134,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     supabase
       .from('meal_pages')
       .select('id, title, week_date, is_paused')
-      .gte('week_date', today)
+      .gte('week_date', mealCutoffDate())
       .order('week_date')
       .limit(1)
       .maybeSingle()
@@ -212,32 +222,44 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       <div className="space-y-3">
         {/* Announcement — always first */}
         {showAnnouncement && (
-          <div
-            className="w-full bg-jade-50 border border-jade/20 rounded-2xl p-4 animate-stack-in"
-            style={{ animationDelay: '70ms' }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-jade/15 flex items-center justify-center shrink-0 mt-0.5">
-                <Megaphone size={22} weight="fill" className="text-jade" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-jade uppercase tracking-wide mb-1">Announcement</p>
-                {announcement ? (
-                  <p className="text-sm text-stone-800 leading-relaxed">{announcement}</p>
-                ) : (
-                  <p className="text-sm text-stone-400 italic">No announcement yet. Tap the pencil to add one.</p>
+          announcement ? (
+            <div
+              className="w-full bg-jade rounded-2xl p-4 animate-stack-in shadow-md shadow-jade/25"
+              style={{ animationDelay: '70ms' }}
+            >
+              <div className="flex items-start gap-3">
+                <Megaphone size={26} weight="fill" className="text-white/70 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-white/60 uppercase tracking-wide mb-1">Announcement</p>
+                  <p className="text-sm text-white leading-relaxed font-medium">{announcement}</p>
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => setEditingAnnouncement(true)}
+                    className="text-white/50 hover:text-white transition-colors shrink-0 mt-0.5 p-1"
+                  >
+                    <PencilSimple size={15} />
+                  </button>
                 )}
               </div>
-              {isAdmin && (
-                <button
-                  onClick={() => setEditingAnnouncement(true)}
-                  className="text-stone-400 hover:text-jade transition-colors shrink-0 mt-0.5 p-1"
-                >
-                  <PencilSimple size={15} />
-                </button>
-              )}
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={() => setEditingAnnouncement(true)}
+              className="w-full bg-jade/8 border border-dashed border-jade/30 rounded-2xl p-4 animate-stack-in text-left"
+              style={{ animationDelay: '70ms' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-jade/10 flex items-center justify-center shrink-0">
+                  <Megaphone size={20} weight="fill" className="text-jade/50" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-jade/60 uppercase tracking-wide mb-0.5">Announcement</p>
+                  <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
+                </div>
+              </div>
+            </button>
+          )
         )}
 
         <Card
