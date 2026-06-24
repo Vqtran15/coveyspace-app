@@ -284,7 +284,7 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
               />
             </div>
             <div>
@@ -333,7 +333,7 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
                         type="date"
                         value={editDate}
                         onChange={e => setEditDate(e.target.value)}
-                        className="w-full border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                        className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
                       />
                       <textarea
                         value={editText}

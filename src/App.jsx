@@ -173,6 +173,7 @@ export default function App() {
 
   useEffect(() => {
     if (location.pathname === '/chat') setUnreadChatCount(0)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [location.pathname])
 
   if (authLoading) {
@@ -196,7 +197,6 @@ export default function App() {
     setEnterFrom(newIndex > prevIndexRef.current ? 'right' : 'left')
     prevIndexRef.current = newIndex
     if (path === '/chat') setUnreadChatCount(0)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
     navigate(path)
   }
 
