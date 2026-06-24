@@ -151,10 +151,14 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     if (cached?.date === today) {
       setFunFact(cached.text)
     } else {
-      fetch('https://api.adviceslip.com/advice')
+      const useDog = new Date().getDate() % 2 === 0
+      const url = useDog
+        ? 'https://dogapi.dog/api/v2/facts'
+        : 'https://catfact.ninja/fact'
+      fetch(url)
         .then(r => r.json())
         .then(d => {
-          const text = d.slip.advice
+          const text = useDog ? d.data[0].attributes.body : d.fact
           localStorage.setItem('fun_fact', JSON.stringify({ date: today, text }))
           setFunFact(text)
         })
@@ -261,7 +265,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 <Lightbulb size={22} weight="fill" className="text-amber-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wide mb-1">Daily Thought</p>
+                <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wide mb-1">Fun Fact</p>
                 <p className="text-sm text-stone-700 leading-relaxed">{funFact}</p>
               </div>
             </div>
