@@ -119,6 +119,11 @@ export default {
           '60%':  { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(0deg)' },
         },
+        'confetti-float': {
+          '0%':   { opacity: '0', transform: 'scale(0)' },
+          '50%':  { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(0)' },
+        },
       },
       animation: {
         'modal-in':         'modal-in 0.25s cubic-bezier(0.32,0.72,0,1) backwards',
@@ -137,6 +142,7 @@ export default {
         'icon-wiggle':      'icon-wiggle 3s ease-in-out infinite',
         'message-in':       'message-in 0.3s cubic-bezier(0.16,1,0.3,1)',
         'wave':             'wave 2.5s ease-in-out infinite',
+        'confetti-float':  'confetti-float 2s ease-in-out infinite backwards',
       },
     },
   },

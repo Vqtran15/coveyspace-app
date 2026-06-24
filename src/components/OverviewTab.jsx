@@ -8,6 +8,35 @@ import { useModalClose } from '../hooks/useModalClose.js'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+const CONFETTI = [
+  { left: '8%',  top: '20%', color: '#B85A3A', delay: 0,    size: 10 },
+  { left: '22%', top: '65%', color: '#E8A838', delay: 0.5,  size: 8  },
+  { left: '38%', top: '28%', color: '#C4622D', delay: 1.0,  size: 12 },
+  { left: '53%', top: '70%', color: '#A1CCA6', delay: 0.25, size: 8  },
+  { left: '67%', top: '32%', color: '#E8A838', delay: 0.75, size: 10 },
+  { left: '80%', top: '62%', color: '#B85A3A', delay: 0.4,  size: 8  },
+  { left: '91%', top: '22%', color: '#A1CCA6', delay: 1.2,  size: 10 },
+  { left: '15%', top: '72%', color: '#E8A838', delay: 1.5,  size: 7  },
+]
+
+function ConfettiDots() {
+  return CONFETTI.map((dot, i) => (
+    <span
+      key={i}
+      className="absolute pointer-events-none animate-confetti-float leading-none select-none"
+      style={{
+        left: dot.left,
+        top: dot.top,
+        fontSize: dot.size,
+        color: dot.color,
+        animationDelay: `${dot.delay}s`,
+      }}
+    >
+      ✦
+    </span>
+  ))
+}
+
 // After 9 pm PT on Tuesdays, roll the meal cutoff forward to Wednesday
 // so the current Tuesday's meal is no longer shown as "next".
 function mealCutoffDate() {
@@ -32,22 +61,23 @@ function shortDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0 }) {
+function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false }) {
   return (
     <button
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
-      className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in"
+      className="relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in"
     >
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+      {confetti && <ConfettiDots />}
+      <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
         {icon}
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="relative flex-1 min-w-0">
         <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide mb-0.5">{label}</p>
         <p className="text-base font-semibold text-stone-800 truncate leading-snug">{primary}</p>
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
-      <CaretRight size={16} className="text-stone-300 shrink-0" />
+      <CaretRight size={16} className="text-stone-300 shrink-0 relative" />
     </button>
   )
 }
@@ -297,6 +327,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           label="Upcoming Birthdays"
           primary={birthdayPrimary()}
           delay={showAnnouncement ? 280 : 210}
+          confetti={!!nextBirthday && nextBirthday.days <= 30}
         />
         <Card
           onClick={onOpenGuide}

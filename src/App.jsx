@@ -97,6 +97,7 @@ export default function App() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
+      if (event === 'SIGNED_IN') navigate('/home')
       if (event === 'PASSWORD_RECOVERY') setIsRecovery(true)
       if (!session) { setProfile(null); setIsRecovery(false) }
     })
