@@ -9,6 +9,21 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   const [chatExiting, setChatExiting] = useState(false)
   const [listClass, setListClass]     = useState('')
 
+  // Prevent iOS from scrolling the window when the keyboard appears.
+  // Without this, tapping the message input causes window.scrollY to drift,
+  // leaving a gap between the input bar and the nav bar after sending.
+  useEffect(() => {
+    const prev = { position: document.body.style.position, width: document.body.style.width, overflow: document.body.style.overflow }
+    document.body.style.position = 'fixed'
+    document.body.style.width    = '100%'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.position = prev.position
+      document.body.style.width    = prev.width
+      document.body.style.overflow = prev.overflow
+    }
+  }, [])
+
   useEffect(() => {
     if (!groupId) return
     supabase
