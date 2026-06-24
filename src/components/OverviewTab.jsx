@@ -142,7 +142,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
     supabase
       .from('serving_pages')
-      .select('title, week_date')
+      .select('title, week_date, is_paused')
       .gte('week_date', today)
       .order('week_date')
       .limit(1)
@@ -286,8 +286,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           icon={<HandHeart size={24} weight="fill" className="text-coral" />}
           iconBg="bg-coral/10"
           label="Next Service"
-          primary={nextService === undefined ? 'Loading…' : nextService?.title ?? 'No upcoming services'}
-          secondary={nextService?.week_date ? shortDate(nextService.week_date) : null}
+          primary={nextService === undefined ? 'Loading…' : nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? 'No upcoming services'}
+          secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
           delay={showAnnouncement ? 210 : 140}
         />
         <Card

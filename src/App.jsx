@@ -31,7 +31,7 @@ const TABS = [
       itemNoun: 'Ingredient',
       pageNoun: 'Meal',
       pageNounPlural: 'Meals',
-      tables: { pages: 'meal_pages', signups: 'signups' },
+      tables: { pages: 'meal_pages', signups: 'signups', pauseRpc: 'toggle_meal_pause' },
       autoFill: true,
       defaultTitle: dateStr => `Meal — ${formatDate(dateStr)}`,
     },
@@ -48,7 +48,7 @@ const TABS = [
       itemNoun: 'Item',
       pageNoun: 'Service',
       pageNounPlural: 'Services',
-      tables: { pages: 'serving_pages', signups: 'serving_signups' },
+      tables: { pages: 'serving_pages', signups: 'serving_signups', pauseRpc: 'toggle_service_pause' },
       defaultTitle: dateStr => `Service Night — ${formatDate(dateStr)}`,
     },
   },
@@ -200,7 +200,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/meals"     element={<RotationTab config={TABS[1].config} revealKey="/meals"     groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
-          <Route path="/services"  element={<RotationTab config={TABS[2].config} revealKey="/services"  groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/services"  element={<RotationTab config={TABS[2].config} revealKey="/services"  groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setHasUnreadChat(false)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>

@@ -175,7 +175,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
 
   async function handleTogglePause() {
     setPausing(true)
-    const { error } = await supabase.rpc('toggle_meal_pause', { p_page_id: page.id })
+    const { error } = await supabase.rpc(tables.pauseRpc, { p_page_id: page.id })
     if (!error) onPageUpdate({ ...page, is_paused: !page.is_paused })
     setPausing(false)
   }
