@@ -20,12 +20,24 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    // Fetch all subscriptions in the group, excluding the sender
+    // Get the user_ids who are members of this specific conversation
+    const { data: convMembers, error: convErr } = await supabase
+      .from('conversation_members')
+      .select('user_id')
+      .eq('conversation_id', msg.conversation_id)
+      .neq('user_id', msg.user_id)
+
+    if (convErr) throw convErr
+    if (!convMembers?.length) return new Response('No recipients', { status: 200 })
+
+    const recipientIds = convMembers.map((m: { user_id: string }) => m.user_id)
+
+    // Fetch push subscriptions only for conversation participants
     const { data: subs, error } = await supabase
       .from('push_subscriptions')
       .select('id, endpoint, subscription')
       .eq('community_group_id', msg.community_group_id)
-      .neq('user_id', msg.user_id)
+      .in('user_id', recipientIds)
 
     if (error) throw error
     if (!subs?.length) return new Response('No subscribers', { status: 200 })
