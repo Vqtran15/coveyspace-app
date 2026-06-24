@@ -220,7 +220,7 @@ export default function App() {
           <Route path="/meals"     element={<RotationTab config={TABS[1].config} revealKey="/meals"     groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
           <Route path="/services"  element={<RotationTab config={TABS[2].config} revealKey="/services"  groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} />} />
-          <Route path="/prayer"    element={<PrayerTab displayName={displayName} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>
       </div>
 

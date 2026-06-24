@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { HandsPraying, X, Plus, Trash, PencilSimple, Check, GearSix, UserPlus, MagnifyingGlass } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, Check, GearSix, MagnifyingGlass } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -29,82 +29,7 @@ function formatLastUpdated(requests) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function AddFriendModal({ onClose, onSave }) {
-  const [closing, close] = useModalClose(onClose)
-  const [name, setName]     = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError]   = useState(null)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-    try {
-      await onSave(name.trim())
-      close()
-    } catch (err) {
-      setError(err.message ?? 'Could not save.')
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
-      onClick={close}
-    >
-      <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-6 pb-4">
-          <h2 className="text-xl font-bold text-stone-800">Add a Friend</h2>
-          <button
-            onClick={close}
-            className="text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Jane Smith"
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-              required
-              autoFocus
-            />
-          </div>
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-          )}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={close}
-              className="flex-1 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-2 bg-jade hover:bg-jade-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
-            >
-              {saving ? 'Adding…' : 'Add'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, onFriendRename, onCountChange }) {
+function PrayerModal({ member, displayName, onClose, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
   const toast = useToast()
   const [requests, setRequests]           = useState([])
@@ -114,11 +39,6 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
   const [requestText, setRequestText]     = useState('')
   const [saving, setSaving]               = useState(false)
   const [error, setError]                 = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting]           = useState(false)
-  const [editingName, setEditingName]     = useState(false)
-  const [nameValue, setNameValue]         = useState(friend.name)
-  const [renamingSaving, setRenamingSaving] = useState(false)
   const [editingId, setEditingId]         = useState(null)
   const [editDate, setEditDate]           = useState('')
   const [editText, setEditText]           = useState('')
@@ -135,14 +55,14 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
     supabase
       .from('prayer_requests')
       .select('*')
-      .eq('friend_id', friend.id)
+      .eq('member_user_id', member.user_id)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setRequests(data ?? [])
         setLoading(false)
       })
-  }, [friend.id])
+  }, [member.user_id])
 
   async function handleAdd(e) {
     e.preventDefault()
@@ -151,7 +71,7 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
     setError(null)
     const { data, error: err } = await supabase
       .from('prayer_requests')
-      .insert({ friend_id: friend.id, date, request: requestText.trim(), added_by: displayName })
+      .insert({ member_user_id: member.user_id, date, request: requestText.trim(), added_by: displayName })
       .select()
       .single()
     if (err) { setError(err.message); setSaving(false); return }
@@ -163,7 +83,7 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
     setDate(new Date().toISOString().split('T')[0])
     setSaving(false)
     haptic()
-    onCountChange(friend.id, +1)
+    onCountChange(member.user_id, +1)
   }
 
   async function handleDeleteRequest(id) {
@@ -171,30 +91,7 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
     if (err) { toast('Failed to delete: ' + err.message, 'error'); return }
     setRequests(prev => prev.filter(r => r.id !== id))
     setConfirmRequestId(null)
-    onCountChange(friend.id, -1)
-  }
-
-  async function handleDeleteFriend() {
-    setDeleting(true)
-    const { error: err } = await supabase.from('prayer_friends').delete().eq('id', friend.id)
-    if (err) { setDeleting(false); return }
-    onFriendDelete(friend.id)
-    onClose()
-  }
-
-  async function handleRenameFriend(e) {
-    e.preventDefault()
-    if (!nameValue.trim() || nameValue.trim() === friend.name) { setEditingName(false); return }
-    setRenamingSaving(true)
-    const { error: err } = await supabase
-      .from('prayer_friends')
-      .update({ name: nameValue.trim() })
-      .eq('id', friend.id)
-    setRenamingSaving(false)
-    if (!err) {
-      onFriendRename(friend.id, nameValue.trim())
-      setEditingName(false)
-    }
+    onCountChange(member.user_id, -1)
   }
 
   function startEditRequest(r) {
@@ -229,53 +126,22 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
-          {editingName ? (
-            <form onSubmit={handleRenameFriend} className="flex items-center gap-2 flex-1 min-w-0">
-              <input
-                value={nameValue}
-                onChange={e => setNameValue(e.target.value)}
-                className="flex-1 min-w-0 border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-                autoFocus
-                required
-              />
-              <button
-                type="submit"
-                disabled={renamingSaving}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-jade text-white hover:bg-jade-700 disabled:opacity-50 transition-colors"
-              >
-                <Check size={16} weight="bold" />
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEditingName(false); setNameValue(friend.name) }}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100"
-              >
-                <X size={16} />
-              </button>
-            </form>
-          ) : (
-            <div className="flex items-center gap-2 min-w-0">
-              <h2 className="text-xl font-bold text-stone-800 truncate">{nameValue}</h2>
-              <button
-                onClick={() => setEditingName(true)}
-                className="shrink-0 text-stone-300 hover:text-stone-500 transition-colors"
-              >
-                <PencilSimple size={16} />
-              </button>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-full bg-jade/10 flex items-center justify-center text-jade font-bold text-sm shrink-0">
+              {(member.display_name ?? '?').charAt(0).toUpperCase()}
             </div>
-          )}
-          {!editingName && (
-            <button
-              onClick={close}
-              className="shrink-0 text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
-            >
-              <X size={20} />
-            </button>
-          )}
+            <h2 className="text-xl font-bold text-stone-800 truncate">{member.display_name}</h2>
+          </div>
+          <button
+            onClick={close}
+            className="shrink-0 text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Scrollable body */}
-        <div className="overflow-y-auto min-h-0 px-6">
+        <div className="overflow-y-auto min-h-0 px-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           {/* Add request form */}
           <form onSubmit={handleAdd} className="space-y-3 pb-5 border-b border-stone-100">
             <div>
@@ -409,49 +275,14 @@ function PrayerModal({ friend, displayName, isAdmin, onClose, onFriendDelete, on
             )}
           </div>
         </div>
-
-        {/* Remove friend footer — admin only */}
-        {isAdmin && (
-          <div className="px-6 pt-3 border-t border-stone-100 shrink-0" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
-            {!confirmDelete ? (
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(true)}
-                className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
-              >
-                Remove Friend
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                <span className="text-sm text-red-700 flex-1">Remove {friend.name}?</span>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(false)}
-                  disabled={deleting}
-                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteFriend}
-                  disabled={deleting}
-                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-50 transition-colors"
-                >
-                  {deleting ? 'Removing…' : 'Remove'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   )
 }
 
-function FriendCard({ friend, index, onClick }) {
+function MemberCard({ member, index, onClick }) {
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
-  const lastUpdated = formatLastUpdated(friend.prayer_requests)
+  const lastUpdated = formatLastUpdated(member.prayer_requests)
 
   return (
     <button
@@ -462,14 +293,9 @@ function FriendCard({ friend, index, onClick }) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-jade/10 flex items-center justify-center text-jade font-bold text-sm shrink-0">
-            {friend.name.charAt(0).toUpperCase()}
+            {(member.display_name ?? '?').charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div className="font-semibold text-stone-800">{friend.name}</div>
-            {friend.added_by && (
-              <div className="text-xs text-stone-400">Added by {friend.added_by}</div>
-            )}
-          </div>
+          <div className="font-semibold text-stone-800">{member.display_name}</div>
         </div>
         {lastUpdated && (
           <span className="text-xs text-stone-400 shrink-0">{lastUpdated}</span>
@@ -479,62 +305,44 @@ function FriendCard({ friend, index, onClick }) {
   )
 }
 
-export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
-  const [friends, setFriends]           = useState([])
-  const [loading, setLoading]           = useState(true)
-  const [addOpen, setAddOpen]           = useState(false)
-  const [selectedFriend, setSelectedFriend] = useState(null)
-  const [searchQuery, setSearchQuery]   = useState('')
+export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings }) {
+  const [members, setMembers]               = useState([])
+  const [loading, setLoading]               = useState(true)
+  const [selectedMember, setSelectedMember] = useState(null)
+  const [searchQuery, setSearchQuery]       = useState('')
 
   async function load() {
-    const { data } = await supabase
-      .from('prayer_friends')
-      .select('*, prayer_requests(id, created_at)')
-      .order('name')
-    setFriends(data ?? [])
+    if (!groupId) return
+    const [membersRes, requestsRes] = await Promise.all([
+      supabase.from('profiles').select('user_id, display_name').eq('community_group_id', groupId).order('display_name'),
+      supabase.from('prayer_requests').select('id, member_user_id, created_at'),
+    ])
+    const profileList = membersRes.data ?? []
+    const requestList = requestsRes.data ?? []
+    setMembers(profileList.map(m => ({
+      ...m,
+      prayer_requests: requestList.filter(r => r.member_user_id === m.user_id),
+    })))
     setLoading(false)
   }
 
-  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedFriend && !addOpen)
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedMember)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { if (groupId) load() }, [groupId])
 
-  async function handleAddFriend(name) {
-    const { data, error } = await supabase
-      .from('prayer_friends')
-      .insert({ name, added_by: displayName })
-      .select('*, prayer_requests(id, created_at)')
-      .single()
-    if (error) throw new Error(error.message)
-    setFriends(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
-  }
-
-  function handleFriendDelete(id) {
-    setFriends(prev => prev.filter(f => f.id !== id))
-    setSelectedFriend(null)
-  }
-
-  function handleFriendRename(id, newName) {
-    setFriends(prev =>
-      prev.map(f => f.id === id ? { ...f, name: newName } : f)
-         .sort((a, b) => a.name.localeCompare(b.name))
-    )
-    setSelectedFriend(prev => prev?.id === id ? { ...prev, name: newName } : prev)
-  }
-
-  function handleCountChange(friendId, delta) {
-    setFriends(prev => prev.map(f => {
-      if (f.id !== friendId) return f
+  function handleCountChange(userId, delta) {
+    setMembers(prev => prev.map(m => {
+      if (m.user_id !== userId) return m
       const updated = delta > 0
-        ? [...(f.prayer_requests ?? []), { id: 'temp', created_at: new Date().toISOString() }]
-        : (f.prayer_requests ?? []).slice(1)
-      return { ...f, prayer_requests: updated }
+        ? [...(m.prayer_requests ?? []), { id: 'temp', created_at: new Date().toISOString() }]
+        : (m.prayer_requests ?? []).slice(1)
+      return { ...m, prayer_requests: updated }
     }))
   }
 
-  const filteredFriends = searchQuery.trim()
-    ? friends.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : friends
+  const filteredMembers = searchQuery.trim()
+    ? members.filter(m => m.display_name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : members
 
   return (
     <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
@@ -554,40 +362,29 @@ export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
         <div>
           <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
           <p className="text-stone-500 mt-1 text-sm">
-            {!loading && (friends.length === 0
-              ? 'No friends added yet'
-              : `${friends.length} friend${friends.length !== 1 ? 's' : ''}`
+            {!loading && (members.length === 0
+              ? 'No members yet'
+              : `${members.length} member${members.length !== 1 ? 's' : ''}`
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenSettings}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-          >
-            <GearSix size={20} weight="regular" />
-          </button>
-          {isAdmin && (
-            <button
-              onClick={() => setAddOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
-              title="Add friend"
-            >
-              <UserPlus size={20} weight="bold" />
-            </button>
-          )}
-        </div>
+        <button
+          onClick={onOpenSettings}
+          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+        >
+          <GearSix size={20} weight="regular" />
+        </button>
       </div>
 
       {/* Search bar */}
-      {!loading && friends.length > 0 && (
+      {!loading && members.length > 0 && (
         <div className="relative mb-4">
           <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search friends…"
+            placeholder="Search members…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
           />
         </div>
@@ -601,50 +398,42 @@ export default function PrayerTab({ displayName, isAdmin, onOpenSettings }) {
                 <div className="w-10 h-10 rounded-full bg-stone-200 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3.5 bg-stone-200 rounded w-2/5" />
-                  <div className="h-3 bg-stone-100 rounded w-1/4" />
                 </div>
                 <div className="h-3 bg-stone-100 rounded w-12" />
               </div>
             </div>
           ))}
         </div>
-      ) : friends.length === 0 ? (
+      ) : members.length === 0 ? (
         <div className="text-center py-16 text-stone-400">
           <div className="flex justify-center mb-3">
             <HandsPraying size={48} weight="fill" className="text-stone-300" />
           </div>
-          <p className="text-sm">Add a friend to keep track of prayer requests</p>
+          <p className="text-sm">No members in this group yet</p>
         </div>
-      ) : filteredFriends.length === 0 ? (
+      ) : filteredMembers.length === 0 ? (
         <div className="text-center py-12 text-stone-400">
           <MagnifyingGlass size={32} className="mx-auto mb-2 text-stone-300" />
-          <p className="text-sm">No friends match "{searchQuery}"</p>
+          <p className="text-sm">No members match "{searchQuery}"</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredFriends.map((friend, i) => (
-            <FriendCard
-              key={friend.id}
-              friend={friend}
+          {filteredMembers.map((member, i) => (
+            <MemberCard
+              key={member.user_id}
+              member={member}
               index={i}
-              onClick={() => setSelectedFriend(friend)}
+              onClick={() => setSelectedMember(member)}
             />
           ))}
         </div>
       )}
 
-      {addOpen && (
-        <AddFriendModal onClose={() => setAddOpen(false)} onSave={handleAddFriend} />
-      )}
-
-      {selectedFriend && (
+      {selectedMember && (
         <PrayerModal
-          friend={selectedFriend}
+          member={selectedMember}
           displayName={displayName}
-          isAdmin={isAdmin}
-          onClose={() => setSelectedFriend(null)}
-          onFriendDelete={handleFriendDelete}
-          onFriendRename={handleFriendRename}
+          onClose={() => setSelectedMember(null)}
           onCountChange={handleCountChange}
         />
       )}
