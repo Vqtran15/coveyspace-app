@@ -20,25 +20,33 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    // Get the user_ids who are members of this specific conversation
-    const { data: convMembers, error: convErr } = await supabase
-      .from('conversation_members')
-      .select('user_id')
-      .eq('conversation_id', msg.conversation_id)
-      .neq('user_id', msg.user_id)
+    let recipientIds: string[] | null = null
 
-    if (convErr) throw convErr
-    if (!convMembers?.length) return new Response('No recipients', { status: 200 })
+    // If we have a conversation_id, scope to conversation members only
+    if (msg.conversation_id) {
+      const { data: convMembers, error: convErr } = await supabase
+        .from('conversation_members')
+        .select('user_id')
+        .eq('conversation_id', msg.conversation_id)
+        .neq('user_id', msg.user_id)
 
-    const recipientIds = convMembers.map((m: { user_id: string }) => m.user_id)
+      if (convErr) throw convErr
+      if (!convMembers?.length) return new Response('No recipients', { status: 200 })
+      recipientIds = convMembers.map((m: { user_id: string }) => m.user_id)
+    }
 
-    // Fetch push subscriptions only for conversation participants
-    const { data: subs, error } = await supabase
+    // Fetch push subscriptions for recipients
+    let subsQuery = supabase
       .from('push_subscriptions')
       .select('id, endpoint, subscription')
       .eq('community_group_id', msg.community_group_id)
-      .in('user_id', recipientIds)
+      .neq('user_id', msg.user_id)
 
+    if (recipientIds) {
+      subsQuery = subsQuery.in('user_id', recipientIds)
+    }
+
+    const { data: subs, error } = await subsQuery
     if (error) throw error
     if (!subs?.length) return new Response('No subscribers', { status: 200 })
 
@@ -56,7 +64,6 @@ Deno.serve(async (req) => {
         try {
           await webpush.sendNotification(row.subscription, notification)
         } catch (err: any) {
-          // 410 Gone = subscription expired, remove it
           if (err.statusCode === 410 || err.statusCode === 404) {
             staleIds.push(row.id)
           }
@@ -71,8 +78,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ sent: subs.length - staleIds.length }), {
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (err) {
+  } catch (err: any) {
     console.error(err)
-    return new Response(String(err), { status: 500 })
+    return new Response(JSON.stringify({ error: err?.message ?? String(err) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 })

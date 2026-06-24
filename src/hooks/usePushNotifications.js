@@ -47,7 +47,7 @@ export function usePushNotifications(userId, groupId) {
   }
 
   async function subscribe() {
-    if (!supported) return
+    if (!supported || !userId || !groupId) return
     setToggling(true)
     try {
       const perm = await Notification.requestPermission()
@@ -61,16 +61,18 @@ export function usePushNotifications(userId, groupId) {
       })
 
       const json = sub.toJSON()
-      await supabase.from('push_subscriptions').upsert({
+      const { error } = await supabase.from('push_subscriptions').upsert({
         user_id:            userId,
         community_group_id: groupId,
         endpoint:           json.endpoint,
         subscription:       json,
-      }, { onConflict: 'user_id, endpoint' })
+      }, { onConflict: 'user_id,endpoint' })
 
+      if (error) throw error
       setSubscribed(true)
     } catch (err) {
       console.error('Push subscribe error:', err)
+      alert(`Notification setup failed: ${err?.message ?? err}`)
     } finally {
       setToggling(false)
     }
