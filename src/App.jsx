@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House } from '@phosphor-icons/react'
+import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { formatDate } from './utils/dates.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
@@ -121,6 +122,7 @@ export default function App() {
   }, [session])
 
   const displayName = profile?.display_name ?? ''
+  const push = usePushNotifications(session?.user?.id, groupId)
   const groupName   = profile?.community_groups?.name ?? session?.user?.user_metadata?.community_group_name ?? ''
   const groupId     = profile?.community_group_id ?? null
   const isAdmin     = profile?.role === 'admin'
@@ -241,6 +243,11 @@ export default function App() {
           userId={session.user.id}
           onOpenGuide={() => setGuideOpen(true)}
           onClose={() => setSettingsOpen(false)}
+          pushSupported={push.supported}
+          pushSubscribed={push.subscribed}
+          pushPermission={push.permission}
+          pushToggling={push.toggling}
+          onPushToggle={push.toggle}
         />
       )}
 

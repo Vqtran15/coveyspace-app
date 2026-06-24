@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GearSix, SignOut, Trash, Crown, X, BookOpen, CaretRight } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, Crown, X, BookOpen, CaretRight, Bell, BellSlash } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 
@@ -7,7 +7,7 @@ function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
-export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onOpenGuide, onClose }) {
+export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onOpenGuide, onClose, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [closing, close] = useModalClose(onClose)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -189,6 +189,36 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {pushSupported && (
+            <div className="pt-2 border-t border-stone-100">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Notifications</p>
+              {pushPermission === 'denied' ? (
+                <p className="text-xs text-stone-400 px-1 py-1">
+                  Notifications are blocked. Enable them in your browser settings.
+                </p>
+              ) : (
+                <button
+                  onClick={onPushToggle}
+                  disabled={pushToggling}
+                  className="w-full flex items-center gap-3 px-1 py-2.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-50"
+                >
+                  {pushSubscribed
+                    ? <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
+                    : <Bell size={18} weight="fill" className="text-jade shrink-0" />
+                  }
+                  <span className="flex-1 text-left font-medium">
+                    {pushToggling
+                      ? 'Updating…'
+                      : pushSubscribed
+                        ? 'Turn off chat notifications'
+                        : 'Turn on chat notifications'
+                    }
+                  </span>
+                </button>
+              )}
             </div>
           )}
 
