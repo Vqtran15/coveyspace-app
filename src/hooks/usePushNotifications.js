@@ -24,9 +24,16 @@ export function usePushNotifications(userId, groupId) {
 
   useEffect(() => {
     if (!supported || !userId || !groupId) return
-    navigator.serviceWorker.ready.then(reg =>
-      reg.pushManager.getSubscription().then(sub => setSubscribed(!!sub))
-    )
+    const timer = setTimeout(() => {
+      Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 5000)),
+      ])
+        .then(reg => reg.pushManager.getSubscription())
+        .then(sub => setSubscribed(!!sub))
+        .catch(() => {})
+    }, 500)
+    return () => clearTimeout(timer)
   }, [supported, userId, groupId])
 
   async function swReady() {
