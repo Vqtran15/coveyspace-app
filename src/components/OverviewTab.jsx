@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandWaving, Lightbulb } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandWaving, Lightbulb, GearSix } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
@@ -110,7 +110,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, birthdays, onOpenBirthdays, onOpenGuide }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings }) {
   const navigate = useNavigate()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
@@ -189,12 +189,20 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   return (
     <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
-      <div className="mb-7 animate-fade-up" style={{ animationDelay: '0ms' }}>
-        <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-2">
-          {timeGreeting()}{displayName ? `, ${displayName.split(' ')[0]}` : ''}
-          <HandWaving size={30} weight="fill" className="text-amber-400 animate-wave origin-bottom" />
-        </h1>
-        {groupName && <p className="text-stone-500 mt-1 text-sm">{groupName}</p>}
+      <div className="mb-7 animate-fade-up flex items-start justify-between" style={{ animationDelay: '0ms' }}>
+        <div>
+          <h1 className="text-3xl font-bold text-stone-800 flex items-center gap-2">
+            {timeGreeting()}{displayName ? `, ${displayName.split(' ')[0]}` : ''}
+            <HandWaving size={30} weight="fill" className="text-amber-400 animate-wave origin-bottom" />
+          </h1>
+          {groupName && <p className="text-stone-500 mt-1 text-sm">{groupName}</p>}
+        </div>
+        <button
+          onClick={onOpenSettings}
+          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0 mt-1"
+        >
+          <GearSix size={22} weight="regular" />
+        </button>
       </div>
 
       <div className="space-y-3">
