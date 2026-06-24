@@ -95,10 +95,11 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
       onClick={close}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        style={{ maxHeight: '85vh' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 pb-4">
+        <div className="flex items-center justify-between p-5 pb-4 shrink-0">
           <div className="flex items-center gap-2">
             <GearSix size={20} weight="fill" className="text-jade" />
             <h2 className="text-lg font-bold text-stone-800">Settings</h2>
@@ -111,7 +112,7 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
           </button>
         </div>
 
-        <div className="px-5 pb-6 space-y-2">
+        <div className="px-5 pb-6 space-y-2 overflow-y-auto overscroll-contain">
           <div className="pt-2 border-t border-stone-100">
             <button
               onClick={() => { close(); onOpenGuide?.() }}
