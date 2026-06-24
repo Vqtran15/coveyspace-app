@@ -94,6 +94,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [infoOpen, setInfoOpen]             = useState(false)
   const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
   const [renamingGroup, setRenamingGroup]   = useState(false)
+  const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false)
   const [renameValue, setRenameValue]       = useState('')
   const [renameSaving, setRenameSaving]     = useState(false)
 
@@ -384,7 +385,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   async function deleteMessage(msgId) {
-    setActiveMsg(null); setMenuPos(null)
+    setActiveMsg(null); setMenuPos(null); setConfirmDeleteMsg(false)
     setMessages(prev => prev.filter(m => m.id !== msgId))
     await supabase.from('messages').delete().eq('id', msgId)
   }
@@ -421,7 +422,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setReplyingTo(msg)
       setTimeout(() => textareaRef.current?.focus(), 50)
     }
-    setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false)
+    setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false); setConfirmDeleteMsg(false)
   }
 
   function scrollToMessage(msgId) {
@@ -770,7 +771,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               <>
                 <div className="w-px h-6 bg-stone-100 mx-0.5" />
                 <button
-                  onClick={() => deleteMessage(activeMsg)}
+                  onClick={() => setConfirmDeleteMsg(true)}
                   className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
                 >
                   <Trash size={14} weight="bold" />
@@ -778,6 +779,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               </>
             )}
           </div>
+          {confirmDeleteMsg && (
+            <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-stone-100 px-1">
+              <span className="text-xs text-stone-500 flex-1">Delete message?</span>
+              <button
+                onClick={() => setConfirmDeleteMsg(false)}
+                className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteMessage(activeMsg)}
+                className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          )}
           {showMoreEmojis && (
             <div className="grid grid-cols-6 gap-0.5 mt-1 pt-1 border-t border-stone-100">
               {MORE_EMOJIS.map(emoji => {

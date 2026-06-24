@@ -37,12 +37,12 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [selectedMembers, setSelectedMembers] = useState(new Set())
   const [creating, setCreating]               = useState(false)
   const [confirmDeleteConv, setConfirmDeleteConv] = useState(null)
-  const [deleteClosing, closeDeleteConfirm, , resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
+  const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
-  const { className: headerClass } = useEntranceAnimation('/chat', 0, { direction: 'left' })
+  const { className: headerClass } = useEntranceAnimation('/chat', 0)
 
   async function loadConversations() {
     try {

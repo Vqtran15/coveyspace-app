@@ -120,6 +120,7 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
   const [editText, setEditText]           = useState('')
   const [newId, setNewId]                 = useState(null)
   const newIdTimerRef                     = useRef(null)
+  const [confirmRequestId, setConfirmRequestId] = useState(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimDone(true), 280)
@@ -164,6 +165,7 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
     const { error: err } = await supabase.from('prayer_requests').delete().eq('id', id)
     if (err) { alert('Failed to delete: ' + err.message); return }
     setRequests(prev => prev.filter(r => r.id !== id))
+    setConfirmRequestId(null)
     onCountChange(friend.id, -1)
   }
 
@@ -364,13 +366,13 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <button
-                            onClick={() => startEditRequest(r)}
+                            onClick={() => { setConfirmRequestId(null); startEditRequest(r) }}
                             className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
                           >
                             <PencilSimple size={14} />
                           </button>
                           <button
-                            onClick={() => handleDeleteRequest(r.id)}
+                            onClick={() => setConfirmRequestId(r.id)}
                             className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
                           >
                             <Trash size={14} />
@@ -378,6 +380,23 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
                         </div>
                       </div>
                       <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                      {confirmRequestId === r.id && (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
+                          <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
+                          <button
+                            onClick={() => setConfirmRequestId(null)}
+                            className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRequest(r.id)}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
