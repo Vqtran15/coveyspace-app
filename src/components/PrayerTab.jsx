@@ -101,9 +101,10 @@ function AddFriendModal({ onClose, onSave }) {
 }
 
 function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRename, onCountChange }) {
-  const [closing, close, mounted] = useModalClose(onClose)
+  const [closing, close] = useModalClose(onClose)
   const [requests, setRequests]           = useState([])
   const [loading, setLoading]             = useState(true)
+  const [animDone, setAnimDone]           = useState(false)
   const [date, setDate]                   = useState(new Date().toISOString().split('T')[0])
   const [requestText, setRequestText]     = useState('')
   const [saving, setSaving]               = useState(false)
@@ -117,6 +118,11 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
   const [editDate, setEditDate]           = useState('')
   const [editText, setEditText]           = useState('')
   const [newId, setNewId]                 = useState(null)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimDone(true), 280)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     supabase
@@ -209,8 +215,7 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
       onClick={close}
     >
       <div
-        className={`bg-white rounded-t-2xl shadow-xl w-full flex flex-col max-h-[90vh] ${mounted ? (closing ? 'animate-modal-out' : 'animate-modal-in') : ''}`}
-        style={!mounted ? { opacity: 0, transform: 'translateY(100%)' } : undefined}
+        className={`bg-white rounded-t-2xl shadow-xl w-full flex flex-col max-h-[90vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -298,7 +303,7 @@ function PrayerModal({ friend, displayName, onClose, onFriendDelete, onFriendRen
 
           {/* Prayer request list */}
           <div className="py-4 space-y-3">
-            {loading ? (
+            {loading || !animDone ? (
               <div className="space-y-3">
                 {[0, 1, 2].map(i => (
                   <div key={i} className="bg-stone-50 rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>

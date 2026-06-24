@@ -20,17 +20,14 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   const [removingId, setRemovingId] = useState(null)
 
   useEffect(() => {
-    if (!groupId) return
+    if (!groupId || !isAdmin) return
     const id = setTimeout(() => {
       supabase
-        .from('community_groups')
-        .select('invite_code')
-        .eq('id', groupId)
-        .single()
-        .then(({ data }) => setInviteCode(data?.invite_code ?? null))
+        .rpc('get_invite_code')
+        .then(({ data }) => setInviteCode(data ?? null))
     }, 260)
     return () => clearTimeout(id)
-  }, [groupId])
+  }, [groupId, isAdmin])
 
   useEffect(() => {
     if (!groupId || !isAdmin) return
@@ -113,7 +110,7 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
         </div>
 
         <div className="px-5 pb-6 space-y-2 overflow-y-auto overscroll-contain">
-          {inviteCode && (
+          {isAdmin && inviteCode && (
             <div className="pt-2 border-t border-stone-100">
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>
               <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
