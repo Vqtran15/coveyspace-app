@@ -241,7 +241,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 <Megaphone size={26} weight="fill" className="text-white/70 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-semibold text-white/60 uppercase tracking-wide mb-1">Announcement</p>
-                  <p className="text-sm text-white leading-relaxed font-medium">{announcement}</p>
+                  <p className="text-sm text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
                 </div>
                 {isAdmin && (
                   <button
