@@ -147,7 +147,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         .then(({ data }) => setAnnouncement(data?.announcement ?? null))
     }
 
-    const cached = JSON.parse(localStorage.getItem('fun_fact') ?? 'null')
+    const cached = JSON.parse(localStorage.getItem('fun_fact_v2') ?? 'null')
     if (cached?.date === today) {
       setFunFact(cached.text)
     } else {
@@ -159,7 +159,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         .then(r => r.json())
         .then(d => {
           const text = useDog ? d.data[0].attributes.body : d.fact
-          localStorage.setItem('fun_fact', JSON.stringify({ date: today, text }))
+          localStorage.setItem('fun_fact_v2', JSON.stringify({ date: today, text }))
           setFunFact(text)
         })
         .catch(() => setFunFact(null))
