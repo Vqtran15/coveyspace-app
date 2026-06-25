@@ -428,7 +428,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setEditingMsgId(msgId)
     setEditText(msg.body)
     setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false); setConfirmDeleteMsg(false)
-    setTimeout(() => editTextareaRef.current?.focus(), 50)
+    setTimeout(() => {
+      const el = editTextareaRef.current
+      if (!el) return
+      el.style.height = 'auto'
+      el.style.height = el.scrollHeight + 'px'
+      el.focus()
+    }, 50)
   }
 
   async function handleSaveEdit(e) {
@@ -649,7 +655,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           <textarea
                             ref={editTextareaRef}
                             value={editText}
-                            onChange={e => setEditText(e.target.value)}
+                            onChange={e => {
+                              setEditText(e.target.value)
+                              e.target.style.height = 'auto'
+                              e.target.style.height = e.target.scrollHeight + 'px'
+                            }}
                             onKeyDown={e => {
                               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(e) }
                               if (e.key === 'Escape') setEditingMsgId(null)
