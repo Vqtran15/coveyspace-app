@@ -118,6 +118,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [editingMsgId, setEditingMsgId]         = useState(null)
   const [editText, setEditText]                 = useState('')
   const [selectedMsgId, setSelectedMsgId]       = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId]   = useState(null)
   const toast = useToast()
   const [renameValue, setRenameValue]       = useState('')
   const [renameSaving, setRenameSaving]     = useState(false)
@@ -288,11 +289,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }, [searchOpen])
 
   useEffect(() => {
-    if (!selectedMsgId) return
-    function clear() { setSelectedMsgId(null) }
+    if (!selectedMsgId && !confirmDeleteId) return
+    function clear() { setSelectedMsgId(null); setConfirmDeleteId(null) }
     document.addEventListener('click', clear)
     return () => document.removeEventListener('click', clear)
-  }, [selectedMsgId])
+  }, [selectedMsgId, confirmDeleteId])
 
   // ── Scroll ────────────────────────────────────────────────────────────────
   function handleScroll() {
@@ -459,7 +460,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
     } else {
       lastTapRef.current = { time: now, msgId }
-      if (selectedMsgId) setSelectedMsgId(null)
+      setSelectedMsgId(null)
+      setConfirmDeleteId(null)
     }
   }
 
@@ -656,12 +658,39 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   onClick={e => handleDoubleTap(e, msg.id, isOwn)}
                 >
                   {isOwn && selectedMsgId === msg.id && !editingMsgId && (
-                    <button
-                      onClick={e => { e.stopPropagation(); setSelectedMsgId(null); deleteMessage(msg.id) }}
-                      className="self-center w-8 h-8 rounded-full bg-red-50 border border-red-100 text-red-400 hover:text-red-600 hover:bg-red-100 flex items-center justify-center shrink-0 transition-colors animate-overlay-in"
-                    >
-                      <Trash size={14} weight="fill" />
-                    </button>
+                    <div className="self-center flex items-center gap-1 animate-overlay-in">
+                      {msg.body && (
+                        <button
+                          onClick={e => { e.stopPropagation(); setSelectedMsgId(null); startEdit(msg.id) }}
+                          className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 text-stone-500 hover:text-stone-700 hover:bg-stone-200 flex items-center justify-center shrink-0 transition-colors"
+                        >
+                          <PencilSimple size={13} weight="bold" />
+                        </button>
+                      )}
+                      <button
+                        onClick={e => { e.stopPropagation(); setSelectedMsgId(null); setConfirmDeleteId(msg.id) }}
+                        className="w-8 h-8 rounded-full bg-red-50 border border-red-100 text-red-400 hover:text-red-600 hover:bg-red-100 flex items-center justify-center shrink-0 transition-colors"
+                      >
+                        <Trash size={13} weight="fill" />
+                      </button>
+                    </div>
+                  )}
+                  {isOwn && confirmDeleteId === msg.id && (
+                    <div className="self-center flex items-center gap-1.5 animate-overlay-in">
+                      <span className="text-xs text-stone-400 whitespace-nowrap">Delete?</span>
+                      <button
+                        onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                        className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 transition-colors"
+                      >
+                        No
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setConfirmDeleteId(null); deleteMessage(msg.id) }}
+                        className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                      >
+                        Yes
+                      </button>
+                    </div>
                   )}
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
