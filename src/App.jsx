@@ -57,7 +57,7 @@ export default function App() {
   const location = useLocation()
   const prevIndexRef  = useRef(PATHS.indexOf(location.pathname))
   const locationRef   = useRef(location.pathname)
-  const [enterFrom, setEnterFrom]       = useState('right')
+  const enterFromRef = useRef('right')
   const [birthdays, setBirthdays]       = useState([])
   const [session, setSession]           = useState(null)
   const [authLoading, setAuthLoading]   = useState(true)
@@ -189,7 +189,7 @@ export default function App() {
   function handleTabChange(path) {
     haptic()
     const newIndex = PATHS.indexOf(path)
-    setEnterFrom(newIndex > prevIndexRef.current ? 'right' : 'left')
+    enterFromRef.current = newIndex > prevIndexRef.current ? 'right' : 'left'
     prevIndexRef.current = newIndex
     if (path === '/chat') setUnreadChatCount(0)
     navigate(path)
@@ -207,13 +207,13 @@ export default function App() {
 
       <div
         key={location.pathname}
-        className={`${isFullHeight ? '' : 'pb-24'} ${enterFrom === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
+        className={`${isFullHeight ? '' : 'pb-24'} ${enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
-          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>
       </div>

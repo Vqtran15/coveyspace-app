@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from './lib/supabase.js'
 import { patchTitleDate, toDateString } from './utils/dates.js'
@@ -50,7 +50,7 @@ async function autoFillPages(existingPages, tables, defaultTitle) {
   return result
 }
 
-export default function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }) {
+const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }, ref) {
   const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false } = config
 
   const [pages, setPages]       = useState([])
@@ -169,6 +169,16 @@ export default function RotationTab({ config, revealKey, groupName = '', display
     }
   }
 
+  useImperativeHandle(ref, () => ({
+    jumpToToday() {
+      const today = toDateString(new Date())
+      const idx = pages.findIndex(p => p.week_date >= today)
+      setViewIndex(idx === -1 ? pages.length - 1 : idx)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    },
+    openPages() { setShowPages(true) },
+  }))
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -196,28 +206,30 @@ export default function RotationTab({ config, revealKey, groupName = '', display
 
   return (
     <>
-      <div className={`max-w-3xl mx-auto px-4 ${compact ? 'pt-2' : 'pt-8'} pb-2 flex items-center justify-between`}>
-        <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              const today = toDateString(new Date())
-              const idx = pages.findIndex(p => p.week_date >= today)
-              setViewIndex(idx === -1 ? pages.length - 1 : idx)
-              window.scrollTo({ top: 0, behavior: 'instant' })
-            }}
-            className="px-3 py-1.5 rounded-xl text-sm font-medium text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-          >
-            Today
-          </button>
-          <button
-            onClick={() => setShowPages(true)}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-          >
-            <ListBullets size={20} weight="regular" />
-          </button>
+      {!compact && (
+        <div className="max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                const today = toDateString(new Date())
+                const idx = pages.findIndex(p => p.week_date >= today)
+                setViewIndex(idx === -1 ? pages.length - 1 : idx)
+                window.scrollTo({ top: 0, behavior: 'instant' })
+              }}
+              className="px-3 py-1.5 rounded-xl text-sm font-medium text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setShowPages(true)}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+            >
+              <ListBullets size={20} weight="regular" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="pt-2" onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
         {viewedPage ? (
@@ -294,4 +306,6 @@ export default function RotationTab({ config, revealKey, groupName = '', display
       )}
     </>
   )
-}
+})
+
+export default RotationTab

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ListBullets } from '@phosphor-icons/react'
 import RotationTab from '../RotationTab.jsx'
 
 export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin }) {
@@ -8,6 +8,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
   const [segment, setSegment] = useState(location.state?.segment ?? 'meals')
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
   const switchingRef = useRef(false)
+  const rotationRef = useRef(null)
 
   function switchTo(newSeg) {
     if (newSeg === segment || switchingRef.current) return
@@ -24,7 +25,24 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
 
   return (
     <div>
-      <div className="max-w-3xl mx-auto px-4 pt-6 pb-3">
+      <div className="max-w-3xl mx-auto px-4 pt-8 pb-3">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-bold text-stone-800">Sign Up</h1>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => rotationRef.current?.jumpToToday()}
+              className="px-3 py-1.5 rounded-xl text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-200 transition-colors"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => rotationRef.current?.openPages()}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-200 transition-colors"
+            >
+              <ListBullets size={20} weight="regular" />
+            </button>
+          </div>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => switchTo('meals')}
@@ -54,6 +72,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
       <div className={animClass}>
         <RotationTab
           key={segment}
+          ref={rotationRef}
           config={segment === 'meals' ? mealsConfig : servicesConfig}
           revealKey={segment}
           groupName={groupName}

@@ -3,6 +3,7 @@ import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash }
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 function initials(name) {
@@ -18,7 +19,7 @@ function formatTime(iso) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings }) {
+export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [] }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -251,8 +252,14 @@ export default function ConversationList({ session, groupId, members, enterClass
       className={`flex flex-col bg-sunrise-50 ${enterClass ?? ''}`}
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
     >
+      {upcoming.length > 0 && (
+        <div className="shrink-0">
+          <BirthdayBanner upcoming={upcoming} />
+        </div>
+      )}
+
       {/* Header */}
-      <div className={`max-w-3xl mx-auto w-full px-4 pt-8 pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
+      <div className={`max-w-3xl mx-auto w-full px-4 ${upcoming.length > 0 ? 'pt-4' : 'pt-8'} pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
         </div>
@@ -264,7 +271,7 @@ export default function ConversationList({ session, groupId, members, enterClass
               setSearchQuery('')
               if (!searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
             }}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-jade text-white' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'}`}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-jade text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
           >
             <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
           </button>
@@ -312,7 +319,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             <p className="text-sm">No conversations yet</p>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto w-full divide-y divide-stone-100">
+          <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
             {conversations.filter(conv => {
               if (!searchQuery.trim()) return true
               const q = searchQuery.toLowerCase()
@@ -332,13 +339,13 @@ export default function ConversationList({ session, groupId, members, enterClass
               return (
                 <div
                   key={conv.id}
-                  className="flex items-stretch hover:bg-white/70 transition-colors bg-sunrise-50 animate-fade-up"
+                  className="flex items-stretch bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-up"
                   style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
                 >
                   {/* Main row */}
                   <button
                     onClick={() => onSelect(conv)}
-                    className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0"
+                    className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
                   >
                     <div className="relative shrink-0">
                       <div className={`w-11 h-11 rounded-full flex items-center justify-center ${isDm ? avatarColor(otherId ?? '', otherMember?.avatar_color) : 'bg-jade'}`}>
@@ -350,7 +357,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                         }
                       </div>
                       {unread && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-jade rounded-full border-2 border-sunrise-50" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-jade rounded-full border-2 border-white" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
