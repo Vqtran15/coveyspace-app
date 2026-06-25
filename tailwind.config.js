@@ -133,9 +133,9 @@ export default {
         },
         'party-launch': {
           '0%':   { opacity: '0', transform: 'translate(0, 0) scale(0.6) rotate(0deg)' },
-          '8%':   { opacity: '1', transform: 'translate(12px, -18px) scale(1.2) rotate(5deg)' },
-          '80%':  { opacity: '1', transform: 'translate(55px, -65px) scale(1.1) rotate(14deg)' },
-          '100%': { opacity: '0', transform: 'translate(72px, -80px) scale(0.5) rotate(18deg)' },
+          '8%':   { opacity: '1', transform: 'translate(6px, -9px) scale(1.2) rotate(5deg)' },
+          '80%':  { opacity: '1', transform: 'translate(28px, -33px) scale(1.1) rotate(14deg)' },
+          '100%': { opacity: '0', transform: 'translate(36px, -40px) scale(0.5) rotate(18deg)' },
         },
         'edit-pop': {
           '0%':   { transform: 'scale(1)' },
