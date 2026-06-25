@@ -347,7 +347,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0"
                   >
                     <div className="relative shrink-0">
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${isDm ? avatarColor(otherId ?? '') : 'bg-jade'}`}>
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${isDm ? avatarColor(otherId ?? '', otherMember?.avatar_color) : 'bg-jade'}`}>
                         {isDm
                           ? otherMember?.avatar_icon
                             ? <AvatarIcon name={otherMember.avatar_icon} size={22} />
@@ -478,7 +478,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     disabled={starting}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-stone-50 transition-colors disabled:opacity-50"
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id)}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id, m.avatar_color)}`}>
                       {m.avatar_icon
                         ? <AvatarIcon name={m.avatar_icon} size={20} />
                         : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
@@ -516,7 +516,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                             onClick={() => toggleMember(m.user_id)}
                             className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
                           >
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id)}`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id, m.avatar_color)}`}>
                               {m.avatar_icon
                                 ? <AvatarIcon name={m.avatar_icon} size={20} />
                                 : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
