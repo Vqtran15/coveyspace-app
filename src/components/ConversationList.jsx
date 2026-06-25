@@ -310,8 +310,23 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* List */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="flex justify-center py-16">
-            <p className="text-stone-400 text-sm animate-pulse">Loading…</p>
+          <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
+            {[0, 1, 2, 3, 4].map(i => (
+              <div
+                key={i}
+                className="flex items-center gap-3 bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5 animate-pulse"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <div className="w-11 h-11 rounded-full bg-stone-200 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="h-3.5 bg-stone-200 rounded w-2/5" />
+                    <div className="h-3 bg-stone-100 rounded w-10 shrink-0" />
+                  </div>
+                  <div className={`h-3 bg-stone-100 rounded ${i % 2 === 0 ? 'w-3/5' : 'w-4/5'}`} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">

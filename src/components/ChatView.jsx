@@ -633,13 +633,39 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 max-w-3xl mx-auto w-full">
         {loadingMore && (
           <div className="flex justify-center py-3">
-            <p className="text-xs text-stone-400 animate-pulse">Loading earlier messages…</p>
+            <div className="flex items-center gap-1.5">
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full bg-stone-300 animate-bounce"
+                  style={{ animationDelay: `${i * 120}ms` }}
+                />
+              ))}
+            </div>
           </div>
         )}
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <p className="text-stone-400 text-sm animate-pulse">Loading messages…</p>
+          <div className="space-y-3 py-4">
+            {[
+              { side: 'left',  w: 'w-48' },
+              { side: 'right', w: 'w-36' },
+              { side: 'left',  w: 'w-56' },
+              { side: 'left',  w: 'w-40' },
+              { side: 'right', w: 'w-52' },
+              { side: 'right', w: 'w-32' },
+              { side: 'left',  w: 'w-44' },
+              { side: 'right', w: 'w-60' },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className={`flex items-end gap-2 animate-pulse ${item.side === 'right' ? 'justify-end' : 'justify-start'}`}
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                {item.side === 'left' && <div className="w-7 h-7 rounded-full bg-stone-200 shrink-0 mb-0.5" />}
+                <div className={`${item.w} h-10 rounded-2xl ${item.side === 'right' ? 'rounded-br-sm bg-jade/20' : 'rounded-bl-sm bg-stone-200'}`} />
+              </div>
+            ))}
           </div>
         ) : filteredMsgs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
