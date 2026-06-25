@@ -9,12 +9,12 @@ import {
   Bird, Dog, Cat, Fish, Butterfly, Rabbit,
   Horse, Shrimp, Cow, PawPrint, Bug, Drop,
   // Food & drink
-  Coffee, Cookie, IceCream, Cake, Wine, Avocado,
-  ForkKnife, BowlFood, Pizza, Hamburger, Flame, Campfire,
+  Coffee, Cookie, IceCream, Cherries, Wine, Avocado,
+  CookingPot, BowlFood, Pizza, Hamburger, Flame, Campfire,
   // Faith & heart
-  HandsPraying, Heart, Peace, Handshake, HandHeart, YinYang,
+  HandsPraying, Heart, Peace, Handshake, HandHeart, Infinity,
   // Achievement
-  Crown, Star, Gift, GraduationCap, Trophy, Medal,
+  Crown, Star, Gift, Certificate, Trophy, Medal,
   // Creative
   MusicNote, Guitar, Book, Palette, Camera, MagicWand,
   PianoKeys, Microphone, VinylRecord, PaintBrush, Headphones, GameController,
@@ -74,11 +74,11 @@ export const AVATAR_ICON_LIST = [
   { name: 'Coffee',        Icon: Coffee },
   { name: 'Cookie',        Icon: Cookie },
   { name: 'IceCream',      Icon: IceCream },
-  { name: 'Cake',          Icon: Cake },
+  { name: 'Cherries',      Icon: Cherries },
   { name: 'Wine',          Icon: Wine },
   { name: 'Avocado',       Icon: Avocado },
   // Row 8 — More food & fire
-  { name: 'ForkKnife',     Icon: ForkKnife },
+  { name: 'CookingPot',    Icon: CookingPot },
   { name: 'BowlFood',      Icon: BowlFood },
   { name: 'Pizza',         Icon: Pizza },
   { name: 'Hamburger',     Icon: Hamburger },
@@ -90,12 +90,12 @@ export const AVATAR_ICON_LIST = [
   { name: 'Peace',         Icon: Peace },
   { name: 'Handshake',     Icon: Handshake },
   { name: 'HandHeart',     Icon: HandHeart },
-  { name: 'YinYang',       Icon: YinYang },
+  { name: 'Infinity',      Icon: Infinity },
   // Row 10 — Achievement & celebration
   { name: 'Crown',         Icon: Crown },
   { name: 'Star',          Icon: Star },
   { name: 'Gift',          Icon: Gift },
-  { name: 'GraduationCap', Icon: GraduationCap },
+  { name: 'Certificate',   Icon: Certificate },
   { name: 'Trophy',        Icon: Trophy },
   { name: 'Medal',         Icon: Medal },
   // Row 11 — Creative
