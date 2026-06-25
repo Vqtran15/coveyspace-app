@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { HandsPraying, X, Plus, Trash, PencilSimple, Check, GearSix, MagnifyingGlass } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, Check, MagnifyingGlass } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -378,12 +378,6 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             )}
           </p>
         </div>
-        <button
-          onClick={onOpenSettings}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-        >
-          <GearSix size={20} weight="regular" />
-        </button>
       </div>
 
       {/* Search bar */}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, GearSix } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -258,12 +258,7 @@ export default function ConversationList({ session, groupId, members, enterClass
           <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenSettings}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-          >
-            <GearSix size={20} weight="regular" />
-          </button>
+
           <button
             onClick={() => {
               setSearchOpen(v => !v)

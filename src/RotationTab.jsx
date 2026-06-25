@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ListBullets, GearSix } from '@phosphor-icons/react'
+import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from './lib/supabase.js'
 import { patchTitleDate, toDateString } from './utils/dates.js'
 import { haptic } from './lib/haptic.js'
@@ -50,7 +50,7 @@ async function autoFillPages(existingPages, tables, defaultTitle) {
   return result
 }
 
-export default function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false }) {
+export default function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }) {
   const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false } = config
 
   const [pages, setPages]       = useState([])
@@ -196,7 +196,7 @@ export default function RotationTab({ config, revealKey, groupName = '', display
 
   return (
     <>
-      <div className="max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
+      <div className={`max-w-3xl mx-auto px-4 ${compact ? 'pt-2' : 'pt-8'} pb-2 flex items-center justify-between`}>
         <button
           onClick={() => {
             const today = toDateString(new Date())
@@ -215,12 +215,6 @@ export default function RotationTab({ config, revealKey, groupName = '', display
             className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
           >
             <ListBullets size={20} weight="regular" />
-          </button>
-          <button
-            onClick={onOpenSettings}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-          >
-            <GearSix size={20} weight="regular" />
           </button>
         </div>
       </div>

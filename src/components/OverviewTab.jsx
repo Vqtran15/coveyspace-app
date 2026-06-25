@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandWaving, Lightbulb, GearSix } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandWaving, Lightbulb } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
@@ -271,12 +271,6 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             </p>
           )}
         </div>
-        <button
-          onClick={onOpenSettings}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0 mt-1"
-        >
-          <GearSix size={22} weight="regular" />
-        </button>
       </div>
 
       <div className="space-y-3">
@@ -325,7 +319,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         {nextMeal === undefined
           ? <CardSkeleton delay={showAnnouncement ? 140 : 70} />
           : <Card
-              onClick={() => navigate('/meals')}
+              onClick={() => navigate('/schedule')}
               icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
               iconBg="bg-jade/10"
               label="Next Meal"
@@ -337,7 +331,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         {nextService === undefined
           ? <CardSkeleton delay={showAnnouncement ? 210 : 140} />
           : <Card
-              onClick={() => navigate('/services')}
+              onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
               icon={<HandHeart size={24} weight="fill" className="text-coral" />}
               iconBg="bg-coral/10"
               label="Next Service"

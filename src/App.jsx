@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { formatDate } from './utils/dates.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
-import RotationTab from './RotationTab.jsx'
+import ScheduleTab from './components/ScheduleTab.jsx'
 import BirthdayTab from './components/BirthdayTab.jsx'
 import PrayerTab from './components/PrayerTab.jsx'
 import BirthdayBanner from './components/BirthdayBanner.jsx'
@@ -18,43 +18,36 @@ import ResetPasswordPage from './components/ResetPasswordPage.jsx'
 import WelcomeSplash from './components/WelcomeSplash.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
 
+const MEALS_CONFIG = {
+  label: 'Meal Signup',
+  Icon: ForkKnife,
+  editLabel: 'Edit Meal',
+  noun: 'Ingredient',
+  itemNoun: 'Ingredient',
+  pageNoun: 'Meal',
+  pageNounPlural: 'Meals',
+  tables: { pages: 'meal_pages', signups: 'signups', pauseRpc: 'toggle_meal_pause' },
+  autoFill: true,
+  defaultTitle: dateStr => `Meal — ${formatDate(dateStr)}`,
+}
+
+const SERVICES_CONFIG = {
+  label: 'Service Night',
+  Icon: HandHeart,
+  editLabel: 'Edit Items',
+  noun: 'Item',
+  itemNoun: 'Item',
+  pageNoun: 'Service',
+  pageNounPlural: 'Services',
+  tables: { pages: 'serving_pages', signups: 'serving_signups', pauseRpc: 'toggle_service_pause' },
+  defaultTitle: dateStr => `Service Night — ${formatDate(dateStr)}`,
+}
+
 const TABS = [
-  { path: '/home',     shortLabel: 'Home',      Icon: House },
-  {
-    path: '/meals',
-    shortLabel: 'Meals',
-    Icon: ForkKnife,
-    config: {
-      label: 'Meal Signup',
-      Icon: ForkKnife,
-      editLabel: 'Edit Meal',
-      noun: 'Ingredient',
-      itemNoun: 'Ingredient',
-      pageNoun: 'Meal',
-      pageNounPlural: 'Meals',
-      tables: { pages: 'meal_pages', signups: 'signups', pauseRpc: 'toggle_meal_pause' },
-      autoFill: true,
-      defaultTitle: dateStr => `Meal — ${formatDate(dateStr)}`,
-    },
-  },
-  {
-    path: '/services',
-    shortLabel: 'Service',
-    Icon: HandHeart,
-    config: {
-      label: 'Service Night',
-      Icon: HandHeart,
-      editLabel: 'Edit Items',
-      noun: 'Item',
-      itemNoun: 'Item',
-      pageNoun: 'Service',
-      pageNounPlural: 'Services',
-      tables: { pages: 'serving_pages', signups: 'serving_signups', pauseRpc: 'toggle_service_pause' },
-      defaultTitle: dateStr => `Service Night — ${formatDate(dateStr)}`,
-    },
-  },
-  { path: '/chat',      shortLabel: 'Chat',      Icon: ChatCircleDots },
-  { path: '/prayer',    shortLabel: 'Prayer',    Icon: HandsPraying },
+  { path: '/home',     shortLabel: 'Home',     Icon: House },
+  { path: '/schedule', shortLabel: 'Sign Up',  Icon: NotePencil },
+  { path: '/chat',     shortLabel: 'Chat',     Icon: ChatCircleDots },
+  { path: '/prayer',   shortLabel: 'Prayer',   Icon: HandsPraying },
 ]
 
 const PATHS = TABS.map(t => t.path)
@@ -217,8 +210,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
-          <Route path="/meals"     element={<RotationTab config={TABS[1].config} revealKey="/meals"     groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
-          <Route path="/services"  element={<RotationTab config={TABS[2].config} revealKey="/services"  groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
+          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>
@@ -254,6 +246,15 @@ export default function App() {
             </button>
           )
         })}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors touch-manipulation text-stone-400"
+        >
+          <span className="px-3 py-1 rounded-2xl">
+            <GearSix size={26} weight={settingsOpen ? 'fill' : 'regular'} />
+          </span>
+          <span className="text-[10px] font-medium tracking-wide">Settings</span>
+        </button>
       </nav>
 
       {settingsOpen && (
