@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'react'
-import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash, PencilSimple } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
+import { AVATAR_ICON_LIST, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
+function AvatarCircle({ icon, name, userId, size = 'md' }) {
+  const dim = size === 'lg' ? 'w-16 h-16' : size === 'sm' ? 'w-7 h-7' : 'w-10 h-10'
+  const iconSize = size === 'lg' ? 28 : size === 'sm' ? 13 : 20
+  const textCls = size === 'lg' ? 'text-xl font-bold' : size === 'sm' ? 'text-[11px] font-bold' : 'text-sm font-bold'
+  return (
+    <div className={`${dim} rounded-full ${avatarColor(userId)} flex items-center justify-center shrink-0`}>
+      {icon
+        ? <AvatarIcon name={icon} size={iconSize} />
+        : <span className={`${textCls} text-white`}>{initials(name)}</span>
+      }
+    </div>
+  )
 }
 
 export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onClose, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
@@ -20,6 +35,19 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   const [members, setMembers] = useState([])
   const [settingRoleId, setSettingRoleId] = useState(null)
   const [removingId, setRemovingId] = useState(null)
+  const [avatarIcon, setAvatarIcon] = useState(null)
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
+  const [savingAvatar, setSavingAvatar] = useState(false)
+
+  useEffect(() => {
+    if (!userId) return
+    supabase
+      .from('profiles')
+      .select('avatar_icon')
+      .eq('user_id', userId)
+      .single()
+      .then(({ data }) => setAvatarIcon(data?.avatar_icon ?? null))
+  }, [userId])
 
   useEffect(() => {
     if (!groupId || !isAdmin) return
@@ -36,13 +64,28 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
     const id = setTimeout(() => {
       supabase
         .from('profiles')
-        .select('user_id, display_name, role')
+        .select('user_id, display_name, role, avatar_icon')
         .eq('community_group_id', groupId)
         .order('display_name')
         .then(({ data }) => setMembers(data ?? []))
     }, 260)
     return () => clearTimeout(id)
   }, [groupId, isAdmin])
+
+  async function handleSelectAvatar(icon) {
+    setSavingAvatar(true)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_icon: icon })
+      .eq('user_id', userId)
+    if (error) {
+      toast('Failed to save avatar', 'error')
+    } else {
+      setAvatarIcon(icon)
+      setAvatarPickerOpen(false)
+    }
+    setSavingAvatar(false)
+  }
 
   function copyCode() {
     if (!inviteCode) return
@@ -142,9 +185,7 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
               <div className="space-y-0.5">
                 {members.map(m => (
                   <div key={m.user_id} className="flex items-center gap-2.5 py-1.5">
-                    <div className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
-                      <span className="text-[11px] font-bold text-stone-500">{initials(m.display_name)}</span>
-                    </div>
+                    <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} size="sm" />
                     <div className="flex items-center gap-1 flex-1 min-w-0">
                       <span className="text-sm text-stone-700 truncate">{m.display_name}</span>
                       {m.role === 'admin' && <Crown size={11} weight="fill" className="text-jade shrink-0" />}
@@ -215,10 +256,27 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">
               Account
             </p>
-            <div className="flex items-center justify-between px-1 mb-3">
-              <div className="min-w-0 mr-3">
+
+            {/* Avatar picker */}
+            <div className="flex items-center gap-4 px-1 mb-3">
+              <div className="relative shrink-0">
+                <AvatarCircle icon={avatarIcon} name={displayName} userId={userId} size="lg" />
+                <button
+                  onClick={() => setAvatarPickerOpen(o => !o)}
+                  className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-jade text-white flex items-center justify-center shadow-sm"
+                >
+                  <PencilSimple size={11} weight="bold" />
+                </button>
+              </div>
+              <div className="flex-1 min-w-0">
                 {displayName && <p className="text-sm font-medium text-stone-700 truncate">{displayName}</p>}
                 {groupName && <p className="text-xs text-stone-400 truncate">{groupName}</p>}
+                <button
+                  onClick={() => setAvatarPickerOpen(o => !o)}
+                  className="text-xs text-jade font-medium mt-0.5"
+                >
+                  {avatarPickerOpen ? 'Close' : 'Change avatar'}
+                </button>
               </div>
               <button
                 onClick={() => supabase.auth.signOut()}
@@ -228,6 +286,32 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                 Sign out
               </button>
             </div>
+
+            {avatarPickerOpen && (
+              <div className="mb-3 p-3 bg-stone-50 rounded-2xl border border-stone-100">
+                <p className="text-xs text-stone-400 font-medium mb-2">Pick an icon</p>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {AVATAR_ICON_LIST.map(({ name, Icon }) => (
+                    <button
+                      key={name}
+                      onClick={() => handleSelectAvatar(name)}
+                      disabled={savingAvatar}
+                      className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
+                        avatarIcon === name
+                          ? `${avatarColor(userId)} ring-2 ring-offset-1 ring-jade`
+                          : 'bg-stone-100 hover:bg-stone-200 active:bg-stone-200'
+                      }`}
+                    >
+                      <Icon
+                        size={22}
+                        weight="fill"
+                        className={avatarIcon === name ? 'text-white' : 'text-stone-500'}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {showDeleteConfirm ? (
               <div className="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3">

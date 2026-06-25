@@ -3,12 +3,7 @@ import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, 
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
-
-const AVATAR_COLORS = ['bg-jade', 'bg-coral', 'bg-lagoon-700']
-function avatarColor(userId) {
-  const n = (userId?.charCodeAt(0) ?? 0) + (userId?.charCodeAt(userId.length - 1) ?? 0)
-  return AVATAR_COLORS[n % AVATAR_COLORS.length]
-}
+import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -330,11 +325,12 @@ export default function ConversationList({ session, groupId, members, enterClass
               return convName(conv).toLowerCase().includes(q) ||
                 lastPreview(conv).toLowerCase().includes(q)
             }).map((conv, i) => {
-              const name    = convName(conv)
-              const isDm    = conv.type === 'direct'
-              const otherId = isDm
+              const name       = convName(conv)
+              const isDm       = conv.type === 'direct'
+              const otherId    = isDm
                 ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id
                 : null
+              const otherMember = isDm ? members.find(m => m.user_id === otherId) : null
               const unread     = isUnread(conv)
               const deletable  = !isMainGroupChat(conv)
               const isDeleting = deletingConvId === conv.id
@@ -351,8 +347,13 @@ export default function ConversationList({ session, groupId, members, enterClass
                     className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0"
                   >
                     <div className="relative shrink-0">
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDm ? avatarColor(otherId ?? '') : 'bg-jade'}`}>
-                        {isDm ? initials(name) : <Users size={22} weight="fill" />}
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${isDm ? avatarColor(otherId ?? '') : 'bg-jade'}`}>
+                        {isDm
+                          ? otherMember?.avatar_icon
+                            ? <AvatarIcon name={otherMember.avatar_icon} size={22} />
+                            : <span className="text-white text-sm font-bold">{initials(name)}</span>
+                          : <Users size={22} weight="fill" className="text-white" />
+                        }
                       </div>
                       {unread && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-jade rounded-full border-2 border-sunrise-50" />
@@ -477,8 +478,11 @@ export default function ConversationList({ session, groupId, members, enterClass
                     disabled={starting}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-stone-50 transition-colors disabled:opacity-50"
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
-                      {initials(m.display_name)}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id)}`}>
+                      {m.avatar_icon
+                        ? <AvatarIcon name={m.avatar_icon} size={20} />
+                        : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
+                      }
                     </div>
                     <span className="text-sm font-medium text-stone-800">{m.display_name}</span>
                   </button>
@@ -512,8 +516,11 @@ export default function ConversationList({ session, groupId, members, enterClass
                             onClick={() => toggleMember(m.user_id)}
                             className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
                           >
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
-                              {initials(m.display_name)}
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id)}`}>
+                              {m.avatar_icon
+                                ? <AvatarIcon name={m.avatar_icon} size={20} />
+                                : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
+                              }
                             </div>
                             <span className="flex-1 text-sm font-medium text-stone-800 text-left">{m.display_name}</span>
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-jade border-jade' : 'border-stone-300'}`}>

@@ -6,6 +6,7 @@ import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
+import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 function formatDate(dateStr) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
@@ -127,8 +128,11 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-jade/10 flex items-center justify-center text-jade font-bold text-sm shrink-0">
-              {(member.display_name ?? '?').charAt(0).toUpperCase()}
+            <div className={`w-9 h-9 rounded-full ${avatarColor(member.user_id)} flex items-center justify-center shrink-0`}>
+              {member.avatar_icon
+                ? <AvatarIcon name={member.avatar_icon} size={16} />
+                : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+              }
             </div>
             <h2 className="text-xl font-bold text-stone-800 truncate">{member.display_name}</h2>
           </div>
@@ -292,8 +296,11 @@ function MemberCard({ member, index, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-jade/10 flex items-center justify-center text-jade font-bold text-sm shrink-0">
-            {(member.display_name ?? '?').charAt(0).toUpperCase()}
+          <div className={`w-10 h-10 rounded-full ${avatarColor(member.user_id)} flex items-center justify-center shrink-0`}>
+            {member.avatar_icon
+              ? <AvatarIcon name={member.avatar_icon} size={20} />
+              : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+            }
           </div>
           <div className="font-semibold text-stone-800">{member.display_name}</div>
         </div>
@@ -314,7 +321,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   async function load() {
     if (!groupId) return
     const [membersRes, requestsRes] = await Promise.all([
-      supabase.from('profiles').select('user_id, display_name').eq('community_group_id', groupId).order('display_name'),
+      supabase.from('profiles').select('user_id, display_name, avatar_icon').eq('community_group_id', groupId).order('display_name'),
       supabase.from('prayer_requests').select('id, member_user_id, created_at'),
     ])
     const profileList = membersRes.data ?? []

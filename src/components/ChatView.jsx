@@ -8,29 +8,48 @@ import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
+import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
 const MORE_EMOJIS = [
-  '🔥', '🎉', '👏', '🤔', '😍', '🥰',
-  '😅', '🤣', '😊', '🤩', '😎', '👀',
-  '💯', '✅', '⭐', '💪', '🙌', '🤦',
+  // Happy faces
+  '😍', '🥰', '😊', '🤩', '😎', '🥹',
+  // Funny
+  '😅', '🤣', '😭', '🤦', '🫠', '💀',
+  // Surprised
+  '😱', '🤯', '👀', '🫢', '🙈', '😲',
+  // Celebration
+  '🎉', '🎊', '🥳', '🎂', '🏆', '🎯',
+  // Positive
+  '💯', '✅', '💪', '🙌', '👏', '🫶',
+  // Vibes
+  '🔥', '⭐', '💎', '✨', '🌈', '💡',
+  // Hearts & colors
+  '🧡', '💛', '💚', '💙', '💜', '🖤',
+  // Animals
+  '🐶', '🐱', '🦊', '🐸', '🐼', '🦋',
+  // More animals
+  '🐨', '🦁', '🐯', '🐺', '🦉', '🐙',
+  // Nature
+  '🌸', '🌻', '🍀', '🌿', '🌊', '🌙',
+  // Food
+  '🍕', '🍔', '🌮', '🧁', '🍦', '🧋',
+  // Fun & misc
+  '🎵', '📚', '🎮', '📸', '🌍', '💫',
 ]
-
-const AVATAR_COLORS = ['bg-jade', 'bg-coral', 'bg-lagoon-700']
-function avatarColor(userId) {
-  const n = (userId.charCodeAt(0) ?? 0) + (userId.charCodeAt(userId.length - 1) ?? 0)
-  return AVATAR_COLORS[n % AVATAR_COLORS.length]
-}
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
-function Initials({ name, userId }) {
+function Initials({ name, userId, icon }) {
   return (
-    <div className={`w-8 h-8 rounded-full ${avatarColor(userId)} flex items-center justify-center shrink-0 text-white text-xs font-bold`}>
-      {initials(name)}
+    <div className={`w-8 h-8 rounded-full ${avatarColor(userId)} flex items-center justify-center shrink-0`}>
+      {icon
+        ? <AvatarIcon name={icon} size={16} />
+        : <span className="text-white text-xs font-bold">{initials(name)}</span>
+      }
     </div>
   )
 }
@@ -616,7 +635,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 >
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
-                      {isFirstInGroup && <Initials name={msg.display_name} userId={msg.user_id} />}
+                      {isFirstInGroup && <Initials name={msg.display_name} userId={msg.user_id} icon={members.find(m => m.user_id === msg.user_id)?.avatar_icon} />}
                     </div>
                   )}
 
@@ -626,7 +645,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     )}
                     <div className={`overflow-hidden ${
                       isOwn
-                        ? `bg-jade text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-bl-2xl rounded-br-sm' : 'rounded-b-md'}`
+                        ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-jade'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-bl-2xl rounded-br-sm' : 'rounded-b-md'}`
                         : `bg-white border border-stone-200 text-stone-800 ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-br-2xl rounded-bl-sm' : 'rounded-b-md'}`
                     }`}>
                       {/* Reply quote */}
@@ -864,7 +883,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </div>
           )}
           {showMoreEmojis && (
-            <div className="grid grid-cols-6 gap-0.5 mt-1 pt-1 border-t border-stone-100">
+            <div className="grid grid-cols-6 gap-0.5 mt-1 pt-1 border-t border-stone-100 max-h-44 overflow-y-auto overscroll-contain">
               {MORE_EMOJIS.map(emoji => {
                 const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
                 return (
@@ -913,7 +932,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ${conversation.type === 'group' ? 'bg-jade' : avatarColor(dmOtherMember?.user_id ?? '')}`}>
                 {conversation.type === 'group'
                   ? <Users size={40} weight="fill" className="text-white" />
-                  : <span className="text-white text-2xl font-bold">{initials(title)}</span>
+                  : dmOtherMember?.avatar_icon
+                    ? <AvatarIcon name={dmOtherMember.avatar_icon} size={40} />
+                    : <span className="text-white text-2xl font-bold">{initials(title)}</span>
                 }
               </div>
               {renamingGroup ? (
@@ -956,8 +977,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <div className="space-y-1">
                   {members.map(m => (
                     <div key={m.user_id} className="flex items-center gap-3 py-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${avatarColor(m.user_id)}`}>
-                        {initials(m.display_name)}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id)}`}>
+                        {m.avatar_icon
+                          ? <AvatarIcon name={m.avatar_icon} size={20} />
+                          : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
+                        }
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
