@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandWaving, Lightbulb } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, Lightbulb } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
@@ -48,19 +48,6 @@ function mealCutoffDate() {
   return toDateString(pst)
 }
 
-function timeGreeting() {
-  const now = new Date()
-  const h   = now.getHours()
-  const d   = now.getDay()
-
-  const morning   = ['Rise and shine', 'Wakey wakey', 'Top of the morning', 'Look who\'s up', 'Another blessed morning']
-  const afternoon = ['Hey there', 'Afternoon, legend', 'Still standing', 'Made it to afternoon', 'Post-lunch mode']
-  const evening   = ['Evening, superstar', 'You survived today', 'Day well spent', 'Winding down', 'Almost bedtime']
-
-  if (h < 12) return morning[d % morning.length]
-  if (h < 17) return afternoon[d % afternoon.length]
-  return evening[d % evening.length]
-}
 
 function shortDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -260,21 +247,13 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         </div>
       )}
 
-      <div className="mb-7 animate-fade-up flex items-start justify-between" style={{ animationDelay: '0ms' }}>
+      <div className="mb-7 animate-fade-up flex items-center justify-between gap-4" style={{ animationDelay: '0ms' }}>
         <div>
-          <h1 className="text-3xl font-bold text-stone-800">
-            {timeGreeting()}{displayName ? `, ${displayName.split(' ')[0]}` : ''}
-          </h1>
-          {groupName && (
-            <p className="text-stone-500 mt-1 text-sm flex items-center gap-1.5">
-              {groupName}
-              <HandWaving size={16} weight="fill" className="inline-block text-amber-400 animate-wave origin-bottom shrink-0" />
-            </p>
-          )}
+          <h1 className="text-3xl font-bold text-stone-800">Our Community</h1>
         </div>
         <button
           onClick={onOpenSettings}
-          className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center shrink-0 mt-1 active:opacity-70 transition-opacity`}
+          className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center shrink-0 active:opacity-70 transition-opacity`}
         >
           {avatarIcon
             ? <AvatarIcon name={avatarIcon} size={22} />

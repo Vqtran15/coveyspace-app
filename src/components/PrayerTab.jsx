@@ -367,10 +367,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
 
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2.5">
-            <HandsPraying size={32} weight="fill" className="text-jade shrink-0" />
-            <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
-          </div>
+          <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
           <p className="text-stone-500 mt-1 text-sm">
             {!loading && (members.length === 0
               ? 'No members yet'

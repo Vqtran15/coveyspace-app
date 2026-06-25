@@ -197,19 +197,19 @@ export default function RotationTab({ config, revealKey, groupName = '', display
   return (
     <>
       <div className={`max-w-3xl mx-auto px-4 ${compact ? 'pt-2' : 'pt-8'} pb-2 flex items-center justify-between`}>
-        <button
-          onClick={() => {
-            const today = toDateString(new Date())
-            const idx = pages.findIndex(p => p.week_date >= today)
-            setViewIndex(idx === -1 ? pages.length - 1 : idx)
-            window.scrollTo({ top: 0, behavior: 'instant' })
-          }}
-          className="flex items-center gap-3 active:opacity-60 transition-opacity"
-        >
-          <Icon size={32} weight="fill" className="text-jade shrink-0" />
-          <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
-        </button>
+        <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              const today = toDateString(new Date())
+              const idx = pages.findIndex(p => p.week_date >= today)
+              setViewIndex(idx === -1 ? pages.length - 1 : idx)
+              window.scrollTo({ top: 0, behavior: 'instant' })
+            }}
+            className="px-3 py-1.5 rounded-xl text-sm font-medium text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+          >
+            Today
+          </button>
           <button
             onClick={() => setShowPages(true)}
             className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"

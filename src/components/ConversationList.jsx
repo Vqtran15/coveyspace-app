@@ -252,9 +252,8 @@ export default function ConversationList({ session, groupId, members, enterClass
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
     >
       {/* Header */}
-      <div className={`max-w-3xl mx-auto w-full px-4 pt-6 pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
+      <div className={`max-w-3xl mx-auto w-full px-4 pt-8 pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
         <div className="flex items-center gap-3">
-          <ChatCircleDots size={32} weight="fill" className="text-jade shrink-0" />
           <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
         </div>
         <div className="flex items-center gap-2">
