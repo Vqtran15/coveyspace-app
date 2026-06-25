@@ -64,7 +64,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
             }`}
           >
             <HandHeart size={17} weight="fill" />
-            Service Night
+            Service
           </button>
         </div>
       </div>

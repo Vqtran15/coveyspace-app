@@ -249,7 +249,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
       <div className="mb-7 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-stone-800">Our Community</h1>
+          <h1 className="text-3xl font-bold text-stone-800">Community Group</h1>
         </div>
         <button
           onClick={onOpenSettings}
@@ -338,7 +338,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           label="Upcoming Birthdays"
           primary={birthdayPrimary()}
           delay={showAnnouncement ? 360 : 300}
-          confetti={!!nextBirthday && nextBirthday.days <= 14}
+          confetti={!!nextBirthday && nextBirthday.days <= 30}
         />
         <Card
           onClick={onOpenGuide}
