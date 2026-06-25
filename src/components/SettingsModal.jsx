@@ -185,8 +185,11 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   function copyCode() {
     if (!inviteCode) return
     navigator.clipboard.writeText(inviteCode)
-    setCodeCopied(true)
-    setTimeout(() => setCodeCopied(false), 2000)
+      .then(() => {
+        setCodeCopied(true)
+        setTimeout(() => setCodeCopied(false), 2000)
+      })
+      .catch(() => toast('Could not copy to clipboard', 'error'))
   }
 
   async function handleRotate() {

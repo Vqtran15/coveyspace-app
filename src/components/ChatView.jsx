@@ -268,6 +268,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
     presenceChannelRef.current = channel
     return () => {
+      clearTimeout(typingTimeoutRef.current)
       supabase.removeChannel(channel)
       presenceChannelRef.current = null
     }
@@ -291,6 +292,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [searchOpen])
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.previewUrl) URL.revokeObjectURL(imagePreview.previewUrl)
+    }
+  }, [imagePreview])
 
   useEffect(() => {
     if (!selectedMsgId && !confirmDeleteId) return
@@ -400,7 +407,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function handleFileChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); return }
+    if (!file.type.startsWith('image/')) { toast('Only image files are supported', 'error'); e.target.value = ''; return }
+    if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); e.target.value = ''; return }
+    if (imagePreview?.previewUrl) URL.revokeObjectURL(imagePreview.previewUrl)
     setImagePreview({ file, previewUrl: URL.createObjectURL(file) })
     e.target.value = ''
   }

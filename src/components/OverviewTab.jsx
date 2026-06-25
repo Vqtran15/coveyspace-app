@@ -145,6 +145,25 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [announcement, setAnnouncement]     = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [funFact, setFunFact]               = useState(null)
+  const [funFactFailed, setFunFactFailed]   = useState(false)
+
+  function fetchFunFact(today) {
+    const useDog = new Date().getDate() % 2 === 0
+    const url = useDog ? 'https://dogapi.dog/api/v2/facts' : 'https://catfact.ninja/fact'
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    setFunFactFailed(false)
+    fetch(url, { signal: controller.signal })
+      .then(r => r.json())
+      .then(d => {
+        const text = useDog ? (d?.data?.[0]?.attributes?.body ?? null) : (d?.fact ?? null)
+        if (!text) { setFunFactFailed(true); return }
+        localStorage.setItem('fun_fact_v2', JSON.stringify({ date: today, text }))
+        setFunFact(text)
+      })
+      .catch(() => setFunFactFailed(true))
+      .finally(() => clearTimeout(timeout))
+  }
 
   async function load() {
     const today = toDateString(new Date())
@@ -165,16 +184,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     if (cached?.date === today) {
       setFunFact(cached.text)
     } else {
-      const useDog = new Date().getDate() % 2 === 0
-      const url = useDog ? 'https://dogapi.dog/api/v2/facts' : 'https://catfact.ninja/fact'
-      fetch(url)
-        .then(r => r.json())
-        .then(d => {
-          const text = useDog ? d.data[0].attributes.body : d.fact
-          localStorage.setItem('fun_fact_v2', JSON.stringify({ date: today, text }))
-          setFunFact(text)
-        })
-        .catch(() => setFunFact(null))
+      fetchFunFact(today)
     }
   }
 
@@ -330,7 +340,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         />
 
         {/* Fun Fact */}
-        {funFact !== null && (
+        {(funFact !== null || funFactFailed) && (
           <div
             className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 animate-stack-in"
             style={{ animationDelay: `${showAnnouncement ? 480 : 420}ms` }}
@@ -341,7 +351,16 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wide mb-1">Fun Fact</p>
-                <p className="text-sm text-stone-700 leading-relaxed">{funFact}</p>
+                {funFactFailed ? (
+                  <button
+                    onClick={() => fetchFunFact(toDateString(new Date()))}
+                    className="text-sm text-amber-500 underline underline-offset-2"
+                  >
+                    Tap to retry
+                  </button>
+                ) : (
+                  <p className="text-sm text-stone-700 leading-relaxed">{funFact}</p>
+                )}
               </div>
             </div>
           </div>

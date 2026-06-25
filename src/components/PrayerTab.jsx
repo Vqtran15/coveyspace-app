@@ -173,7 +173,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
             <button
               type="submit"
               disabled={saving || !requestText.trim()}
-              className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-2"
             >
               <Plus size={16} weight="bold" />
               {saving ? 'Adding…' : 'Add Request'}
@@ -386,8 +386,16 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search members…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       )}
 

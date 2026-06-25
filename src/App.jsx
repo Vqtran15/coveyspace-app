@@ -32,7 +32,7 @@ const MEALS_CONFIG = {
 }
 
 const SERVICES_CONFIG = {
-  label: 'Service Night',
+  label: 'Service',
   Icon: HandHeart,
   editLabel: 'Edit Items',
   noun: 'Item',
@@ -40,7 +40,7 @@ const SERVICES_CONFIG = {
   pageNoun: 'Service',
   pageNounPlural: 'Services',
   tables: { pages: 'serving_pages', signups: 'serving_signups', pauseRpc: 'toggle_service_pause' },
-  defaultTitle: dateStr => `Service Night — ${formatDate(dateStr)}`,
+  defaultTitle: dateStr => `Service — ${formatDate(dateStr)}`,
 }
 
 const TABS = [
@@ -159,8 +159,9 @@ export default function App() {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages',
         filter: `community_group_id=eq.${groupId}`,
-      }, () => {
-        if (locationRef.current !== '/chat') setUnreadChatCount(c => c + 1)
+      }, ({ new: msg }) => {
+        if (locationRef.current !== '/chat' && msg.user_id !== session?.user?.id)
+          setUnreadChatCount(c => c + 1)
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
@@ -203,7 +204,7 @@ export default function App() {
           You're offline
         </div>
       )}
-      {!isFullHeight && location.pathname !== '/home' && <BirthdayBanner upcoming={upcoming} />}
+      {!isFullHeight && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && <BirthdayBanner upcoming={upcoming} />}
 
       <div
         key={location.pathname}

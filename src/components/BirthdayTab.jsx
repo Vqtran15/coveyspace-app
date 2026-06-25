@@ -45,11 +45,11 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl shadow-xl w-full ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">
@@ -64,7 +64,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 space-y-4" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">Name</label>
             <input
