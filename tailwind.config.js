@@ -131,6 +131,12 @@ export default {
           '50%':  { opacity: '1', transform: 'scale(1)' },
           '100%': { opacity: '0', transform: 'scale(0)' },
         },
+        'party-launch': {
+          '0%':   { opacity: '0', transform: 'translate(0, 0) scale(0.6) rotate(0deg)' },
+          '8%':   { opacity: '1', transform: 'translate(12px, -18px) scale(1.2) rotate(5deg)' },
+          '80%':  { opacity: '1', transform: 'translate(55px, -65px) scale(1.1) rotate(14deg)' },
+          '100%': { opacity: '0', transform: 'translate(72px, -80px) scale(0.5) rotate(18deg)' },
+        },
         'edit-pop': {
           '0%':   { transform: 'scale(1)' },
           '25%':  { transform: 'scale(0.96)' },
@@ -172,6 +178,7 @@ export default {
         'wave':             'wave 2.5s ease-in-out infinite',
         'toast-in':        'toast-in 0.2s cubic-bezier(0.16,1,0.3,1)',
         'confetti-float':  'confetti-float 2s ease-in-out infinite backwards',
+        'party-launch':    'party-launch 3s ease-out infinite',
         'edit-pop':        'edit-pop 0.28s cubic-bezier(0.16,1,0.3,1)',
         'popup-in':        'popup-in 0.22s cubic-bezier(0.16,1,0.3,1) both',
         'popup-out':       'popup-out 0.15s ease-in forwards',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, Lightbulb } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, Lightbulb, Confetti } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
@@ -9,33 +9,12 @@ import { useModalClose } from '../hooks/useModalClose.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 
 
-const CONFETTI = [
-  { left: '8%',  top: '20%', color: '#B85A3A', delay: 0,    size: 10 },
-  { left: '22%', top: '65%', color: '#E8A838', delay: 0.5,  size: 8  },
-  { left: '38%', top: '28%', color: '#C4622D', delay: 1.0,  size: 12 },
-  { left: '53%', top: '70%', color: '#A1CCA6', delay: 0.25, size: 8  },
-  { left: '67%', top: '32%', color: '#E8A838', delay: 0.75, size: 10 },
-  { left: '80%', top: '62%', color: '#B85A3A', delay: 0.4,  size: 8  },
-  { left: '91%', top: '22%', color: '#A1CCA6', delay: 1.2,  size: 10 },
-  { left: '15%', top: '72%', color: '#E8A838', delay: 1.5,  size: 7  },
-]
-
-function ConfettiDots() {
-  return CONFETTI.map((dot, i) => (
-    <span
-      key={i}
-      className="absolute pointer-events-none animate-confetti-float leading-none select-none"
-      style={{
-        left: dot.left,
-        top: dot.top,
-        fontSize: dot.size,
-        color: dot.color,
-        animationDelay: `${dot.delay}s`,
-      }}
-    >
-      ✦
+function PartyLaunch() {
+  return (
+    <span className="absolute pointer-events-none animate-party-launch z-10" style={{ left: '60px', top: '12px' }}>
+      <Confetti size={22} weight="fill" className="text-jade" />
     </span>
-  ))
+  )
 }
 
 // After 9 pm PT on Tuesdays, roll the meal cutoff forward to Wednesday
@@ -59,9 +38,9 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
     <button
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
-      className="relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in"
+      className="relative w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in"
     >
-      {confetti && <ConfettiDots />}
+      {confetti && <PartyLaunch />}
       <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
         {icon}
       </div>
