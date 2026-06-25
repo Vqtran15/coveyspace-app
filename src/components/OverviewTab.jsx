@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandWaving, Lightbulb } from '@phosphor-icons/react'
+import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
@@ -171,7 +172,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings }) {
   const navigate = useNavigate()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
@@ -271,6 +272,17 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             </p>
           )}
         </div>
+        <button
+          onClick={onOpenSettings}
+          className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center shrink-0 mt-1 active:opacity-70 transition-opacity`}
+        >
+          {avatarIcon
+            ? <AvatarIcon name={avatarIcon} size={22} />
+            : <span className="text-white text-sm font-bold">
+                {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+              </span>
+          }
+        </button>
       </div>
 
       <div className="space-y-3">

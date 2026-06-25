@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { formatDate } from './utils/dates.js'
@@ -111,7 +111,7 @@ export default function App() {
     if (!session) return
     supabase
       .from('profiles')
-      .select('display_name, community_group_id, role, community_groups(name)')
+      .select('display_name, community_group_id, role, avatar_icon, avatar_color, community_groups(name)')
       .eq('user_id', session.user.id)
       .single()
       .then(({ data }) => {
@@ -125,10 +125,12 @@ export default function App() {
       })
   }, [session])
 
-  const displayName = profile?.display_name ?? ''
-  const groupName   = profile?.community_groups?.name ?? session?.user?.user_metadata?.community_group_name ?? ''
-  const groupId     = profile?.community_group_id ?? null
-  const isAdmin     = profile?.role === 'admin'
+  const displayName    = profile?.display_name ?? ''
+  const groupName      = profile?.community_groups?.name ?? session?.user?.user_metadata?.community_group_name ?? ''
+  const groupId        = profile?.community_group_id ?? null
+  const isAdmin        = profile?.role === 'admin'
+  const avatarIcon     = profile?.avatar_icon ?? null
+  const avatarColorKey = profile?.avatar_color ?? null
   const push = usePushNotifications(session?.user?.id, groupId)
 
   useEffect(() => {
@@ -209,7 +211,7 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
@@ -246,15 +248,6 @@ export default function App() {
             </button>
           )
         })}
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors touch-manipulation text-stone-400"
-        >
-          <span className="px-3 py-1 rounded-2xl">
-            <GearSix size={26} weight={settingsOpen ? 'fill' : 'regular'} />
-          </span>
-          <span className="text-[10px] font-medium tracking-wide">Settings</span>
-        </button>
       </nav>
 
       {settingsOpen && (
