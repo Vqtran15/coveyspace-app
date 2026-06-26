@@ -350,7 +350,7 @@ export default function DashboardClient({ initialGroups }) {
               <p className="text-sm">Loading…</p>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-stone-800">
                   {selectedGroup.name}
