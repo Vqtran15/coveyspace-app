@@ -343,8 +343,8 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                     {pushToggling
                       ? 'Updating…'
                       : pushSubscribed
-                        ? 'Turn off chat notifications'
-                        : 'Turn on chat notifications'
+                        ? 'Chat notifications on'
+                        : 'Chat notifications off'
                     }
                   </span>
                 </button>
