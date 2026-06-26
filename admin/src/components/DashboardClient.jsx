@@ -374,7 +374,7 @@ export default function DashboardClient({ initialGroups }) {
                         <th className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Role</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Last Activity</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Last Logged In</th>
-                        <th className="px-5 py-3 w-44"></th>
+                        <th className="px-5 py-3 w-56"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-50">
@@ -411,8 +411,8 @@ export default function DashboardClient({ initialGroups }) {
                           <td className="px-5 py-3 text-xs text-stone-400 whitespace-nowrap">
                             {formatTime(member.last_sign_in_at)}
                           </td>
-                          <td className="px-5 py-3 w-44 whitespace-nowrap">
-                            <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                          <td className="px-5 py-3 w-56">
+                            <div className="flex flex-nowrap items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => handleToggleRole(member)}
                                 className="px-2 py-0.5 rounded-md text-xs font-medium bg-jade/10 text-jade hover:bg-jade/20 transition-colors"
