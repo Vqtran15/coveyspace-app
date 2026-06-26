@@ -262,15 +262,19 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                 onClick={() => setAdminOpen(o => !o)}
                 className="w-full flex items-center justify-between py-1 mb-1"
               >
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Admin</p>
+                <div className="flex items-center gap-1.5">
+                  <Crown size={12} weight="fill" className="text-stone-400" />
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Admin</p>
+                </div>
                 <CaretDown
                   size={14}
                   weight="bold"
                   className={`text-stone-400 transition-transform duration-200 ${adminOpen ? 'rotate-180' : ''}`}
                 />
               </button>
-              {adminOpen && (
-                <div className="space-y-3">
+              <div className={`grid transition-all duration-200 ease-in-out ${adminOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                <div className="space-y-3 pb-1">
                   {inviteCode && (
                     <div>
                       <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>
@@ -335,7 +339,8 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                     </div>
                   )}
                 </div>
-              )}
+                </div>
+              </div>
             </div>
           )}
 
