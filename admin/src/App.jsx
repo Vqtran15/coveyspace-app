@@ -541,7 +541,8 @@ function AdminApp() {
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Member</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Activity</th>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Active</th>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Logged In</th>
                         <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Joined</th>
                         <th className="px-5 py-3" />
                       </tr>
@@ -614,16 +615,18 @@ function AdminApp() {
                           {/* Email */}
                           <td className="px-5 py-4 text-slate-500 font-mono text-xs">{member.email || '—'}</td>
 
-                          {/* Activity: last active (session) + last sign-in */}
+                          {/* Last active (session) */}
                           <td className="px-5 py-4 text-xs">
-                            <span className={member.last_active_at ? 'text-slate-600 font-medium' : 'text-slate-300'}>
+                            <span className={member.last_active_at ? 'text-slate-500' : 'text-slate-300'}>
                               {formatLastSeen(member.last_active_at)}
                             </span>
-                            {member.last_sign_in_at && (
-                              <p className="text-slate-400 mt-0.5">
-                                signed in {formatLastSeen(member.last_sign_in_at)}
-                              </p>
-                            )}
+                          </td>
+
+                          {/* Last logged in (sign-in) */}
+                          <td className="px-5 py-4 text-xs">
+                            <span className={member.last_sign_in_at ? 'text-slate-500' : 'text-slate-300'}>
+                              {formatLastSeen(member.last_sign_in_at)}
+                            </span>
                           </td>
 
                           {/* Joined */}
