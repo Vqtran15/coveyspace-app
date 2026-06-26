@@ -204,6 +204,11 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   }
 
   async function handleSetRole(targetId, newRole) {
+    const member = members.find(m => m.user_id === targetId)
+    const msg = newRole === 'admin'
+      ? `Make ${member?.display_name ?? 'this member'} an admin?`
+      : `Remove admin rights from ${member?.display_name ?? 'this member'}?`
+    if (!window.confirm(msg)) return
     setSettingRoleId(targetId)
     const { error } = await supabase.rpc('set_member_role', { target_user_id: targetId, new_role: newRole })
     if (error) toast(error.message, 'error')
