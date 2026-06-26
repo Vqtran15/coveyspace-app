@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretDown } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -55,6 +55,7 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
+  const [adminOpen, setAdminOpen] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -255,70 +256,86 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
         </div>
 
         <div className="px-5 pb-6 space-y-2 overflow-y-auto overscroll-contain">
-          {isAdmin && inviteCode && (
+          {isAdmin && (inviteCode || members.length > 0) && (
             <div className="pt-2 border-t border-stone-100">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>
-              <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
-                <span className="font-mono font-bold text-xl tracking-widest text-stone-800 flex-1">
-                  {codeRotating ? '……' : inviteCode}
-                </span>
-                <button onClick={copyCode} className="text-xs font-semibold text-jade shrink-0">
-                  {codeCopied ? 'Copied!' : 'Copy'}
-                </button>
-                {isAdmin && (
-                  <button
-                    onClick={handleRotate}
-                    disabled={codeRotating}
-                    className="text-xs font-semibold text-stone-400 hover:text-red-500 transition-colors shrink-0 disabled:opacity-40"
-                  >
-                    Rotate
-                  </button>
-                )}
-              </div>
-              <p className="text-xs text-stone-400 mt-1.5">Share this code with people you want to invite.</p>
-            </div>
-          )}
-
-          {isAdmin && members.length > 0 && (
-            <div className="pt-2 border-t border-stone-100">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Members</p>
-              <div className="space-y-0.5">
-                {members.map(m => (
-                  <div key={m.user_id} className="flex items-center gap-2.5 py-1.5">
-                    <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} size="sm" />
-                    <div className="flex items-center gap-1 flex-1 min-w-0">
-                      <span className="text-sm text-stone-700 truncate">{m.display_name}</span>
-                      {m.role === 'admin' && <Crown size={11} weight="fill" className="text-jade shrink-0" />}
-                      {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
-                    </div>
-                    {m.user_id !== userId && (
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <button
-                          onClick={() => handleSetRole(m.user_id, m.role === 'admin' ? 'member' : 'admin')}
-                          disabled={!!settingRoleId}
-                          title={m.role === 'admin' ? 'Remove admin' : 'Make admin'}
-                          className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-jade transition-colors disabled:opacity-40 rounded-lg hover:bg-stone-50"
-                        >
-                          {settingRoleId === m.user_id
-                            ? <span className="text-[10px] text-stone-300">…</span>
-                            : <Crown size={13} weight={m.role === 'admin' ? 'fill' : 'regular'} />
-                          }
+              <button
+                onClick={() => setAdminOpen(o => !o)}
+                className="w-full flex items-center justify-between py-1 mb-1"
+              >
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Admin</p>
+                <CaretDown
+                  size={14}
+                  weight="bold"
+                  className={`text-stone-400 transition-transform duration-200 ${adminOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {adminOpen && (
+                <div className="space-y-3">
+                  {inviteCode && (
+                    <div>
+                      <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>
+                      <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
+                        <span className="font-mono font-bold text-xl tracking-widest text-stone-800 flex-1">
+                          {codeRotating ? '……' : inviteCode}
+                        </span>
+                        <button onClick={copyCode} className="text-xs font-semibold text-jade shrink-0">
+                          {codeCopied ? 'Copied!' : 'Copy'}
                         </button>
                         <button
-                          onClick={() => handleRemoveMember(m.user_id)}
-                          disabled={removingId === m.user_id}
-                          className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-red-400 transition-colors disabled:opacity-40 rounded-lg hover:bg-red-50"
+                          onClick={handleRotate}
+                          disabled={codeRotating}
+                          className="text-xs font-semibold text-stone-400 hover:text-red-500 transition-colors shrink-0 disabled:opacity-40"
                         >
-                          {removingId === m.user_id
-                            ? <span className="text-[10px] text-stone-300">…</span>
-                            : <X size={13} weight="bold" />
-                          }
+                          Rotate
                         </button>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      <p className="text-xs text-stone-400 mt-1.5">Share this code with people you want to invite.</p>
+                    </div>
+                  )}
+                  {members.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Members</p>
+                      <div className="space-y-0.5">
+                        {members.map(m => (
+                          <div key={m.user_id} className="flex items-center gap-2.5 py-1.5">
+                            <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} size="sm" />
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                              <span className="text-sm text-stone-700 truncate">{m.display_name}</span>
+                              {m.role === 'admin' && <Crown size={11} weight="fill" className="text-jade shrink-0" />}
+                              {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
+                            </div>
+                            {m.user_id !== userId && (
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <button
+                                  onClick={() => handleSetRole(m.user_id, m.role === 'admin' ? 'member' : 'admin')}
+                                  disabled={!!settingRoleId}
+                                  title={m.role === 'admin' ? 'Remove admin' : 'Make admin'}
+                                  className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-jade transition-colors disabled:opacity-40 rounded-lg hover:bg-stone-50"
+                                >
+                                  {settingRoleId === m.user_id
+                                    ? <span className="text-[10px] text-stone-300">…</span>
+                                    : <Crown size={13} weight={m.role === 'admin' ? 'fill' : 'regular'} />
+                                  }
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveMember(m.user_id)}
+                                  disabled={removingId === m.user_id}
+                                  className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-red-400 transition-colors disabled:opacity-40 rounded-lg hover:bg-red-50"
+                                >
+                                  {removingId === m.user_id
+                                    ? <span className="text-[10px] text-stone-300">…</span>
+                                    : <X size={13} weight="bold" />
+                                  }
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -336,8 +353,8 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                   className="w-full flex items-center gap-3 px-1 py-2.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-50"
                 >
                   {pushSubscribed
-                    ? <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
-                    : <Bell size={18} weight="fill" className="text-jade shrink-0" />
+                    ? <Bell size={18} weight="fill" className="text-jade shrink-0" />
+                    : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
                   }
                   <span className="flex-1 text-left font-medium">
                     {pushToggling
