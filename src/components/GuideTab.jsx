@@ -1,6 +1,9 @@
 import { BookOpen, ArrowSquareOut, ArrowLeft } from '@phosphor-icons/react'
 
-export default function GuideTab({ onClose }) {
+const FALLBACK_GUIDE_URL = 'https://bridgetown.church/guideblog'
+
+export default function GuideTab({ onClose, guideUrl }) {
+  const url = guideUrl || FALLBACK_GUIDE_URL
   return (
     <div className="max-w-3xl mx-auto px-4 pt-8 pb-12">
       <div className="flex items-center justify-end mb-8">
@@ -19,10 +22,10 @@ export default function GuideTab({ onClose }) {
         </div>
         <h1 className="text-3xl font-bold text-stone-800 mb-2">Guide</h1>
         <p className="text-stone-500 text-sm mb-8 max-w-xs">
-          Read the latest guide posts from Bridgetown Church.
+          Read the latest guide posts from your community.
         </p>
         <button
-          onClick={() => window.open('https://bridgetown.church/guideblog', '_blank', 'noopener,noreferrer')}
+          onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
           className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
         >
           Open Guide

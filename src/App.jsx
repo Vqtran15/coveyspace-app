@@ -67,6 +67,8 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isRecovery, setIsRecovery] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [groupSettings, setGroupSettings] = useState(null)
+  const [sampleRefreshKey, setSampleRefreshKey] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [guideClosing, setGuideClosing] = useState(false)
@@ -118,7 +120,7 @@ export default function App() {
       .then(({ data }) => {
         if (!data) return
         setProfile(data)
-        const key = `cg_welcomed_${session.user.id}`
+        const key = `cg_welcomed_${session.user.id}_${data.community_group_id}`
         if (!localStorage.getItem(key)) {
           localStorage.setItem(key, '1')
           setShowWelcome(true)
@@ -151,6 +153,22 @@ export default function App() {
 
     return () => supabase.removeChannel(channel)
   }, [session])
+
+  useEffect(() => {
+    function onSampleDataChanged() { setSampleRefreshKey(k => k + 1) }
+    window.addEventListener('cg-sample-data-changed', onSampleDataChanged)
+    return () => window.removeEventListener('cg-sample-data-changed', onSampleDataChanged)
+  }, [])
+
+  useEffect(() => {
+    if (!groupId) return
+    supabase
+      .from('group_settings')
+      .select('*')
+      .eq('group_id', groupId)
+      .maybeSingle()
+      .then(({ data }) => setGroupSettings(data ?? {}))
+  }, [groupId])
 
   // Unread chat tracking — fires for any new message while not on /chat
   useEffect(() => {
@@ -213,15 +231,24 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />} />
-          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} />} />
+          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} refreshKey={sampleRefreshKey} />} />
+          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} refreshKey={sampleRefreshKey} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
         </Routes>
       </div>
 
       {showWelcome && (
-        <WelcomeSplash groupName={groupName} onDone={() => setShowWelcome(false)} />
+        <WelcomeSplash
+          groupName={groupName}
+          onDone={() => setShowWelcome(false)}
+          isAdmin={isAdmin}
+          groupSettings={groupSettings}
+          onSeedGroup={async () => {
+            await supabase.rpc('seed_group')
+            setGroupSettings(prev => ({ ...(prev ?? {}), sample_seeded: true }))
+          }}
+        />
       )}
 
       <nav
@@ -252,7 +279,7 @@ export default function App() {
         })}
       </nav>
 
-      {settingsOpen && (
+      {settingsOpen && !showWelcome && (
         <SettingsModal
           groupName={groupName}
           displayName={displayName}
@@ -266,6 +293,13 @@ export default function App() {
           pushPermission={push.permission}
           pushToggling={push.toggling}
           onPushToggle={push.toggle}
+          groupSettings={groupSettings}
+          onGroupSettingsChange={setGroupSettings}
+          onRevisitGuide={() => {
+            const key = `cg_welcomed_${session.user.id}_${groupId}`
+            localStorage.removeItem(key)
+            setShowWelcome(true)
+          }}
         />
       )}
 
@@ -274,7 +308,7 @@ export default function App() {
           className={`fixed inset-0 z-50 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <GuideTab onClose={closeGuide} />
+          <GuideTab onClose={closeGuide} guideUrl={groupSettings?.guide_url} />
         </div>
       )}
 

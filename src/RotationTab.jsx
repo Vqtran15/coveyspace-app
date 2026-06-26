@@ -11,7 +11,7 @@ import ManagePagesModal from './components/ManagePagesModal.jsx'
 const FUTURE_BUFFER = 2  // always keep at least this many pages with dates after today
 const AUTO_FILL_LIMIT = 10 // safety cap per load
 
-async function autoFillPages(existingPages, tables, defaultTitle) {
+async function autoFillPages(existingPages, tables, defaultTitle, intervalDays = 7, targetDow = null) {
   if (!existingPages.length) return existingPages
 
   const today = toDateString(new Date())
@@ -25,7 +25,11 @@ async function autoFillPages(existingPages, tables, defaultTitle) {
   while (result.filter(p => p.week_date > today).length < FUTURE_BUFFER && k < AUTO_FILL_LIMIT) {
     const lastPage = result[result.length - 1]
     const lastDate = new Date(lastPage.week_date + 'T12:00:00')
-    lastDate.setDate(lastDate.getDate() + 7)
+    lastDate.setDate(lastDate.getDate() + intervalDays)
+    if (targetDow !== null) {
+      const diff = (targetDow - lastDate.getDay() + 7) % 7
+      lastDate.setDate(lastDate.getDate() + diff)
+    }
     const nextDateStr = toDateString(lastDate)
 
     const template = pool[k % pool.length]
@@ -51,7 +55,7 @@ async function autoFillPages(existingPages, tables, defaultTitle) {
 }
 
 const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }, ref) {
-  const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false } = config
+  const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null } = config
 
   const [pages, setPages]       = useState([])
   const [viewIndex, setViewIndex] = useState(0)
@@ -67,7 +71,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     setError(null)
     const { data, error: err } = await supabase.from(tables.pages).select('*').order('position')
     if (err) { setError(err.message); setLoading(false); return }
-    const filled = autoFill ? await autoFillPages(data ?? [], tables, defaultTitle) : (data ?? [])
+    const filled = autoFill ? await autoFillPages(data ?? [], tables, defaultTitle, intervalDays, targetDow) : (data ?? [])
     const today = toDateString(new Date())
     const upcomingIdx = filled.findIndex(p => p.week_date >= today)
     setPages(filled)

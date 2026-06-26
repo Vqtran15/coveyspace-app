@@ -153,7 +153,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0 }) {
   const navigate = useNavigate()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
@@ -205,7 +205,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
-  useEffect(() => { load() }, [groupId])
+  useEffect(() => { load() }, [groupId, refreshKey])
 
   async function handleSaveAnnouncement(text) {
     await supabase.rpc('update_announcement', { p_text: text })
@@ -320,7 +320,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
               iconBg="bg-jade/10"
               label="Next Meal"
-              primary={nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? 'No upcoming meals'}
+              primary={nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet')}
               secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
               delay={showAnnouncement ? 80 : 0}
             />
@@ -332,7 +332,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               icon={<HandHeart size={24} weight="fill" className="text-coral" />}
               iconBg="bg-coral/10"
               label="Next Service"
-              primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? 'No upcoming services'}
+              primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
               secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
               delay={showAnnouncement ? 160 : 80}
             />

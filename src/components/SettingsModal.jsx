@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretDown } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretDown, Lightbulb } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -23,7 +23,7 @@ function AvatarCircle({ icon, name, userId, colorKey, size = 'md' }) {
   )
 }
 
-export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onClose, onDisplayNameChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onClose, onDisplayNameChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, groupSettings, onGroupSettingsChange, onRevisitGuide }) {
   const [closing, close] = useModalClose(onClose)
   const toast = useToast()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -56,6 +56,11 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [guideUrlOpen, setGuideUrlOpen] = useState(false)
+  const [guideUrlValue, setGuideUrlValue] = useState('')
+  const [guideUrlSaving, setGuideUrlSaving] = useState(false)
+  const [seeding, setSeeding] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -225,6 +230,61 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
     setRemovingId(null)
   }
 
+  async function handleSaveRotation(patch) {
+    onGroupSettingsChange?.(prev => ({ ...prev, ...patch }))
+    const { error } = await supabase
+      .from('group_settings')
+      .upsert({ group_id: groupId, ...patch }, { onConflict: 'group_id' })
+    if (error) {
+      toast('Failed to save', 'error')
+      onGroupSettingsChange?.(groupSettings)
+    }
+  }
+
+  async function handleSeedGroup() {
+    if (!window.confirm('Load sample meals, service weeks, and birthdays? You can clear them later.')) return
+    setSeeding(true)
+    const { error } = await supabase.rpc('seed_group')
+    if (error) toast(error.message, 'error')
+    else {
+      onGroupSettingsChange?.(prev => ({ ...prev, sample_seeded: true }))
+      window.dispatchEvent(new CustomEvent('cg-sample-data-changed'))
+      toast('Sample data loaded', 'success')
+    }
+    setSeeding(false)
+  }
+
+  async function handleClearSampleData() {
+    if (!window.confirm('Remove all sample data from the group?')) return
+    setClearing(true)
+    const { error } = await supabase.rpc('clear_sample_data')
+    if (error) toast(error.message, 'error')
+    else {
+      onGroupSettingsChange?.(prev => ({ ...prev, sample_seeded: false }))
+      window.dispatchEvent(new CustomEvent('cg-sample-data-changed'))
+      toast('Sample data cleared', 'success')
+    }
+    setClearing(false)
+  }
+
+  async function handleSaveGuideUrl(e) {
+    e.preventDefault()
+    const trimmed = guideUrlValue.trim()
+    const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
+    setGuideUrlSaving(true)
+    const { error } = await supabase
+      .from('group_settings')
+      .upsert({ group_id: groupId, guide_url: normalized || null }, { onConflict: 'group_id' })
+    if (error) {
+      toast('Failed to save guide URL', 'error')
+    } else {
+      onGroupSettingsChange?.(prev => ({ ...prev, guide_url: normalized || null }))
+      toast('Guide link saved', 'success')
+      setGuideUrlOpen(false)
+    }
+    setGuideUrlSaving(false)
+  }
+
   async function handleDeleteAccount() {
     setDeleting(true)
     setDeleteError(null)
@@ -343,6 +403,149 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                       </div>
                     </div>
                   )}
+
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Meal Schedule</p>
+                    <p className="text-[11px] text-stone-400 mb-1.5">Day of week</p>
+                    <div className="flex gap-1 mb-3">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSaveRotation({ meal_day_of_week: groupSettings?.meal_day_of_week === i ? null : i })}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
+                            groupSettings?.meal_day_of_week === i
+                              ? 'bg-jade text-white'
+                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-stone-400 mb-1.5">Frequency</p>
+                    <div className="flex gap-1.5 mb-1">
+                      {[{ label: 'Weekly', days: 7 }, { label: 'Every 2 weeks', days: 14 }].map(({ label: fl, days }) => (
+                        <button
+                          key={days}
+                          onClick={() => handleSaveRotation({ meal_interval_days: days })}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
+                            (groupSettings?.meal_interval_days ?? 7) === days
+                              ? 'bg-jade text-white'
+                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {fl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Service Schedule</p>
+                    <div className="flex gap-1.5 mb-3">
+                      {[{ label: 'Off', val: false }, { label: 'On (monthly)', val: true }].map(({ label: sl, val }) => (
+                        <button
+                          key={String(val)}
+                          onClick={() => handleSaveRotation({ service_autofill: val })}
+                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
+                            (groupSettings?.service_autofill ?? false) === val
+                              ? 'bg-jade text-white'
+                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {sl}
+                        </button>
+                      ))}
+                    </div>
+                    {groupSettings?.service_autofill && (
+                      <>
+                        <p className="text-[11px] text-stone-400 mb-1.5">Day of week</p>
+                        <div className="flex gap-1">
+                          {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleSaveRotation({ service_day_of_week: groupSettings?.service_day_of_week === i ? null : i })}
+                              className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
+                                groupSettings?.service_day_of_week === i
+                                  ? 'bg-jade text-white'
+                                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              }`}
+                            >
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Sample Data</p>
+                    {groupSettings?.sample_seeded ? (
+                      <button
+                        onClick={handleClearSampleData}
+                        disabled={clearing}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-40"
+                      >
+                        <Trash size={14} weight="bold" className="shrink-0" />
+                        {clearing ? 'Clearing…' : 'Clear sample data'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSeedGroup}
+                        disabled={seeding}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-jade hover:text-jade-700 hover:bg-stone-50 rounded-xl transition-colors disabled:opacity-40"
+                      >
+                        <Lightbulb size={14} weight="fill" className="shrink-0" />
+                        {seeding ? 'Loading…' : 'Load sample data'}
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Guide Link</p>
+                    {guideUrlOpen ? (
+                      <form onSubmit={handleSaveGuideUrl} className="space-y-2">
+                        <input
+                          autoFocus
+                          type="text"
+                          placeholder="https://example.com/guide"
+                          value={guideUrlValue}
+                          onChange={e => setGuideUrlValue(e.target.value)}
+                          className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setGuideUrlOpen(false)}
+                            className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={guideUrlSaving}
+                            className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                          >
+                            {guideUrlSaving ? 'Saving…' : 'Save'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <button
+                        onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors"
+                      >
+                        <PencilSimple size={14} weight="bold" className="text-stone-400 shrink-0" />
+                        <span className="flex-1 text-left truncate">
+                          {groupSettings?.guide_url
+                            ? <span className="text-stone-500">{groupSettings.guide_url}</span>
+                            : <span className="text-stone-400 italic">No custom link set</span>
+                          }
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 </div>
               </div>
@@ -410,13 +613,6 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                   {avatarPickerOpen ? 'Close' : 'Change avatar'}
                 </button>
               </div>
-              <button
-                onClick={() => supabase.auth.signOut()}
-                className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-red-500 transition-colors shrink-0"
-              >
-                <SignOut size={15} weight="bold" />
-                Sign out
-              </button>
             </div>
 
             {avatarPickerOpen && (
@@ -588,6 +784,23 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
                 Change password
               </button>
             )}
+
+            {onRevisitGuide && (
+              <button
+                onClick={onRevisitGuide}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+              >
+                <GearSix size={15} weight="bold" className="text-stone-400" />
+                View setup guide
+              </button>
+            )}
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+            >
+              <SignOut size={15} weight="bold" className="text-stone-400" />
+              Sign out
+            </button>
 
             {/* Leave group */}
             {leaveConfirm ? (

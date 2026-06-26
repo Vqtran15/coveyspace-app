@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ListBullets } from '@phosphor-icons/react'
 import RotationTab from '../RotationTab.jsx'
 
-export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin }) {
+export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin, groupSettings, refreshKey = 0 }) {
   const location = useLocation()
   const [segment, setSegment] = useState(location.state?.segment ?? 'meals')
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
@@ -71,9 +71,12 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
 
       <div className={animClass}>
         <RotationTab
-          key={segment}
+          key={`${segment}-${refreshKey}`}
           ref={rotationRef}
-          config={segment === 'meals' ? mealsConfig : servicesConfig}
+          config={segment === 'meals'
+            ? { ...mealsConfig, intervalDays: groupSettings?.meal_interval_days ?? 7, targetDow: groupSettings?.meal_day_of_week ?? null }
+            : { ...servicesConfig, autoFill: groupSettings?.service_autofill ?? false, intervalDays: groupSettings?.service_interval_days ?? 28, targetDow: groupSettings?.service_day_of_week ?? null }
+          }
           revealKey={segment}
           groupName={groupName}
           displayName={displayName}
