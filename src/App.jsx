@@ -17,6 +17,7 @@ import AuthPage from './components/AuthPage.jsx'
 import ResetPasswordPage from './components/ResetPasswordPage.jsx'
 import WelcomeSplash from './components/WelcomeSplash.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
+import UpdatePrompt from './components/UpdatePrompt.jsx'
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -290,6 +291,8 @@ export default function App() {
           />
         </div>
       )}
+
+      <UpdatePrompt />
     </div>
   )
 }
