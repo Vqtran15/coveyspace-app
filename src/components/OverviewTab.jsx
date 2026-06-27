@@ -207,6 +207,16 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   useEffect(() => { load() }, [groupId, refreshKey])
 
+  useEffect(() => {
+    if (!groupId) return
+    const channel = supabase
+      .channel(`overview-pages:${groupId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meal_pages' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'serving_pages' }, load)
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [groupId])
+
   async function handleSaveAnnouncement(text) {
     await supabase.rpc('update_announcement', { p_text: text })
     setAnnouncement(text.trim() || null)
