@@ -210,7 +210,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
             </div>
             <p className="text-stone-500 mt-1">{formatDate(page.week_date)}</p>
             {page.is_paused ? (
-              <p className="text-sm text-amber-500 font-medium mt-0.5">Paused — no signup this week</p>
+              <p className="text-sm text-amber-500 font-medium mt-0.5">No meal signup this week</p>
             ) : (
               <p className="text-sm text-stone-400 mt-0.5">
                 {filledCount} / {page.slot_count} {noun.toLowerCase()}s filled
@@ -236,9 +236,9 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
       {page.is_paused ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <PauseCircle size={48} weight="fill" className="text-amber-300 mb-3" />
-          <p className="text-lg font-semibold text-stone-700">Signup paused</p>
+          <p className="text-lg font-semibold text-stone-700">No meal signup this week</p>
           <p className="text-sm text-stone-400 mt-1">
-            Paused for {formatDate(page.week_date)}
+            {formatDate(page.week_date)}
           </p>
         </div>
       ) : loading ? (
