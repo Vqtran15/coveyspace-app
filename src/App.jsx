@@ -242,7 +242,12 @@ export default function App() {
     )
   }
 
-  if (!session) return <AuthPage />
+  if (!session) return (
+    <Routes>
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  )
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
 
   const upcoming = getUpcomingBirthdays(birthdays)
