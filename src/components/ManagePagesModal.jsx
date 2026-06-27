@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { DotsSixVertical, Plus } from '@phosphor-icons/react'
+import { DotsSixVertical, Plus, Trash } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
 const ROW_HEIGHT = 52
@@ -9,10 +9,12 @@ function shortDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onReorder, onAddPage, onClose }) {
+export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onReorder, onAddPage, onDeletePage, onClose }) {
   const [closing, close] = useModalClose(onClose)
   const [list, setList] = useState(pages)
   const [draggingId, setDraggingId] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const rowRefs = useRef([])
   const dragInfo = useRef(null) // { id, startIndex, startClientY, spacing, node, lastSteps, length }
   const suppressSync = useRef(false)
@@ -64,6 +66,18 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
       if (targetIndex > info.startIndex && i > info.startIndex && i <= targetIndex) shift = -info.spacing
       else if (targetIndex < info.startIndex && i < info.startIndex && i >= targetIndex) shift = info.spacing
       el.style.transform = shift ? `translateY(${shift}px)` : ''
+    }
+  }
+
+  async function handleDelete(pageId) {
+    if (confirmDeleteId !== pageId) { setConfirmDeleteId(pageId); return }
+    setDeleting(true)
+    try {
+      await onDeletePage(pageId)
+      setList(prev => prev.filter(p => p.id !== pageId))
+    } finally {
+      setDeleting(false)
+      setConfirmDeleteId(null)
     }
   }
 
@@ -171,6 +185,19 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-stone-800 truncate">{page.title}</div>
                     </div>
+                    {onDeletePage && (
+                      <button
+                        onClick={() => handleDelete(page.id)}
+                        disabled={deleting}
+                        className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                          confirmDeleteId === page.id
+                            ? 'bg-red-500 text-white'
+                            : 'text-stone-300 hover:text-red-400'
+                        }`}
+                      >
+                        {confirmDeleteId === page.id ? 'Confirm?' : <Trash size={14} weight="bold" />}
+                      </button>
+                    )}
                   </div>
                 )
               })}
