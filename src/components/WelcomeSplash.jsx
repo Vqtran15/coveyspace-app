@@ -287,7 +287,7 @@ export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSetting
         <Confetti size={80} weight="fill" />
       </div>
       <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-        Welcome to your CoveySpace!
+        Welcome to your Covey Space!
       </p>
       <h1 className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
         {groupName || "Let's get started"}

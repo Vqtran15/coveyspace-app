@@ -117,7 +117,7 @@ export default function AuthPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-jade mb-4">
             <UsersThree size={32} weight="fill" className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-stone-800">CoveySpace</h1>
+          <h1 className="text-2xl font-bold text-stone-800">Covey Space</h1>
           <p className="text-stone-500 mt-1 text-sm">
             Sign up for meals and service, chat with your group, and remember birthdays!
           </p>
