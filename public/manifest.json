@@ -1,9 +1,9 @@
 {
-  "name": "Community Group",
-  "short_name": "Community",
+  "name": "Covey Space",
+  "short_name": "Covey Space",
   "description": "Chat, sign up for meals and service, and remember birthdays with your community group.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "https://app.coveyspace.com/",
+  "scope": "https://app.coveyspace.com/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FBF8F4",
