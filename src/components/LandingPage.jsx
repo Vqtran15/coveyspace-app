@@ -116,6 +116,7 @@ export default function LandingPage() {
               { src: '/screenshots/service-signup.PNG', label: 'Service Signup' },
               { src: '/screenshots/chat-list.PNG', label: 'Chats' },
               { src: '/screenshots/group-chat.PNG', label: 'Group Chat' },
+              { src: '/screenshots/prayer-request.PNG', label: 'Prayer Requests' },
             ].map(({ src, label }) => (
               <div key={label} className="shrink-0 snap-center flex flex-col items-center gap-3">
                 <div className="w-52 p-2 bg-stone-800 rounded-[1.75rem] shadow-2xl">
