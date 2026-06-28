@@ -5,7 +5,7 @@ const FALLBACK_GUIDE_URL = 'https://bridgetown.church/guideblog'
 export default function GuideTab({ onClose, guideUrl }) {
   const url = guideUrl || FALLBACK_GUIDE_URL
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       <div className="flex items-center justify-end mb-8">
         {onClose && (
           <button

@@ -201,7 +201,7 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-stone-800">Birthdays</h1>

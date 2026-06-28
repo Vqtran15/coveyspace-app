@@ -118,11 +118,11 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-t-2xl shadow-xl w-full flex flex-col max-h-[90vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full lg:max-w-lg flex flex-col max-h-[90vh] lg:max-h-[85vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -352,7 +352,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
     : members
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div

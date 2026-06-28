@@ -25,7 +25,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
 
   return (
     <div>
-      <div className="max-w-3xl mx-auto px-4 pt-8 pb-3">
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-3">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-stone-800">Sign Up</h1>
           <div className="flex items-center gap-1">

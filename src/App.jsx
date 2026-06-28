@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
@@ -266,9 +266,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-sunrise-50 overflow-x-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="min-h-screen bg-sunrise-50 overflow-x-hidden lg:pl-56" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {!isOnline && (
-        <div className="fixed inset-x-0 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
+        <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
           <WifiSlash size={14} weight="bold" />
           You're offline
         </div>
@@ -277,7 +277,7 @@ export default function App() {
 
       <div
         key={location.pathname}
-        className={`${isFullHeight ? '' : 'pb-24'} ${enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
+        className={`${isFullHeight ? '' : 'pb-24 lg:pb-0'} ${enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
@@ -301,8 +301,49 @@ export default function App() {
         />
       )}
 
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex lg:flex-col fixed inset-y-0 left-0 w-56 bg-white border-r border-stone-200 z-40">
+        <div className="px-4 py-5 border-b border-stone-100 flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-jade flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 256 256" className="w-4 h-4 fill-white">
+              <path d="M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z" />
+            </svg>
+          </div>
+          <span className="font-league-gothic text-2xl text-jade tracking-wide">Covey Space</span>
+        </div>
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
+          {TABS.map(t => {
+            const active = location.pathname === t.path
+            return (
+              <button
+                key={t.path}
+                onClick={() => handleTabChange(t.path)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  active ? 'bg-jade text-white' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-800'
+                }`}
+              >
+                <t.Icon size={20} weight={active ? 'fill' : 'regular'} />
+                {t.shortLabel}
+                {t.path === '/chat' && unreadChatCount > 0 && (
+                  <span className="ml-auto w-2 h-2 bg-coral rounded-full" />
+                )}
+              </button>
+            )
+          })}
+        </nav>
+        <div className="px-3 py-4 border-t border-stone-100">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-stone-500 hover:bg-stone-100 hover:text-stone-800 transition-colors"
+          >
+            <GearSix size={20} />
+            Settings
+          </button>
+        </div>
+      </aside>
+
       <nav
-        className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex"
+        className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {TABS.map(t => {
@@ -352,7 +393,7 @@ export default function App() {
 
       {guideOpen && (
         <div
-          className={`fixed inset-0 z-50 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <GuideTab onClose={closeGuide} guideUrl={groupSettings?.guide_url} />
@@ -361,7 +402,7 @@ export default function App() {
 
       {birthdayOpen && (
         <div
-          className={`fixed inset-0 z-50 bg-sunrise-50 overflow-y-auto ${birthdayClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${birthdayClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <BirthdayTab

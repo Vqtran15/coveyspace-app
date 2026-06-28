@@ -446,11 +446,11 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* New message sheet */}
       {newDmOpen && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${dmClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
           onClick={closeDm}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             {/* Modal header */}

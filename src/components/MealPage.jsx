@@ -185,7 +185,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
   const selectedDishName = selectedSlot != null ? (page.slot_dishes?.[selectedSlot - 1] ?? '') : ''
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pb-12">
+    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
       <div className={`mb-6 relative overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100 ${headerEntranceClass}`}>
         <span className="absolute top-0 left-0 right-0 h-1 bg-coral" />
 

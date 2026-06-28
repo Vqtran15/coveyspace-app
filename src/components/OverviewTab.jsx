@@ -248,7 +248,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const showAnnouncement = isAdmin || !!announcement
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div
@@ -278,11 +278,11 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {/* Announcement — always first */}
         {showAnnouncement && (
           announcement ? (
-            <div className="w-full animate-stack-in">
+            <div className="w-full animate-stack-in lg:col-span-2">
               <div
                 className="w-full bg-jade rounded-2xl p-5 shadow-md shadow-jade/25 animate-announcement-shake"
                 style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
@@ -307,7 +307,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           ) : (
             <button
               onClick={() => setEditingAnnouncement(true)}
-              className="w-full bg-jade/8 border border-dashed border-jade/30 rounded-2xl p-4 animate-stack-in text-left"
+              className="w-full bg-jade/8 border border-dashed border-jade/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
               style={{ animationDelay: '0ms' }}
             >
               <div className="flex items-center gap-3">
@@ -369,7 +369,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         {/* Fun Fact */}
         {(funFact !== null || funFactFailed) && (
           <div
-            className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 animate-stack-in"
+            className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 animate-stack-in lg:col-span-2"
             style={{ animationDelay: `${showAnnouncement ? 400 : 320}ms` }}
           >
             <div className="flex items-start gap-3">
