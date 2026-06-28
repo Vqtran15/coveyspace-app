@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { UsersThree, ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 
 const MODE_ORDER = { signin: 0, forgot: 1, signup: 2 }
 
 export default function AuthPage() {
-  const [mode, setMode]             = useState('signin')
+  const [searchParams] = useSearchParams()
+  const [mode, setMode]             = useState(searchParams.get('tab') === 'signup' ? 'signup' : 'signin')
   const [joinMode, setJoinMode]     = useState('join') // 'join' | 'create'
   const [displayName, setDisplayName] = useState('')
   const [inviteCode, setInviteCode] = useState('')
