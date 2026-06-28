@@ -87,6 +87,8 @@ export default function AuthPage() {
       if (err) {
         setError(err.message)
       } else {
+        window.dataLayer = window.dataLayer || []
+        window.dataLayer.push({ event: 'sign_up', method: joinMode === 'create' ? 'create_group' : 'join_group' })
         switchMode('signin')
         setNotice(
           joinMode === 'create'
@@ -96,7 +98,12 @@ export default function AuthPage() {
       }
     } else {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) setError(err.message)
+      if (err) {
+        setError(err.message)
+      } else {
+        window.dataLayer = window.dataLayer || []
+        window.dataLayer.push({ event: 'login', method: 'email' })
+      }
     }
 
     setLoading(false)
