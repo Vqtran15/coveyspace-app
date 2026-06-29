@@ -449,13 +449,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 View setup guide
               </button>
             )}
-            <a
-              href="mailto:hello@coveyspace.com"
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-xl transition-colors mb-1"
-            >
-              <EnvelopeSimple size={15} weight="bold" className="text-stone-400" />
-              Bugs &amp; feature requests
-            </a>
             <button
               onClick={() => supabase.auth.signOut()}
               className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-xl transition-colors mb-1"

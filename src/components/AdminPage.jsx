@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, EnvelopeSimple, CaretDown } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -34,6 +34,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [groupNameValue, setGroupNameValue] = useState('')
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
   const [groupNameSaving, setGroupNameSaving] = useState(false)
+  const [membersOpen, setMembersOpen] = useState(false)
   const [guideUrlOpen, setGuideUrlOpen] = useState(false)
   const [guideUrlValue, setGuideUrlValue] = useState('')
   const [guideUrlSaving, setGuideUrlSaving] = useState(false)
@@ -259,49 +260,61 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         {/* Members */}
         {members.length > 0 && (
           <section>
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">
-              Members ({members.length})
-            </p>
-            <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100">
-              {members.map(m => (
-                <div key={m.user_id} className="flex items-center gap-3 px-4 py-3.5">
-                  <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-stone-700 truncate">{m.display_name}</span>
-                      {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
+            <button
+              onClick={() => setMembersOpen(o => !o)}
+              className="w-full flex items-center justify-between mb-3"
+            >
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">
+                Members ({members.length})
+              </p>
+              <CaretDown
+                size={14}
+                weight="bold"
+                className={`text-stone-400 transition-transform ${membersOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {membersOpen && (
+              <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100">
+                {members.map(m => (
+                  <div key={m.user_id} className="flex items-center gap-3 px-4 py-3.5">
+                    <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-stone-700 truncate">{m.display_name}</span>
+                        {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
+                      </div>
+                      {m.role === 'admin' && (
+                        <span className="text-xs text-jade font-semibold flex items-center gap-1">
+                          <ShieldCheck size={10} weight="fill" /> Admin
+                        </span>
+                      )}
                     </div>
-                    {m.role === 'admin' && (
-                      <span className="text-xs text-jade font-semibold flex items-center gap-1">
-                        <ShieldCheck size={10} weight="fill" /> Admin
-                      </span>
+                    {m.user_id !== userId && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleSetRole(m.user_id, m.role === 'admin' ? 'member' : 'admin')}
+                          disabled={!!settingRoleId}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
+                            m.role === 'admin'
+                              ? 'bg-jade/10 text-jade hover:bg-jade/20'
+                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {settingRoleId === m.user_id ? '…' : m.role === 'admin' ? 'Admin ✓' : 'Make Admin'}
+                        </button>
+                        <button
+                          onClick={() => handleRemoveMember(m.user_id)}
+                          disabled={removingId === m.user_id}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+                        >
+                          {removingId === m.user_id ? <span className="text-[10px]">…</span> : <X size={15} weight="bold" />}
+                        </button>
+                      </div>
                     )}
                   </div>
-                  {m.user_id !== userId && (
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleSetRole(m.user_id, m.role === 'admin' ? 'member' : 'admin')}
-                        disabled={!!settingRoleId}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
-                          m.role === 'admin'
-                            ? 'bg-jade/10 text-jade hover:bg-jade/20'
-                            : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                        }`}
-                      >
-                        {settingRoleId === m.user_id ? '…' : m.role === 'admin' ? 'Admin ✓' : 'Make Admin'}
-                      </button>
-                      <button
-                        onClick={() => handleRemoveMember(m.user_id)}
-                        disabled={removingId === m.user_id}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
-                      >
-                        {removingId === m.user_id ? <span className="text-[10px]">…</span> : <X size={15} weight="bold" />}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -336,6 +349,13 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             })}
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">The Sign Up tab is removed from the nav when both Meal and Service sign-ups are disabled.</p>
+          <a
+            href="mailto:hello@coveyspace.com"
+            className="mt-3 w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-xl transition-colors"
+          >
+            <EnvelopeSimple size={15} weight="bold" className="text-stone-400" />
+            Bugs &amp; feature requests
+          </a>
         </section>
 
         {/* Meal Schedule */}
