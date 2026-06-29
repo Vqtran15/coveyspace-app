@@ -816,8 +816,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     <div className={`overflow-hidden select-none transition-colors duration-200
                       ${editingMsgId === msg.id ? 'animate-edit-pop' : editClosingId === msg.id ? 'animate-edit-close' : ''}
                       ${isOwn
-                        ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-jade'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-bl-2xl rounded-br-none' : 'rounded-b-md'}`
-                        : `bg-white border border-stone-200 text-stone-800 ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-br-2xl rounded-bl-none' : 'rounded-b-md'}`
+                        ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-jade'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? `rounded-bl-2xl ${msg.image_url ? 'rounded-br-sm' : 'rounded-br-none'}` : 'rounded-b-md'}`
+                        : `bg-white border border-stone-200 text-stone-800 ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? `rounded-br-2xl ${msg.image_url ? 'rounded-bl-sm' : 'rounded-bl-none'}` : 'rounded-b-md'}`
                       }`}>
                       {/* Reply quote */}
                       {msg.reply_message && (
@@ -895,12 +895,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         </p>
                       )}
                     </div>
-                    {isLastInGroup && isOwn && (
+                    {isLastInGroup && isOwn && !msg.image_url && (
                       <svg className="absolute bottom-0 -right-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 0 0 C 0 10 9 10 9 12 L 0 12 Z" fill={editingMsgId === msg.id ? '#57534e' : '#C4622D'} />
                       </svg>
                     )}
-                    {isLastInGroup && !isOwn && (
+                    {isLastInGroup && !isOwn && !msg.image_url && (
                       <svg className="absolute bottom-0 -left-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 9 0 C 9 10 0 10 0 12 L 9 12 Z" fill="white" />
                         <path d="M 9 0 C 9 10 0 10 0 12" fill="none" stroke="#e7e5e4" strokeWidth="1" />
