@@ -16,6 +16,7 @@ import AuthPage from './components/AuthPage.jsx'
 import ResetPasswordPage from './components/ResetPasswordPage.jsx'
 import WelcomeSplash from './components/WelcomeSplash.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
+import AdminPage from './components/AdminPage.jsx'
 import UpdatePrompt from './components/UpdatePrompt.jsx'
 
 const MEALS_CONFIG = {
@@ -283,6 +284,8 @@ export default function App() {
           <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} refreshKey={sampleRefreshKey} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
+          <Route path="*"          element={<Navigate to="/home" replace />} />
         </Routes>
       </div>
 
@@ -366,9 +369,7 @@ export default function App() {
 
       {settingsOpen && !showWelcome && (
         <SettingsModal
-          groupName={groupName}
           displayName={displayName}
-          groupId={groupId}
           isAdmin={isAdmin}
           userId={session.user.id}
           onClose={() => setSettingsOpen(false)}
@@ -378,9 +379,6 @@ export default function App() {
           pushPermission={push.permission}
           pushToggling={push.toggling}
           onPushToggle={push.toggle}
-          groupSettings={groupSettings}
-          onGroupSettingsChange={setGroupSettings}
-          onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))}
           onRevisitGuide={() => {
             const key = `cg_welcomed_${session.user.id}_${groupId}`
             localStorage.removeItem(key)

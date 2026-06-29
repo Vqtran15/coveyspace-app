@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { GearSix, SignOut, Trash, Crown, X, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretDown } from '@phosphor-icons/react'
+import { useNavigate } from 'react-router-dom'
+import { GearSix, SignOut, Trash, Crown, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -23,18 +24,13 @@ function AvatarCircle({ icon, name, userId, colorKey, size = 'md' }) {
   )
 }
 
-export default function SettingsModal({ groupName, displayName, groupId, isAdmin, userId, onClose, onDisplayNameChange, onGroupNameChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, groupSettings, onGroupSettingsChange, onRevisitGuide }) {
+export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
   const [closing, close] = useModalClose(onClose)
+  const navigate = useNavigate()
   const toast = useToast()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
-  const [inviteCode, setInviteCode] = useState(null)
-  const [codeCopied, setCodeCopied] = useState(false)
-  const [codeRotating, setCodeRotating] = useState(false)
-  const [members, setMembers] = useState([])
-  const [settingRoleId, setSettingRoleId] = useState(null)
-  const [removingId, setRemovingId] = useState(null)
   const [avatarIcon, setAvatarIcon] = useState(null)
   const [avatarColorKey, setAvatarColorKey] = useState(null)
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
@@ -55,14 +51,6 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
-  const [adminOpen, setAdminOpen] = useState(false)
-  const [guideUrlOpen, setGuideUrlOpen] = useState(false)
-  const [guideUrlValue, setGuideUrlValue] = useState('')
-  const [guideUrlSaving, setGuideUrlSaving] = useState(false)
-  const [groupNameOpen, setGroupNameOpen] = useState(false)
-  const [groupNameValue, setGroupNameValue] = useState('')
-  const [groupNameConfirm, setGroupNameConfirm] = useState(false)
-  const [groupNameSaving, setGroupNameSaving] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -77,29 +65,6 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
       })
     supabase.auth.getUser().then(({ data: { user } }) => setEmail(user?.email ?? ''))
   }, [userId])
-
-  useEffect(() => {
-    if (!groupId || !isAdmin) return
-    const id = setTimeout(() => {
-      supabase
-        .rpc('get_invite_code')
-        .then(({ data }) => setInviteCode(data ?? null))
-    }, 260)
-    return () => clearTimeout(id)
-  }, [groupId, isAdmin])
-
-  useEffect(() => {
-    if (!groupId || !isAdmin) return
-    const id = setTimeout(() => {
-      supabase
-        .from('profiles')
-        .select('user_id, display_name, role, avatar_icon, avatar_color')
-        .eq('community_group_id', groupId)
-        .order('display_name')
-        .then(({ data }) => setMembers(data ?? []))
-    }, 260)
-    return () => clearTimeout(id)
-  }, [groupId, isAdmin])
 
   async function handleSelectAvatar(icon) {
     setSavingAvatar(true)
@@ -142,8 +107,6 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
     if (error) {
       toast('Failed to update name', 'error')
     } else {
-      // Keep the local admin members list in sync
-      setMembers(prev => prev.map(m => m.user_id === userId ? { ...m, display_name: trimmed } : m))
       onDisplayNameChange?.(trimmed)
       toast('Name updated', 'success')
       setNameOpen(false)
@@ -192,95 +155,6 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
     setPwSaving(false)
   }
 
-  function copyCode() {
-    if (!inviteCode) return
-    navigator.clipboard.writeText(inviteCode)
-      .then(() => {
-        setCodeCopied(true)
-        setTimeout(() => setCodeCopied(false), 2000)
-      })
-      .catch(() => toast('Could not copy to clipboard', 'error'))
-  }
-
-  async function handleRotate() {
-    if (!window.confirm('Generate a new invite code? The old code will stop working immediately.')) return
-    setCodeRotating(true)
-    const { data, error } = await supabase.rpc('rotate_invite_code')
-    if (!error) setInviteCode(data)
-    setCodeRotating(false)
-  }
-
-  async function handleSetRole(targetId, newRole) {
-    const member = members.find(m => m.user_id === targetId)
-    const msg = newRole === 'admin'
-      ? `Make ${member?.display_name ?? 'this member'} an admin?`
-      : `Remove admin rights from ${member?.display_name ?? 'this member'}?`
-    if (!window.confirm(msg)) return
-    setSettingRoleId(targetId)
-    const { error } = await supabase.rpc('set_member_role', { target_user_id: targetId, new_role: newRole })
-    if (error) toast(error.message, 'error')
-    else setMembers(prev => prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m))
-    setSettingRoleId(null)
-  }
-
-  async function handleRemoveMember(targetId) {
-    const member = members.find(m => m.user_id === targetId)
-    if (!window.confirm(`Remove ${member?.display_name ?? 'this member'} from the group?`)) return
-    setRemovingId(targetId)
-    const { error } = await supabase.rpc('remove_member', { target_user_id: targetId })
-    if (!error) setMembers(prev => prev.filter(m => m.user_id !== targetId))
-    setRemovingId(null)
-  }
-
-  async function handleSaveRotation(patch) {
-    onGroupSettingsChange?.(prev => ({ ...prev, ...patch }))
-    const { error } = await supabase
-      .from('group_settings')
-      .upsert({ group_id: groupId, ...patch }, { onConflict: 'group_id' })
-    if (error) {
-      toast('Failed to save', 'error')
-      onGroupSettingsChange?.(groupSettings)
-    }
-  }
-
-
-  async function handleSaveGuideUrl(e) {
-    e.preventDefault()
-    const trimmed = guideUrlValue.trim()
-    const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
-    setGuideUrlSaving(true)
-    const { error } = await supabase
-      .from('group_settings')
-      .upsert({ group_id: groupId, guide_url: normalized || null }, { onConflict: 'group_id' })
-    if (error) {
-      toast('Failed to save guide URL', 'error')
-    } else {
-      onGroupSettingsChange?.(prev => ({ ...prev, guide_url: normalized || null }))
-      toast('Guide link saved', 'success')
-      setGuideUrlOpen(false)
-    }
-    setGuideUrlSaving(false)
-  }
-
-  async function handleChangeGroupName() {
-    const trimmed = groupNameValue.trim()
-    if (!trimmed || trimmed === groupName) return
-    setGroupNameSaving(true)
-    const { error } = await supabase
-      .from('community_groups')
-      .update({ name: trimmed })
-      .eq('id', groupId)
-    if (error) {
-      toast('Failed to rename group', 'error')
-    } else {
-      onGroupNameChange?.(trimmed)
-      toast('Group renamed', 'success')
-      setGroupNameOpen(false)
-      setGroupNameConfirm(false)
-    }
-    setGroupNameSaving(false)
-  }
-
   async function handleDeleteAccount() {
     setDeleting(true)
     setDeleteError(null)
@@ -317,274 +191,17 @@ export default function SettingsModal({ groupName, displayName, groupId, isAdmin
         </div>
 
         <div className="px-5 pb-6 space-y-2 overflow-y-auto overscroll-contain">
-          {isAdmin && (inviteCode || members.length > 0) && (
+          {isAdmin && (
             <div className="pt-2 border-t border-stone-100">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Admin</p>
               <button
-                onClick={() => setAdminOpen(o => !o)}
-                className="w-full flex items-center justify-between py-1 mb-1"
+                onClick={() => { close(); setTimeout(() => navigate('/admin'), 200) }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors"
               >
-                <div className="flex items-center gap-1.5">
-                  <Crown size={12} weight="fill" className="text-stone-400" />
-                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Admin</p>
-                </div>
-                <CaretDown
-                  size={14}
-                  weight="bold"
-                  className={`text-stone-400 transition-transform duration-200 ${adminOpen ? 'rotate-180' : ''}`}
-                />
+                <Crown size={15} weight="fill" className="text-stone-400" />
+                Admin settings
+                <CaretRight size={14} className="ml-auto text-stone-300" />
               </button>
-              <div className={`grid transition-all duration-200 ease-in-out ${adminOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                <div className="overflow-hidden">
-                <div className="space-y-3 pb-1">
-                  <div>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Group Name</p>
-                    {groupNameOpen ? (
-                      groupNameConfirm ? (
-                        <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-3">
-                          <p className="text-sm text-stone-700">
-                            Rename group to <span className="font-semibold">"{groupNameValue.trim()}"</span>?
-                          </p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setGroupNameConfirm(false)}
-                              className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                            >
-                              Back
-                            </button>
-                            <button
-                              onClick={handleChangeGroupName}
-                              disabled={groupNameSaving}
-                              className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                            >
-                              {groupNameSaving ? 'Saving…' : 'Confirm'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <input
-                            autoFocus
-                            type="text"
-                            value={groupNameValue}
-                            onChange={e => setGroupNameValue(e.target.value)}
-                            maxLength={60}
-                            placeholder="Group name"
-                            className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setGroupNameOpen(false)}
-                              className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => setGroupNameConfirm(true)}
-                              disabled={!groupNameValue.trim() || groupNameValue.trim() === groupName}
-                              className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                            >
-                              Save
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    ) : (
-                      <button
-                        onClick={() => { setGroupNameValue(groupName ?? ''); setGroupNameOpen(true); setGroupNameConfirm(false) }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors"
-                      >
-                        <PencilSimple size={14} weight="bold" className="text-stone-400 shrink-0" />
-                        <span className="flex-1 text-left truncate text-stone-500">{groupName}</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {inviteCode && (
-                    <div>
-                      <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Invite Code</p>
-                      <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
-                        <span className="font-mono font-bold text-xl tracking-widest text-stone-800 flex-1">
-                          {codeRotating ? '……' : inviteCode}
-                        </span>
-                        <button onClick={copyCode} className="text-xs font-semibold text-jade shrink-0">
-                          {codeCopied ? 'Copied!' : 'Copy'}
-                        </button>
-                        <button
-                          onClick={handleRotate}
-                          disabled={codeRotating}
-                          className="text-xs font-semibold text-stone-400 hover:text-red-500 transition-colors shrink-0 disabled:opacity-40"
-                        >
-                          Rotate
-                        </button>
-                      </div>
-                      <p className="text-xs text-stone-400 mt-1.5">Share this code with people you want to invite.</p>
-                    </div>
-                  )}
-                  {members.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Members</p>
-                      <div className="space-y-0.5">
-                        {members.map(m => (
-                          <div key={m.user_id} className="flex items-center gap-2.5 py-1.5">
-                            <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} size="sm" />
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
-                              <span className="text-sm text-stone-700 truncate">{m.display_name}</span>
-                              {m.role === 'admin' && <Crown size={11} weight="fill" className="text-jade shrink-0" />}
-                              {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
-                            </div>
-                            {m.user_id !== userId && (
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                <button
-                                  onClick={() => handleSetRole(m.user_id, m.role === 'admin' ? 'member' : 'admin')}
-                                  disabled={!!settingRoleId}
-                                  title={m.role === 'admin' ? 'Remove admin' : 'Make admin'}
-                                  className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-jade transition-colors disabled:opacity-40 rounded-lg hover:bg-stone-50"
-                                >
-                                  {settingRoleId === m.user_id
-                                    ? <span className="text-[10px] text-stone-300">…</span>
-                                    : <Crown size={13} weight={m.role === 'admin' ? 'fill' : 'regular'} />
-                                  }
-                                </button>
-                                <button
-                                  onClick={() => handleRemoveMember(m.user_id)}
-                                  disabled={removingId === m.user_id}
-                                  className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-red-400 transition-colors disabled:opacity-40 rounded-lg hover:bg-red-50"
-                                >
-                                  {removingId === m.user_id
-                                    ? <span className="text-[10px] text-stone-300">…</span>
-                                    : <X size={13} weight="bold" />
-                                  }
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Meal Schedule</p>
-                    <p className="text-[11px] text-stone-400 mb-1.5">Day of week</p>
-                    <div className="flex gap-1 mb-3">
-                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSaveRotation({ meal_day_of_week: groupSettings?.meal_day_of_week === i ? null : i })}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
-                            groupSettings?.meal_day_of_week === i
-                              ? 'bg-jade text-white'
-                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
-                        >
-                          {d}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[11px] text-stone-400 mb-1.5">Frequency</p>
-                    <div className="flex gap-1.5 mb-1">
-                      {[{ label: 'Weekly', days: 7 }, { label: 'Every 2 weeks', days: 14 }].map(({ label: fl, days }) => (
-                        <button
-                          key={days}
-                          onClick={() => handleSaveRotation({ meal_interval_days: days })}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
-                            (groupSettings?.meal_interval_days ?? 7) === days
-                              ? 'bg-jade text-white'
-                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
-                        >
-                          {fl}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Service Schedule</p>
-                    <div className="flex gap-1.5 mb-3">
-                      {[{ label: 'Off', val: false }, { label: 'On (monthly)', val: true }].map(({ label: sl, val }) => (
-                        <button
-                          key={String(val)}
-                          onClick={() => handleSaveRotation({ service_autofill: val })}
-                          className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
-                            (groupSettings?.service_autofill ?? false) === val
-                              ? 'bg-jade text-white'
-                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
-                        >
-                          {sl}
-                        </button>
-                      ))}
-                    </div>
-                    {groupSettings?.service_autofill && (
-                      <>
-                        <p className="text-[11px] text-stone-400 mb-1.5">Day of week</p>
-                        <div className="flex gap-1">
-                          {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => (
-                            <button
-                              key={i}
-                              onClick={() => handleSaveRotation({ service_day_of_week: groupSettings?.service_day_of_week === i ? null : i })}
-                              className={`flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-colors ${
-                                groupSettings?.service_day_of_week === i
-                                  ? 'bg-jade text-white'
-                                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                              }`}
-                            >
-                              {d}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Guide Link</p>
-                    {guideUrlOpen ? (
-                      <form onSubmit={handleSaveGuideUrl} className="space-y-2">
-                        <input
-                          autoFocus
-                          type="text"
-                          placeholder="https://example.com/guide"
-                          value={guideUrlValue}
-                          onChange={e => setGuideUrlValue(e.target.value)}
-                          className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setGuideUrlOpen(false)}
-                            className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={guideUrlSaving}
-                            className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                          >
-                            {guideUrlSaving ? 'Saving…' : 'Save'}
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <button
-                        onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors"
-                      >
-                        <PencilSimple size={14} weight="bold" className="text-stone-400 shrink-0" />
-                        <span className="flex-1 text-left truncate">
-                          {groupSettings?.guide_url
-                            ? <span className="text-stone-500">{groupSettings.guide_url}</span>
-                            : <span className="text-stone-400 italic">No custom link set</span>
-                          }
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                </div>
-              </div>
             </div>
           )}
 
