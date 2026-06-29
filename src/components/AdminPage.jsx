@@ -25,7 +25,6 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const toast = useToast()
 
   const [inviteCode, setInviteCode] = useState(null)
-  const [codeCopied, setCodeCopied] = useState(false)
   const [codeRotating, setCodeRotating] = useState(false)
   const [members, setMembers] = useState([])
   const [settingRoleId, setSettingRoleId] = useState(null)
@@ -56,13 +55,6 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         setMembers(sorted)
       })
   }, [groupId, isAdmin])
-
-  function copyCode() {
-    if (!inviteCode) return
-    navigator.clipboard.writeText(inviteCode)
-      .then(() => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000) })
-      .catch(() => toast('Could not copy to clipboard', 'error'))
-  }
 
   async function handleRotate() {
     if (!window.confirm('Generate a new invite code? The old code will stop working immediately.')) return
@@ -239,20 +231,15 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 <span className="font-mono font-bold text-3xl tracking-widest text-stone-800 flex-1">
                   {codeRotating ? '……' : inviteCode}
                 </span>
-                <button onClick={copyCode} className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-jade hover:bg-jade-700 transition-colors shrink-0">
-                  {codeCopied ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-stone-400">Share this code with people you want to invite.</p>
                 <button
                   onClick={handleRotate}
                   disabled={codeRotating}
-                  className="text-xs font-semibold text-stone-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-jade hover:bg-jade-700 transition-colors shrink-0 disabled:opacity-40"
                 >
-                  Rotate
+                  {codeRotating ? 'Resetting…' : 'Reset invite code'}
                 </button>
               </div>
+              <p className="text-xs text-stone-400">Share this code with people you want to invite.</p>
             </div>
           </section>
         )}
