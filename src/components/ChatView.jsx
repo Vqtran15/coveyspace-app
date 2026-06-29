@@ -419,7 +419,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
-        URL.revokeObjectURL(previewUrl)
         setMessages(prev => {
           const without = prev.filter(m => m._tempId !== tempId)
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
@@ -465,12 +464,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function handleFileChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) { toast('Only image files are supported', 'error'); e.target.value = ''; return }
-    if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); e.target.value = ''; return }
-    if (imagePreview?.previewUrl) URL.revokeObjectURL(imagePreview.previewUrl)
-    setImagePreview({ file, previewUrl: URL.createObjectURL(file) })
-
     e.target.value = ''
+    if (!file.type.startsWith('image/')) { toast('Only image files are supported', 'error'); return }
+    if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); return }
+    const reader = new FileReader()
+    reader.onload = ev => setImagePreview({ file, previewUrl: ev.target.result })
+    reader.readAsDataURL(file)
   }
 
   // ── Reactions ─────────────────────────────────────────────────────────────
@@ -969,7 +968,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <div className="relative inline-block mb-2">
             <img src={imagePreview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
             <button
-              onClick={() => { URL.revokeObjectURL(imagePreview.previewUrl); setImagePreview(null) }}
+              onClick={() => setImagePreview(null)}
               className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
             >
               <X size={10} weight="bold" />
