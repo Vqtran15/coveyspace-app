@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import EmojiPicker from 'emoji-picker-react'
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
   MagnifyingGlass, ArrowDown, Trash, ArrowLeft, Notepad,
-  Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy,
+  Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -12,32 +13,6 @@ import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
-const MORE_EMOJIS = [
-  // Happy faces
-  '😍', '🥰', '😊', '🤩', '😎', '🥹',
-  // Funny
-  '😅', '🤣', '😭', '🤦', '🫠', '💀',
-  // Surprised
-  '😱', '🤯', '👀', '🫢', '🙈', '😲',
-  // Celebration
-  '🎉', '🎊', '🥳', '🎂', '🏆', '🎯',
-  // Positive
-  '💯', '✅', '💪', '🙌', '👏', '🫶',
-  // Vibes
-  '🔥', '⭐', '💎', '✨', '🌈', '💡',
-  // Hearts & colors
-  '🧡', '💛', '💚', '💙', '💜', '🖤',
-  // Animals
-  '🐶', '🐱', '🦊', '🐸', '🐼', '🦋',
-  // More animals
-  '🐨', '🦁', '🐯', '🐺', '🦉', '🐙',
-  // Nature
-  '🌸', '🌻', '🍀', '🌿', '🌊', '🌙',
-  // Food
-  '🍕', '🍔', '🌮', '🧁', '🍦', '🧋',
-  // Fun & misc
-  '🎵', '📚', '🎮', '📸', '🌍', '💫',
-]
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -109,12 +84,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [activeMsg, setActiveMsg]       = useState(null)
   const [menuPos, setMenuPos]           = useState(null)
   const [showMoreEmojis, setShowMoreEmojis] = useState(false)
+  const [reactionPickerClosing, setReactionPickerClosing] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [emojiPickerClosing, setEmojiPickerClosing] = useState(false)
   const [notesOpen, setNotesOpen]           = useState(false)
   const [replyingTo, setReplyingTo]         = useState(null)
   const [infoOpen, setInfoOpen]             = useState(false)
   const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
   const [menuClosing, closeMenu, resetMenuClosing] = useModalClose(() => {
-    setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false); setConfirmDeleteMsg(false)
+    setActiveMsg(null); setMenuPos(null); setShowMoreEmojis(false); setReactionPickerClosing(false); setConfirmDeleteMsg(false)
   }, 150)
   const [renamingGroup, setRenamingGroup]   = useState(false)
   const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false)
@@ -410,6 +388,30 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setSending(false)
   }
 
+  function closeReactionPicker() {
+    setReactionPickerClosing(true)
+    setTimeout(() => { setShowMoreEmojis(false); setReactionPickerClosing(false) }, 250)
+  }
+
+  function closeEmojiPicker() {
+    setEmojiPickerClosing(true)
+    setTimeout(() => { setShowEmojiPicker(false); setEmojiPickerClosing(false) }, 200)
+  }
+
+  function insertEmoji(emoji) {
+    const el = textareaRef.current
+    if (!el) return
+    const start = el.selectionStart ?? text.length
+    const end = el.selectionEnd ?? text.length
+    const newText = text.slice(0, start) + emoji + text.slice(end)
+    setText(newText)
+    closeEmojiPicker()
+    setTimeout(() => {
+      el.focus()
+      el.setSelectionRange(start + emoji.length, start + emoji.length)
+    }, 0)
+  }
+
   function handleFileChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -462,6 +464,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     })
     setActiveMsg(msgId)
     setShowMoreEmojis(false)
+    setReactionPickerClosing(false)
   }
 
   function exitEdit() {
@@ -889,6 +892,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </button>
           </div>
         )}
+        {(showEmojiPicker || emojiPickerClosing) && (
+          <div className={`mb-2 ${emojiPickerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
+            <EmojiPicker
+              onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
+              width="100%"
+              height={350}
+              searchPlaceholder="Search emojis…"
+              previewConfig={{ showPreview: false }}
+            />
+          </div>
+        )}
         <form onSubmit={handleSend} className="flex items-end gap-2">
           <button
             type="button"
@@ -908,6 +922,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             className="flex-1 resize-none border border-stone-200 rounded-2xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-stone-50"
             style={{ maxHeight: 120, overflowY: 'auto' }}
           />
+          <button
+            type="button"
+            onClick={() => showEmojiPicker ? closeEmojiPicker() : setShowEmojiPicker(true)}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors shrink-0 ${showEmojiPicker ? 'text-jade bg-jade/10' : 'text-stone-400 hover:text-jade hover:bg-stone-100'}`}
+          >
+            <Smiley size={22} />
+          </button>
           <button
             type="submit"
             disabled={sending || (!text.trim() && !imagePreview)}
@@ -953,7 +974,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               )
             })}
             <button
-              onClick={() => setShowMoreEmojis(v => !v)}
+              onClick={() => showMoreEmojis ? closeReactionPicker() : setShowMoreEmojis(true)}
               className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-colors ${showMoreEmojis ? 'bg-jade text-white' : 'text-stone-400 hover:bg-stone-100'}`}
             >
               {showMoreEmojis ? '×' : '+'}
@@ -1014,23 +1035,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               </button>
             </div>
           )}
-          {showMoreEmojis && (
-            <div className="grid grid-cols-6 gap-0.5 mt-1 pt-1 border-t border-stone-100 max-h-44 overflow-y-auto overscroll-contain">
-              {MORE_EMOJIS.map(emoji => {
-                const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
-                return (
-                  <button
-                    key={emoji}
-                    onClick={() => toggleReaction(activeMsg, emoji)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-colors ${reacted ? 'bg-jade/10' : 'hover:bg-stone-100'}`}
-                  >
-                    {emoji}
-                  </button>
-                )
-              })}
-            </div>
-          )}
         </div>
+        </div>
+      )}
+
+      {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
+        <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <EmojiPicker
+            onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
+            width="100%"
+            height={350}
+            searchPlaceholder="Search emojis…"
+            previewConfig={{ showPreview: false }}
+          />
         </div>
       )}
 
