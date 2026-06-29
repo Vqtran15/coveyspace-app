@@ -104,6 +104,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const toast = useToast()
   const [renameValue, setRenameValue]       = useState('')
   const [renameSaving, setRenameSaving]     = useState(false)
+  const [memberReadTimes, setMemberReadTimes] = useState({})
+  const [unreadCount, setUnreadCount]         = useState(0)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -114,6 +116,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const typingTimeoutRef   = useRef(null)
   const lastTapRef         = useRef(null)
   const preserveScrollRef  = useRef(null)
+  const isAtBottomRef      = useRef(true)
 
   const myId = session.user.id
   const convId = conversation.id
@@ -148,6 +151,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setLoading(true)
     setMessages([])
     setReplyingTo(null)
+    setMemberReadTimes({})
+    setUnreadCount(0)
     setText(localStorage.getItem(`draft:${convId}`) ?? '')
 
     supabase
@@ -183,6 +188,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         filter: `conversation_id=eq.${convId}`,
       }, ({ new: msg }) => {
         setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, { ...msg, _isNew: true }])
+        if (msg.user_id !== myId) {
+          if (isAtBottomRef.current) {
+            supabase.from('conversation_members')
+              .update({ last_read_at: new Date().toISOString() })
+              .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+          } else {
+            setUnreadCount(prev => prev + 1)
+          }
+        }
       })
       .on('postgres_changes', {
         event: 'DELETE', schema: 'public', table: 'messages',
@@ -219,10 +233,40 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
+    // Load member read times for read receipts
+    supabase
+      .from('conversation_members')
+      .select('user_id, last_read_at')
+      .eq('conversation_id', convId)
+      .then(({ data }) => {
+        const map = {}
+        for (const m of data ?? []) {
+          if (m.user_id !== myId) map[m.user_id] = m.last_read_at
+        }
+        setMemberReadTimes(map)
+      })
+
+    // Mark ourselves as read on enter
+    supabase.from('conversation_members')
+      .update({ last_read_at: new Date().toISOString() })
+      .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+
+    const readCh = supabase
+      .channel(`read:${convId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'conversation_members',
+        filter: `conversation_id=eq.${convId}`,
+      }, ({ new: row }) => {
+        if (row.user_id !== myId) {
+          setMemberReadTimes(prev => ({ ...prev, [row.user_id]: row.last_read_at }))
+        }
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
-      // Mark read when leaving the conversation
+      supabase.removeChannel(readCh)
       supabase.from('conversation_members')
         .update({ last_read_at: new Date().toISOString() })
         .eq('conversation_id', convId)
@@ -291,7 +335,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function handleScroll() {
     const el = scrollRef.current
     if (!el) return
-    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80)
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    setIsAtBottom(atBottom)
+    isAtBottomRef.current = atBottom
+    if (atBottom && unreadCount > 0) {
+      setUnreadCount(0)
+      supabase.from('conversation_members')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+    }
     if (el.scrollTop < 60 && hasMore && !loadingMore) loadMore()
   }
 
@@ -419,6 +471,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
+        await new Promise(resolve => {
+          const img = new window.Image()
+          img.onload = resolve
+          img.onerror = resolve
+          img.src = publicUrl
+        })
         setMessages(prev => {
           const without = prev.filter(m => m._tempId !== tempId)
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
@@ -615,6 +673,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       lastDate = d
     }
     items.push({ type: 'msg', msg })
+  }
+
+  const readersAtMessage = {}
+  for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
+    if (!lastReadAt) continue
+    const readTime = new Date(lastReadAt)
+    let lastReadMsgId = null
+    for (let i = filteredMsgs.length - 1; i >= 0; i--) {
+      const m = filteredMsgs[i]
+      if (!m._tempId && new Date(m.created_at) <= readTime) { lastReadMsgId = m.id; break }
+    }
+    if (lastReadMsgId) {
+      if (!readersAtMessage[lastReadMsgId]) readersAtMessage[lastReadMsgId] = []
+      const member = members.find(m => m.user_id === userId)
+      if (member) readersAtMessage[lastReadMsgId].push(member)
+    }
   }
 
   const typing = typingLabel(typingUsers)
@@ -932,6 +1006,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         ))}
                       </div>
                     )}
+                    {isOwn && readersAtMessage[msg.id]?.length > 0 && (
+                      <div className="flex gap-0.5 mt-1 justify-end">
+                        {readersAtMessage[msg.id].slice(0, 6).map(member => (
+                          <div
+                            key={member.user_id}
+                            title={member.display_name}
+                            className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${avatarColor(member.user_id, member.avatar_color)}`}
+                          >
+                            {member.avatar_icon
+                              ? <AvatarIcon name={member.avatar_icon} size={8} />
+                              : <span className="text-white text-[7px] font-bold leading-none">{initials(member.display_name)}</span>
+                            }
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -942,8 +1032,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {/* Typing indicator */}
       {typing && (
-        <div className="shrink-0 px-5 pb-1 max-w-3xl mx-auto w-full">
-          <p className="text-xs text-stone-400 italic">{typing}</p>
+        <div className="shrink-0 px-4 pb-2 max-w-3xl mx-auto w-full animate-overlay-in">
+          <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
+          <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
+            {[0, 1, 2].map(i => (
+              <div
+                key={i}
+                className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-bounce"
+                style={{ animationDelay: `${i * 150}ms` }}
+              />
+            ))}
+          </div>
         </div>
       )}
 
@@ -1025,16 +1124,30 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {/* Scroll-to-bottom */}
       {!isAtBottom && !searchOpen && (
-        <button
-          onClick={() => {
-            setIsAtBottom(true)
-            if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-          }}
-          className="fixed left-1/2 -translate-x-1/2 w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center z-10 animate-overlay-in"
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-10 animate-overlay-in"
           style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
         >
-          <ArrowDown size={16} weight="bold" />
-        </button>
+          <button
+            onClick={() => {
+              setIsAtBottom(true)
+              isAtBottomRef.current = true
+              setUnreadCount(0)
+              supabase.from('conversation_members')
+                .update({ last_read_at: new Date().toISOString() })
+                .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+              if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+            }}
+            className="relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
+          >
+            <ArrowDown size={16} weight="bold" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
       )}
 
       {/* Action menu */}
