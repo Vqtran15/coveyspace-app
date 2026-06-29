@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Cake, ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
@@ -17,6 +17,18 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
   const [error, setError]   = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function onResize() {
+      setKeyboardOffset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    }
+    vv.addEventListener('resize', onResize)
+    vv.addEventListener('scroll', onResize)
+    return () => { vv.removeEventListener('resize', onResize); vv.removeEventListener('scroll', onResize) }
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -50,6 +62,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
     >
       <div
         className={`bg-white rounded-t-2xl shadow-xl w-full ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        style={{ marginBottom: keyboardOffset, transition: 'margin-bottom 0.15s ease-out' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">

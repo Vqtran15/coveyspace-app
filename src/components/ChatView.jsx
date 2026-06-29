@@ -73,7 +73,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [loading, setLoading]           = useState(true)
   const [hasMore, setHasMore]           = useState(false)
   const [loadingMore, setLoadingMore]   = useState(false)
-  const [text, setText]                 = useState('')
+  const [text, setText]                 = useState(() => localStorage.getItem(`draft:${conversation.id}`) ?? '')
   const [sending, setSending]           = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [searchOpen, setSearchOpen]     = useState(false)
@@ -148,6 +148,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setLoading(true)
     setMessages([])
     setReplyingTo(null)
+    setText(localStorage.getItem(`draft:${convId}`) ?? '')
 
     supabase
       .from('messages')
@@ -282,12 +283,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }, [imagePreview])
 
-  useEffect(() => {
-    if (showMoreEmojis) {
-      document.body.style.overflow = 'hidden'
-      return () => { document.body.style.overflow = '' }
-    }
-  }, [showMoreEmojis])
 
 
   useEffect(() => {
@@ -331,7 +326,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   function handleTextInput(e) {
-    setText(e.target.value)
+    const val = e.target.value
+    setText(val)
+    if (val) localStorage.setItem(`draft:${convId}`, val)
+    else localStorage.removeItem(`draft:${convId}`)
     e.target.style.height = 'auto'
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
     if (presenceChannelRef.current) {
@@ -387,6 +385,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => [...prev, { ...newMsg, _isNew: true }])
       }
       setText('')
+      localStorage.removeItem(`draft:${convId}`)
       setImagePreview(null)
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
@@ -1050,7 +1049,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
         <>
           <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
-          <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
             <EmojiPicker
               onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
               width="100%"

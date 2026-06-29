@@ -46,6 +46,18 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
   const [newId, setNewId]                 = useState(null)
   const newIdTimerRef                     = useRef(null)
   const [confirmRequestId, setConfirmRequestId] = useState(null)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function onResize() {
+      setKeyboardOffset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    }
+    vv.addEventListener('resize', onResize)
+    vv.addEventListener('scroll', onResize)
+    return () => { vv.removeEventListener('resize', onResize); vv.removeEventListener('scroll', onResize) }
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimDone(true), 280)
@@ -123,6 +135,11 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
     >
       <div
         className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full lg:max-w-lg flex flex-col max-h-[90vh] lg:max-h-[85vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        style={{
+          marginBottom: keyboardOffset,
+          ...(keyboardOffset > 0 && { maxHeight: `${window.innerHeight - keyboardOffset - 32}px` }),
+          transition: 'margin-bottom 0.15s ease-out',
+        }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
