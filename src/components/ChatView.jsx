@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
   MagnifyingGlass, ArrowDown, Trash, ArrowLeft, Notepad,
-  Users, ArrowBendUpLeft, Crown, PencilSimple, Check, Copy,
+  Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -1120,7 +1120,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm text-stone-800 truncate">{m.display_name}</span>
                           {m.role === 'admin' && (
-                            <Crown size={12} weight="fill" className="text-jade shrink-0" />
+                            <ShieldCheck size={12} weight="fill" className="text-jade shrink-0" />
                           )}
                           {m.user_id === myId && (
                             <span className="text-stone-400 text-xs shrink-0">(You)</span>

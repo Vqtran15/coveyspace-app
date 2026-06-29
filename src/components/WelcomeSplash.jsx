@@ -1,6 +1,6 @@
 import {
   Confetti, Lightbulb, BoxArrowUp, DotsThreeVertical,
-  DeviceMobile, GearSix, UserCircle, Bell, Key, Users, Crown, ArrowLeft, Link, Database,
+  DeviceMobile, GearSix, UserCircle, Bell, Key, Users, ShieldCheck, ArrowLeft, Link, Database,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
@@ -158,7 +158,7 @@ export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSetting
           {isAdmin && (
             <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.45s' }}>
               <div className="px-4 py-2.5 border-b border-stone-100 flex items-center gap-1.5">
-                <Crown size={12} weight="fill" className="text-amber-500" />
+                <ShieldCheck size={12} weight="fill" className="text-amber-500" />
                 <p className="text-[10px] font-semibold text-amber-500 uppercase tracking-wide">Admin only</p>
               </div>
               <div className="divide-y divide-stone-100">

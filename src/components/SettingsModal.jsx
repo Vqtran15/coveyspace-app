@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, Crown, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -198,7 +198,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 onClick={() => { close(); setTimeout(() => navigate('/admin'), 200) }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors"
               >
-                <Crown size={15} weight="fill" className="text-stone-400" />
+                <ShieldCheck size={15} weight="fill" className="text-stone-400" />
                 Admin settings
                 <CaretRight size={14} className="ml-auto text-stone-300" />
               </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Crown, ArrowLeft, PencilSimple, X } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -46,7 +46,14 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       .select('user_id, display_name, role, avatar_icon, avatar_color')
       .eq('community_group_id', groupId)
       .order('display_name')
-      .then(({ data }) => setMembers(data ?? []))
+      .then(({ data }) => {
+        const sorted = (data ?? []).slice().sort((a, b) => {
+          if (a.role === 'admin' && b.role !== 'admin') return -1
+          if (b.role === 'admin' && a.role !== 'admin') return 1
+          return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+        })
+        setMembers(sorted)
+      })
   }, [groupId, isAdmin])
 
   function copyCode() {
@@ -73,7 +80,14 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
     setSettingRoleId(targetId)
     const { error } = await supabase.rpc('set_member_role', { target_user_id: targetId, new_role: newRole })
     if (error) toast(error.message, 'error')
-    else setMembers(prev => prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m))
+    else setMembers(prev => {
+      const updated = prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m)
+      return updated.slice().sort((a, b) => {
+        if (a.role === 'admin' && b.role !== 'admin') return -1
+        if (b.role === 'admin' && a.role !== 'admin') return 1
+        return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+      })
+    })
     setSettingRoleId(null)
   }
 
@@ -145,7 +159,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <ArrowLeft size={20} weight="bold" />
         </button>
         <div className="flex items-center gap-2">
-          <Crown size={20} weight="fill" className="text-jade" />
+          <ShieldCheck size={20} weight="fill" className="text-jade" />
           <h1 className="text-2xl font-bold text-stone-800">Admin</h1>
         </div>
       </div>
@@ -259,7 +273,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                     </div>
                     {m.role === 'admin' && (
                       <span className="text-xs text-jade font-semibold flex items-center gap-1">
-                        <Crown size={10} weight="fill" /> Admin
+                        <ShieldCheck size={10} weight="fill" /> Admin
                       </span>
                     )}
                   </div>
