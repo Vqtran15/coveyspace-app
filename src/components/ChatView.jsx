@@ -277,11 +277,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => document.removeEventListener('keydown', onKey)
   }, [searchOpen])
 
-  useEffect(() => {
-    return () => {
-      if (imagePreview?.previewUrl) URL.revokeObjectURL(imagePreview.previewUrl)
-    }
-  }, [imagePreview])
 
 
 
@@ -350,48 +345,97 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     e?.preventDefault()
     const trimmed = text.trim()
     if (!trimmed && !imagePreview) return
-    setSending(true)
     clearTimeout(typingTimeoutRef.current)
     presenceChannelRef.current?.track({ display_name: displayName, typing: false })
 
     const replyId = replyingTo?.id ?? null
+    const replyMsg = replyingTo
+      ? { id: replyingTo.id, body: replyingTo.body, display_name: replyingTo.display_name, image_url: replyingTo.image_url }
+      : null
     setReplyingTo(null)
 
+    if (imagePreview) {
+      const tempId = `temp-${Date.now()}`
+      const captured = imagePreview
+      setIsAtBottom(true)
+      setMessages(prev => [...prev, {
+        _tempId: tempId, _pending: true, _file: captured.file,
+        id: tempId, conversation_id: convId, user_id: myId,
+        display_name: displayName || 'Member',
+        body: trimmed || null, image_url: captured.previewUrl,
+        reply_to_id: replyId, reply_message: replyMsg,
+        created_at: new Date().toISOString(), _isNew: true,
+      }])
+      setText('')
+      localStorage.removeItem(`draft:${convId}`)
+      setImagePreview(null)
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+      sendImage(tempId, captured.file, captured.previewUrl, trimmed || null, replyId)
+      return
+    }
+
+    setSending(true)
     try {
-      let imageUrl = null
-      if (imagePreview) {
-        const ext = imagePreview.file.name.split('.').pop()
-        const path = `${myId}/${convId}_${Date.now()}.${ext}`
-        const { data: uploaded, error: upErr } = await supabase.storage
-          .from('chat-images')
-          .upload(path, imagePreview.file, { contentType: imagePreview.file.type })
-        if (upErr) throw upErr
-        const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
-        imageUrl = publicUrl
+      const { data: newMsg } = await supabase.from('messages').insert({
+        community_group_id: groupId,
+        conversation_id: convId,
+        user_id: myId,
+        display_name: displayName || 'Member',
+        body: trimmed,
+        image_url: null,
+        reply_to_id: replyId,
+      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
+      if (newMsg) {
+        setIsAtBottom(true)
+        setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, _isNew: true }])
       }
+      setText('')
+      localStorage.removeItem(`draft:${convId}`)
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    } catch (err) {
+      console.error('Send failed:', err)
+    }
+    setSending(false)
+  }
+
+  async function sendImage(tempId, file, previewUrl, body, replyId) {
+    try {
+      const ext = file.name.split('.').pop()
+      const path = `${myId}/${convId}_${Date.now()}.${ext}`
+      const { data: uploaded, error: upErr } = await supabase.storage
+        .from('chat-images')
+        .upload(path, file, { contentType: file.type })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
 
       const { data: newMsg } = await supabase.from('messages').insert({
         community_group_id: groupId,
         conversation_id: convId,
         user_id: myId,
         display_name: displayName || 'Member',
-        body: trimmed || null,
-        image_url: imageUrl,
+        body,
+        image_url: publicUrl,
         reply_to_id: replyId,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
-        setIsAtBottom(true)
-        setMessages(prev => [...prev, { ...newMsg, _isNew: true }])
+        URL.revokeObjectURL(previewUrl)
+        setMessages(prev => {
+          const without = prev.filter(m => m._tempId !== tempId)
+          return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
+        })
       }
-      setText('')
-      localStorage.removeItem(`draft:${convId}`)
-      setImagePreview(null)
-      if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
-      console.error('Send failed:', err)
+      console.error('Image send failed:', err)
+      setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: false, _failed: true } : m))
     }
-    setSending(false)
+  }
+
+  async function retryMessage(tempId) {
+    const msg = messages.find(m => m._tempId === tempId)
+    if (!msg?._file) return
+    setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: true, _failed: false } : m))
+    sendImage(tempId, msg._file, msg.image_url, msg.body, msg.reply_to_id)
   }
 
   function closeReactionPicker() {
@@ -425,6 +469,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); e.target.value = ''; return }
     if (imagePreview?.previewUrl) URL.revokeObjectURL(imagePreview.previewUrl)
     setImagePreview({ file, previewUrl: URL.createObjectURL(file) })
+
     e.target.value = ''
   }
 
@@ -720,8 +765,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   id={`msg-${msg.id}`}
                   key={msg.id}
                   className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
-                  onContextMenu={e => { e.preventDefault(); openMenu(e, msg.id, isOwn) }}
-                  onClick={e => handleDoubleTap(e, msg.id, isOwn)}
+                  onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
+                  onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
                 >
                   {isOwn && selectedMsgId === msg.id && !editingMsgId && (
                     <div className="self-center flex items-center gap-2 animate-overlay-in">
@@ -764,15 +809,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     </div>
                   )}
 
-                  <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? 'animate-message-in' : ''}`}>
+                  <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
                     {!isOwn && isFirstInGroup && (
                       <p className="text-xs font-semibold text-stone-500 mb-1 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
                     )}
+                    <div className="relative">
                     <div className={`overflow-hidden select-none transition-colors duration-200
                       ${editingMsgId === msg.id ? 'animate-edit-pop' : editClosingId === msg.id ? 'animate-edit-close' : ''}
                       ${isOwn
-                        ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-jade'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-bl-2xl rounded-br-sm' : 'rounded-b-md'}`
-                        : `bg-white border border-stone-200 text-stone-800 ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-br-2xl rounded-bl-sm' : 'rounded-b-md'}`
+                        ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-jade'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-bl-2xl rounded-br-none' : 'rounded-b-md'}`
+                        : `bg-white border border-stone-200 text-stone-800 ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? 'rounded-br-2xl rounded-bl-none' : 'rounded-b-md'}`
                       }`}>
                       {/* Reply quote */}
                       {msg.reply_message && (
@@ -791,11 +837,31 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         </button>
                       )}
                       {msg.image_url && (
-                        isOwn
-                          ? <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
-                          : <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                              <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
-                            </a>
+                        msg._pending || msg._failed ? (
+                          <div className="relative">
+                            <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
+                            {msg._pending && (
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                              </div>
+                            )}
+                            {msg._failed && (
+                              <button
+                                className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5 w-full"
+                                onClick={e => { e.stopPropagation(); retryMessage(msg._tempId) }}
+                              >
+                                <X size={22} className="text-white" weight="bold" />
+                                <span className="text-white text-xs font-medium">Tap to retry</span>
+                              </button>
+                            )}
+                          </div>
+                        ) : isOwn ? (
+                          <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
+                        ) : (
+                          <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                            <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
+                          </a>
+                        )
                       )}
                       {editingMsgId === msg.id ? (
                         <form onSubmit={handleSaveEdit} className="px-3 py-2 animate-overlay-in">
@@ -830,10 +896,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         </p>
                       )}
                     </div>
+                    {isLastInGroup && isOwn && (
+                      <svg className="absolute bottom-0 -right-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 0 0 C 0 10 9 10 9 12 L 0 12 Z" fill={editingMsgId === msg.id ? '#57534e' : '#C4622D'} />
+                      </svg>
+                    )}
+                    {isLastInGroup && !isOwn && (
+                      <svg className="absolute bottom-0 -left-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 9 0 C 9 10 0 10 0 12 L 9 12 Z" fill="white" />
+                        <path d="M 9 0 C 9 10 0 10 0 12" fill="none" stroke="#e7e5e4" strokeWidth="1" />
+                      </svg>
+                    )}
+                    </div>
 
                     {isLastInGroup && (
-                      <p className={`text-[10px] text-stone-400 mt-1 ${isOwn ? 'mr-1' : 'ml-1'}`}>
-                        {formatTime(msg.created_at)}
+                      <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-400'}`}>
+                        {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatTime(msg.created_at)}
                       </p>
                     )}
 
@@ -891,7 +969,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <div className="relative inline-block mb-2">
             <img src={imagePreview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
             <button
-              onClick={() => setImagePreview(null)}
+              onClick={() => { URL.revokeObjectURL(imagePreview.previewUrl); setImagePreview(null) }}
               className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
             >
               <X size={10} weight="bold" />

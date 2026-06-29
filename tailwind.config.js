@@ -113,9 +113,15 @@ export default {
           '40%':  { transform: 'rotate(0deg) scale(1)' },
           '100%': { transform: 'rotate(0deg) scale(1)' },
         },
-        'message-in': {
-          '0%':   { opacity: '0', transform: 'scale(0.8)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
+        'msg-in-right': {
+          '0%':   { opacity: '0', transform: 'translateX(20px) scale(0.88)' },
+          '55%':  { transform: 'translateX(-3px) scale(1.02)' },
+          '100%': { opacity: '1', transform: 'translateX(0) scale(1)' },
+        },
+        'msg-in-left': {
+          '0%':   { opacity: '0', transform: 'translateX(-20px) scale(0.88)' },
+          '55%':  { transform: 'translateX(3px) scale(1.02)' },
+          '100%': { opacity: '1', transform: 'translateX(0) scale(1)' },
         },
         'wave': {
           '0%':   { transform: 'rotate(0deg)' },
@@ -187,7 +193,8 @@ export default {
         'welcome-pop':      'welcome-pop 0.6s cubic-bezier(0.16,1,0.3,1) both',
         'fade-up':          'fade-up 0.5s ease-out both',
         'icon-wiggle':      'icon-wiggle 3s ease-in-out infinite',
-        'message-in':       'message-in 0.3s cubic-bezier(0.16,1,0.3,1)',
+        'msg-in-right':     'msg-in-right 0.38s cubic-bezier(0.16,1,0.3,1) both',
+        'msg-in-left':      'msg-in-left 0.38s cubic-bezier(0.16,1,0.3,1) both',
         'wave':             'wave 2.5s ease-in-out infinite',
         'toast-in':        'toast-in 0.2s cubic-bezier(0.16,1,0.3,1)',
         'confetti-float':  'confetti-float 1.5s ease-in-out infinite',
