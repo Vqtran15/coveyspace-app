@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide emoji picker category shortcut bar */
+#epr-category-nav-id {
+  display: none !important;
+}

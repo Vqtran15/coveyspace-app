@@ -282,6 +282,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }, [imagePreview])
 
+  useEffect(() => {
+    if (showMoreEmojis) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [showMoreEmojis])
+
 
   useEffect(() => {
     if (!selectedMsgId && !confirmDeleteId) return
@@ -900,6 +907,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               height={350}
               searchPlaceholder="Search emojis…"
               previewConfig={{ showPreview: false }}
+              autoFocusSearch={false}
             />
           </div>
         )}
@@ -1040,15 +1048,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
-        <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <EmojiPicker
-            onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
-            width="100%"
-            height={350}
-            searchPlaceholder="Search emojis…"
-            previewConfig={{ showPreview: false }}
-          />
-        </div>
+        <>
+          <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
+          <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <EmojiPicker
+              onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
+              width="100%"
+              height={350}
+              searchPlaceholder="Search emojis…"
+              previewConfig={{ showPreview: false }}
+              autoFocusSearch={false}
+            />
+          </div>
+        </>
       )}
 
       {activeMsg && (
