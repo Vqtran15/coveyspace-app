@@ -5,7 +5,10 @@ import RotationTab from '../RotationTab.jsx'
 
 export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin, groupSettings, refreshKey = 0 }) {
   const location = useLocation()
-  const [segment, setSegment] = useState(location.state?.segment ?? 'meals')
+  const mealsEnabled    = groupSettings?.meals_enabled !== false
+  const servicesEnabled = groupSettings?.services_enabled !== false
+  const defaultSegment  = location.state?.segment ?? (mealsEnabled ? 'meals' : 'services')
+  const [segment, setSegment] = useState(defaultSegment)
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
   const switchingRef = useRef(false)
   const rotationRef = useRef(null)
@@ -43,30 +46,32 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
             </button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => switchTo('meals')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
-              segment === 'meals'
-                ? 'bg-jade text-white shadow-sm'
-                : 'bg-stone-100 text-stone-500'
-            }`}
-          >
-            <ForkKnife size={17} weight="fill" />
-            Meals
-          </button>
-          <button
-            onClick={() => switchTo('services')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
-              segment === 'services'
-                ? 'bg-jade text-white shadow-sm'
-                : 'bg-stone-100 text-stone-500'
-            }`}
-          >
-            <HandHeart size={17} weight="fill" />
-            Service
-          </button>
-        </div>
+        {mealsEnabled && servicesEnabled && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => switchTo('meals')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
+                segment === 'meals'
+                  ? 'bg-jade text-white shadow-sm'
+                  : 'bg-stone-100 text-stone-500'
+              }`}
+            >
+              <ForkKnife size={17} weight="fill" />
+              Meals
+            </button>
+            <button
+              onClick={() => switchTo('services')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
+                segment === 'services'
+                  ? 'bg-jade text-white shadow-sm'
+                  : 'bg-stone-100 text-stone-500'
+              }`}
+            >
+              <HandHeart size={17} weight="fill" />
+              Service
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={animClass}>

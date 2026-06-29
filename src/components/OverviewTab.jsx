@@ -153,7 +153,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0 }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true }) {
   const navigate = useNavigate()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
@@ -323,48 +323,54 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           )
         )}
 
-        {nextMeal === undefined
-          ? <CardSkeleton delay={showAnnouncement ? 80 : 0} />
-          : <Card
-              onClick={() => navigate('/schedule')}
-              icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
-              iconBg="bg-jade/10"
-              label="Next Meal"
-              primary={nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet')}
-              secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
-              delay={showAnnouncement ? 80 : 0}
-            />
-        }
-        {nextService === undefined
-          ? <CardSkeleton delay={showAnnouncement ? 160 : 80} />
-          : <Card
-              onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
-              icon={<HandHeart size={24} weight="fill" className="text-coral" />}
-              iconBg="bg-coral/10"
-              label="Next Service"
-              primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
-              secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
-              delay={showAnnouncement ? 160 : 80}
-            />
-        }
-        <Card
-          onClick={onOpenBirthdays}
-          icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
-          iconBg="bg-lagoon-50"
-          label="Upcoming Birthdays"
-          primary={birthdayPrimary()}
-          delay={showAnnouncement ? 240 : 160}
-          confetti={!!nextBirthday && nextBirthday.days <= 30}
-        />
-        <Card
-          onClick={onOpenGuide}
-          icon={<BookOpen size={24} weight="fill" className="text-stone-500" />}
-          iconBg="bg-stone-100"
-          label="Guide"
-          primary="Community Guide"
-          secondary="Tap to open"
-          delay={showAnnouncement ? 320 : 240}
-        />
+        {mealsEnabled && (
+          nextMeal === undefined
+            ? <CardSkeleton delay={showAnnouncement ? 80 : 0} />
+            : <Card
+                onClick={() => navigate('/schedule')}
+                icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
+                iconBg="bg-jade/10"
+                label="Next Meal"
+                primary={nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet')}
+                secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
+                delay={showAnnouncement ? 80 : 0}
+              />
+        )}
+        {servicesEnabled && (
+          nextService === undefined
+            ? <CardSkeleton delay={showAnnouncement ? 160 : 80} />
+            : <Card
+                onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
+                icon={<HandHeart size={24} weight="fill" className="text-coral" />}
+                iconBg="bg-coral/10"
+                label="Next Service"
+                primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
+                secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
+                delay={showAnnouncement ? 160 : 80}
+              />
+        )}
+        {birthdaysEnabled && (
+          <Card
+            onClick={onOpenBirthdays}
+            icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
+            iconBg="bg-lagoon-50"
+            label="Upcoming Birthdays"
+            primary={birthdayPrimary()}
+            delay={showAnnouncement ? 240 : 160}
+            confetti={!!nextBirthday && nextBirthday.days <= 30}
+          />
+        )}
+        {guideEnabled && (
+          <Card
+            onClick={onOpenGuide}
+            icon={<BookOpen size={24} weight="fill" className="text-stone-500" />}
+            iconBg="bg-stone-100"
+            label="Guide"
+            primary="Community Guide"
+            secondary="Tap to open"
+            delay={showAnnouncement ? 320 : 240}
+          />
+        )}
 
         {/* Fun Fact */}
         {(funFact !== null || funFactFailed) && (

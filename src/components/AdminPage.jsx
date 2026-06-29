@@ -305,6 +305,38 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           </section>
         )}
 
+        {/* Features */}
+        <section>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Features</p>
+          <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100">
+            {[
+              { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Home screen card' },
+              { key: 'services_enabled',  label: 'Service Sign-ups',  desc: 'Home screen card' },
+              { key: 'chat_enabled',      label: 'Group Chat',        desc: 'Chat tab' },
+              { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Prayer tab' },
+              { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen card and birthday banner' },
+              { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Home screen card' },
+            ].map(({ key, label, desc }) => {
+              const enabled = groupSettings?.[key] !== false
+              return (
+                <div key={key} className="flex items-center gap-4 px-4 py-3.5">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-stone-700">{label}</p>
+                    <p className="text-xs text-stone-400 mt-0.5">{desc}</p>
+                  </div>
+                  <button
+                    onClick={() => handleSaveRotation({ [key]: !enabled })}
+                    className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${enabled ? 'bg-jade' : 'bg-stone-200'}`}
+                  >
+                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${enabled ? 'left-[22px]' : 'left-0.5'}`} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <p className="text-xs text-stone-400 mt-2 px-1">The Sign Up tab is removed from the nav when both Meal and Service sign-ups are disabled.</p>
+        </section>
+
         {/* Meal Schedule */}
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Meal Schedule</p>

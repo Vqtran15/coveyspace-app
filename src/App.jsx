@@ -136,6 +136,20 @@ export default function App() {
   const avatarColorKey = profile?.avatar_color ?? null
   const push = usePushNotifications(session?.user?.id, groupId)
 
+  const mealsEnabled     = groupSettings?.meals_enabled !== false
+  const servicesEnabled  = groupSettings?.services_enabled !== false
+  const chatEnabled      = groupSettings?.chat_enabled !== false
+  const prayerEnabled    = groupSettings?.prayer_enabled !== false
+  const birthdaysEnabled = groupSettings?.birthdays_enabled !== false
+  const guideEnabled     = groupSettings?.guide_enabled !== false
+  const showScheduleTab  = mealsEnabled || servicesEnabled
+  const visibleTabs      = TABS.filter(t => {
+    if (t.path === '/schedule') return showScheduleTab
+    if (t.path === '/chat')     return chatEnabled
+    if (t.path === '/prayer')   return prayerEnabled
+    return true
+  })
+
   useEffect(() => {
     if (!session) return
     supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(data ?? []))
@@ -272,7 +286,7 @@ export default function App() {
           You're offline
         </div>
       )}
-      {!isFullHeight && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && <BirthdayBanner upcoming={upcoming} />}
+      {!isFullHeight && birthdaysEnabled && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && <BirthdayBanner upcoming={upcoming} />}
 
       <div
         key={location.pathname}
@@ -280,7 +294,7 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} refreshKey={sampleRefreshKey} />} />
+          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} refreshKey={sampleRefreshKey} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} />} />
           <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} refreshKey={sampleRefreshKey} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
@@ -313,7 +327,7 @@ export default function App() {
           <span className="font-league-gothic text-2xl text-jade tracking-wide">Covey Space</span>
         </div>
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
-          {TABS.map(t => {
+          {visibleTabs.map(t => {
             const active = location.pathname === t.path
             return (
               <button
@@ -347,7 +361,7 @@ export default function App() {
         className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        {TABS.map(t => {
+        {visibleTabs.map(t => {
           const active = location.pathname === t.path
           return (
             <button
