@@ -307,7 +307,8 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
 
         {/* Features */}
         <section>
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Features</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Features</p>
+          <p className="text-xs text-stone-400 mb-3">Toggling a feature off hides it from members — no data is deleted.</p>
           <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100">
             {[
               { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Home screen card' },

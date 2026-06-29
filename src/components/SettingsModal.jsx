@@ -193,14 +193,16 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
         <div className="px-5 pb-6 space-y-2 overflow-y-auto overscroll-contain">
           {isAdmin && (
             <div className="pt-2 border-t border-stone-100">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2">Admin</p>
               <button
                 onClick={() => { close(); setTimeout(() => navigate('/admin'), 200) }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-2xl transition-all"
               >
-                <ShieldCheck size={15} weight="fill" className="text-stone-400" />
-                Admin settings
-                <CaretRight size={14} className="ml-auto text-stone-300" />
+                <ShieldCheck size={20} weight="fill" className="text-white/80 shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-white">Admin settings</p>
+                  <p className="text-xs text-white/60">Members, features &amp; schedules</p>
+                </div>
+                <CaretRight size={14} className="text-white/40" />
               </button>
             </div>
           )}

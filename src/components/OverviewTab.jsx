@@ -163,15 +163,13 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [funFactFailed, setFunFactFailed]   = useState(false)
 
   function fetchFunFact(today) {
-    const useDog = new Date().getDate() % 2 === 0
-    const url = useDog ? 'https://dogapi.dog/api/v2/facts' : 'https://catfact.ninja/fact'
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 5000)
     setFunFactFailed(false)
-    fetch(url, { signal: controller.signal })
+    fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en', { signal: controller.signal })
       .then(r => r.json())
       .then(d => {
-        const text = useDog ? (d?.data?.[0]?.attributes?.body ?? null) : (d?.fact ?? null)
+        const text = d?.text ?? null
         if (!text) { setFunFactFailed(true); return }
         localStorage.setItem('fun_fact_v2', JSON.stringify({ date: today, text }))
         setFunFact(text)
