@@ -175,6 +175,14 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    if (showWelcome) {
+      setSettingsOpen(false)
+      setGuideOpen(false)
+      setBirthdayOpen(false)
+    }
+  }, [showWelcome])
+
+  useEffect(() => {
     if (!groupId) return
     supabase
       .from('group_settings')
