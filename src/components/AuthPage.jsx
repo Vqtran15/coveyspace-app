@@ -92,7 +92,7 @@ export default function AuthPage() {
         switchMode('signin')
         setNotice(
           joinMode === 'create'
-            ? 'Group created! Check your email to confirm, then sign in. Find your invite code in the group chat.'
+            ? 'Group created! Check your email to confirm, then sign in. Find your invite code in Admin settings.'
             : 'Account created! Check your email to confirm, then sign in.'
         )
       }
@@ -250,7 +250,7 @@ export default function AuthPage() {
                         className={inputClass}
                       />
                       <p className="text-xs text-stone-400 mt-1.5">
-                        Once signed in, find your invite code in the group chat to share with members.
+                        Once signed in, find your invite code in Admin settings to share with members.
                       </p>
                     </div>
                   )}
