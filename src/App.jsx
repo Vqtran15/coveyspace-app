@@ -68,7 +68,6 @@ export default function App() {
   const [isRecovery, setIsRecovery] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [groupSettings, setGroupSettings] = useState(null)
-  const [sampleRefreshKey, setSampleRefreshKey] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [guideClosing, setGuideClosing] = useState(false)
@@ -167,12 +166,6 @@ export default function App() {
 
     return () => supabase.removeChannel(channel)
   }, [session])
-
-  useEffect(() => {
-    function onSampleDataChanged() { setSampleRefreshKey(k => k + 1) }
-    window.addEventListener('cg-sample-data-changed', onSampleDataChanged)
-    return () => window.removeEventListener('cg-sample-data-changed', onSampleDataChanged)
-  }, [])
 
   useEffect(() => {
     if (showWelcome) {
@@ -302,8 +295,8 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} refreshKey={sampleRefreshKey} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} />} />
-          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} refreshKey={sampleRefreshKey} />} />
+          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} />} />
+          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
@@ -321,10 +314,6 @@ export default function App() {
           groupId={groupId}
           groupSettings={groupSettings}
           onGroupSettingsChange={setGroupSettings}
-          onSeedGroup={async () => {
-            await supabase.rpc('seed_group')
-            setGroupSettings(prev => ({ ...(prev ?? {}), sample_seeded: true }))
-          }}
         />
       )}
 
