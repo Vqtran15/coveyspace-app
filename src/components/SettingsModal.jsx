@@ -452,6 +452,22 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 View setup guide
               </button>
             )}
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-jade hover:text-jade-700 hover:bg-jade/5 rounded-xl transition-colors mb-1"
+            >
+              <ChatTeardropDots size={15} weight="fill" className="text-jade shrink-0" />
+              Send Feedback
+            </button>
+
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+            >
+              <SignOut size={15} weight="bold" className="text-stone-400" />
+              Sign out
+            </button>
+
             <div className="rounded-2xl bg-coral/5 border border-coral/20 p-4 mb-1">
               <div className="flex items-center gap-2 mb-2">
                 <Heart size={15} weight="fill" className="text-coral shrink-0" />
@@ -470,22 +486,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 Support Covey Space
               </a>
             </div>
-
-            <button
-              onClick={() => setFeedbackOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-jade hover:text-jade-700 hover:bg-jade/5 rounded-xl transition-colors mb-1"
-            >
-              <ChatTeardropDots size={15} weight="fill" className="text-jade shrink-0" />
-              Send Feedback
-            </button>
-
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-xl transition-colors mb-1"
-            >
-              <SignOut size={15} weight="bold" className="text-stone-400" />
-              Sign out
-            </button>
 
             {/* Leave group */}
             {leaveConfirm ? (
