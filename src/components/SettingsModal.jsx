@@ -454,14 +454,10 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             )}
             <button
               onClick={() => setFeedbackOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-2xl transition-all mb-2"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-jade hover:text-jade-700 hover:bg-jade/5 rounded-xl transition-colors mb-1"
             >
-              <ChatTeardropDots size={20} weight="fill" className="text-white/80 shrink-0" />
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-white">Send Feedback</p>
-                <p className="text-xs text-white/60">Bug reports, ideas, or anything else</p>
-              </div>
-              <CaretRight size={14} className="text-white/40" />
+              <ChatTeardropDots size={15} weight="fill" className="text-jade shrink-0" />
+              Send Feedback
             </button>
 
             <button
