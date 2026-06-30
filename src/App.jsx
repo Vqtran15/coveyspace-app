@@ -400,6 +400,7 @@ export default function App() {
           onRevisitGuide={() => {
             const key = `cg_welcomed_${session.user.id}_${groupId}`
             localStorage.removeItem(key)
+            setSettingsOpen(false)
             setShowWelcome(true)
           }}
         />
