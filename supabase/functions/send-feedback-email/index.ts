@@ -1,5 +1,5 @@
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const TO_EMAIL       = 'vuong.tran.dev@gmail.com'
+const TO_EMAIL       = 'vuong.tran@coveyspace.com'
 const FROM_EMAIL     = 'feedback@coveyspace.com'
 
 const TYPE_LABELS: Record<string, string> = {
