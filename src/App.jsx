@@ -308,7 +308,11 @@ export default function App() {
           groupName={groupName}
           onDone={() => setShowWelcome(false)}
           isAdmin={isAdmin}
+          userId={session.user.id}
+          displayName={displayName}
+          groupId={groupId}
           groupSettings={groupSettings}
+          onGroupSettingsChange={setGroupSettings}
           onSeedGroup={async () => {
             await supabase.rpc('seed_group')
             setGroupSettings(prev => ({ ...(prev ?? {}), sample_seeded: true }))

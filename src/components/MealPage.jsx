@@ -256,7 +256,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
                 itemNoun={itemNoun}
                 dishName={page.slot_dishes?.[n - 1] ?? ''}
                 signup={signups.find(s => s.slot_number === n)}
-                revealKey={revealKey}
+                revealKey={`${revealKey}-${page.id}`}
                 isNew={n === justAddedSlot}
                 onClick={() => setSelectedSlot(n)}
               />

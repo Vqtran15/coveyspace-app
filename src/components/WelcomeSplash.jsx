@@ -1,10 +1,21 @@
 import {
-  Confetti, Lightbulb, BoxArrowUp, DotsThreeVertical,
-  DeviceMobile, GearSix, UserCircle, Bell, Key, Users, ShieldCheck, ArrowLeft, Link, Database,
+  Confetti, DeviceMobile, BoxArrowUp, DotsThreeVertical,
+  ShieldCheck, Users, ArrowLeft, ChatCircleDots, ForkKnife,
+  HandsPraying, Cake, CalendarCheck, Link, ShareNetwork,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import {
+  AVATAR_ICON_LIST,
+  AVATAR_COLOR_OPTIONS,
+  AvatarIcon,
+  avatarColor as getAvatarColor,
+} from '../lib/avatarIcons.jsx'
+
+const MONTHS    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const DAYS      = Array.from({ length: 31 }, (_, i) => i + 1)
+const DOW_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 function ProgressDots({ steps, currentStep }) {
   const idx = steps.indexOf(currentStep)
@@ -25,53 +36,200 @@ function ProgressDots({ steps, currentStep }) {
   )
 }
 
-function FeatureRow({ icon, label, desc }) {
+function StepShell({ steps, currentStep, onBack, bg = 'bg-sunrise-50', children, closing = false }) {
+  const idx = steps.indexOf(currentStep)
   return (
-    <div className="flex items-start gap-3 px-4 py-3">
-      <div className="mt-0.5 shrink-0">{icon}</div>
-      <div>
-        <p className="text-sm font-medium text-stone-700">{label}</p>
-        {desc && <p className="text-xs text-stone-400 mt-0.5">{desc}</p>}
-      </div>
+    <div className={`fixed inset-0 ${bg} flex flex-col z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
+      <ProgressDots steps={steps} currentStep={currentStep} />
+      {idx > 0 && (
+        <button
+          onClick={onBack}
+          className="absolute left-6 flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors text-sm font-medium"
+          style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
+        >
+          <ArrowLeft size={16} weight="bold" /> Back
+        </button>
+      )}
+      {children}
     </div>
   )
 }
 
-export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSettings, onSeedGroup }) {
+const TOUR_CARDS = [
+  { Icon: ChatCircleDots, color: 'bg-sage/20 text-sage-700',     title: 'Group Chat',        desc: 'A main group chat, plus direct messages and smaller group threads.' },
+  { Icon: ForkKnife,      color: 'bg-jade/10 text-jade',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
+  { Icon: HandsPraying,   color: 'bg-sunrise/10 text-sunrise',   title: 'Prayer Requests',   desc: 'Every member has a profile. Look back later and see what God has done.' },
+  { Icon: Cake,           color: 'bg-coral/10 text-coral',       title: 'Birthdays',         desc: 'Upcoming birthdays show on the home screen so no one gets forgotten.' },
+  { Icon: CalendarCheck,  color: 'bg-lagoon/10 text-lagoon-600', title: 'Service Schedules', desc: 'Monthly service sign-ups that rotate automatically.' },
+]
+
+const FEATURE_TOGGLES = [
+  { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Weekly rotating meal signups',    Icon: ForkKnife,      color: 'text-jade' },
+  { key: 'services_enabled',  label: 'Service Schedules', desc: 'Monthly service signups',          Icon: CalendarCheck,  color: 'text-lagoon-600' },
+  { key: 'chat_enabled',      label: 'Group Chat',        desc: 'Group and direct messages',        Icon: ChatCircleDots, color: 'text-sage-700' },
+  { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',           Icon: HandsPraying,   color: 'text-sunrise' },
+  { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral' },
+  { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Link to your discussion guide',   Icon: Link,           color: 'text-jade' },
+]
+
+export default function WelcomeSplash({
+  groupName, onDone, isAdmin,
+  userId, displayName, groupId,
+  groupSettings, onGroupSettingsChange,
+}) {
   const [closing, close] = useModalClose(onDone)
-  const [iconClass, setIconClass] = useState('animate-welcome-pop')
+
+  const steps = useRef(
+    isAdmin
+      ? ['welcome', 'personalize', 'features', 'setup', 'invite', 'install']
+      : ['welcome', 'personalize', 'tour', 'install']
+  ).current
+
   const [step, setStep] = useState('welcome')
-  const [seeding, setSeeding] = useState(false)
+
+  // ── Personalize ────────────────────────────────────────────────────────────
+  const [avatarIcon,   setAvatarIcon]   = useState(null)
+  const [colorKey,     setColorKey]     = useState(null)
+  const [savingAvatar, setSavingAvatar] = useState(false)
+  const [bdMonth, setBdMonth] = useState('')
+  const [bdDay,   setBdDay]   = useState('')
+
+  // ── Features (admin) ───────────────────────────────────────────────────────
+  const [features, setFeatures] = useState({
+    meals_enabled:     groupSettings?.meals_enabled     !== false,
+    services_enabled:  groupSettings?.services_enabled  !== false,
+    chat_enabled:      groupSettings?.chat_enabled      !== false,
+    prayer_enabled:    groupSettings?.prayer_enabled    !== false,
+    birthdays_enabled: groupSettings?.birthdays_enabled !== false,
+    guide_enabled:     groupSettings?.guide_enabled     !== false,
+  })
+  const [guideUrl,       setGuideUrl]       = useState(groupSettings?.guide_url ?? '')
+  const [savingFeatures, setSavingFeatures] = useState(false)
+
+  // ── Setup (admin) ──────────────────────────────────────────────────────────
+  const [mealDow,        setMealDow]        = useState(groupSettings?.meal_day_of_week    ?? null)
+  const [mealInterval,   setMealInterval]   = useState(groupSettings?.meal_interval_days  ?? 7)
+  const [mealNames,      setMealNames]      = useState(['', ''])
+  const [serviceDow,     setServiceDow]     = useState(groupSettings?.service_day_of_week ?? null)
+  const [serviceAutofill,setServiceAutofill]= useState(groupSettings?.service_autofill    ?? false)
+  const [savingSetup,    setSavingSetup]    = useState(false)
+
+  // ── Invite (admin) ─────────────────────────────────────────────────────────
   const [inviteCode, setInviteCode] = useState(null)
   const [codeCopied, setCodeCopied] = useState(false)
 
-  const steps = useRef(
-    isAdmin && !groupSettings?.sample_seeded
-      ? ['welcome', 'sample', 'guide', 'install']
-      : ['welcome', 'guide', 'install']
-  ).current
-
-  const showSeedStep = isAdmin && !groupSettings?.sample_seeded
+  // ── Tour (member) ──────────────────────────────────────────────────────────
+  const [tourSlide, setTourSlide] = useState(0)
+  const touchStartX = useRef(null)
 
   useEffect(() => {
-    const t = setTimeout(() => setIconClass('animate-icon-wiggle'), 750)
-    return () => clearTimeout(t)
-  }, [])
+    if (!userId) return
+    supabase.from('profiles')
+      .select('avatar_icon, avatar_color')
+      .eq('user_id', userId)
+      .single()
+      .then(({ data }) => {
+        setAvatarIcon(data?.avatar_icon ?? null)
+        setColorKey(data?.avatar_color ?? null)
+      })
+  }, [userId])
 
   useEffect(() => {
-    if (!isAdmin || step !== 'guide') return
-    supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
+    if (isAdmin && step === 'invite') {
+      supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
+    }
   }, [isAdmin, step])
 
-  async function handleSeed() {
-    setSeeding(true)
-    try {
-      await onSeedGroup()
-      window.dispatchEvent(new CustomEvent('cg-sample-data-changed'))
-      setStep('guide')
-    } finally {
-      setSeeding(false)
+  async function handleSelectIcon(icon) {
+    setSavingAvatar(true)
+    await supabase.from('profiles').update({ avatar_icon: icon }).eq('user_id', userId)
+    setAvatarIcon(icon)
+    setSavingAvatar(false)
+  }
+
+  async function handleSelectColor(ck) {
+    setColorKey(ck)
+    await supabase.from('profiles').update({ avatar_color: ck }).eq('user_id', userId)
+  }
+
+  async function handlePersonalizeNext() {
+    if (bdMonth && bdDay) {
+      const mm = String(bdMonth).padStart(2, '0')
+      const dd = String(bdDay).padStart(2, '0')
+      await supabase.from('profiles')
+        .update({ birthday: `2000-${mm}-${dd}` })
+        .eq('user_id', userId)
     }
+    setStep(isAdmin ? 'features' : 'tour')
+  }
+
+  async function handleFeaturesNext() {
+    setSavingFeatures(true)
+    const updates = {
+      group_id: groupId,
+      ...features,
+      guide_url: features.guide_enabled ? guideUrl : (groupSettings?.guide_url ?? null),
+    }
+    const { data, error } = await supabase.from('group_settings')
+      .upsert(updates, { onConflict: 'group_id' })
+      .select().single()
+    setSavingFeatures(false)
+    if (error) { console.error('Failed to save features:', error.message); return }
+    if (data) onGroupSettingsChange?.(data)
+    setStep('setup')
+  }
+
+  function nextDowDate(dow, intervalDays) {
+    const today = new Date()
+    if (dow === null || dow === undefined) return today
+    const diff = (dow - today.getDay() + 7) % 7
+    const d = new Date(today)
+    d.setDate(today.getDate() + (diff === 0 ? intervalDays : diff))
+    return d
+  }
+
+  function dateStr(d) {
+    const y  = d.getFullYear()
+    const m  = String(d.getMonth() + 1).padStart(2, '0')
+    const dy = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${dy}`
+  }
+
+  async function handleSetupNext() {
+    setSavingSetup(true)
+    const patch = {}
+    if (features.meals_enabled) {
+      patch.meal_day_of_week   = mealDow
+      patch.meal_interval_days = mealInterval
+    }
+    if (features.services_enabled) {
+      patch.service_day_of_week = serviceDow
+      patch.service_autofill    = serviceAutofill
+    }
+    if (Object.keys(patch).length > 0) {
+      const { data, error } = await supabase.from('group_settings')
+        .upsert({ group_id: groupId, ...patch }, { onConflict: 'group_id' })
+        .select().single()
+      if (error) { console.error('Failed to save schedule:', error.message); setSavingSetup(false); return }
+      if (data) onGroupSettingsChange?.(data)
+    }
+
+    const names = mealNames.map(n => n.trim()).filter(Boolean)
+    if (features.meals_enabled && names.length > 0) {
+      const start = nextDowDate(mealDow, mealInterval)
+      const rows = names.map((title, i) => ({
+        title,
+        week_date: dateStr(new Date(start.getTime() + i * mealInterval * 86_400_000)),
+        slot_count: 4,
+        slot_dishes: [],
+        position: i,
+      }))
+      const { error } = await supabase.from('meal_pages').insert(rows)
+      if (!error) setMealNames(['', ''])
+    }
+
+    setSavingSetup(false)
+    setStep('invite')
   }
 
   function copyCode() {
@@ -81,155 +239,513 @@ export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSetting
       .catch(() => {})
   }
 
-  if (step === 'sample') {
+  async function shareCode() {
+    if (!inviteCode) return
+    const text = `Join my group on Covey Space!\nInvite code: ${inviteCode}\nhttps://app.coveyspace.com`
+    if (navigator.share) await navigator.share({ text }).catch(() => {})
+    else copyCode()
+  }
+
+  function handleTouchStart(e) { touchStartX.current = e.touches[0].clientX }
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) > 40) {
+      if (delta > 0) setTourSlide(s => Math.min(s + 1, TOUR_CARDS.length - 1))
+      else           setTourSlide(s => Math.max(s - 1, 0))
+    }
+    touchStartX.current = null
+  }
+
+  // ── STEP: welcome ──────────────────────────────────────────────────────────
+  if (step === 'welcome') {
     return (
-      <div className="fixed inset-0 bg-sunrise-50 flex flex-col items-center justify-center z-50 p-6 animate-overlay-in">
-        <ProgressDots steps={steps} currentStep="sample" />
-        <button
-          onClick={() => setStep('welcome')}
-          className="absolute left-6 flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors text-sm font-medium"
-          style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
-        >
-          <ArrowLeft size={16} weight="bold" />
-          Back
-        </button>
-        <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
-          <Lightbulb size={72} weight="fill" />
-        </div>
-        <h1 className="text-2xl font-bold text-stone-800 text-center mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          Want to see it in action?
-        </h1>
-        <p className="text-stone-500 text-sm text-center max-w-xs mb-8 animate-fade-up" style={{ animationDelay: '0.32s' }}>
-          Load sample data to explore meals, service signups, and birthdays. You can clear it anytime from Settings.
-        </p>
-        <div className="w-full max-w-xs flex flex-col gap-3 animate-fade-up" style={{ animationDelay: '0.42s' }}>
+      <StepShell key="welcome" steps={steps} currentStep="welcome" onBack={null}>
+        <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
+          <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.1s' }}>
+            <Confetti size={80} weight="fill" />
+          </div>
+          {isAdmin ? (
+            <>
+              <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                You created
+              </p>
+              <h1 className="text-3xl font-bold text-jade text-center mb-3 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                {groupName || 'your group'}
+              </h1>
+              <div className="flex items-center gap-1.5 mb-8 animate-fade-up" style={{ animationDelay: '0.48s' }}>
+                <ShieldCheck size={14} weight="fill" className="text-amber-500" />
+                <p className="text-xs font-semibold text-amber-500 uppercase tracking-wide">You're the admin</p>
+              </div>
+              <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+                Let's get your group set up. It only takes a minute.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                You joined
+              </p>
+              <h1 className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                {groupName || 'your group'}
+              </h1>
+              <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+                Let's get you set up so your group knows who you are.
+              </p>
+            </>
+          )}
           <button
-            onClick={handleSeed}
-            disabled={seeding}
-            className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-60"
+            onClick={() => setStep('personalize')}
+            className="px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
+            style={{ animationDelay: '0.65s' }}
           >
-            {seeding ? 'Loading...' : 'Load sample data'}
-          </button>
-          <button
-            onClick={() => setStep('guide')}
-            className="w-full px-8 py-3 text-stone-500 hover:text-stone-700 font-medium text-sm transition-colors"
-          >
-            Skip for now
+            Let's go
           </button>
         </div>
-      </div>
+      </StepShell>
     )
   }
 
-  if (step === 'guide') {
+  // ── STEP: personalize ──────────────────────────────────────────────────────
+  if (step === 'personalize') {
+    const bgClass = getAvatarColor(userId, colorKey)
     return (
-      <div className="fixed inset-0 bg-sunrise-50 z-50 animate-overlay-in overflow-y-auto">
-        <ProgressDots steps={steps} currentStep="guide" />
-        <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
-          <button
-            onClick={() => setStep(isAdmin && showSeedStep ? 'sample' : 'welcome')}
-            className="flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors text-sm font-medium mb-6"
-          >
-            <ArrowLeft size={16} weight="bold" />
-            Back
-          </button>
+      <StepShell key="personalize" steps={steps} currentStep="personalize" onBack={() => setStep('welcome')}>
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
+            <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Make it yours</h1>
+            <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+              Pick an avatar and add your birthday.
+            </p>
 
-          <div className="mb-5 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
-            <GearSix size={64} weight="fill" />
-          </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2 animate-fade-up" style={{ animationDelay: '0.15s' }}>
-            Your Settings
-          </h1>
-          <p className="text-stone-500 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.25s' }}>
-            Tap your avatar in the top right of the home screen to open Settings.
-          </p>
-
-          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-4 animate-fade-up" style={{ animationDelay: '0.35s' }}>
-            <div className="px-4 py-2.5 border-b border-stone-100">
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Everyone</p>
-            </div>
-            <div className="divide-y divide-stone-100">
-              <FeatureRow icon={<UserCircle size={18} weight="fill" className="text-jade" />} label="Edit your name and avatar" />
-              <FeatureRow icon={<Bell size={18} weight="fill" className="text-jade" />} label="Toggle chat notifications" desc="Available after saving to home screen" />
-              <FeatureRow icon={<Key size={18} weight="fill" className="text-jade" />} label="Change your password" />
-            </div>
-          </div>
-
-          {isAdmin && (
-            <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.45s' }}>
-              <div className="px-4 py-2.5 border-b border-stone-100 flex items-center gap-1.5">
-                <ShieldCheck size={12} weight="fill" className="text-amber-500" />
-                <p className="text-[10px] font-semibold text-amber-500 uppercase tracking-wide">Admin only</p>
+            {/* Avatar preview */}
+            <div className="flex justify-center mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bgClass}`}>
+                {avatarIcon
+                  ? <AvatarIcon name={avatarIcon} size={28} />
+                  : <span className="text-xl font-bold text-white">
+                      {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                    </span>
+                }
               </div>
-              <div className="divide-y divide-stone-100">
-                <FeatureRow
-                  icon={<Users size={18} weight="fill" className="text-coral" />}
-                  label="Invite code"
-                  desc="Share with new members to join your group"
-                />
-                <FeatureRow
-                  icon={<Users size={18} weight="fill" className="text-coral" />}
-                  label="Member management"
-                  desc="Promote to admin or remove members"
-                />
-                <FeatureRow
-                  icon={<GearSix size={18} weight="fill" className="text-coral" />}
-                  label="Meal & service schedules"
-                  desc="Set day of week and frequency"
-                />
-                <FeatureRow
-                  icon={<Link size={18} weight="fill" className="text-coral" />}
-                  label="Guide link"
-                  desc="Customize the community guide URL"
-                />
-                <FeatureRow
-                  icon={<Database size={18} weight="fill" className="text-coral" />}
-                  label="Sample data"
-                  desc="Load or clear sample meals, service, and birthdays"
-                />
+            </div>
+
+            {/* Color picker */}
+            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Color</p>
+              <div className="flex gap-2 flex-wrap">
+                {AVATAR_COLOR_OPTIONS.map(({ key, bgClass: cls, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => handleSelectColor(key)}
+                    title={label}
+                    className={`w-9 h-9 rounded-full ${cls} flex items-center justify-center transition-transform active:scale-95 ${
+                      colorKey === key ? 'ring-2 ring-offset-2 ring-stone-400 scale-110' : ''
+                    }`}
+                  >
+                    {colorKey === key && <span className="w-2 h-2 rounded-full bg-white/80" />}
+                  </button>
+                ))}
               </div>
-              {inviteCode && (
-                <div className="px-4 py-3 border-t border-stone-100 bg-stone-50">
-                  <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-2">Your invite code</p>
-                  <div className="flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-3 py-2.5">
-                    <span className="font-mono font-bold text-lg tracking-widest text-stone-800 flex-1">{inviteCode}</span>
+            </div>
+
+            {/* Icon picker */}
+            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-5 animate-fade-up" style={{ animationDelay: '0.28s' }}>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Icon</p>
+              <div className="grid grid-cols-6 gap-1.5 max-h-44 overflow-y-auto scrollbar-hide">
+                {AVATAR_ICON_LIST.map(({ name, Icon }) => (
+                  <button
+                    key={name}
+                    onClick={() => handleSelectIcon(name)}
+                    disabled={savingAvatar}
+                    className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
+                      avatarIcon === name
+                        ? `${bgClass} ring-2 ring-offset-1 ring-jade`
+                        : 'bg-stone-100 hover:bg-stone-200'
+                    }`}
+                  >
+                    <Icon size={22} weight="fill" className={avatarIcon === name ? 'text-white' : 'text-stone-500'} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Birthday */}
+            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.36s' }}>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday</p>
+              <p className="text-xs text-stone-400 mb-3">Your group will be reminded so they can celebrate you.</p>
+              <div className="flex gap-2">
+                <select
+                  value={bdMonth}
+                  onChange={e => setBdMonth(e.target.value)}
+                  className="flex-1 text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade text-stone-700"
+                >
+                  <option value="">Month</option>
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  value={bdDay}
+                  onChange={e => setBdDay(e.target.value)}
+                  className="w-24 text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade text-stone-700"
+                >
+                  <option value="">Day</option>
+                  {DAYS.map(d => (
+                    <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button
+              onClick={handlePersonalizeNext}
+              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </StepShell>
+    )
+  }
+
+  // ── STEP: features (admin only) ────────────────────────────────────────────
+  if (step === 'features') {
+    return (
+      <StepShell key="features" steps={steps} currentStep="features" onBack={() => setStep('personalize')}>
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
+            <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Set up features</h1>
+            <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+              Turn on what your group needs. You can change these anytime in Admin settings.
+            </p>
+
+            <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+              {FEATURE_TOGGLES.map(({ key, label, desc, Icon, color }, i) => (
+                <div key={key}>
+                  <div className={`flex items-center gap-3 px-4 py-3.5 ${i < FEATURE_TOGGLES.length - 1 ? 'border-b border-stone-100' : ''}`}>
+                    <Icon size={18} weight="fill" className={`${color} shrink-0`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-700">{label}</p>
+                      <p className="text-xs text-stone-400">{desc}</p>
+                    </div>
                     <button
-                      onClick={copyCode}
-                      className="text-xs font-semibold text-jade shrink-0 px-2 py-1 rounded-lg hover:bg-jade/10 transition-colors"
+                      onClick={() => setFeatures(f => ({ ...f, [key]: !f[key] }))}
+                      className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${features[key] ? 'bg-jade' : 'bg-stone-200'}`}
                     >
-                      {codeCopied ? 'Copied!' : 'Copy'}
+                      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${features[key] ? 'left-[22px]' : 'left-0.5'}`} />
                     </button>
                   </div>
-                  <p className="text-xs text-stone-400 mt-1.5">Share this with people you want to invite.</p>
+                  {key === 'guide_enabled' && features.guide_enabled && (
+                    <div className="px-4 pb-3">
+                      <input
+                        type="url"
+                        placeholder="https://your-guide-url.com"
+                        value={guideUrl}
+                        onChange={e => setGuideUrl(e.target.value)}
+                        className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
-          )}
 
-          <button
-            onClick={() => setStep('install')}
-            className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
-            style={{ animationDelay: '0.55s' }}
-          >
-            Next
-          </button>
+            <button
+              onClick={handleFeaturesNext}
+              disabled={savingFeatures}
+              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
+            >
+              {savingFeatures ? 'Saving…' : 'Next'}
+            </button>
+          </div>
         </div>
-      </div>
+      </StepShell>
     )
   }
 
-  if (step === 'install') {
+  // ── STEP: setup (admin only) ──────────────────────────────────────────────
+  if (step === 'setup') {
+    const showMeals    = features.meals_enabled
+    const showServices = features.services_enabled
+
     return (
-      <div className={`fixed inset-0 bg-sunrise-50 flex flex-col items-center justify-center z-50 p-6 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
-        <ProgressDots steps={steps} currentStep="install" />
-        <button
-          onClick={() => setStep('guide')}
-          className="absolute left-6 flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors text-sm font-medium"
-          style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
-        >
-          <ArrowLeft size={16} weight="bold" />
-          Back
-        </button>
+      <StepShell key="setup" steps={steps} currentStep="setup" onBack={() => setStep('features')}>
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
+            <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Set up your schedule</h1>
+            <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.08s' }}>
+              Tell us when your group meets so the rotation is ready from day one.
+            </p>
+
+            {/* ── Meals ─────────────────────────────────────────── */}
+            {showMeals && (
+              <div className="mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <ForkKnife size={14} weight="fill" className="text-jade" />
+                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Meals</p>
+                </div>
+                <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
+                  {/* Day of week */}
+                  <div>
+                    <p className="text-xs text-stone-400 font-medium mb-2">Which day do you meet?</p>
+                    <div className="flex gap-1">
+                      {DOW_LABELS.map((d, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setMealDow(mealDow === i ? null : i)}
+                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                            mealDow === i ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Frequency */}
+                  <div>
+                    <p className="text-xs text-stone-400 font-medium mb-2">How often?</p>
+                    <div className="flex gap-2">
+                      {[{ label: 'Weekly', days: 7 }, { label: 'Every 2 weeks', days: 14 }].map(({ label, days }) => (
+                        <button
+                          key={days}
+                          onClick={() => setMealInterval(days)}
+                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                            mealInterval === days ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Meal names */}
+                  <div>
+                    <p className="text-xs text-stone-400 font-medium mb-2">Name your meals <span className="font-normal">(optional)</span></p>
+                    <div className="space-y-2">
+                      {mealNames.map((name, i) => (
+                        <input
+                          key={i}
+                          type="text"
+                          placeholder={`e.g. ${['Taco Night', 'Pasta Night', 'BBQ Night', 'Soup Night'][i] ?? 'Meal name'}`}
+                          value={name}
+                          onChange={e => setMealNames(prev => prev.map((v, j) => j === i ? e.target.value : v))}
+                          className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                        />
+                      ))}
+                    </div>
+                    {mealNames.length < 4 && (
+                      <button
+                        onClick={() => setMealNames(prev => [...prev, ''])}
+                        className="mt-2 text-xs text-jade font-semibold"
+                      >
+                        + Add another meal
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Services ──────────────────────────────────────── */}
+            {showServices && (
+              <div className="mb-6 animate-fade-up" style={{ animationDelay: showMeals ? '0.22s' : '0.15s' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarCheck size={14} weight="fill" className="text-lagoon-600" />
+                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Service</p>
+                </div>
+                <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
+                  {/* Auto-fill toggle */}
+                  <div>
+                    <p className="text-xs text-stone-400 font-medium mb-2">Auto-schedule monthly rotations?</p>
+                    <div className="flex gap-2">
+                      {[{ label: 'Yes', val: true }, { label: 'No', val: false }].map(({ label, val }) => (
+                        <button
+                          key={String(val)}
+                          onClick={() => setServiceAutofill(val)}
+                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                            serviceAutofill === val ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Day of week (only if autofill on) */}
+                  {serviceAutofill && (
+                    <div>
+                      <p className="text-xs text-stone-400 font-medium mb-2">Which day does service meet?</p>
+                      <div className="flex gap-1">
+                        {DOW_LABELS.map((d, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setServiceDow(serviceDow === i ? null : i)}
+                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                              serviceDow === i ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            }`}
+                          >
+                            {d}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Neither enabled ────────────────────────────────── */}
+            {!showMeals && !showServices && (
+              <div className="bg-white border border-stone-100 rounded-2xl p-6 shadow-sm text-center mb-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+                <p className="text-stone-400 text-sm">No schedule to configure — you can always enable features later in Admin settings.</p>
+              </div>
+            )}
+
+            <button
+              onClick={handleSetupNext}
+              disabled={savingSetup}
+              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
+            >
+              {savingSetup ? 'Saving…' : 'Next'}
+            </button>
+            <button
+              onClick={() => setStep('invite')}
+              className="w-full py-2.5 text-stone-400 text-sm mt-1"
+            >
+              Set up later
+            </button>
+          </div>
+        </div>
+      </StepShell>
+    )
+  }
+
+  // ── STEP: invite (admin only) ──────────────────────────────────────────────
+  if (step === 'invite') {
+    return (
+      <StepShell key="invite" steps={steps} currentStep="invite" onBack={() => setStep('setup')}>
+        <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
+          <div className="mb-5 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
+            <Users size={64} weight="fill" />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-800 mb-2 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+            Invite your members
+          </h1>
+          <p className="text-stone-400 text-sm max-w-xs mb-8 animate-fade-up" style={{ animationDelay: '0.25s' }}>
+            Share this code with everyone in your group. They'll enter it when they sign up.
+          </p>
+
+          <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.35s' }}>
+            <div className="bg-white border border-stone-100 rounded-2xl px-6 py-5 shadow-sm mb-3">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Invite code</p>
+              <p className="font-mono font-bold text-4xl tracking-widest text-jade mb-1">
+                {inviteCode ?? '——'}
+              </p>
+            </div>
+
+            {navigator.share ? (
+              <div className="flex gap-2 mb-3">
+                <button
+                  onClick={copyCode}
+                  className="flex-1 py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors"
+                >
+                  {codeCopied ? '✓ Copied!' : 'Copy code'}
+                </button>
+                <button
+                  onClick={shareCode}
+                  className="flex-1 py-3 bg-jade text-white text-sm font-semibold rounded-xl hover:bg-jade-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ShareNetwork size={16} weight="bold" /> Share
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={copyCode}
+                className="w-full py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors mb-3"
+              >
+                {codeCopied ? '✓ Copied!' : 'Copy code'}
+              </button>
+            )}
+
+            <button
+              onClick={() => setStep('install')}
+              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+            >
+              Continue →
+            </button>
+          </div>
+        </div>
+      </StepShell>
+    )
+  }
+
+  // ── STEP: tour (member only) ───────────────────────────────────────────────
+  if (step === 'tour') {
+    const isLastSlide = tourSlide === TOUR_CARDS.length - 1
+    return (
+      <StepShell key="tour" steps={steps} currentStep="tour" onBack={() => setStep('personalize')}>
+        <div className="flex flex-col flex-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
+          <div className="px-6 mb-6">
+            <h1 className="text-2xl font-bold text-stone-800 mb-1">What's in here</h1>
+            <p className="text-stone-400 text-sm">Swipe to explore what your group can do.</p>
+          </div>
+
+          <div
+            className="flex-1 overflow-hidden px-6"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{ touchAction: 'pan-y' }}
+          >
+            <div
+              className="flex h-full transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(calc(-${tourSlide * 100}% - ${tourSlide * 24}px))` }}
+            >
+              {TOUR_CARDS.map(({ Icon, color, title, desc }) => (
+                <div key={title} className="w-full shrink-0 mr-6">
+                  <div className="bg-white border border-stone-100 rounded-2xl p-8 shadow-sm h-full flex flex-col items-center justify-center text-center gap-4">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${color}`}>
+                      <Icon size={32} weight="fill" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-stone-800 text-lg mb-2">{title}</h3>
+                      <p className="text-stone-400 text-sm leading-relaxed max-w-[220px] mx-auto">{desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-6 py-6 flex flex-col items-center gap-4">
+            <div className="flex gap-1.5">
+              {TOUR_CARDS.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setTourSlide(i)}
+                  className={`rounded-full transition-all duration-300 ${i === tourSlide ? 'w-5 h-2 bg-jade' : 'w-2 h-2 bg-stone-300'}`}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => isLastSlide ? setStep('install') : setTourSlide(s => s + 1)}
+              className="w-full max-w-xs py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+            >
+              {isLastSlide ? 'Got it' : 'Next'}
+            </button>
+          </div>
+        </div>
+      </StepShell>
+    )
+  }
+
+  // ── STEP: install ──────────────────────────────────────────────────────────
+  const prevStep = isAdmin ? 'invite' : 'tour'
+  return (
+    <StepShell key="install" steps={steps} currentStep="install" onBack={() => setStep(prevStep)} closing={closing}>
+      <div className="flex flex-col items-center justify-center flex-1 p-6">
         <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
           <DeviceMobile size={72} weight="fill" />
         </div>
@@ -246,8 +762,7 @@ export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSetting
               <div>
                 <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
                 <p className="text-xs text-stone-400 mt-0.5">
-                  Tap the <span className="font-medium">Share</span> button, then{' '}
-                  <span className="font-medium">"Add to Home Screen"</span>
+                  Open in <span className="font-medium">Safari</span>, tap <span className="font-medium">Share</span>, then <span className="font-medium">"Add to Home Screen"</span>
                 </p>
               </div>
             </div>
@@ -256,8 +771,7 @@ export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSetting
               <div>
                 <p className="text-sm font-semibold text-stone-700">Android</p>
                 <p className="text-xs text-stone-400 mt-0.5">
-                  Tap the <span className="font-medium">browser menu</span>, then{' '}
-                  <span className="font-medium">"Add to Home Screen"</span>
+                  Tap the <span className="font-medium">browser menu</span>, then <span className="font-medium">"Add to Home Screen"</span>
                 </p>
               </div>
             </div>
@@ -266,42 +780,10 @@ export default function WelcomeSplash({ groupName, onDone, isAdmin, groupSetting
             onClick={close}
             className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
           >
-            Got it!
+            {isAdmin ? 'Go to my group' : "I'm ready"}
           </button>
         </div>
       </div>
-    )
-  }
-
-  return (
-    <div
-      className={`fixed inset-0 bg-sunrise-50 flex flex-col items-center justify-center z-50 p-6 ${
-        closing ? 'animate-overlay-out' : 'animate-overlay-in'
-      }`}
-    >
-      <ProgressDots steps={steps} currentStep="welcome" />
-      <div
-        className={`mb-6 text-jade ${iconClass}`}
-        style={iconClass === 'animate-welcome-pop' ? { animationDelay: '0.1s' } : undefined}
-      >
-        <Confetti size={80} weight="fill" />
-      </div>
-      <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-        Welcome to your Covey Space!
-      </p>
-      <h1 className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-        {groupName || "Let's get started"}
-      </h1>
-      <p className="text-stone-400 text-sm text-center max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
-        Chat with your group, sign up for meals and service, and celebrate each other's birthdays.
-      </p>
-      <button
-        onClick={() => !isAdmin ? setStep('guide') : showSeedStep ? setStep('sample') : setStep('guide')}
-        className="px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
-        style={{ animationDelay: '0.65s' }}
-      >
-        Next
-      </button>
-    </div>
+    </StepShell>
   )
 }
