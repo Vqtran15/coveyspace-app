@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AVATAR_ICON_LIST, AVATAR_COLOR_OPTIONS, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
+import FeedbackModal from './FeedbackModal.jsx'
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -51,6 +52,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -168,6 +170,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
   }
 
   return (
+    <>
     <div
       className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
       onClick={close}
@@ -450,6 +453,18 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
               </button>
             )}
             <button
+              onClick={() => setFeedbackOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-2xl transition-all mb-2"
+            >
+              <ChatTeardropDots size={20} weight="fill" className="text-white/80 shrink-0" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold text-white">Send Feedback</p>
+                <p className="text-xs text-white/60">Bug reports, ideas, or anything else</p>
+              </div>
+              <CaretRight size={14} className="text-white/40" />
+            </button>
+
+            <button
               onClick={() => supabase.auth.signOut()}
               className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-50 rounded-xl transition-colors mb-1"
             >
@@ -531,5 +546,15 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
         </div>
       </div>
     </div>
+
+    {feedbackOpen && (
+      <FeedbackModal
+        userId={userId}
+        displayName={displayName}
+        email={email}
+        onClose={() => setFeedbackOpen(false)}
+      />
+    )}
+  </>
   )
 }
