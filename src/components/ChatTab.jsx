@@ -43,9 +43,11 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   }, [displayName])
 
   function openConv(conv, dbLastReadAt = null) {
-    // Prefer in-memory close time over DB value to avoid race between
-    // cleanup UPDATE and ConversationList's loadConversations SELECT
-    setCapturedLastReadAt(readAtMap[conv.id] ?? dbLastReadAt)
+    // Pick the most recent of: in-memory close time, localStorage (survives reloads),
+    // or DB value — localStorage is synchronous so it has no race condition
+    const localReadAt = localStorage.getItem(`readAt:${conv.id}`)
+    const best = [readAtMap[conv.id], localReadAt, dbLastReadAt].filter(Boolean).sort().pop() ?? null
+    setCapturedLastReadAt(best)
     setListClass('')
     setActiveConv(conv)
     supabase

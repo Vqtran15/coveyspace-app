@@ -198,8 +198,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, { ...msg, _isNew: true }])
         if (msg.user_id !== myId) {
           if (isAtBottomRef.current) {
+            const now = new Date().toISOString()
+            localStorage.setItem(`readAt:${convId}`, now)
             supabase.from('conversation_members')
-              .update({ last_read_at: new Date().toISOString() })
+              .update({ last_read_at: now })
               .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
           } else {
             setUnreadCount(prev => prev + 1)
@@ -255,8 +257,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
 
     // Mark ourselves as read on enter
+    const openTime = new Date().toISOString()
+    localStorage.setItem(`readAt:${convId}`, openTime)
     supabase.from('conversation_members')
-      .update({ last_read_at: new Date().toISOString() })
+      .update({ last_read_at: openTime })
       .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
 
     const readCh = supabase
@@ -275,8 +279,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
+      const closeTime = new Date().toISOString()
+      localStorage.setItem(`readAt:${convId}`, closeTime)
       supabase.from('conversation_members')
-        .update({ last_read_at: new Date().toISOString() })
+        .update({ last_read_at: closeTime })
         .eq('conversation_id', convId)
         .eq('user_id', myId)
         .then(() => {})
@@ -377,10 +383,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setIsAtBottom(atBottom)
     isAtBottomRef.current = atBottom
     if (atBottom) {
+      const now = new Date().toISOString()
+      localStorage.setItem(`readAt:${convId}`, now)
       if (unreadCount > 0) {
         setUnreadCount(0)
         supabase.from('conversation_members')
-          .update({ last_read_at: new Date().toISOString() })
+          .update({ last_read_at: now })
           .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
       }
       if (firstUnreadId && !suppressUnreadClearRef.current) setFirstUnreadId(null)
