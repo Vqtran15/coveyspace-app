@@ -4,10 +4,11 @@ import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 
 export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [] }) {
-  const [activeConv, setActiveConv]   = useState(null)
-  const [members, setMembers]         = useState([])
-  const [chatExiting, setChatExiting] = useState(false)
-  const [listClass, setListClass]     = useState('')
+  const [activeConv, setActiveConv]           = useState(null)
+  const [capturedLastReadAt, setCapturedLastReadAt] = useState(null)
+  const [members, setMembers]                 = useState([])
+  const [chatExiting, setChatExiting]         = useState(false)
+  const [listClass, setListClass]             = useState('')
 
   // Prevent iOS from scrolling the window when the keyboard appears.
   // Without this, tapping the message input causes window.scrollY to drift,
@@ -40,7 +41,8 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
     ))
   }, [displayName])
 
-  function openConv(conv) {
+  function openConv(conv, lastReadAt = null) {
+    setCapturedLastReadAt(lastReadAt)
     setListClass('')
     setActiveConv(conv)
     supabase
@@ -56,6 +58,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
     setTimeout(() => {
       setChatExiting(false)
       setActiveConv(null)
+      setCapturedLastReadAt(null)
       setListClass('animate-slide-in-left')
       setTimeout(() => setListClass(''), 250)
     }, 200)
@@ -73,6 +76,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
         exiting={chatExiting}
         onBack={goBack}
         onRead={onRead}
+        openedWithLastReadAt={capturedLastReadAt}
       />
     )
   }

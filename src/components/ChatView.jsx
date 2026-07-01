@@ -68,7 +68,7 @@ function typingLabel(users) {
   return `${users.length} people are typing…`
 }
 
-export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead }) {
+export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null }) {
   const [messages, setMessages]         = useState([])
   const [loading, setLoading]           = useState(true)
   const [hasMore, setHasMore]           = useState(false)
@@ -106,7 +106,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [renameSaving, setRenameSaving]     = useState(false)
   const [memberReadTimes, setMemberReadTimes] = useState({})
   const [unreadCount, setUnreadCount]         = useState(0)
-  const [myLastReadAt, setMyLastReadAt]       = useState(undefined) // undefined = not yet fetched
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [contentReady, setContentReady]       = useState(false)
 
@@ -158,7 +157,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setReplyingTo(null)
     setMemberReadTimes({})
     setUnreadCount(0)
-    setMyLastReadAt(undefined)
     setFirstUnreadId(null)
     setContentReady(false)
     initialScrollDoneRef.current = false
@@ -243,24 +241,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
-    // Load member read times; capture own last_read_at BEFORE marking as read
+    // Load member read times for read receipts
     supabase
       .from('conversation_members')
       .select('user_id, last_read_at')
       .eq('conversation_id', convId)
       .then(({ data }) => {
         const map = {}
-        let myRead = null
         for (const m of data ?? []) {
           if (m.user_id !== myId) map[m.user_id] = m.last_read_at
-          else myRead = m.last_read_at
         }
         setMemberReadTimes(map)
-        setMyLastReadAt(myRead)
-        supabase.from('conversation_members')
-          .update({ last_read_at: new Date().toISOString() })
-          .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
       })
+
+    // Mark ourselves as read on enter
+    supabase.from('conversation_members')
+      .update({ last_read_at: new Date().toISOString() })
+      .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
 
     const readCh = supabase
       .channel(`read:${convId}`)
@@ -288,11 +285,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   // ── Initial scroll: first unread or bottom ───────────────────────────────
   useEffect(() => {
-    if (loading || initialScrollDoneRef.current || myLastReadAt === undefined) return
+    if (loading || initialScrollDoneRef.current) return
     initialScrollDoneRef.current = true
 
-    if (myLastReadAt && messages.length > 0) {
-      const readTime = new Date(myLastReadAt)
+    if (openedWithLastReadAt && messages.length > 0) {
+      const readTime = new Date(openedWithLastReadAt)
       const firstUnread = messages.find(m => !m._tempId && new Date(m.created_at) > readTime)
       if (firstUnread) {
         setFirstUnreadId(firstUnread.id)
@@ -312,7 +309,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     setContentReady(true)
-  }, [loading, myLastReadAt, messages])
+  }, [loading, messages])
 
   // ── Typing presence ───────────────────────────────────────────────────────
   useEffect(() => {

@@ -202,7 +202,7 @@ export default function ConversationList({ session, groupId, members, enterClass
     if (existing) {
       closeDm()
       setStarting(false)
-      onSelect(existing)
+      onSelect(existing, lastReadAt?.[existing.id] ?? null)
       return
     }
 
@@ -216,7 +216,7 @@ export default function ConversationList({ session, groupId, members, enterClass
     setStarting(false)
     if (conv) {
       setConversations(prev => [conv, ...prev])
-      onSelect(conv)
+      onSelect(conv, null)
     }
   }
 
@@ -244,7 +244,7 @@ export default function ConversationList({ session, groupId, members, enterClass
     setCreating(false)
     if (conv) {
       setConversations(prev => [conv, ...prev])
-      onSelect(conv)
+      onSelect(conv, null)
     }
   }
 
@@ -362,7 +362,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                 >
                   {/* Main row */}
                   <button
-                    onClick={() => onSelect(conv)}
+                    onClick={() => onSelect(conv, lastReadAt?.[conv.id] ?? null)}
                     className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
                   >
                     <div className="relative shrink-0">
