@@ -290,7 +290,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
     if (openedWithLastReadAt && messages.length > 0) {
       const readTime = new Date(openedWithLastReadAt)
-      const firstUnread = messages.find(m => !m._tempId && new Date(m.created_at) > readTime)
+      const firstUnread = messages.find(m => !m._tempId && m.user_id !== myId && new Date(m.created_at) > readTime)
       if (firstUnread) {
         setFirstUnreadId(firstUnread.id)
         // Mark not-at-bottom so new incoming messages don't yank user away from unread position

@@ -6,6 +6,7 @@ import ChatView from './ChatView.jsx'
 export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [] }) {
   const [activeConv, setActiveConv]           = useState(null)
   const [capturedLastReadAt, setCapturedLastReadAt] = useState(null)
+  const [readAtMap, setReadAtMap]             = useState({})
   const [members, setMembers]                 = useState([])
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
@@ -41,8 +42,10 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
     ))
   }, [displayName])
 
-  function openConv(conv, lastReadAt = null) {
-    setCapturedLastReadAt(lastReadAt)
+  function openConv(conv, dbLastReadAt = null) {
+    // Prefer in-memory close time over DB value to avoid race between
+    // cleanup UPDATE and ConversationList's loadConversations SELECT
+    setCapturedLastReadAt(readAtMap[conv.id] ?? dbLastReadAt)
     setListClass('')
     setActiveConv(conv)
     supabase
@@ -55,6 +58,9 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
 
   function goBack() {
     setChatExiting(true)
+    if (activeConv) {
+      setReadAtMap(prev => ({ ...prev, [activeConv.id]: new Date().toISOString() }))
+    }
     setTimeout(() => {
       setChatExiting(false)
       setActiveConv(null)
