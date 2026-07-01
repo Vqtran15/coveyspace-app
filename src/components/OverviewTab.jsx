@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, Lightbulb, Confetti } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, Confetti } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
@@ -159,24 +159,6 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [nextService, setNextService]       = useState(undefined)
   const [announcement, setAnnouncement]     = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
-  const [funFact, setFunFact]               = useState(null)
-  const [funFactFailed, setFunFactFailed]   = useState(false)
-
-  function fetchFunFact(today) {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000)
-    setFunFactFailed(false)
-    fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en', { signal: controller.signal })
-      .then(r => r.json())
-      .then(d => {
-        const text = d?.text ?? null
-        if (!text) { setFunFactFailed(true); return }
-        localStorage.setItem('fun_fact_v2', JSON.stringify({ date: today, text }))
-        setFunFact(text)
-      })
-      .catch(() => setFunFactFailed(true))
-      .finally(() => clearTimeout(timeout))
-  }
 
   async function load() {
     const today = toDateString(new Date())
@@ -191,13 +173,6 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     if (groupId) {
       const { data } = await supabase.from('community_groups').select('announcement').eq('id', groupId).single()
       setAnnouncement(data?.announcement ?? null)
-    }
-
-    const cached = JSON.parse(localStorage.getItem('fun_fact_v2') ?? 'null')
-    if (cached?.date === today) {
-      setFunFact(cached.text)
-    } else {
-      fetchFunFact(today)
     }
   }
 
@@ -370,32 +345,6 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           />
         )}
 
-        {/* Fun Fact */}
-        {(funFact !== null || funFactFailed) && (
-          <div
-            className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 animate-stack-in lg:col-span-2"
-            style={{ animationDelay: `${showAnnouncement ? 400 : 320}ms` }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-                <Lightbulb size={22} weight="fill" className="text-amber-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wide mb-1">Fun Fact</p>
-                {funFactFailed ? (
-                  <button
-                    onClick={() => fetchFunFact(toDateString(new Date()))}
-                    className="text-sm text-amber-500 underline underline-offset-2"
-                  >
-                    Tap to retry
-                  </button>
-                ) : (
-                  <p className="text-sm text-stone-700 leading-relaxed">{funFact}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {editingAnnouncement && (
