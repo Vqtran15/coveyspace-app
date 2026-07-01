@@ -106,6 +106,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [renameSaving, setRenameSaving]     = useState(false)
   const [memberReadTimes, setMemberReadTimes] = useState({})
   const [unreadCount, setUnreadCount]         = useState(0)
+  const [myLastReadAt, setMyLastReadAt]       = useState(undefined) // undefined = not yet fetched
+  const [firstUnreadId, setFirstUnreadId]     = useState(null)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -116,7 +118,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const typingTimeoutRef   = useRef(null)
   const lastTapRef         = useRef(null)
   const preserveScrollRef  = useRef(null)
-  const isAtBottomRef      = useRef(true)
+  const isAtBottomRef              = useRef(true)
+  const initialScrollDoneRef       = useRef(false)
+  const suppressUnreadClearRef     = useRef(false)
 
   const myId = session.user.id
   const convId = conversation.id
@@ -153,6 +157,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setReplyingTo(null)
     setMemberReadTimes({})
     setUnreadCount(0)
+    setMyLastReadAt(undefined)
+    setFirstUnreadId(null)
+    initialScrollDoneRef.current = false
+    suppressUnreadClearRef.current = false
     setText(localStorage.getItem(`draft:${convId}`) ?? '')
 
     supabase
@@ -233,23 +241,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
-    // Load member read times for read receipts
+    // Load member read times; capture own last_read_at BEFORE marking as read
     supabase
       .from('conversation_members')
       .select('user_id, last_read_at')
       .eq('conversation_id', convId)
       .then(({ data }) => {
         const map = {}
+        let myRead = null
         for (const m of data ?? []) {
           if (m.user_id !== myId) map[m.user_id] = m.last_read_at
+          else myRead = m.last_read_at
         }
         setMemberReadTimes(map)
+        setMyLastReadAt(myRead)
+        supabase.from('conversation_members')
+          .update({ last_read_at: new Date().toISOString() })
+          .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
       })
-
-    // Mark ourselves as read on enter
-    supabase.from('conversation_members')
-      .update({ last_read_at: new Date().toISOString() })
-      .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
 
     const readCh = supabase
       .channel(`read:${convId}`)
@@ -274,6 +283,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         .then(() => {})
     }
   }, [convId])
+
+  // ── Initial scroll: first unread or bottom ───────────────────────────────
+  useEffect(() => {
+    if (loading || initialScrollDoneRef.current || myLastReadAt === undefined) return
+    initialScrollDoneRef.current = true
+
+    if (myLastReadAt && messages.length > 0) {
+      const readTime = new Date(myLastReadAt)
+      const firstUnread = messages.find(m => !m._tempId && new Date(m.created_at) > readTime)
+      if (firstUnread) {
+        setFirstUnreadId(firstUnread.id)
+        // Mark not-at-bottom so new incoming messages don't yank user away from unread position
+        setIsAtBottom(false)
+        isAtBottomRef.current = false
+        // Suppress handleScroll from immediately clearing the divider via the programmatic scroll event
+        suppressUnreadClearRef.current = true
+        setTimeout(() => {
+          document.getElementById(`msg-${firstUnread.id}`)?.scrollIntoView({ block: 'start' })
+          setTimeout(() => { suppressUnreadClearRef.current = false }, 200)
+        }, 30)
+        return
+      }
+    }
+
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [loading, myLastReadAt, messages])
 
   // ── Typing presence ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -310,7 +345,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       preserveScrollRef.current = null
       return
     }
-    if (isAtBottom) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (initialScrollDoneRef.current && isAtBottom) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [messages])
 
   useEffect(() => {
@@ -338,11 +375,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
     setIsAtBottom(atBottom)
     isAtBottomRef.current = atBottom
-    if (atBottom && unreadCount > 0) {
-      setUnreadCount(0)
-      supabase.from('conversation_members')
-        .update({ last_read_at: new Date().toISOString() })
-        .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+    if (atBottom) {
+      if (unreadCount > 0) {
+        setUnreadCount(0)
+        supabase.from('conversation_members')
+          .update({ last_read_at: new Date().toISOString() })
+          .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+      }
+      if (firstUnreadId && !suppressUnreadClearRef.current) setFirstUnreadId(null)
     }
     if (el.scrollTop < 60 && hasMore && !loadingMore) loadMore()
   }
@@ -672,6 +712,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       items.push({ type: 'date', label: dateSeparatorLabel(msg.created_at), key: `date-${msg.created_at}` })
       lastDate = d
     }
+    if (!searchQuery && firstUnreadId && msg.id === firstUnreadId) {
+      items.push({ type: 'unread-divider', key: 'unread-divider' })
+    }
     items.push({ type: 'msg', msg })
   }
 
@@ -820,6 +863,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     <div className="flex-1 h-px bg-stone-200" />
                     <span className="text-xs text-stone-400 font-medium">{item.label}</span>
                     <div className="flex-1 h-px bg-stone-200" />
+                  </div>
+                )
+              }
+
+              if (item.type === 'unread-divider') {
+                return (
+                  <div key="unread-divider" className="flex items-center gap-3 py-2">
+                    <div className="flex-1 h-px bg-jade/40" />
+                    <span className="text-[11px] text-jade font-semibold tracking-wide">New messages</span>
+                    <div className="flex-1 h-px bg-jade/40" />
                   </div>
                 )
               }
