@@ -1,6 +1,13 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const TO_EMAIL       = 'vuong.tran@coveyspace.com'
 const FROM_EMAIL     = 'feedback@coveyspace.com'
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+)
 
 Deno.serve(async (req) => {
   try {
@@ -11,14 +18,28 @@ Deno.serve(async (req) => {
       return new Response('Missing record', { status: 400 })
     }
 
-    const groupName  = record.name      ?? 'Unknown'
-    const groupId    = record.id        ?? 'Unknown'
+    const groupName  = record.name        ?? 'Unknown'
+    const groupId    = record.id          ?? 'Unknown'
     const inviteCode = record.invite_code ?? 'Unknown'
     const createdAt  = new Date(record.created_at).toLocaleString('en-US', {
       timeZone: 'America/Los_Angeles',
       dateStyle: 'medium',
       timeStyle: 'short',
     })
+
+    // Look up the creator's email via their profile
+    let creatorEmail = 'Unknown'
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('community_group_id', record.id)
+      .limit(1)
+      .single()
+
+    if (profile?.user_id) {
+      const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id)
+      creatorEmail = user?.email ?? 'Unknown'
+    }
 
     const html = `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1c1917">
@@ -32,12 +53,16 @@ Deno.serve(async (req) => {
             <td style="padding:8px 0;font-weight:600">${groupName}</td>
           </tr>
           <tr>
-            <td style="padding:8px 0;color:#78716c">Group ID</td>
-            <td style="padding:8px 0;font-family:monospace;font-size:13px">${groupId}</td>
+            <td style="padding:8px 0;color:#78716c">Creator Email</td>
+            <td style="padding:8px 0">${creatorEmail}</td>
           </tr>
           <tr>
             <td style="padding:8px 0;color:#78716c">Invite Code</td>
             <td style="padding:8px 0;font-family:monospace;font-weight:700;letter-spacing:0.1em">${inviteCode}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#78716c">Group ID</td>
+            <td style="padding:8px 0;font-family:monospace;font-size:13px">${groupId}</td>
           </tr>
           <tr>
             <td style="padding:8px 0;color:#78716c">Created</td>
