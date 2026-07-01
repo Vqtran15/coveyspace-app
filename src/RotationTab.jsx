@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 're
 import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from './lib/supabase.js'
 import { patchTitleDate, toDateString } from './utils/dates.js'
+import { nextScheduledDate } from './utils/schedule.js'
 import { haptic } from './lib/haptic.js'
 import MealPage from './components/MealPage.jsx'
 import AddPageModal from './components/AddPageModal.jsx'
@@ -11,7 +12,7 @@ import ManagePagesModal from './components/ManagePagesModal.jsx'
 const FUTURE_BUFFER = 2  // always keep at least this many pages with dates after today
 const AUTO_FILL_LIMIT = 10 // safety cap per load
 
-async function autoFillPages(existingPages, tables, defaultTitle, intervalDays = 7, targetDow = null) {
+async function autoFillPages(existingPages, tables, defaultTitle, intervalDays = 7, targetDow = null, weekOccurrences = null) {
   if (!existingPages.length) return existingPages
 
   const today = toDateString(new Date())
@@ -25,12 +26,20 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
   while (result.filter(p => p.week_date > today).length < FUTURE_BUFFER && k < AUTO_FILL_LIMIT) {
     const lastPage = result[result.length - 1]
     const lastDate = new Date(lastPage.week_date + 'T12:00:00')
-    lastDate.setDate(lastDate.getDate() + intervalDays)
-    if (targetDow !== null) {
-      const diff = (targetDow - lastDate.getDay() + 7) % 7
-      lastDate.setDate(lastDate.getDate() + diff)
+
+    let nextDate
+    if (weekOccurrences && weekOccurrences.length > 0 && targetDow !== null) {
+      nextDate = nextScheduledDate(lastDate, targetDow, weekOccurrences)
+      if (!nextDate) break
+    } else {
+      nextDate = new Date(lastDate)
+      nextDate.setDate(nextDate.getDate() + intervalDays)
+      if (targetDow !== null) {
+        const diff = (targetDow - nextDate.getDay() + 7) % 7
+        nextDate.setDate(nextDate.getDate() + diff)
+      }
     }
-    const nextDateStr = toDateString(lastDate)
+    const nextDateStr = toDateString(nextDate)
 
     const template = pool[k % pool.length]
 
@@ -55,7 +64,7 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
 }
 
 const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }, ref) {
-  const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null } = config
+  const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null, weekOccurrences = null } = config
 
   const [pages, setPages]       = useState([])
   const [viewIndex, setViewIndex] = useState(0)
@@ -71,7 +80,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     setError(null)
     const { data, error: err } = await supabase.from(tables.pages).select('*').order('position')
     if (err) { setError(err.message); setLoading(false); return }
-    const filled = autoFill ? await autoFillPages(data ?? [], tables, defaultTitle, intervalDays, targetDow) : (data ?? [])
+    const filled = autoFill ? await autoFillPages(data ?? [], tables, defaultTitle, intervalDays, targetDow, weekOccurrences) : (data ?? [])
     const today = toDateString(new Date())
     const upcomingIdx = filled.findIndex(p => p.week_date >= today)
     setPages(filled)
@@ -313,6 +322,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           existingDates={pages.map(p => p.week_date)}
           targetDow={targetDow}
           intervalDays={intervalDays}
+          weekOccurrences={weekOccurrences}
         />
       )}
     </>

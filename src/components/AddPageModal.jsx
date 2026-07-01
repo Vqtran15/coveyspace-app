@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
 import { toDateString } from '../utils/dates.js'
+import { nextScheduledDate } from '../utils/schedule.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 
-function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7) {
+function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
+  if (weekOccurrences && weekOccurrences.length > 0 && targetDow !== null) {
+    let d = nextScheduledDate(today, targetDow, weekOccurrences)
+    while (d && existingDates.includes(toDateString(d))) {
+      d = nextScheduledDate(d, targetDow, weekOccurrences)
+    }
+    return d ?? today
+  }
+
   let d = new Date(today)
   if (targetDow !== null) {
     const diff = d.getDay() === targetDow ? 7 : (targetDow - d.getDay() + 7) % 7
@@ -22,9 +32,9 @@ function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7
   return d
 }
 
-export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [], onClose, onSave, existingDates, targetDow = null, intervalDays = 7 }) {
+export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [], onClose, onSave, existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null }) {
   const [closing, close] = useModalClose(onClose)
-  const defaultDate = findNextAvailableDate(existingDates, targetDow, intervalDays)
+  const defaultDate = findNextAvailableDate(existingDates, targetDow, intervalDays, weekOccurrences)
   const defaultDateStr = toDateString(defaultDate)
 
   const [title, setTitle]         = useState(defaultTitle(defaultDateStr))

@@ -6,6 +6,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { nextScheduledDate } from '../utils/schedule.js'
 import {
   AVATAR_ICON_LIST,
   AVATAR_COLOR_OPTIONS,
@@ -72,6 +73,20 @@ const FEATURE_TOGGLES = [
   { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Link to your discussion guide',   Icon: Link,           color: 'text-jade' },
 ]
 
+function weekOccToMode(occ) {
+  if (!occ || occ.length === 5) return 'weekly'
+  if (occ.length === 2 && ((occ[0]===1&&occ[1]===3)||(occ[0]===2&&occ[1]===4))) return 'biweekly'
+  return 'custom'
+}
+function weekOccToPat(occ) {
+  return (occ?.[0]===1 && occ?.[1]===3) ? 'odd' : 'even'
+}
+function modeToWeekOcc(mode, pat, customWeeks) {
+  if (mode === 'weekly')   return [1, 2, 3, 4, 5]
+  if (mode === 'biweekly') return pat === 'odd' ? [1, 3] : [2, 4]
+  return customWeeks
+}
+
 export default function WelcomeSplash({
   groupName, onDone, isAdmin,
   userId, displayName, groupId,
@@ -107,11 +122,16 @@ export default function WelcomeSplash({
   const [savingFeatures, setSavingFeatures] = useState(false)
 
   // ── Setup (admin) ──────────────────────────────────────────────────────────
-  const [mealDow,        setMealDow]        = useState(groupSettings?.meal_day_of_week    ?? null)
-  const [mealInterval,   setMealInterval]   = useState(groupSettings?.meal_interval_days  ?? 7)
-  const [mealNames,      setMealNames]      = useState(['', ''])
-  const [serviceDow,     setServiceDow]     = useState(groupSettings?.service_day_of_week ?? null)
-  const [serviceAutofill,setServiceAutofill]= useState(groupSettings?.service_autofill    ?? false)
+  const [mealDow,           setMealDow]           = useState(groupSettings?.meal_day_of_week ?? null)
+  const [mealFreqMode,      setMealFreqMode]      = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
+  const [mealBiweeklyPat,   setMealBiweeklyPat]   = useState(() => weekOccToPat(groupSettings?.meal_week_occurrences))
+  const [mealCustomWeeks,   setMealCustomWeeks]   = useState(groupSettings?.meal_week_occurrences ?? [1, 2, 3, 4, 5])
+  const [mealNames,         setMealNames]         = useState(['', ''])
+  const [serviceDow,        setServiceDow]        = useState(groupSettings?.service_day_of_week ?? null)
+  const [serviceFreqMode,   setServiceFreqMode]   = useState(() => weekOccToMode(groupSettings?.service_week_occurrences ?? [1]))
+  const [serviceBiweeklyPat,setServiceBiweeklyPat]= useState(() => weekOccToPat(groupSettings?.service_week_occurrences ?? [1]))
+  const [serviceCustomWeeks,setServiceCustomWeeks]= useState(groupSettings?.service_week_occurrences ?? [1])
+  const [serviceAutofill,   setServiceAutofill]   = useState(groupSettings?.service_autofill ?? false)
   const [savingSetup,    setSavingSetup]    = useState(false)
 
   // ── Invite (admin) ─────────────────────────────────────────────────────────
@@ -179,15 +199,6 @@ export default function WelcomeSplash({
     setStep('setup')
   }
 
-  function nextDowDate(dow, intervalDays) {
-    const today = new Date()
-    if (dow === null || dow === undefined) return today
-    const diff = (dow - today.getDay() + 7) % 7
-    const d = new Date(today)
-    d.setDate(today.getDate() + (diff === 0 ? intervalDays : diff))
-    return d
-  }
-
   function dateStr(d) {
     const y  = d.getFullYear()
     const m  = String(d.getMonth() + 1).padStart(2, '0')
@@ -199,12 +210,13 @@ export default function WelcomeSplash({
     setSavingSetup(true)
     const patch = {}
     if (features.meals_enabled) {
-      patch.meal_day_of_week   = mealDow
-      patch.meal_interval_days = mealInterval
+      patch.meal_day_of_week      = mealDow
+      patch.meal_week_occurrences = modeToWeekOcc(mealFreqMode, mealBiweeklyPat, mealCustomWeeks)
     }
     if (features.services_enabled) {
-      patch.service_day_of_week = serviceDow
-      patch.service_autofill    = serviceAutofill
+      patch.service_day_of_week      = serviceDow
+      patch.service_week_occurrences = modeToWeekOcc(serviceFreqMode, serviceBiweeklyPat, serviceCustomWeeks)
+      patch.service_autofill         = serviceAutofill
     }
     if (Object.keys(patch).length > 0) {
       const { data, error } = await supabase.from('group_settings')
@@ -215,11 +227,19 @@ export default function WelcomeSplash({
     }
 
     const names = mealNames.map(n => n.trim()).filter(Boolean)
-    if (features.meals_enabled && names.length > 0) {
-      const start = nextDowDate(mealDow, mealInterval)
+    if (features.meals_enabled && names.length > 0 && mealDow !== null) {
+      // Generate the first N occurrence dates using nth-weekday logic
+      const dates = []
+      let from = new Date(); from.setHours(0, 0, 0, 0); from.setDate(from.getDate() - 1)
+      for (let i = 0; i < names.length; i++) {
+        const d = nextScheduledDate(from, mealDow, modeToWeekOcc(mealFreqMode, mealBiweeklyPat, mealCustomWeeks))
+        if (!d) break
+        dates.push(d)
+        from = new Date(d)
+      }
       const rows = names.map((title, i) => ({
         title,
-        week_date: dateStr(new Date(start.getTime() + i * mealInterval * 86_400_000)),
+        week_date: dates[i] ? dateStr(dates[i]) : dateStr(new Date()),
         slot_count: 4,
         slot_dishes: [],
         position: i,
@@ -507,13 +527,14 @@ export default function WelcomeSplash({
                   {/* Frequency */}
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">How often?</p>
-                    <div className="flex gap-2">
-                      {[{ label: 'Weekly', days: 7 }, { label: 'Every 2 weeks', days: 14 }].map(({ label, days }) => (
+                    <div className="flex gap-1.5">
+                      {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
                         <button
-                          key={days}
-                          onClick={() => setMealInterval(days)}
+                          key={value}
+                          type="button"
+                          onClick={() => setMealFreqMode(value)}
                           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            mealInterval === days ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            mealFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                           }`}
                         >
                           {label}
@@ -521,6 +542,52 @@ export default function WelcomeSplash({
                       ))}
                     </div>
                   </div>
+                  {mealFreqMode === 'biweekly' && (
+                    <div>
+                      <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
+                      <div className="flex gap-1.5">
+                        {[{ label: '1st & 3rd', value: 'odd' }, { label: '2nd & 4th', value: 'even' }].map(({ label, value }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setMealBiweeklyPat(value)}
+                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                              mealBiweeklyPat === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {mealFreqMode === 'custom' && (
+                    <div>
+                      <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
+                      <div className="flex gap-1">
+                        {['1st', '2nd', '3rd', '4th', '5th'].map((label, idx) => {
+                          const n = idx + 1
+                          const selected = mealCustomWeeks.includes(n)
+                          return (
+                            <button
+                              key={n}
+                              type="button"
+                              onClick={() => setMealCustomWeeks(prev =>
+                                prev.includes(n)
+                                  ? prev.length > 1 ? prev.filter(x => x !== n) : prev
+                                  : [...prev, n].sort((a, b) => a - b)
+                              )}
+                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                   {/* Meal names */}
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Name your meals <span className="font-normal">(optional)</span></p>
@@ -574,24 +641,89 @@ export default function WelcomeSplash({
                       ))}
                     </div>
                   </div>
-                  {/* Day of week (only if autofill on) */}
+                  {/* Day of week + week occurrences (only if autofill on) */}
                   {serviceAutofill && (
-                    <div>
-                      <p className="text-xs text-stone-400 font-medium mb-2">Which day does service meet?</p>
-                      <div className="flex gap-1">
-                        {DOW_LABELS.map((d, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setServiceDow(serviceDow === i ? null : i)}
-                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                              serviceDow === i ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                            }`}
-                          >
-                            {d}
-                          </button>
-                        ))}
+                    <>
+                      <div>
+                        <p className="text-xs text-stone-400 font-medium mb-2">Which day does service meet?</p>
+                        <div className="flex gap-1">
+                          {DOW_LABELS.map((d, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setServiceDow(serviceDow === i ? null : i)}
+                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                serviceDow === i ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              }`}
+                            >
+                              {d}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                      <div>
+                        <p className="text-xs text-stone-400 font-medium mb-2">How often?</p>
+                        <div className="flex gap-1.5">
+                          {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setServiceFreqMode(value)}
+                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                serviceFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {serviceFreqMode === 'biweekly' && (
+                        <div>
+                          <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
+                          <div className="flex gap-1.5">
+                            {[{ label: '1st & 3rd', value: 'odd' }, { label: '2nd & 4th', value: 'even' }].map(({ label, value }) => (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => setServiceBiweeklyPat(value)}
+                                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                  serviceBiweeklyPat === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {serviceFreqMode === 'custom' && (
+                        <div>
+                          <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
+                          <div className="flex gap-1">
+                            {['1st', '2nd', '3rd', '4th', '5th'].map((label, idx) => {
+                              const n = idx + 1
+                              const selected = serviceCustomWeeks.includes(n)
+                              return (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  onClick={() => setServiceCustomWeeks(prev =>
+                                    prev.includes(n)
+                                      ? prev.length > 1 ? prev.filter(x => x !== n) : prev
+                                      : [...prev, n].sort((a, b) => a - b)
+                                  )}
+                                  className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                    selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

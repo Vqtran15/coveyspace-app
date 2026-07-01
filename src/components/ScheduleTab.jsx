@@ -79,8 +79,8 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
           key={`${segment}-${refreshKey}`}
           ref={rotationRef}
           config={segment === 'meals'
-            ? { ...mealsConfig, intervalDays: groupSettings?.meal_interval_days ?? 7, targetDow: groupSettings?.meal_day_of_week ?? null }
-            : { ...servicesConfig, autoFill: groupSettings?.service_autofill ?? false, intervalDays: groupSettings?.service_interval_days ?? 28, targetDow: groupSettings?.service_day_of_week ?? null }
+            ? { ...mealsConfig, intervalDays: groupSettings?.meal_interval_days ?? 7, targetDow: groupSettings?.meal_day_of_week ?? null, weekOccurrences: groupSettings?.meal_week_occurrences ?? null }
+            : { ...servicesConfig, autoFill: groupSettings?.service_autofill ?? false, intervalDays: groupSettings?.service_interval_days ?? 28, targetDow: groupSettings?.service_day_of_week ?? null, weekOccurrences: groupSettings?.service_week_occurrences ?? null }
           }
           revealKey={segment}
           groupName={groupName}

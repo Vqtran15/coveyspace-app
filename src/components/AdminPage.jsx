@@ -5,6 +5,12 @@ import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
+function weekOccToMode(occ) {
+  if (!occ || occ.length === 5) return 'weekly'
+  if (occ.length === 2 && ((occ[0]===1&&occ[1]===3)||(occ[0]===2&&occ[1]===4))) return 'biweekly'
+  return 'custom'
+}
+
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
@@ -37,6 +43,8 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [guideUrlOpen, setGuideUrlOpen] = useState(false)
   const [guideUrlValue, setGuideUrlValue] = useState('')
   const [guideUrlSaving, setGuideUrlSaving] = useState(false)
+  const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
+  const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
 
   useEffect(() => {
     if (!isAdmin) { navigate('/home', { replace: true }); return }
@@ -336,13 +344,6 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             })}
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">The Sign Up tab is removed from the nav when both Meal and Service sign-ups are disabled.</p>
-          <a
-            href="mailto:hello@coveyspace.com"
-            className="mt-3 w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-xl transition-colors"
-          >
-            <EnvelopeSimple size={15} weight="bold" className="text-stone-400" />
-            Bugs &amp; feature requests
-          </a>
         </section>
 
         {/* Meal Schedule */}
@@ -369,23 +370,77 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             </div>
             <div>
               <p className="text-xs text-stone-400 font-medium mb-2">Frequency</p>
-              <div className="flex gap-2">
-                {[{ label: 'Weekly', days: 7 }, { label: 'Every 2 weeks', days: 14 }].map(({ label, days }) => (
+              <div className="flex gap-1.5">
+                {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
                   <button
-                    key={days}
-                    onClick={() => handleSaveRotation({ meal_interval_days: days })}
+                    key={value}
+                    onClick={() => {
+                      setMealFreqMode(value)
+                      if (value === 'weekly')   handleSaveRotation({ meal_week_occurrences: [1,2,3,4,5] })
+                      if (value === 'biweekly') handleSaveRotation({ meal_week_occurrences: [2,4] })
+                    }}
                     className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                      (groupSettings?.meal_interval_days ?? 7) === days
-                        ? 'bg-jade text-white'
-                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                      mealFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                     }`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
+              {mealFreqMode === 'biweekly' && (() => {
+                const occ = groupSettings?.meal_week_occurrences ?? [2,4]
+                return (
+                  <div className="mt-3">
+                    <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
+                    <div className="flex gap-1.5">
+                      {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
+                        <button
+                          key={label}
+                          onClick={() => handleSaveRotation({ meal_week_occurrences: pat })}
+                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                            JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+              {mealFreqMode === 'custom' && (() => {
+                const occ = groupSettings?.meal_week_occurrences ?? [1,2,3,4,5]
+                return (
+                  <div className="mt-3">
+                    <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
+                    <div className="flex gap-1">
+                      {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
+                        const n = idx + 1
+                        const selected = occ.includes(n)
+                        return (
+                          <button
+                            key={n}
+                            onClick={() => {
+                              const next = selected
+                                ? occ.length > 1 ? occ.filter(x => x !== n) : occ
+                                : [...occ, n].sort((a,b) => a-b)
+                              handleSaveRotation({ meal_week_occurrences: next })
+                            }}
+                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                              selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           </div>
+          <p className="text-xs text-stone-400 mt-2 px-1">New meals are automatically created on these days using your existing meals as a rotating template.</p>
         </section>
 
         {/* Service Schedule */}
@@ -393,7 +448,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Service Schedule</p>
           <div className="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
             <div className="flex gap-2">
-              {[{ label: 'Off', val: false }, { label: 'On (monthly)', val: true }].map(({ label, val }) => (
+              {[{ label: 'Off', val: false }, { label: 'Auto-schedule', val: true }].map(({ label, val }) => (
                 <button
                   key={String(val)}
                   onClick={() => handleSaveRotation({ service_autofill: val })}
@@ -408,26 +463,100 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               ))}
             </div>
             {groupSettings?.service_autofill && (
-              <div>
-                <p className="text-xs text-stone-400 font-medium mb-2">Day of week</p>
-                <div className="flex gap-1.5">
-                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSaveRotation({ service_day_of_week: groupSettings?.service_day_of_week === i ? null : i })}
-                      className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                        groupSettings?.service_day_of_week === i
-                          ? 'bg-jade text-white'
-                          : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                      }`}
-                    >
-                      {d}
-                    </button>
-                  ))}
+              <>
+                <div>
+                  <p className="text-xs text-stone-400 font-medium mb-2">Day of week</p>
+                  <div className="flex gap-1.5">
+                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSaveRotation({ service_day_of_week: groupSettings?.service_day_of_week === i ? null : i })}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                          groupSettings?.service_day_of_week === i
+                            ? 'bg-jade text-white'
+                            : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+                <div>
+                  <p className="text-xs text-stone-400 font-medium mb-2">Frequency</p>
+                  <div className="flex gap-1.5">
+                    {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
+                      <button
+                        key={value}
+                        onClick={() => {
+                          setServiceFreqMode(value)
+                          if (value === 'weekly')   handleSaveRotation({ service_week_occurrences: [1,2,3,4,5] })
+                          if (value === 'biweekly') handleSaveRotation({ service_week_occurrences: [2,4] })
+                        }}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                          serviceFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {serviceFreqMode === 'biweekly' && (() => {
+                    const occ = groupSettings?.service_week_occurrences ?? [2,4]
+                    return (
+                      <div className="mt-3">
+                        <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
+                        <div className="flex gap-1.5">
+                          {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
+                            <button
+                              key={label}
+                              onClick={() => handleSaveRotation({ service_week_occurrences: pat })}
+                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  {serviceFreqMode === 'custom' && (() => {
+                    const occ = groupSettings?.service_week_occurrences ?? [1]
+                    return (
+                      <div className="mt-3">
+                        <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
+                        <div className="flex gap-1">
+                          {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
+                            const n = idx + 1
+                            const selected = occ.includes(n)
+                            return (
+                              <button
+                                key={n}
+                                onClick={() => {
+                                  const next = selected
+                                    ? occ.length > 1 ? occ.filter(x => x !== n) : occ
+                                    : [...occ, n].sort((a,b) => a-b)
+                                  handleSaveRotation({ service_week_occurrences: next })
+                                }}
+                                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                  selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              </>
             )}
           </div>
+          <p className="text-xs text-stone-400 mt-2 px-1">New service events are automatically created on these days using your existing events as a rotating template.</p>
         </section>
 
         {/* Guide Link */}
@@ -475,6 +604,14 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             </button>
           )}
         </section>
+
+        <a
+          href="mailto:hello@coveyspace.com"
+          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-xl transition-colors"
+        >
+          <EnvelopeSimple size={15} weight="bold" className="text-stone-400" />
+          Leave feedback
+        </a>
       </div>
     </div>
   )
