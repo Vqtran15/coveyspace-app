@@ -108,6 +108,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [unreadCount, setUnreadCount]         = useState(0)
   const [myLastReadAt, setMyLastReadAt]       = useState(undefined) // undefined = not yet fetched
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
+  const [contentReady, setContentReady]       = useState(false)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -159,6 +160,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setUnreadCount(0)
     setMyLastReadAt(undefined)
     setFirstUnreadId(null)
+    setContentReady(false)
     initialScrollDoneRef.current = false
     suppressUnreadClearRef.current = false
     setText(localStorage.getItem(`draft:${convId}`) ?? '')
@@ -301,6 +303,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         suppressUnreadClearRef.current = true
         setTimeout(() => {
           document.getElementById(`msg-${firstUnread.id}`)?.scrollIntoView({ block: 'start' })
+          setContentReady(true)
           setTimeout(() => { suppressUnreadClearRef.current = false }, 200)
         }, 30)
         return
@@ -308,6 +311,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
 
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    setContentReady(true)
   }, [loading, myLastReadAt, messages])
 
   // ── Typing presence ───────────────────────────────────────────────────────
@@ -821,7 +825,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           </div>
         )}
 
-        {loading ? (
+        {(loading || !contentReady) ? (
           <div className="space-y-3 py-4">
             {[
               { side: 'left',  w: 'w-48' },
