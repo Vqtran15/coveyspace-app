@@ -3,6 +3,7 @@ import { UsersThree } from '@phosphor-icons/react'
 
 const STAGING_HOST = 'staging.app.coveyspace.com'
 const SESSION_KEY  = 'staging_auth'
+const EMAIL        = import.meta.env.VITE_STAGING_EMAIL
 const PASSWORD     = import.meta.env.VITE_STAGING_PASSWORD
 
 function isStaging() {
@@ -11,6 +12,7 @@ function isStaging() {
 
 export default function StagingGate({ children }) {
   const [authed, setAuthed]   = useState(() => sessionStorage.getItem(SESSION_KEY) === '1')
+  const [email, setEmail]     = useState('')
   const [input, setInput]     = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError]     = useState(null)
@@ -23,11 +25,12 @@ export default function StagingGate({ children }) {
       setError('mismatch')
       return
     }
-    if (input === PASSWORD) {
+    if (email === EMAIL && input === PASSWORD) {
       sessionStorage.setItem(SESSION_KEY, '1')
       setAuthed(true)
     } else {
       setError('wrong')
+      setEmail('')
       setInput('')
       setConfirm('')
     }
@@ -45,13 +48,25 @@ export default function StagingGate({ children }) {
         <p className="text-center text-stone-400 text-sm mb-8">Staging environment</p>
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6 flex flex-col gap-4">
           <div>
+            <label className="block text-xs font-semibold text-stone-500 mb-1.5">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setError(null) }}
+              placeholder="Enter your email"
+              autoFocus
+              className={`w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors ${
+                error === 'wrong' ? 'border-red-400 bg-red-50' : 'border-stone-200 focus:border-jade'
+              }`}
+            />
+          </div>
+          <div>
             <label className="block text-xs font-semibold text-stone-500 mb-1.5">Password</label>
             <input
               type="password"
               value={input}
               onChange={e => { setInput(e.target.value); setError(null) }}
               placeholder="Enter staging password"
-              autoFocus
               className={`w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors ${
                 error === 'wrong' ? 'border-red-400 bg-red-50' : 'border-stone-200 focus:border-jade'
               }`}
@@ -69,7 +84,7 @@ export default function StagingGate({ children }) {
               }`}
             />
             {error === 'mismatch' && <p className="text-red-500 text-xs mt-1.5">Passwords do not match</p>}
-            {error === 'wrong'    && <p className="text-red-500 text-xs mt-1.5">Incorrect password</p>}
+            {error === 'wrong'    && <p className="text-red-500 text-xs mt-1.5">Incorrect email or password</p>}
           </div>
           <button
             type="submit"
