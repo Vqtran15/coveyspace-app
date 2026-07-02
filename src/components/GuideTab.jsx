@@ -41,7 +41,7 @@ function AddGuideModal({ onClose, onSave }) {
         <form onSubmit={handleSave} className="px-5 pb-6 space-y-4">
           <input
             autoFocus
-            type="url"
+            type="text"
             value={url}
             onChange={e => { setUrl(e.target.value); setError(null) }}
             placeholder="https://example.com/guide"
