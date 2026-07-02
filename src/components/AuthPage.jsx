@@ -161,7 +161,7 @@ export default function AuthPage() {
 
           {/* Animated form content */}
           <div key={animKey} className={animClass}>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="p-6 space-y-4">
 
               {/* Forgot password sub-header */}
               {mode === 'forgot' && (
