@@ -15,7 +15,7 @@ export default function BirthdayBanner({ upcoming }) {
           <div className="flex-1 min-w-0 space-y-1.5">
             {upcoming.map(b => (
               <div key={b.id} className="flex items-center justify-between gap-4">
-                <span className="font-semibold text-stone-800 truncate">{(() => { const p = b.name.trim().split(' '); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] })()}</span>
+                <span className="font-semibold text-stone-800 truncate">{(() => { const p = (b.name ?? '').trim().split(' ').filter(Boolean); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? '' })()}</span>
                 <span className={`text-sm font-medium shrink-0 ${
                   b.daysUntil === 0 ? 'text-jade' : 'text-stone-500'
                 }`}>
