@@ -150,7 +150,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
       onClick={close}
     >
       <div
-        className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full lg:max-w-lg flex flex-col max-h-[90vh] lg:max-h-[85vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full lg:max-w-lg flex flex-col min-h-[50vh] max-h-[90vh] lg:max-h-[85vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         style={{
           marginBottom: keyboardOffset,
           ...(keyboardOffset > 0 && { maxHeight: `${window.innerHeight - keyboardOffset - 32}px` }),

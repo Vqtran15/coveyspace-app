@@ -344,8 +344,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             : prayerCard && (
               <Card
                 onClick={() => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } })}
-                icon={<HandsPraying size={24} weight="fill" className="text-jade" />}
-                iconBg="bg-jade/10"
+                icon={<HandsPraying size={24} weight="fill" className="text-sage-700" />}
+                iconBg="bg-sage-50"
                 label="Pray for Today"
                 primary={prayerCard.profile?.display_name ?? 'Someone'}
                 secondary={prayerCard.request}
