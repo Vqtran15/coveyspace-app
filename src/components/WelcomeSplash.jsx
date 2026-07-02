@@ -451,7 +451,7 @@ export default function WelcomeSplash({
           <button
             onClick={handleFeaturesNext}
             disabled={savingFeatures}
-            className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
+            className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40"
           >
             {savingFeatures ? 'Saving…' : 'Next'}
           </button>
@@ -703,7 +703,7 @@ export default function WelcomeSplash({
             <button
               onClick={handleSetupNext}
               disabled={savingSetup}
-              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
+              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40"
             >
               {savingSetup ? 'Saving…' : 'Next'}
             </button>

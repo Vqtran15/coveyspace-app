@@ -76,7 +76,7 @@ export default function ResetPasswordPage({ onDone }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="w-full py-3 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm"
             >
               {loading ? 'Updating…' : 'Update Password'}
             </button>

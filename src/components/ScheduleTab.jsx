@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ListBullets } from '@phosphor-icons/react'
 import RotationTab from '../RotationTab.jsx'
+import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 
 export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin, groupSettings, refreshKey = 0 }) {
   const location = useLocation()
@@ -10,14 +11,18 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
   const defaultSegment  = location.state?.segment ?? (mealsEnabled ? 'meals' : 'services')
   const [segment, setSegment] = useState(defaultSegment)
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
+  const [localRefreshKey, setLocalRefreshKey] = useState(0)
   const switchingRef = useRef(false)
   const rotationRef = useRef(null)
+
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(
+    () => setLocalRefreshKey(k => k + 1)
+  )
 
   function switchTo(newSeg) {
     if (newSeg === segment || switchingRef.current) return
     switchingRef.current = true
     const goRight = newSeg === 'services'
-    // Apply exit animation, then swap segment so RotationTab remounts with entry animation
     setAnimClass(goRight ? 'animate-slide-out-left' : 'animate-slide-out-right')
     setTimeout(() => {
       setSegment(newSeg)
@@ -28,6 +33,17 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
 
   return (
     <div>
+      {pullDistance > 0 && (
+        <div
+          className="fixed inset-x-0 z-30 flex justify-center transition-transform"
+          style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
+        >
+          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
+            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          </div>
+        </div>
+      )}
+
       <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-3">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold text-stone-800">Sign Up</h1>
@@ -76,7 +92,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
 
       <div className={animClass}>
         <RotationTab
-          key={`${segment}-${refreshKey}`}
+          key={`${segment}-${refreshKey}-${localRefreshKey}`}
           ref={rotationRef}
           config={segment === 'meals'
             ? { ...mealsConfig, intervalDays: groupSettings?.meal_interval_days ?? 7, targetDow: groupSettings?.meal_day_of_week ?? null, weekOccurrences: groupSettings?.meal_week_occurrences ?? null }

@@ -190,7 +190,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
             <button
               type="submit"
               disabled={saving || !requestText.trim()}
-              className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
             >
               <Plus size={16} weight="bold" />
               {saving ? 'Adding…' : 'Add Request'}
@@ -241,7 +241,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
                         <button
                           type="submit"
                           disabled={!editText.trim()}
-                          className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-50 transition-colors"
+                          className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
                         >
                           Save
                         </button>
@@ -442,7 +442,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         </div>
       ) : filteredMembers.length === 0 ? (
         <div className="text-center py-12 text-stone-400">
-          <MagnifyingGlass size={32} className="mx-auto mb-2 text-stone-300" />
+          <MagnifyingGlass size={40} className="mx-auto mb-2 text-stone-300" />
           <p className="text-sm">No members match "{searchQuery}"</p>
         </div>
       ) : (

@@ -208,7 +208,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+              className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
             >
               {saving ? 'Adding…' : `Add ${pageNoun}`}
             </button>

@@ -219,7 +219,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 <button
                   onClick={onPushToggle}
                   disabled={pushToggling}
-                  className="w-full flex items-center gap-3 px-1 py-2.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-1 py-2.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
                 >
                   {pushSubscribed
                     ? <Bell size={18} weight="fill" className="text-jade shrink-0" />
@@ -282,7 +282,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                         onClick={() => handleSelectColor(key)}
                         disabled={savingColor}
                         title={label}
-                        className={`w-9 h-9 rounded-full ${bgClass} flex items-center justify-center transition-transform active:scale-95 disabled:opacity-50 ${
+                        className={`w-9 h-9 rounded-full ${bgClass} flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40 ${
                           avatarColorKey === key ? 'ring-2 ring-offset-2 ring-stone-400 scale-110' : ''
                         }`}
                       >
@@ -505,7 +505,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                   <button
                     onClick={handleLeaveGroup}
                     disabled={leaving}
-                    className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-lg transition-colors disabled:opacity-50"
+                    className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-lg transition-colors disabled:opacity-40"
                   >
                     {leaving ? 'Leaving…' : 'Leave'}
                   </button>
@@ -540,7 +540,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                   <button
                     onClick={handleDeleteAccount}
                     disabled={deleting}
-                    className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                    className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-40"
                   >
                     {deleting ? 'Deleting…' : 'Delete Forever'}
                   </button>

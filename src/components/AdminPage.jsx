@@ -24,9 +24,12 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
 
   const [inviteCode, setInviteCode] = useState(null)
   const [codeRotating, setCodeRotating] = useState(false)
+  const [confirmRotate, setConfirmRotate] = useState(false)
   const [members, setMembers] = useState([])
   const [settingRoleId, setSettingRoleId] = useState(null)
   const [removingId, setRemovingId] = useState(null)
+  const [confirmRoleAction, setConfirmRoleAction] = useState(null) // { id, newRole }
+  const [confirmRemoveId, setConfirmRemoveId] = useState(null)
   const [groupNameOpen, setGroupNameOpen] = useState(false)
   const [groupNameValue, setGroupNameValue] = useState('')
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
@@ -57,7 +60,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   }, [groupId, isAdmin])
 
   async function handleRotate() {
-    if (!window.confirm('Generate a new invite code? The old code will stop working immediately.')) return
+    setConfirmRotate(false)
     setCodeRotating(true)
     const { data, error } = await supabase.rpc('rotate_invite_code')
     if (!error) setInviteCode(data)
@@ -65,31 +68,38 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   }
 
   async function handleSetRole(targetId, newRole) {
-    const member = members.find(m => m.user_id === targetId)
-    const msg = newRole === 'admin'
-      ? `Make ${member?.display_name ?? 'this member'} an admin?`
-      : `Remove admin rights from ${member?.display_name ?? 'this member'}?`
-    if (!window.confirm(msg)) return
+    setConfirmRoleAction(null)
     setSettingRoleId(targetId)
+    const member = members.find(m => m.user_id === targetId)
     const { error } = await supabase.rpc('set_member_role', { target_user_id: targetId, new_role: newRole })
-    if (error) toast(error.message, 'error')
-    else setMembers(prev => {
-      const updated = prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m)
-      return updated.slice().sort((a, b) => {
-        if (a.role === 'admin' && b.role !== 'admin') return -1
-        if (b.role === 'admin' && a.role !== 'admin') return 1
-        return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+    if (error) {
+      toast(error.message, 'error')
+    } else {
+      setMembers(prev => {
+        const updated = prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m)
+        return updated.slice().sort((a, b) => {
+          if (a.role === 'admin' && b.role !== 'admin') return -1
+          if (b.role === 'admin' && a.role !== 'admin') return 1
+          return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+        })
       })
-    })
+      const name = member?.display_name ?? 'Member'
+      toast(newRole === 'admin' ? `${name} is now an admin` : `${name}'s admin access was removed`, 'success')
+    }
     setSettingRoleId(null)
   }
 
   async function handleRemoveMember(targetId) {
     const member = members.find(m => m.user_id === targetId)
-    if (!window.confirm(`Remove ${member?.display_name ?? 'this member'} from the group?`)) return
+    setConfirmRemoveId(null)
     setRemovingId(targetId)
     const { error } = await supabase.rpc('remove_member', { target_user_id: targetId })
-    if (!error) setMembers(prev => prev.filter(m => m.user_id !== targetId))
+    if (error) {
+      toast(error.message, 'error')
+    } else {
+      setMembers(prev => prev.filter(m => m.user_id !== targetId))
+      toast(`${member?.display_name ?? 'Member'} was removed from the group`, 'success')
+    }
     setRemovingId(null)
   }
 
@@ -231,15 +241,38 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 <span className="font-mono font-bold text-3xl tracking-widest text-stone-800 flex-1">
                   {codeRotating ? '……' : inviteCode}
                 </span>
-                <button
-                  onClick={handleRotate}
-                  disabled={codeRotating}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-jade hover:bg-jade-700 transition-colors shrink-0 disabled:opacity-40"
-                >
-                  {codeRotating ? 'Resetting…' : 'Reset invite code'}
-                </button>
+                {confirmRotate ? (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setConfirmRotate(false)}
+                      className="px-3 py-2 rounded-xl text-sm font-medium text-stone-600 bg-white border border-stone-200 hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleRotate}
+                      disabled={codeRotating}
+                      className="px-3 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-40"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmRotate(true)}
+                    disabled={codeRotating}
+                    className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-jade hover:bg-jade-700 transition-colors shrink-0 disabled:opacity-40"
+                  >
+                    {codeRotating ? 'Resetting…' : 'Reset invite code'}
+                  </button>
+                )}
               </div>
-              <p className="text-xs text-stone-400">Share this code with people you want to invite.</p>
+              {confirmRotate && (
+                <p className="text-xs text-red-500 mb-1">The old code will stop working immediately.</p>
+              )}
+              {!confirmRotate && (
+                <p className="text-xs text-stone-400">Share this code with people you want to invite.</p>
+              )}
             </div>
           </section>
         )}
@@ -263,38 +296,80 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             {membersOpen && (
               <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100">
                 {members.map(m => (
-                  <div key={m.user_id} className="flex items-center gap-3 px-4 py-3.5">
-                    <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-stone-700 truncate">{m.display_name}</span>
-                        {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
+                  <div key={m.user_id} className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium text-stone-700 truncate">{m.display_name}</span>
+                          {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
+                        </div>
+                        {m.role === 'admin' && (
+                          <span className="text-xs text-jade font-semibold flex items-center gap-1">
+                            <ShieldCheck size={10} weight="fill" /> Admin
+                          </span>
+                        )}
                       </div>
-                      {m.role === 'admin' && (
-                        <span className="text-xs text-jade font-semibold flex items-center gap-1">
-                          <ShieldCheck size={10} weight="fill" /> Admin
-                        </span>
+                      {m.user_id !== userId && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => setConfirmRoleAction({ id: m.user_id, newRole: m.role === 'admin' ? 'member' : 'admin' })}
+                            disabled={!!settingRoleId}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
+                              m.role === 'admin'
+                                ? 'bg-jade/10 text-jade hover:bg-jade/20'
+                                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            }`}
+                          >
+                            {settingRoleId === m.user_id ? '…' : m.role === 'admin' ? 'Admin ✓' : 'Make Admin'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmRemoveId(m.user_id)}
+                            disabled={removingId === m.user_id}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+                          >
+                            {removingId === m.user_id ? <span className="text-[10px]">…</span> : <X size={15} weight="bold" />}
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {m.user_id !== userId && (
-                      <div className="flex items-center gap-2 shrink-0">
+                    {/* Inline role confirmation */}
+                    {confirmRoleAction?.id === m.user_id && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <p className="flex-1 text-xs text-stone-500">
+                          {confirmRoleAction.newRole === 'admin'
+                            ? `Make ${m.display_name} an admin?`
+                            : `Remove admin rights from ${m.display_name}?`}
+                        </p>
                         <button
-                          onClick={() => handleSetRole(m.user_id, m.role === 'admin' ? 'member' : 'admin')}
-                          disabled={!!settingRoleId}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
-                            m.role === 'admin'
-                              ? 'bg-jade/10 text-jade hover:bg-jade/20'
-                              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
+                          onClick={() => setConfirmRoleAction(null)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
                         >
-                          {settingRoleId === m.user_id ? '…' : m.role === 'admin' ? 'Admin ✓' : 'Make Admin'}
+                          Cancel
                         </button>
                         <button
-                          onClick={() => handleRemoveMember(m.user_id)}
-                          disabled={removingId === m.user_id}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+                          onClick={() => handleSetRole(confirmRoleAction.id, confirmRoleAction.newRole)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-jade hover:bg-jade-700 transition-colors"
                         >
-                          {removingId === m.user_id ? <span className="text-[10px]">…</span> : <X size={15} weight="bold" />}
+                          Confirm
+                        </button>
+                      </div>
+                    )}
+                    {/* Inline remove confirmation */}
+                    {confirmRemoveId === m.user_id && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <p className="flex-1 text-xs text-stone-500">Remove {m.display_name} from the group?</p>
+                        <button
+                          onClick={() => setConfirmRemoveId(null)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleRemoveMember(confirmRemoveId)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                        >
+                          Remove
                         </button>
                       </div>
                     )}
@@ -343,7 +418,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Meal Schedule</p>
           <div className="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
             <div>
-              <p className="text-xs text-stone-400 font-medium mb-2">Day of week</p>
+              <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
               <div className="flex gap-1.5">
                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
                   <button
@@ -361,7 +436,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               </div>
             </div>
             <div>
-              <p className="text-xs text-stone-400 font-medium mb-2">Frequency</p>
+              <p className="text-xs text-stone-400 font-semibold mb-2">Frequency</p>
               <div className="flex gap-1.5">
                 {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
                   <button
@@ -383,7 +458,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 const occ = groupSettings?.meal_week_occurrences ?? [2,4]
                 return (
                   <div className="mt-3">
-                    <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
+                    <p className="text-xs text-stone-400 font-semibold mb-2">Which pattern?</p>
                     <div className="flex gap-1.5">
                       {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
                         <button
@@ -404,7 +479,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 const occ = groupSettings?.meal_week_occurrences ?? [1,2,3,4,5]
                 return (
                   <div className="mt-3">
-                    <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
+                    <p className="text-xs text-stone-400 font-semibold mb-2">Which weeks of the month?</p>
                     <div className="flex gap-1">
                       {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
                         const n = idx + 1
@@ -457,7 +532,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             {groupSettings?.service_autofill && (
               <>
                 <div>
-                  <p className="text-xs text-stone-400 font-medium mb-2">Day of week</p>
+                  <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
                   <div className="flex gap-1.5">
                     {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
                       <button
@@ -475,7 +550,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-stone-400 font-medium mb-2">Frequency</p>
+                  <p className="text-xs text-stone-400 font-semibold mb-2">Frequency</p>
                   <div className="flex gap-1.5">
                     {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
                       <button
@@ -497,7 +572,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                     const occ = groupSettings?.service_week_occurrences ?? [2,4]
                     return (
                       <div className="mt-3">
-                        <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
+                        <p className="text-xs text-stone-400 font-semibold mb-2">Which pattern?</p>
                         <div className="flex gap-1.5">
                           {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
                             <button
@@ -515,10 +590,10 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                     )
                   })()}
                   {serviceFreqMode === 'custom' && (() => {
-                    const occ = groupSettings?.service_week_occurrences ?? [1]
+                    const occ = groupSettings?.service_week_occurrences ?? [1,2,3,4,5]
                     return (
                       <div className="mt-3">
-                        <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
+                        <p className="text-xs text-stone-400 font-semibold mb-2">Which weeks of the month?</p>
                         <div className="flex gap-1">
                           {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
                             const n = idx + 1
@@ -548,20 +623,20 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               </>
             )}
           </div>
-          <p className="text-xs text-stone-400 mt-2 px-1">New service events are automatically created on these days using your existing events as a rotating template.</p>
+          <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
         </section>
 
-        {/* Guide Link */}
+        {/* Guide URL */}
         <section>
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Guide Link</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Community Guide</p>
           {guideUrlOpen ? (
             <form onSubmit={handleSaveGuideUrl} className="space-y-2">
               <input
                 autoFocus
-                type="text"
-                placeholder="https://example.com/guide"
+                type="url"
                 value={guideUrlValue}
                 onChange={e => setGuideUrlValue(e.target.value)}
+                placeholder="https://example.com/guide"
                 className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
               />
               <div className="flex gap-2">
@@ -586,24 +661,11 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
               className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700 hover:bg-stone-50 transition-colors"
             >
-              <PencilSimple size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left truncate">
-                {groupSettings?.guide_url
-                  ? <span className="text-stone-500">{groupSettings.guide_url}</span>
-                  : <span className="text-stone-400 italic">No custom link set</span>
-                }
-              </span>
+              <EnvelopeSimple size={16} weight="bold" className="text-stone-400 shrink-0" />
+              <span className="flex-1 text-left truncate">{groupSettings?.guide_url ?? 'Add a guide link…'}</span>
             </button>
           )}
         </section>
-
-        <a
-          href="mailto:hello@coveyspace.com"
-          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-xl transition-colors"
-        >
-          <EnvelopeSimple size={15} weight="bold" className="text-stone-400" />
-          Leave feedback
-        </a>
       </div>
     </div>
   )
