@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, EnvelopeSimple, CaretDown } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, BookOpen, CaretDown } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -661,7 +661,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
               className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700 hover:bg-stone-50 transition-colors"
             >
-              <EnvelopeSimple size={16} weight="bold" className="text-stone-400 shrink-0" />
+              <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
               <span className="flex-1 text-left truncate">{groupSettings?.guide_url ?? 'Add a guide link…'}</span>
             </button>
           )}
