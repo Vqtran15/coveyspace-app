@@ -201,7 +201,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   const nextBirthday = sortedBirthdays[0]
   const sameDayGroup = nextBirthday
-    ? sortedBirthdays.filter(b => b.days === nextBirthday.days).map(b => { const p = b.name.trim().split(' '); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] })
+    ? sortedBirthdays.filter(b => b.days === nextBirthday.days).map(b => { const p = (b.name ?? '').trim().split(' ').filter(Boolean); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? '' })
     : []
 
   function joinNames(names) {
