@@ -5,6 +5,7 @@ import ChatView from './ChatView.jsx'
 
 export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [] }) {
   const [activeConv, setActiveConv]           = useState(null)
+  const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
   const [members, setMembers]                 = useState([])
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
@@ -41,6 +42,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   }, [displayName])
 
   function openConv(conv) {
+    setOpenedWithLastReadAt(localStorage.getItem(`readAt:${conv.id}`))
     setListClass('')
     setActiveConv(conv)
   }
@@ -67,6 +69,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
         exiting={chatExiting}
         onBack={goBack}
         onRead={onRead}
+        openedWithLastReadAt={openedWithLastReadAt}
       />
     )
   }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import EmojiPicker from 'emoji-picker-react'
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
-  MagnifyingGlass, ArrowDown, Trash, ArrowLeft, Notepad,
+  MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
   Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -68,7 +68,7 @@ function typingLabel(users) {
   return `${users.length} people are typing…`
 }
 
-export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead }) {
+export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null }) {
   const [messages, setMessages]         = useState([])
   const [loading, setLoading]           = useState(true)
   const [hasMore, setHasMore]           = useState(false)
@@ -107,6 +107,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [memberReadTimes, setMemberReadTimes] = useState({})
   const [unreadCount, setUnreadCount]         = useState(0)
   const [contentReady, setContentReady]       = useState(false)
+  const [firstUnreadId, setFirstUnreadId]     = useState(null)
+  const [openUnreadCount, setOpenUnreadCount] = useState(0)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -157,6 +159,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setMemberReadTimes({})
     setUnreadCount(0)
     setContentReady(false)
+    setFirstUnreadId(null)
+    setOpenUnreadCount(0)
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
     setText(localStorage.getItem(`draft:${convId}`) ?? '')
@@ -288,21 +292,36 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }, [convId])
 
   // ── Initial scroll: always go to bottom ─────────────────────────────────
-  // contentReady gates the skeleton → we set it true here so messages render
-  // into the DOM, then the useLayoutEffect below executes the scroll
-  // synchronously after commit (guaranteeing elements exist in the DOM).
   useEffect(() => {
     if (loading || initialScrollDoneRef.current) return
     initialScrollDoneRef.current = true
+
+    if (openedWithLastReadAt) {
+      const unread = messages.filter(m => m.created_at > openedWithLastReadAt && m.user_id !== myId)
+      if (unread.length > 0) {
+        setFirstUnreadId(unread[0].id)
+        setOpenUnreadCount(unread.length)
+      }
+    }
+
     pendingScrollRef.current = { type: 'bottom' }
     setContentReady(true)
   }, [loading, messages])
 
-  // Executes the pending scroll after messages are committed to the DOM.
+  // Scroll to bottom synchronously after messages enter the DOM.
   useLayoutEffect(() => {
     if (!contentReady || !pendingScrollRef.current) return
     pendingScrollRef.current = null
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [contentReady])
+
+  // Belt-and-suspenders: re-scroll after images may have affected layout height.
+  useEffect(() => {
+    if (!contentReady) return
+    const t = setTimeout(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }, 150)
+    return () => clearTimeout(t)
   }, [contentReady])
 
   // ── Typing presence ───────────────────────────────────────────────────────
@@ -378,6 +397,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         supabase.from('conversation_members')
           .update({ last_read_at: now })
           .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+      }
+      if (firstUnreadId) setFirstUnreadId(null)
+    }
+    // Dismiss unread pill once user has scrolled up to see those messages
+    if (firstUnreadId) {
+      const msgEl = document.getElementById(`msg-${firstUnreadId}`)
+      if (msgEl) {
+        const containerRect = el.getBoundingClientRect()
+        const msgRect = msgEl.getBoundingClientRect()
+        if (msgRect.top < containerRect.bottom) setFirstUnreadId(null)
       }
     }
     if (el.scrollTop < 60 && hasMore && !loadingMore) loadMore()
@@ -795,6 +824,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               {filteredMsgs.length} {filteredMsgs.length === 1 ? 'message' : 'messages'} found
             </p>
           )}
+        </div>
+      )}
+
+      {/* Unread pill */}
+      {firstUnreadId && !searchOpen && (
+        <div className="shrink-0 flex justify-center py-1.5 animate-overlay-in">
+          <button
+            onClick={() => {
+              document.getElementById(`msg-${firstUnreadId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              setFirstUnreadId(null)
+            }}
+            className="flex items-center gap-1.5 bg-jade text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md"
+          >
+            <ArrowUp size={12} weight="bold" />
+            {openUnreadCount} new message{openUnreadCount !== 1 ? 's' : ''}
+          </button>
         </div>
       )}
 
