@@ -271,7 +271,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             <p className="text-stone-500 text-sm mb-2">Add your first {pageNoun.toLowerCase()} to get started.</p>
             {autoFill && (
               <p className="text-stone-400 text-xs mb-6 max-w-xs mx-auto">
-                Once you have {pageNounPlural.toLowerCase()}, new {pageNounPlural.toLowerCase()} are automatically scheduled each week using your existing {pageNounPlural.toLowerCase()} as a rotating template — so upcoming weeks are always ready.
+                Once you have {pageNounPlural.toLowerCase()}, new {pageNounPlural.toLowerCase()} are automatically scheduled {intervalDays >= 28 ? 'each month' : weekOccurrences && weekOccurrences.length <= 2 ? 'biweekly' : 'each week'} using your existing {pageNounPlural.toLowerCase()} as a rotating template — so upcoming dates are always ready.
               </p>
             )}
             {!autoFill && <div className="mb-6" />}
