@@ -121,6 +121,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const isAtBottomRef              = useRef(true)
   const initialScrollDoneRef       = useRef(false)
   const suppressUnreadClearRef     = useRef(false)
+  const pendingScrollRef           = useRef(null)
 
   const myId = session.user.id
   const convId = conversation.id
@@ -161,6 +162,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(false)
     initialScrollDoneRef.current = false
     suppressUnreadClearRef.current = false
+    pendingScrollRef.current = null
     setText(localStorage.getItem(`draft:${convId}`) ?? '')
 
     supabase
@@ -290,6 +292,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }, [convId])
 
   // ── Initial scroll: first unread or bottom ───────────────────────────────
+  // We set contentReady=true first so messages render into the DOM, then
+  // pendingScrollRef is consumed by the useLayoutEffect below which fires
+  // synchronously after the DOM update — guaranteeing the target element exists.
   useEffect(() => {
     if (loading || initialScrollDoneRef.current) return
     initialScrollDoneRef.current = true
@@ -299,23 +304,31 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       const firstUnread = messages.find(m => !m._tempId && m.user_id !== myId && new Date(m.created_at) > readTime)
       if (firstUnread) {
         setFirstUnreadId(firstUnread.id)
-        // Mark not-at-bottom so new incoming messages don't yank user away from unread position
         setIsAtBottom(false)
         isAtBottomRef.current = false
-        // Suppress handleScroll from immediately clearing the divider via the programmatic scroll event
         suppressUnreadClearRef.current = true
-        setTimeout(() => {
-          document.getElementById(`msg-${firstUnread.id}`)?.scrollIntoView({ block: 'start' })
-          setContentReady(true)
-          setTimeout(() => { suppressUnreadClearRef.current = false }, 200)
-        }, 30)
+        pendingScrollRef.current = { type: 'id', id: firstUnread.id }
+        setContentReady(true)
         return
       }
     }
 
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    pendingScrollRef.current = { type: 'bottom' }
     setContentReady(true)
   }, [loading, messages])
+
+  // Executes the pending initial scroll after messages are in the DOM.
+  useLayoutEffect(() => {
+    if (!contentReady || !pendingScrollRef.current) return
+    const pending = pendingScrollRef.current
+    pendingScrollRef.current = null
+    if (pending.type === 'bottom') {
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    } else if (pending.type === 'id') {
+      document.getElementById(`msg-${pending.id}`)?.scrollIntoView({ block: 'start' })
+      setTimeout(() => { suppressUnreadClearRef.current = false }, 200)
+    }
+  }, [contentReady])
 
   // ── Typing presence ───────────────────────────────────────────────────────
   useEffect(() => {
