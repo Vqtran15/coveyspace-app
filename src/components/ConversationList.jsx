@@ -5,19 +5,7 @@ import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
-
-function initials(name) {
-  return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
-
-function formatTime(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const now = new Date()
-  if (d.toDateString() === now.toDateString())
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
+import { initials, formatListTime } from '../utils/format.js'
 
 export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [] }) {
   const [conversations, setConversations] = useState([])
@@ -384,7 +372,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                           {name}
                         </span>
                         <span className={`text-xs shrink-0 ${unread ? 'font-semibold text-jade' : 'text-stone-400'}`}>
-                          {formatTime(lastMessages[conv.id]?.created_at)}
+                          {formatListTime(lastMessages[conv.id]?.created_at)}
                         </span>
                       </div>
                       <p className={`text-xs truncate mt-0.5 ${unread ? 'text-stone-700 font-medium' : 'text-stone-400'}`}>

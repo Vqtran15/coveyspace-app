@@ -1,3 +1,9 @@
+export function weekOccToMode(occ) {
+  if (!occ || occ.length === 5) return 'weekly'
+  if (occ.length === 2 && ((occ[0]===1&&occ[1]===3)||(occ[0]===2&&occ[1]===4))) return 'biweekly'
+  return 'custom'
+}
+
 // Returns [{n, date}] for every occurrence of `dow` (0=Sun) in the given month
 function getWeekdayOccurrencesInMonth(year, month, dow) {
   const results = []

@@ -10,14 +10,13 @@ import { useModalClose } from '../hooks/useModalClose.js'
 import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
+import { initials, formatMessageTime } from '../utils/format.js'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
 const GROUP_TIME_GAP = 5 * 60 * 1000
-
-function initials(name) {
-  return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
+const DRAFT_KEY  = convId => `draft:${convId}`
+const READ_AT_KEY = convId => `readAt:${convId}`
 
 function Initials({ name, userId, icon, colorKey }) {
   return (
@@ -28,14 +27,6 @@ function Initials({ name, userId, icon, colorKey }) {
       }
     </div>
   )
-}
-
-function formatTime(iso) {
-  const d = new Date(iso)
-  const now = new Date()
-  if (d.toDateString() === now.toDateString())
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
 function dateSeparatorLabel(iso) {
@@ -74,7 +65,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [loading, setLoading]           = useState(true)
   const [hasMore, setHasMore]           = useState(false)
   const [loadingMore, setLoadingMore]   = useState(false)
-  const [text, setText]                 = useState(() => localStorage.getItem(`draft:${conversation.id}`) ?? '')
+  const [text, setText]                 = useState(() => localStorage.getItem(DRAFT_KEY(conversation.id)) ?? '')
   const [sending, setSending]           = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [searchOpen, setSearchOpen]     = useState(false)
@@ -165,7 +156,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setOpenUnreadCount(0)
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
-    setText(localStorage.getItem(`draft:${convId}`) ?? '')
+    setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
 
     supabase
       .from('messages')
@@ -203,7 +194,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         if (msg.user_id !== myId) {
           if (isAtBottomRef.current) {
             const now = new Date().toISOString()
-            localStorage.setItem(`readAt:${convId}`, now)
+            localStorage.setItem(READ_AT_KEY(convId), now)
             supabase.from('conversation_members')
               .update({ last_read_at: now })
               .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
@@ -262,7 +253,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
     // Mark ourselves as read on enter
     const openTime = new Date().toISOString()
-    localStorage.setItem(`readAt:${convId}`, openTime)
+    localStorage.setItem(READ_AT_KEY(convId), openTime)
     supabase.from('conversation_members')
       .update({ last_read_at: openTime })
       .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
@@ -284,7 +275,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
       const closeTime = new Date().toISOString()
-      localStorage.setItem(`readAt:${convId}`, closeTime)
+      localStorage.setItem(READ_AT_KEY(convId), closeTime)
       supabase.from('conversation_members')
         .update({ last_read_at: closeTime })
         .eq('conversation_id', convId)
@@ -393,7 +384,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     isAtBottomRef.current = atBottom
     if (atBottom) {
       const now = new Date().toISOString()
-      localStorage.setItem(`readAt:${convId}`, now)
+      localStorage.setItem(READ_AT_KEY(convId), now)
       if (unreadCount > 0) {
         setUnreadCount(0)
         supabase.from('conversation_members')
@@ -442,8 +433,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function handleTextInput(e) {
     const val = e.target.value
     setText(val)
-    if (val) localStorage.setItem(`draft:${convId}`, val)
-    else localStorage.removeItem(`draft:${convId}`)
+    if (val) localStorage.setItem(DRAFT_KEY(convId), val)
+    else localStorage.removeItem(DRAFT_KEY(convId))
     e.target.style.height = 'auto'
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
     if (presenceChannelRef.current) {
@@ -486,7 +477,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         created_at: new Date().toISOString(), _isNew: true,
       }])
       setText('')
-      localStorage.removeItem(`draft:${convId}`)
+      localStorage.removeItem(DRAFT_KEY(convId))
       setImagePreview(null)
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
       sendImage(tempId, captured.file, captured.previewUrl, trimmed || null, replyId)
@@ -509,7 +500,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, _isNew: true }])
       }
       setText('')
-      localStorage.removeItem(`draft:${convId}`)
+      localStorage.removeItem(DRAFT_KEY(convId))
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
       console.error('Send failed:', err)
@@ -1070,7 +1061,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
                     {isLastInGroup && (
                       <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-400'}`}>
-                        {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatTime(msg.created_at)}
+                        {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatMessageTime(msg.created_at)}
                       </p>
                     )}
 

@@ -6,10 +6,7 @@ import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AVATAR_ICON_LIST, AVATAR_COLOR_OPTIONS, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
-
-function initials(name) {
-  return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
+import { initials } from '../utils/format.js'
 
 function AvatarCircle({ icon, name, userId, colorKey, size = 'md' }) {
   const dim = size === 'lg' ? 'w-16 h-16' : size === 'sm' ? 'w-7 h-7' : 'w-10 h-10'
@@ -135,6 +132,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     if (newPw !== confirmPw) { setPwError('New passwords don\'t match.'); return }
     setPwSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setPwError('Session expired. Please log in again.'); setPwSaving(false); return }
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: currentPw,
