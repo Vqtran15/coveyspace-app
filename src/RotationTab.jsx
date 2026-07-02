@@ -64,7 +64,7 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
 }
 
 const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }, ref) {
-  const { label, Icon, editLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null, weekOccurrences = null } = config
+  const { label, Icon, editLabel, editSubLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null, weekOccurrences = null } = config
 
   const [pages, setPages]       = useState([])
   const [viewIndex, setViewIndex] = useState(0)
@@ -250,6 +250,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             page={viewedPage}
             noun={noun}
             itemNoun={itemNoun}
+            pageNoun={pageNoun}
             editLabel={editLabel}
             tables={tables}
             revealKey={revealKey}
@@ -288,6 +289,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
       {showPages && (
         <PagesModal
           editLabel={editLabel}
+          editSubLabel={editSubLabel}
           pageNounPlural={pageNounPlural}
           onEditPage={viewedPage ? () => { setShowPages(false); setShowEditPage(true) } : undefined}
           onManagePages={() => { setShowPages(false); setShowManagePages(true) }}
