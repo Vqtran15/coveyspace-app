@@ -47,7 +47,6 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
     // or DB value — localStorage is synchronous so it has no race condition
     const localReadAt = localStorage.getItem(`readAt:${conv.id}`)
     const best = [readAtMap[conv.id], localReadAt, dbLastReadAt].filter(Boolean).sort().pop() ?? null
-    console.log('[chat] openConv', { convId: conv.id, readAtMap: readAtMap[conv.id], localReadAt, dbLastReadAt, best })
     setCapturedLastReadAt(best)
     setListClass('')
     setActiveConv(conv)
