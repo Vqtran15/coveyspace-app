@@ -1,20 +1,28 @@
 import { useState } from 'react'
 import { BookOpen, ArrowSquareOut, ArrowLeft, Link } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { useToast } from '../lib/toast.jsx'
 
 function AddGuideModal({ onClose, onSave }) {
   const [closing, close] = useModalClose(onClose)
   const [url, setUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const toast = useToast()
 
   async function handleSave(e) {
     e.preventDefault()
     setSaving(true)
     setError(null)
     const { error: saveError } = await onSave(url)
-    if (saveError) { setError('Failed to save. Please try again.'); setSaving(false) }
-    else close()
+    if (saveError) {
+      setError('Failed to save. Please try again.')
+      toast('Failed to save guide link', 'error')
+      setSaving(false)
+    } else {
+      toast('Guide link saved', 'success')
+      close()
+    }
   }
 
   return (
