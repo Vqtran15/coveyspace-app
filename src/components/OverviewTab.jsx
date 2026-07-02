@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString } from '../utils/dates.js'
@@ -130,11 +130,12 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true }) {
   const navigate = useNavigate()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
   const [announcement, setAnnouncement]     = useState(undefined)
+  const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
 
   async function load() {
@@ -148,8 +149,44 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     setNextService(serviceRes.data ?? null)
 
     if (groupId) {
-      const { data } = await supabase.from('community_groups').select('announcement').eq('id', groupId).single()
-      setAnnouncement(data?.announcement ?? null)
+      const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
+      const [{ data: groupData }, { data: memberData }] = await Promise.all([
+        supabase.from('community_groups').select('announcement').eq('id', groupId).single(),
+        prayerEnabled
+          ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId)
+          : Promise.resolve({ data: [] }),
+      ])
+      setAnnouncement(groupData?.announcement ?? null)
+
+      if (prayerEnabled) {
+        const memberIds = (memberData ?? []).map(m => m.user_id)
+        if (memberIds.length > 0) {
+          const { data: requestData } = await supabase
+            .from('prayer_requests')
+            .select('id, member_user_id, request, created_at')
+            .in('member_user_id', memberIds)
+            .gte('created_at', cutoff)
+            .order('created_at', { ascending: false })
+          const profileMap = Object.fromEntries((memberData ?? []).map(p => [p.user_id, p]))
+          const seen = new Set()
+          const uniqueUsers = []
+          for (const r of requestData ?? []) {
+            if (!seen.has(r.member_user_id)) {
+              seen.add(r.member_user_id)
+              uniqueUsers.push({ ...r, profile: profileMap[r.member_user_id] })
+            }
+          }
+          if (uniqueUsers.length > 0) {
+            const d = new Date()
+            const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
+            setPrayerCard(uniqueUsers[seed % uniqueUsers.length])
+          } else {
+            setPrayerCard(null)
+          }
+        } else {
+          setPrayerCard(null)
+        }
+      }
     }
   }
 
@@ -301,6 +338,21 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 delay={showAnnouncement ? 160 : 80}
               />
         )}
+        {prayerEnabled && (
+          prayerCard === undefined
+            ? <CardSkeleton delay={showAnnouncement ? 240 : 160} />
+            : prayerCard && (
+              <Card
+                onClick={() => navigate('/prayer')}
+                icon={<HandsPraying size={24} weight="fill" className="text-violet-500" />}
+                iconBg="bg-violet-50"
+                label="Pray for Today"
+                primary={prayerCard.profile?.display_name ?? 'Someone'}
+                secondary={prayerCard.request}
+                delay={showAnnouncement ? 240 : 160}
+              />
+            )
+        )}
         {birthdaysEnabled && (
           <Card
             onClick={onOpenBirthdays}
@@ -308,7 +360,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             iconBg="bg-lagoon-50"
             label="Upcoming Birthdays"
             primary={birthdayPrimary()}
-            delay={showAnnouncement ? 240 : 160}
+            delay={showAnnouncement ? 320 : 240}
             confetti={!!nextBirthday && nextBirthday.days <= 30}
           />
         )}
@@ -320,7 +372,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             label="Guide"
             primary="Community Guide"
             secondary="Tap to open"
-            delay={showAnnouncement ? 320 : 240}
+            delay={showAnnouncement ? 400 : 320}
           />
         )}
 
