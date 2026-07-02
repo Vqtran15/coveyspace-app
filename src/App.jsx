@@ -22,7 +22,8 @@ import UpdatePrompt from './components/UpdatePrompt.jsx'
 const MEALS_CONFIG = {
   label: 'Meal Signup',
   Icon: ForkKnife,
-  editLabel: 'Edit Meal',
+  editLabel: 'Edit this meal',
+  editSubLabel: 'Edit title, date, and ingredients',
   noun: 'Ingredient',
   itemNoun: 'Ingredient',
   pageNoun: 'Meal',
@@ -35,7 +36,8 @@ const MEALS_CONFIG = {
 const SERVICES_CONFIG = {
   label: 'Service',
   Icon: HandHeart,
-  editLabel: 'Edit Items',
+  editLabel: 'Edit this service',
+  editSubLabel: 'Edit title, date, and sign-up slots',
   noun: 'Item',
   itemNoun: 'Item',
   pageNoun: 'Service',

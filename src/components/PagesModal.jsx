@@ -1,7 +1,7 @@
 import { ListBullets, PencilSimple } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
-export default function PagesModal({ editLabel, pageNounPlural, onEditPage, onManagePages, onClose }) {
+export default function PagesModal({ editLabel, editSubLabel, pageNounPlural, onEditPage, onManagePages, onClose }) {
   const [closing, close] = useModalClose(onClose)
 
   return (
@@ -38,7 +38,7 @@ export default function PagesModal({ editLabel, pageNounPlural, onEditPage, onMa
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-semibold text-stone-800">{editLabel}</div>
-                  <div className="text-xs text-stone-400 mt-0.5">Edit title, date, and ingredients</div>
+                  <div className="text-xs text-stone-400 mt-0.5">{editSubLabel}</div>
                 </div>
               </div>
             </button>
@@ -52,7 +52,7 @@ export default function PagesModal({ editLabel, pageNounPlural, onEditPage, onMa
                 <ListBullets size={16} weight="bold" className="text-lagoon-700" />
               </div>
               <div className="text-left">
-                <div className="text-sm font-semibold text-stone-800">Manage {pageNounPlural.toLowerCase()}</div>
+                <div className="text-sm font-semibold text-stone-800">Manage all {pageNounPlural.toLowerCase()}</div>
                 <div className="text-xs text-stone-400 mt-0.5">Add, view, and reorder {pageNounPlural.toLowerCase()}</div>
               </div>
             </div>

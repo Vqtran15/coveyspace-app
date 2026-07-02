@@ -7,7 +7,7 @@ import SlotCard from './SlotCard.jsx'
 import SignupModal from './SignupModal.jsx'
 import EditDishesModal from './EditDishesModal.jsx'
 
-export default function MealPage({ page, noun, itemNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, isAdmin = false }) {
+export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, isAdmin = false }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -289,6 +289,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
         <EditDishesModal
           page={page}
           noun={noun}
+          pageNoun={pageNoun}
           signups={signups}
           onClose={onEditClose}
           onSave={handleSaveDishes}
