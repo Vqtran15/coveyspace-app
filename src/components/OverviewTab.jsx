@@ -25,6 +25,11 @@ function shortDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+function shortName(full) {
+  const parts = (full ?? '').trim().split(' ').filter(Boolean)
+  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] ?? ''
+}
+
 function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false }) {
   return (
     <button
@@ -347,7 +352,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 icon={<HandsPraying size={24} weight="fill" className="text-sage-700" />}
                 iconBg="bg-sage-50"
                 label="Pray for Today"
-                primary={prayerCard.profile?.display_name ?? 'Someone'}
+                primary={shortName(prayerCard.profile?.display_name) || 'Someone'}
                 secondary={prayerCard.request}
                 delay={showAnnouncement ? 240 : 160}
               />
