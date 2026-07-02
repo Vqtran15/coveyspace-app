@@ -37,25 +37,6 @@ function ProgressDots({ steps, currentStep }) {
   )
 }
 
-function StepShell({ steps, currentStep, onBack, bg = 'bg-sunrise-50', children, closing = false }) {
-  const idx = steps.indexOf(currentStep)
-  return (
-    <div className={`fixed inset-0 ${bg} flex flex-col z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
-      <ProgressDots steps={steps} currentStep={currentStep} />
-      {idx > 0 && (
-        <button
-          onClick={onBack}
-          className="absolute left-6 flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors text-sm font-medium"
-          style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
-        >
-          <ArrowLeft size={16} weight="bold" /> Back
-        </button>
-      )}
-      {children}
-    </div>
-  )
-}
-
 const TOUR_CARDS = [
   { Icon: ChatCircleDots, color: 'bg-sage/20 text-sage-700',     title: 'Group Chat',        desc: 'A main group chat, plus direct messages and smaller group threads.' },
   { Icon: ForkKnife,      color: 'bg-jade/10 text-jade',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
@@ -228,7 +209,6 @@ export default function WelcomeSplash({
 
     const names = mealNames.map(n => n.trim()).filter(Boolean)
     if (features.meals_enabled && names.length > 0 && mealDow !== null) {
-      // Generate the first N occurrence dates using nth-weekday logic
       const dates = []
       let from = new Date(); from.setHours(0, 0, 0, 0); from.setDate(from.getDate() - 1)
       for (let i = 0; i < names.length; i++) {
@@ -277,60 +257,68 @@ export default function WelcomeSplash({
     touchStartX.current = null
   }
 
-  // ── STEP: welcome ──────────────────────────────────────────────────────────
-  if (step === 'welcome') {
-    return (
-      <StepShell key="welcome" steps={steps} currentStep="welcome" onBack={null}>
-        <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
-          <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.1s' }}>
-            <Confetti size={80} weight="fill" />
-          </div>
-          {isAdmin ? (
-            <>
-              <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-                You created
-              </p>
-              <h1 className="text-3xl font-bold text-jade text-center mb-3 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-                {groupName || 'your group'}
-              </h1>
-              <div className="flex items-center gap-1.5 mb-8 animate-fade-up" style={{ animationDelay: '0.48s' }}>
-                <ShieldCheck size={14} weight="fill" className="text-amber-500" />
-                <p className="text-xs font-semibold text-amber-500 uppercase tracking-wide">You're the admin</p>
-              </div>
-              <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
-                Let's get your group set up. It only takes a minute.
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-                You joined
-              </p>
-              <h1 className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
-                {groupName || 'your group'}
-              </h1>
-              <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
-                Let's get you set up so your group knows who you are.
-              </p>
-            </>
-          )}
-          <button
-            onClick={() => setStep('personalize')}
-            className="px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
-            style={{ animationDelay: '0.65s' }}
-          >
-            Let's go
-          </button>
-        </div>
-      </StepShell>
-    )
-  }
+  const stepIdx = steps.indexOf(step)
 
-  // ── STEP: personalize ──────────────────────────────────────────────────────
-  if (step === 'personalize') {
-    const bgClass = getAvatarColor(userId, colorKey)
-    return (
-      <StepShell key="personalize" steps={steps} currentStep="personalize" onBack={() => setStep('welcome')}>
+  const onBack = (() => {
+    if (step === 'personalize') return () => setStep('welcome')
+    if (step === 'features')   return () => setStep('personalize')
+    if (step === 'setup')      return () => setStep('features')
+    if (step === 'invite')     return () => setStep('setup')
+    if (step === 'tour')       return () => setStep('personalize')
+    if (step === 'install')    return () => setStep(isAdmin ? 'invite' : 'tour')
+    return null
+  })()
+
+  function renderStep() {
+    // ── STEP: welcome ──────────────────────────────────────────────────────────
+    if (step === 'welcome') return (
+      <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
+        <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.1s' }}>
+          <Confetti size={80} weight="fill" />
+        </div>
+        {isAdmin ? (
+          <>
+            <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+              You created
+            </p>
+            <h1 className="text-3xl font-bold text-jade text-center mb-3 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+              {groupName || 'your group'}
+            </h1>
+            <div className="flex items-center gap-1.5 mb-8 animate-fade-up" style={{ animationDelay: '0.48s' }}>
+              <ShieldCheck size={14} weight="fill" className="text-amber-500" />
+              <p className="text-xs font-semibold text-amber-500 uppercase tracking-wide">You're the admin</p>
+            </div>
+            <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+              Let's get your group set up. It only takes a minute.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+              You joined
+            </p>
+            <h1 className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+              {groupName || 'your group'}
+            </h1>
+            <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+              Let's get you set up so your group knows who you are.
+            </p>
+          </>
+        )}
+        <button
+          onClick={() => setStep('personalize')}
+          className="px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
+          style={{ animationDelay: '0.65s' }}
+        >
+          Let's go
+        </button>
+      </div>
+    )
+
+    // ── STEP: personalize ──────────────────────────────────────────────────────
+    if (step === 'personalize') {
+      const bgClass = getAvatarColor(userId, colorKey)
+      return (
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
             <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Make it yours</h1>
@@ -338,7 +326,6 @@ export default function WelcomeSplash({
               Pick an avatar and add your birthday.
             </p>
 
-            {/* Avatar preview */}
             <div className="flex justify-center mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
               <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bgClass}`}>
                 {avatarIcon
@@ -350,7 +337,6 @@ export default function WelcomeSplash({
               </div>
             </div>
 
-            {/* Color picker */}
             <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Color</p>
               <div className="flex gap-2 flex-wrap">
@@ -369,7 +355,6 @@ export default function WelcomeSplash({
               </div>
             </div>
 
-            {/* Icon picker */}
             <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-5 animate-fade-up" style={{ animationDelay: '0.28s' }}>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Icon</p>
               <div className="grid grid-cols-6 gap-1.5 max-h-44 overflow-y-auto scrollbar-hide">
@@ -390,7 +375,6 @@ export default function WelcomeSplash({
               </div>
             </div>
 
-            {/* Birthday */}
             <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.36s' }}>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday</p>
               <p className="text-xs text-stone-400 mb-3">Your group will be reminded so they can celebrate you.</p>
@@ -426,72 +410,65 @@ export default function WelcomeSplash({
             </button>
           </div>
         </div>
-      </StepShell>
-    )
-  }
+      )
+    }
 
-  // ── STEP: features (admin only) ────────────────────────────────────────────
-  if (step === 'features') {
-    return (
-      <StepShell key="features" steps={steps} currentStep="features" onBack={() => setStep('personalize')}>
-        <div className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
-            <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Set up features</h1>
-            <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-              Turn on what your group needs. You can change these anytime in Admin settings.
-            </p>
+    // ── STEP: features (admin only) ────────────────────────────────────────────
+    if (step === 'features') return (
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
+          <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Set up features</h1>
+          <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+            Turn on what your group needs. You can change these anytime in Admin settings.
+          </p>
 
-            <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-              {FEATURE_TOGGLES.map(({ key, label, desc, Icon, color }, i) => (
-                <div key={key}>
-                  <div className={`flex items-center gap-3 px-4 py-3.5 ${i < FEATURE_TOGGLES.length - 1 ? 'border-b border-stone-100' : ''}`}>
-                    <Icon size={18} weight="fill" className={`${color} shrink-0`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-700">{label}</p>
-                      <p className="text-xs text-stone-400">{desc}</p>
-                    </div>
-                    <button
-                      onClick={() => setFeatures(f => ({ ...f, [key]: !f[key] }))}
-                      className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${features[key] ? 'bg-jade' : 'bg-stone-200'}`}
-                    >
-                      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${features[key] ? 'left-[22px]' : 'left-0.5'}`} />
-                    </button>
+          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+            {FEATURE_TOGGLES.map(({ key, label, desc, Icon, color }, i) => (
+              <div key={key}>
+                <div className={`flex items-center gap-3 px-4 py-3.5 ${i < FEATURE_TOGGLES.length - 1 ? 'border-b border-stone-100' : ''}`}>
+                  <Icon size={18} weight="fill" className={`${color} shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-stone-700">{label}</p>
+                    <p className="text-xs text-stone-400">{desc}</p>
                   </div>
-                  {key === 'guide_enabled' && features.guide_enabled && (
-                    <div className="px-4 pb-3">
-                      <input
-                        type="url"
-                        placeholder="https://your-guide-url.com"
-                        value={guideUrl}
-                        onChange={e => setGuideUrl(e.target.value)}
-                        className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                      />
-                    </div>
-                  )}
+                  <button
+                    onClick={() => setFeatures(f => ({ ...f, [key]: !f[key] }))}
+                    className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${features[key] ? 'bg-jade' : 'bg-stone-200'}`}
+                  >
+                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${features[key] ? 'left-[22px]' : 'left-0.5'}`} />
+                  </button>
                 </div>
-              ))}
-            </div>
-
-            <button
-              onClick={handleFeaturesNext}
-              disabled={savingFeatures}
-              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
-            >
-              {savingFeatures ? 'Saving…' : 'Next'}
-            </button>
+                {key === 'guide_enabled' && features.guide_enabled && (
+                  <div className="px-4 pb-3">
+                    <input
+                      type="url"
+                      placeholder="https://your-guide-url.com"
+                      value={guideUrl}
+                      onChange={e => setGuideUrl(e.target.value)}
+                      className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
+
+          <button
+            onClick={handleFeaturesNext}
+            disabled={savingFeatures}
+            className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-50"
+          >
+            {savingFeatures ? 'Saving…' : 'Next'}
+          </button>
         </div>
-      </StepShell>
+      </div>
     )
-  }
 
-  // ── STEP: setup (admin only) ──────────────────────────────────────────────
-  if (step === 'setup') {
-    const showMeals    = features.meals_enabled
-    const showServices = features.services_enabled
-
-    return (
-      <StepShell key="setup" steps={steps} currentStep="setup" onBack={() => setStep('features')}>
+    // ── STEP: setup (admin only) ───────────────────────────────────────────────
+    if (step === 'setup') {
+      const showMeals    = features.meals_enabled
+      const showServices = features.services_enabled
+      return (
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
             <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Set up your schedule</h1>
@@ -499,7 +476,6 @@ export default function WelcomeSplash({
               Tell us when your group meets so the rotation is ready from day one.
             </p>
 
-            {/* ── Meals ─────────────────────────────────────────── */}
             {showMeals && (
               <div className="mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
                 <div className="flex items-center gap-2 mb-3">
@@ -507,7 +483,6 @@ export default function WelcomeSplash({
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Meals</p>
                 </div>
                 <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
-                  {/* Day of week */}
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Which day do you meet?</p>
                     <div className="flex gap-1">
@@ -524,7 +499,6 @@ export default function WelcomeSplash({
                       ))}
                     </div>
                   </div>
-                  {/* Frequency */}
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">How often?</p>
                     <div className="flex gap-1.5">
@@ -588,7 +562,6 @@ export default function WelcomeSplash({
                       </div>
                     </div>
                   )}
-                  {/* Meal names */}
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Name your meals <span className="font-normal">(optional)</span></p>
                     <div className="space-y-2">
@@ -616,7 +589,6 @@ export default function WelcomeSplash({
               </div>
             )}
 
-            {/* ── Services ──────────────────────────────────────── */}
             {showServices && (
               <div className="mb-6 animate-fade-up" style={{ animationDelay: showMeals ? '0.22s' : '0.15s' }}>
                 <div className="flex items-center gap-2 mb-3">
@@ -624,7 +596,6 @@ export default function WelcomeSplash({
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Service</p>
                 </div>
                 <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
-                  {/* Auto-fill toggle */}
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Auto-schedule monthly rotations?</p>
                     <div className="flex gap-2">
@@ -641,7 +612,6 @@ export default function WelcomeSplash({
                       ))}
                     </div>
                   </div>
-                  {/* Day of week + week occurrences (only if autofill on) */}
                   {serviceAutofill && (
                     <>
                       <div>
@@ -729,7 +699,6 @@ export default function WelcomeSplash({
               </div>
             )}
 
-            {/* ── Neither enabled ────────────────────────────────── */}
             {!showMeals && !showServices && (
               <div className="bg-white border border-stone-100 rounded-2xl p-6 shadow-sm text-center mb-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
                 <p className="text-stone-400 text-sm">No schedule to configure — you can always enable features later in Admin settings.</p>
@@ -751,74 +720,68 @@ export default function WelcomeSplash({
             </button>
           </div>
         </div>
-      </StepShell>
-    )
-  }
+      )
+    }
 
-  // ── STEP: invite (admin only) ──────────────────────────────────────────────
-  if (step === 'invite') {
-    return (
-      <StepShell key="invite" steps={steps} currentStep="invite" onBack={() => setStep('setup')}>
-        <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
-          <div className="mb-5 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
-            <Users size={64} weight="fill" />
+    // ── STEP: invite (admin only) ──────────────────────────────────────────────
+    if (step === 'invite') return (
+      <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
+        <div className="mb-5 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
+          <Users size={64} weight="fill" />
+        </div>
+        <h1 className="text-2xl font-bold text-stone-800 mb-2 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+          Invite your members
+        </h1>
+        <p className="text-stone-400 text-sm max-w-xs mb-8 animate-fade-up" style={{ animationDelay: '0.25s' }}>
+          Share this code with everyone in your group. They'll enter it when they sign up.
+        </p>
+
+        <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.35s' }}>
+          <div className="bg-white border border-stone-100 rounded-2xl px-6 py-5 shadow-sm mb-3">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Invite code</p>
+            <p className="font-mono font-bold text-4xl tracking-widest text-jade mb-1">
+              {inviteCode ?? '——'}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2 animate-fade-up" style={{ animationDelay: '0.15s' }}>
-            Invite your members
-          </h1>
-          <p className="text-stone-400 text-sm max-w-xs mb-8 animate-fade-up" style={{ animationDelay: '0.25s' }}>
-            Share this code with everyone in your group. They'll enter it when they sign up.
-          </p>
 
-          <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.35s' }}>
-            <div className="bg-white border border-stone-100 rounded-2xl px-6 py-5 shadow-sm mb-3">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Invite code</p>
-              <p className="font-mono font-bold text-4xl tracking-widest text-jade mb-1">
-                {inviteCode ?? '——'}
-              </p>
-            </div>
-
-            {navigator.share ? (
-              <div className="flex gap-2 mb-3">
-                <button
-                  onClick={copyCode}
-                  className="flex-1 py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors"
-                >
-                  {codeCopied ? '✓ Copied!' : 'Copy code'}
-                </button>
-                <button
-                  onClick={shareCode}
-                  className="flex-1 py-3 bg-jade text-white text-sm font-semibold rounded-xl hover:bg-jade-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <ShareNetwork size={16} weight="bold" /> Share
-                </button>
-              </div>
-            ) : (
+          {navigator.share ? (
+            <div className="flex gap-2 mb-3">
               <button
                 onClick={copyCode}
-                className="w-full py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors mb-3"
+                className="flex-1 py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors"
               >
                 {codeCopied ? '✓ Copied!' : 'Copy code'}
               </button>
-            )}
-
+              <button
+                onClick={shareCode}
+                className="flex-1 py-3 bg-jade text-white text-sm font-semibold rounded-xl hover:bg-jade-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShareNetwork size={16} weight="bold" /> Share
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => setStep('install')}
-              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              onClick={copyCode}
+              className="w-full py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors mb-3"
             >
-              Continue →
+              {codeCopied ? '✓ Copied!' : 'Copy code'}
             </button>
-          </div>
-        </div>
-      </StepShell>
-    )
-  }
+          )}
 
-  // ── STEP: tour (member only) ───────────────────────────────────────────────
-  if (step === 'tour') {
-    const isLastSlide = tourSlide === TOUR_CARDS.length - 1
-    return (
-      <StepShell key="tour" steps={steps} currentStep="tour" onBack={() => setStep('personalize')}>
+          <button
+            onClick={() => setStep('install')}
+            className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+          >
+            Continue →
+          </button>
+        </div>
+      </div>
+    )
+
+    // ── STEP: tour (member only) ───────────────────────────────────────────────
+    if (step === 'tour') {
+      const isLastSlide = tourSlide === TOUR_CARDS.length - 1
+      return (
         <div className="flex flex-col flex-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
           <div className="px-6 mb-6">
             <h1 className="text-2xl font-bold text-stone-800 mb-1">What's in here</h1>
@@ -869,14 +832,11 @@ export default function WelcomeSplash({
             </button>
           </div>
         </div>
-      </StepShell>
-    )
-  }
+      )
+    }
 
-  // ── STEP: install ──────────────────────────────────────────────────────────
-  const prevStep = isAdmin ? 'invite' : 'tour'
-  return (
-    <StepShell key="install" steps={steps} currentStep="install" onBack={() => setStep(prevStep)} closing={closing}>
+    // ── STEP: install ──────────────────────────────────────────────────────────
+    return (
       <div className="flex flex-col items-center justify-center flex-1 p-6">
         <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
           <DeviceMobile size={72} weight="fill" />
@@ -916,6 +876,24 @@ export default function WelcomeSplash({
           </button>
         </div>
       </div>
-    </StepShell>
+    )
+  }
+
+  return (
+    <div className={`fixed inset-0 z-50 bg-sunrise-50 flex flex-col ${closing ? 'animate-overlay-out' : ''}`}>
+      <ProgressDots steps={steps} currentStep={step} />
+      {stepIdx > 0 && (
+        <button
+          onClick={onBack}
+          className="absolute left-6 flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors text-sm font-medium"
+          style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
+        >
+          <ArrowLeft size={16} weight="bold" /> Back
+        </button>
+      )}
+      <div key={step} className="animate-overlay-in flex flex-col flex-1 min-h-0">
+        {renderStep()}
+      </div>
+    </div>
   )
 }
