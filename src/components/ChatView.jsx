@@ -1052,9 +1052,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
                           {searchQuery.trim() ? highlightText(msg.body, searchQuery) : msg.body}
-                          {(msg._edited || (msg.updated_at && msg.created_at && new Date(msg.updated_at) - new Date(msg.created_at) > 2000)) && (
-                            <span className={`text-[10px] ml-1.5 ${isOwn ? 'text-white/50' : 'text-stone-400'}`}>(edited)</span>
-                          )}
                         </p>
                       )}
                     </div>
