@@ -757,6 +757,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       className={`flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
     >
+      {/* TEMP DEBUG BANNER */}
+      <div className="bg-red-500 text-white text-[11px] text-center py-0.5 shrink-0">
+        readAt: {openedWithLastReadAt ? new Date(openedWithLastReadAt).toLocaleString() : 'NULL'} | ls: {typeof window !== 'undefined' ? (localStorage.getItem(`readAt:${convId}`) ? new Date(localStorage.getItem(`readAt:${convId}`)).toLocaleString() : 'empty') : '?'}
+      </div>
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2">
         <button
