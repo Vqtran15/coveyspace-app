@@ -10,12 +10,14 @@ export default function BirthdayBanner({ upcoming }) {
         <p className="text-xs font-bold text-jade uppercase tracking-wider mb-2 pl-3">
           Upcoming {upcoming.length === 1 ? 'Birthday' : 'Birthdays'}
         </p>
-        <div className="pl-3 flex items-center gap-3">
-          <Cake size={22} weight="fill" className="text-jade shrink-0" />
+        <div className="pl-3">
           <div className="flex-1 min-w-0 space-y-1.5">
             {upcoming.map(b => (
               <div key={b.id} className="flex items-center justify-between gap-4">
-                <span className="font-semibold text-stone-800 truncate">{(() => { const p = (b.name ?? '').trim().split(' ').filter(Boolean); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? '' })()}</span>
+                <span className="font-semibold text-stone-800 truncate flex items-center gap-1.5">
+                  <Cake size={16} weight="fill" className="text-jade shrink-0" />
+                  {(() => { const p = (b.name ?? '').trim().split(' ').filter(Boolean); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? '' })()}
+                </span>
                 <span className={`text-sm font-medium shrink-0 ${
                   b.daysUntil === 0 ? 'text-jade' : 'text-stone-500'
                 }`}>
@@ -29,6 +31,7 @@ export default function BirthdayBanner({ upcoming }) {
             ))}
           </div>
         </div>
+
       </div>
     </div>
   )
