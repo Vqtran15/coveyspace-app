@@ -410,7 +410,20 @@ export default function App() {
           className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <GuideTab onClose={closeGuide} guideUrl={groupSettings?.guide_url} />
+          <GuideTab
+            onClose={closeGuide}
+            guideUrl={groupSettings?.guide_url}
+            isAdmin={isAdmin}
+            onGuideUrlSave={async (url) => {
+              const trimmed = url.trim()
+              const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
+              const { error } = await supabase
+                .from('group_settings')
+                .upsert({ group_id: groupId, guide_url: normalized || null }, { onConflict: 'group_id' })
+              if (!error) setGroupSettings(prev => ({ ...prev, guide_url: normalized || null }))
+              return { error }
+            }}
+          />
         </div>
       )}
 
