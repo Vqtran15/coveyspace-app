@@ -27,7 +27,7 @@ function AddGuideModal({ onClose, onSave }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
@@ -48,7 +48,6 @@ function AddGuideModal({ onClose, onSave }) {
         </div>
         <form onSubmit={handleSave} className="px-5 pb-6 space-y-4">
           <input
-            autoFocus
             type="text"
             value={url}
             onChange={e => { setUrl(e.target.value); setError(null) }}
