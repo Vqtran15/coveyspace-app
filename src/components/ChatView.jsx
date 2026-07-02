@@ -1198,7 +1198,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             />
           </div>
         )}
-        <form onSubmit={handleSend} className="flex items-end gap-2">
+        <div className="flex items-end gap-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -1225,13 +1225,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             <Smiley size={22} />
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSend}
             disabled={sending || (!text.trim() && !imagePreview)}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-jade text-white hover:bg-jade-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <PaperPlaneTilt size={18} weight="fill" />
           </button>
-        </form>
+        </div>
       </div>
 
       {/* Action menu */}
