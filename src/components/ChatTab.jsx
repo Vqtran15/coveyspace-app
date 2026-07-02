@@ -5,8 +5,6 @@ import ChatView from './ChatView.jsx'
 
 export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [] }) {
   const [activeConv, setActiveConv]           = useState(null)
-  const [capturedLastReadAt, setCapturedLastReadAt] = useState(null)
-  const [readAtMap, setReadAtMap]             = useState({})
   const [members, setMembers]                 = useState([])
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
@@ -42,31 +40,16 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
     ))
   }, [displayName])
 
-  function openConv(conv, dbLastReadAt = null) {
-    // Pick the most recent of: in-memory close time, localStorage (survives reloads),
-    // or DB value — localStorage is synchronous so it has no race condition
-    const localReadAt = localStorage.getItem(`readAt:${conv.id}`)
-    const best = [readAtMap[conv.id], localReadAt, dbLastReadAt].filter(Boolean).sort().pop() ?? null
-    setCapturedLastReadAt(best)
+  function openConv(conv) {
     setListClass('')
     setActiveConv(conv)
-    supabase
-      .from('conversation_members')
-      .update({ last_read_at: new Date().toISOString() })
-      .eq('conversation_id', conv.id)
-      .eq('user_id', session.user.id)
-      .then(({ error }) => { if (error) console.error('Failed to mark read:', error.message) })
   }
 
   function goBack() {
     setChatExiting(true)
-    if (activeConv) {
-      setReadAtMap(prev => ({ ...prev, [activeConv.id]: new Date().toISOString() }))
-    }
     setTimeout(() => {
       setChatExiting(false)
       setActiveConv(null)
-      setCapturedLastReadAt(null)
       setListClass('animate-slide-in-left')
       setTimeout(() => setListClass(''), 250)
     }, 200)
@@ -84,7 +67,6 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
         exiting={chatExiting}
         onBack={goBack}
         onRead={onRead}
-        openedWithLastReadAt={capturedLastReadAt}
       />
     )
   }

@@ -68,7 +68,7 @@ function typingLabel(users) {
   return `${users.length} people are typing…`
 }
 
-export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null }) {
+export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead }) {
   const [messages, setMessages]         = useState([])
   const [loading, setLoading]           = useState(true)
   const [hasMore, setHasMore]           = useState(false)
@@ -106,7 +106,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [renameSaving, setRenameSaving]     = useState(false)
   const [memberReadTimes, setMemberReadTimes] = useState({})
   const [unreadCount, setUnreadCount]         = useState(0)
-  const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [contentReady, setContentReady]       = useState(false)
 
   const scrollRef          = useRef(null)
@@ -120,7 +119,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const preserveScrollRef  = useRef(null)
   const isAtBottomRef              = useRef(true)
   const initialScrollDoneRef       = useRef(false)
-  const suppressUnreadClearRef     = useRef(false)
   const pendingScrollRef           = useRef(null)
 
   const myId = session.user.id
@@ -158,10 +156,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setReplyingTo(null)
     setMemberReadTimes({})
     setUnreadCount(0)
-    setFirstUnreadId(null)
     setContentReady(false)
     initialScrollDoneRef.current = false
-    suppressUnreadClearRef.current = false
     pendingScrollRef.current = null
     setText(localStorage.getItem(`draft:${convId}`) ?? '')
 
@@ -291,43 +287,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }, [convId])
 
-  // ── Initial scroll: first unread or bottom ───────────────────────────────
-  // We set contentReady=true first so messages render into the DOM, then
-  // pendingScrollRef is consumed by the useLayoutEffect below which fires
-  // synchronously after the DOM update — guaranteeing the target element exists.
+  // ── Initial scroll: always go to bottom ─────────────────────────────────
+  // contentReady gates the skeleton → we set it true here so messages render
+  // into the DOM, then the useLayoutEffect below executes the scroll
+  // synchronously after commit (guaranteeing elements exist in the DOM).
   useEffect(() => {
     if (loading || initialScrollDoneRef.current) return
     initialScrollDoneRef.current = true
-
-    if (openedWithLastReadAt && messages.length > 0) {
-      const readTime = new Date(openedWithLastReadAt)
-      const firstUnread = messages.find(m => !m._tempId && m.user_id !== myId && new Date(m.created_at) > readTime)
-      if (firstUnread) {
-        setFirstUnreadId(firstUnread.id)
-        setIsAtBottom(false)
-        isAtBottomRef.current = false
-        suppressUnreadClearRef.current = true
-        pendingScrollRef.current = { type: 'id', id: firstUnread.id }
-        setContentReady(true)
-        return
-      }
-    }
-
     pendingScrollRef.current = { type: 'bottom' }
     setContentReady(true)
   }, [loading, messages])
 
-  // Executes the pending initial scroll after messages are in the DOM.
+  // Executes the pending scroll after messages are committed to the DOM.
   useLayoutEffect(() => {
     if (!contentReady || !pendingScrollRef.current) return
-    const pending = pendingScrollRef.current
     pendingScrollRef.current = null
-    if (pending.type === 'bottom') {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    } else if (pending.type === 'id') {
-      document.getElementById(`msg-${pending.id}`)?.scrollIntoView({ block: 'start' })
-      setTimeout(() => { suppressUnreadClearRef.current = false }, 200)
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [contentReady])
 
   // ── Typing presence ───────────────────────────────────────────────────────
@@ -404,7 +379,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           .update({ last_read_at: now })
           .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
       }
-      if (firstUnreadId && !suppressUnreadClearRef.current) setFirstUnreadId(null)
     }
     if (el.scrollTop < 60 && hasMore && !loadingMore) loadMore()
   }
@@ -734,9 +708,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       items.push({ type: 'date', label: dateSeparatorLabel(msg.created_at), key: `date-${msg.created_at}` })
       lastDate = d
     }
-    if (!searchQuery && firstUnreadId && msg.id === firstUnreadId) {
-      items.push({ type: 'unread-divider', key: 'unread-divider' })
-    }
     items.push({ type: 'msg', msg })
   }
 
@@ -889,17 +860,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 )
               }
 
-              if (item.type === 'unread-divider') {
-                return (
-                  <div key="unread-divider" className="flex items-center gap-3 py-2">
-                    <div className="flex-1 h-px bg-jade/40" />
-                    <span className="text-[11px] text-jade font-semibold tracking-wide">New messages</span>
-                    <div className="flex-1 h-px bg-jade/40" />
-                  </div>
-                )
-              }
-
-              const { msg } = item
+const { msg } = item
               const isOwn = msg.user_id === myId
               const nextItem = items[i + 1]
               const prevItem = items[i - 1]
