@@ -13,6 +13,7 @@ import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+const GROUP_TIME_GAP = 5 * 60 * 1000
 
 function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -109,6 +110,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [contentReady, setContentReady]       = useState(false)
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
+  const [lightboxImg, setLightboxImg]         = useState(null)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -694,7 +696,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const id = editingMsgId
     exitEdit()
     const { error } = await supabase.from('messages').update({ body: editText.trim() }).eq('id', id)
-    if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editText.trim() } : m))
+    if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editText.trim(), _edited: true } : m))
     else toast('Failed to edit message', 'error')
   }
 
@@ -905,12 +907,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 )
               }
 
-const { msg } = item
+              const { msg } = item
               const isOwn = msg.user_id === myId
               const nextItem = items[i + 1]
               const prevItem = items[i - 1]
-              const isLastInGroup  = nextItem?.type !== 'msg' || nextItem.msg.user_id !== msg.user_id
-              const isFirstInGroup = prevItem?.type !== 'msg' || prevItem.msg.user_id !== msg.user_id
+              const isLastInGroup  = nextItem?.type !== 'msg' || nextItem.msg.user_id !== msg.user_id || new Date(nextItem.msg.created_at) - new Date(msg.created_at) > GROUP_TIME_GAP
+              const isFirstInGroup = prevItem?.type !== 'msg' || prevItem.msg.user_id !== msg.user_id || new Date(msg.created_at) - new Date(prevItem.msg.created_at) > GROUP_TIME_GAP
               const msgReactions = reactions[msg.id]
               const hasReactions = msgReactions && Object.keys(msgReactions).length > 0
 
@@ -1009,12 +1011,14 @@ const { msg } = item
                               </button>
                             )}
                           </div>
-                        ) : isOwn ? (
-                          <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
                         ) : (
-                          <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                            <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
-                          </a>
+                          <img
+                            src={msg.image_url}
+                            alt="shared"
+                            className="block max-w-full cursor-pointer"
+                            style={{ maxHeight: 280 }}
+                            onClick={e => { e.stopPropagation(); setLightboxImg(msg.image_url) }}
+                          />
                         )
                       )}
                       {editingMsgId === msg.id ? (
@@ -1047,6 +1051,9 @@ const { msg } = item
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
                           {searchQuery.trim() ? highlightText(msg.body, searchQuery) : msg.body}
+                          {(msg._edited || (msg.updated_at && new Date(msg.updated_at) - new Date(msg.created_at) > 2000)) && (
+                            <span className={`text-[10px] ml-1.5 ${isOwn ? 'text-white/50' : 'text-stone-400'}`}>(edited)</span>
+                          )}
                         </p>
                       )}
                     </div>
@@ -1093,11 +1100,11 @@ const { msg } = item
                           <div
                             key={member.user_id}
                             title={member.display_name}
-                            className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${avatarColor(member.user_id, member.avatar_color)}`}
+                            className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${avatarColor(member.user_id, member.avatar_color)}`}
                           >
                             {member.avatar_icon
-                              ? <AvatarIcon name={member.avatar_icon} size={8} />
-                              : <span className="text-white text-[7px] font-bold leading-none">{initials(member.display_name)}</span>
+                              ? <AvatarIcon name={member.avatar_icon} size={9} />
+                              : <span className="text-white text-[8px] font-bold leading-none">{initials(member.display_name)}</span>
                             }
                           </div>
                         ))}
@@ -1203,33 +1210,32 @@ const { msg } = item
         </form>
       </div>
 
-      {/* Scroll-to-bottom */}
-      {!isAtBottom && !searchOpen && (
-        <div
-          className="fixed left-1/2 -translate-x-1/2 z-10 animate-overlay-in"
-          style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
-        >
-          <button
-            onClick={() => {
-              setIsAtBottom(true)
-              isAtBottomRef.current = true
-              setUnreadCount(0)
-              supabase.from('conversation_members')
-                .update({ last_read_at: new Date().toISOString() })
-                .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
-              if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-            }}
-            className="relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
-          >
-            <ArrowDown size={16} weight="bold" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
-      )}
+      {/* Scroll-to-bottom — zero-height anchor sits between messages and input bar */}
+      <div className="relative h-0 shrink-0">
+        {!isAtBottom && !searchOpen && (
+          <div className="absolute bottom-3 right-4 z-10 animate-overlay-in">
+            <button
+              onClick={() => {
+                setIsAtBottom(true)
+                isAtBottomRef.current = true
+                setUnreadCount(0)
+                supabase.from('conversation_members')
+                  .update({ last_read_at: new Date().toISOString() })
+                  .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+                scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+              }}
+              className="relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
+            >
+              <ArrowDown size={16} weight="bold" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Action menu */}
       {activeMsg && menuPos && (
@@ -1436,6 +1442,28 @@ const { msg } = item
       )}
 
       {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}
+
+      {/* Image lightbox */}
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center animate-overlay-in"
+          onClick={() => setLightboxImg(null)}
+        >
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+          >
+            <X size={20} weight="bold" />
+          </button>
+          <img
+            src={lightboxImg}
+            alt="Full size"
+            className="max-w-full max-h-full object-contain rounded-lg"
+            style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   )
 }

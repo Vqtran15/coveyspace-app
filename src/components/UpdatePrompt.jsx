@@ -23,8 +23,7 @@ export default function UpdatePrompt() {
 
   return (
     <div
-      className="fixed inset-x-0 z-50 flex justify-center px-4 animate-toast-in"
-      style={{ bottom: 'calc(env(safe-area-inset-bottom) + 62px)' }}
+      className="fixed inset-x-0 lg:left-56 z-50 flex justify-center px-4 animate-toast-in bottom-[calc(env(safe-area-inset-bottom)+62px)] lg:bottom-6"
     >
       <div className="flex items-center gap-3 bg-stone-800 text-white text-sm font-medium pl-4 pr-2 py-2.5 rounded-xl shadow-lg">
         <span>New version available</span>
