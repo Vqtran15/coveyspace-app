@@ -253,7 +253,9 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {/* Announcement — always first */}
-        {showAnnouncement && (
+        {isAdmin && announcement === undefined ? (
+          <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>
+        ) : showAnnouncement && (
           announcement ? (
             <div className="w-full animate-stack-in lg:col-span-2">
               <div
