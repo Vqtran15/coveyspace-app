@@ -343,7 +343,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             ? <CardSkeleton delay={showAnnouncement ? 240 : 160} />
             : prayerCard && (
               <Card
-                onClick={() => navigate('/prayer')}
+                onClick={() => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } })}
                 icon={<HandsPraying size={24} weight="fill" className="text-violet-500" />}
                 iconBg="bg-violet-50"
                 label="Pray for Today"

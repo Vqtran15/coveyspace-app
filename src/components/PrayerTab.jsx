@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { HandsPraying, X, Plus, Trash, PencilSimple, Check, MagnifyingGlass } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -330,10 +331,18 @@ function MemberCard({ member, index, onClick }) {
 }
 
 export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings }) {
+  const location = useLocation()
+  const featuredUserId = location.state?.featuredUserId
   const [members, setMembers]               = useState([])
   const [loading, setLoading]               = useState(true)
   const [selectedMember, setSelectedMember] = useState(null)
   const [searchQuery, setSearchQuery]       = useState('')
+
+  useEffect(() => {
+    if (!featuredUserId || members.length === 0 || selectedMember) return
+    const featured = members.find(m => m.user_id === featuredUserId)
+    if (featured) setSelectedMember(featured)
+  }, [members, featuredUserId])
 
   async function load() {
     if (!groupId) return
