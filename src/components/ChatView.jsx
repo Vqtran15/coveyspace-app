@@ -1213,7 +1213,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {/* Scroll-to-bottom — zero-height anchor sits between messages and input bar */}
       <div className="relative h-0 shrink-0">
         {!isAtBottom && !searchOpen && (
-          <div className="absolute bottom-3 right-4 z-10 animate-overlay-in">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 animate-overlay-in">
             <button
               onClick={() => {
                 setIsAtBottom(true)
