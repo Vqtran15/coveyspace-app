@@ -37,6 +37,8 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
   const [requests, setRequests]           = useState([])
   const [loading, setLoading]             = useState(true)
   const [animDone, setAnimDone]           = useState(false)
+  const [addingRequest, setAddingRequest] = useState(false)
+  const [searchQuery, setSearchQuery]     = useState('')
   const [date, setDate]                   = useState(new Date().toISOString().split('T')[0])
   const [requestText, setRequestText]     = useState('')
   const [saving, setSaving]               = useState(false)
@@ -78,6 +80,13 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
       })
   }, [member.user_id])
 
+  function cancelAdd() {
+    setAddingRequest(false)
+    setRequestText('')
+    setDate(new Date().toISOString().split('T')[0])
+    setError(null)
+  }
+
   async function handleAdd(e) {
     e.preventDefault()
     if (!requestText.trim()) return
@@ -96,6 +105,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
     setRequestText('')
     setDate(new Date().toISOString().split('T')[0])
     setSaving(false)
+    setAddingRequest(false)
     haptic()
     onCountChange(member.user_id, +1)
   }
@@ -129,6 +139,11 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
     }
   }
 
+  const q = searchQuery.trim().toLowerCase()
+  const filteredRequests = q
+    ? requests.filter(r => r.request?.toLowerCase().includes(q) || formatDate(r.date).toLowerCase().includes(q))
+    : requests
+
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
@@ -154,148 +169,183 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
             </div>
             <h2 className="text-xl font-bold text-stone-800 truncate">{member.display_name}</h2>
           </div>
-          <button
-            onClick={close}
-            className="shrink-0 text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {addingRequest ? (
+              <button
+                onClick={cancelAdd}
+                className="text-sm font-medium text-stone-500 hover:text-stone-700 px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+              >
+                Cancel
+              </button>
+            ) : (
+              <button
+                onClick={() => setAddingRequest(true)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-jade/10 hover:bg-jade/20 text-jade transition-colors"
+              >
+                <Plus size={18} weight="bold" />
+              </button>
+            )}
+            <button
+              onClick={close}
+              className="shrink-0 text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable body */}
         <div className="overflow-y-auto min-h-0 px-6" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
-          {/* Add request form */}
-          <form onSubmit={handleAdd} className="space-y-3 pb-5 border-b border-stone-100">
-            <div>
-              <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-stone-500 mb-1">Prayer Request</label>
-              <textarea
-                value={requestText}
-                onChange={e => setRequestText(e.target.value)}
-                placeholder="Write a prayer request…"
-                rows={3}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-            )}
-            <button
-              type="submit"
-              disabled={saving || !requestText.trim()}
-              className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
-            >
-              <Plus size={16} weight="bold" />
-              {saving ? 'Adding…' : 'Add Request'}
-            </button>
-          </form>
-
-          {/* Prayer request list */}
-          <div className="py-4 space-y-3">
-            {loading || !animDone ? (
-              <div className="space-y-3">
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="bg-stone-50 rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
-                    <div className="h-3 bg-stone-200 rounded w-1/3 mb-2" />
-                    <div className="h-3 bg-stone-200 rounded w-full mb-1.5" />
-                    <div className="h-3 bg-stone-200 rounded w-4/5" />
-                  </div>
-                ))}
+          {addingRequest ? (
+            <form onSubmit={handleAdd} className="space-y-3 pb-5">
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                />
               </div>
-            ) : requests.length === 0 ? (
-              <p className="text-sm text-stone-400 text-center py-4">No requests yet. Add one above!</p>
-            ) : (
-              requests.map(r => (
-                <div key={r.id} className={`bg-stone-50 rounded-xl p-3 ${newId === r.id ? 'animate-fade-up' : ''}`}>
-                  {editingId === r.id ? (
-                    <form onSubmit={handleSaveRequest} className="space-y-2">
-                      <input
-                        type="date"
-                        value={editDate}
-                        onChange={e => setEditDate(e.target.value)}
-                        className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
-                      />
-                      <textarea
-                        value={editText}
-                        onChange={e => setEditText(e.target.value)}
-                        rows={3}
-                        className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
-                        required
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditingId(null)}
-                          className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={!editText.trim()}
-                          className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <>
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div>
-                          <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
-                          {r.added_by && (
-                            <span className="text-xs text-stone-400"> · {r.added_by}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Prayer Request</label>
+                <textarea
+                  autoFocus
+                  value={requestText}
+                  onChange={e => setRequestText(e.target.value)}
+                  placeholder="Write a prayer request…"
+                  rows={4}
+                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                />
+              </div>
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+              )}
+              <button
+                type="submit"
+                disabled={saving || !requestText.trim()}
+                className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
+              >
+                <Plus size={16} weight="bold" />
+                {saving ? 'Adding…' : 'Add Request'}
+              </button>
+            </form>
+          ) : (
+            <div className="pb-4 space-y-3">
+              {/* Search — only show once loaded and there's more than one request */}
+              {!loading && animDone && requests.length > 1 && (
+                <div className="relative">
+                  <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search requests…"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              {/* Request list */}
+              {loading || !animDone ? (
+                <div className="space-y-3">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="bg-stone-50 rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
+                      <div className="h-3 bg-stone-200 rounded w-1/3 mb-2" />
+                      <div className="h-3 bg-stone-200 rounded w-full mb-1.5" />
+                      <div className="h-3 bg-stone-200 rounded w-4/5" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredRequests.length === 0 ? (
+                <p className="text-sm text-stone-400 text-center py-6">
+                  {q ? 'No requests match your search.' : 'No requests yet. Tap + to add one!'}
+                </p>
+              ) : (
+                filteredRequests.map(r => (
+                  <div key={r.id} className={`bg-stone-50 rounded-xl p-3 ${newId === r.id ? 'animate-fade-up' : ''}`}>
+                    {editingId === r.id ? (
+                      <form onSubmit={handleSaveRequest} className="space-y-2">
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={e => setEditDate(e.target.value)}
+                          className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                        />
+                        <textarea
+                          value={editText}
+                          onChange={e => setEditText(e.target.value)}
+                          rows={3}
+                          className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                          required
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
                           <button
-                            onClick={() => { setConfirmRequestId(null); startEditRequest(r) }}
-                            className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
-                          >
-                            <PencilSimple size={14} />
-                          </button>
-                          <button
-                            onClick={() => setConfirmRequestId(r.id)}
-                            className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
-                          >
-                            <Trash size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
-                      {confirmRequestId === r.id && (
-                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
-                          <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
-                          <button
-                            onClick={() => setConfirmRequestId(null)}
-                            className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
                           >
                             Cancel
                           </button>
                           <button
-                            onClick={() => handleDeleteRequest(r.id)}
-                            className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                            type="submit"
+                            disabled={!editText.trim()}
+                            className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
                           >
-                            Delete
+                            Save
                           </button>
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div>
+                            <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
+                            {r.added_by && (
+                              <span className="text-xs text-stone-400"> · {r.added_by}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() => { setConfirmRequestId(null); startEditRequest(r) }}
+                              className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
+                            >
+                              <PencilSimple size={14} />
+                            </button>
+                            <button
+                              onClick={() => setConfirmRequestId(r.id)}
+                              className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
+                            >
+                              <Trash size={14} />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                        {confirmRequestId === r.id && (
+                          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
+                            <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
+                            <button
+                              onClick={() => setConfirmRequestId(null)}
+                              className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRequest(r.id)}
+                              className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
