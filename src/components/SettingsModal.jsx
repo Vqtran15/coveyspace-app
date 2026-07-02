@@ -177,7 +177,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     >
       <div
         className={`bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
-        style={{ maxHeight: '85vh' }}
+        style={{ maxHeight: '85dvh' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 pb-4 shrink-0">
