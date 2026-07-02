@@ -846,7 +846,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       {/* Messages */}
-      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 max-w-3xl mx-auto w-full">
+      <div className="relative flex-1 min-h-0">
+      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full">
         {loadingMore && (
           <div className="flex justify-center py-3">
             <div className="flex items-center gap-1.5">
@@ -1118,6 +1119,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         )}
       </div>
 
+      {/* Scroll-to-bottom — floats inside messages area, above typing + input */}
+      {!isAtBottom && !searchOpen && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 animate-overlay-in">
+          <button
+            onClick={() => {
+              setIsAtBottom(true)
+              isAtBottomRef.current = true
+              setUnreadCount(0)
+              supabase.from('conversation_members')
+                .update({ last_read_at: new Date().toISOString() })
+                .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
+              scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+            }}
+            className="relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
+          >
+            <ArrowDown size={16} weight="bold" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+      </div>
+
       {/* Typing indicator */}
       {typing && (
         <div className="shrink-0 px-4 pb-2 max-w-3xl mx-auto w-full animate-overlay-in">
@@ -1208,33 +1235,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             <PaperPlaneTilt size={18} weight="fill" />
           </button>
         </form>
-      </div>
-
-      {/* Scroll-to-bottom — zero-height anchor sits between messages and input bar */}
-      <div className="relative h-0 shrink-0">
-        {!isAtBottom && !searchOpen && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 animate-overlay-in">
-            <button
-              onClick={() => {
-                setIsAtBottom(true)
-                isAtBottomRef.current = true
-                setUnreadCount(0)
-                supabase.from('conversation_members')
-                  .update({ last_read_at: new Date().toISOString() })
-                  .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
-                scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-              }}
-              className="relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
-            >
-              <ArrowDown size={16} weight="bold" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Action menu */}
