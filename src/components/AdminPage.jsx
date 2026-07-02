@@ -4,16 +4,8 @@ import { ShieldCheck, ArrowLeft, PencilSimple, X, EnvelopeSimple, CaretDown } fr
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
-
-function weekOccToMode(occ) {
-  if (!occ || occ.length === 5) return 'weekly'
-  if (occ.length === 2 && ((occ[0]===1&&occ[1]===3)||(occ[0]===2&&occ[1]===4))) return 'biweekly'
-  return 'custom'
-}
-
-function initials(name) {
-  return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
+import { initials } from '../utils/format.js'
+import { weekOccToMode } from '../utils/schedule.js'
 
 function AvatarCircle({ icon, name, userId, colorKey }) {
   return (

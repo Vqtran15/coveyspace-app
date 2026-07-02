@@ -337,17 +337,20 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
 
   async function load() {
     if (!groupId) return
-    const [membersRes, requestsRes] = await Promise.all([
-      supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId).order('display_name'),
-      supabase.from('prayer_requests').select('id, member_user_id, created_at'),
-    ])
-    const profileList = membersRes.data ?? []
-    const requestList = requestsRes.data ?? []
-    setMembers(profileList.map(m => ({
-      ...m,
-      prayer_requests: requestList.filter(r => r.member_user_id === m.user_id),
-    })))
-    setLoading(false)
+    try {
+      const [membersRes, requestsRes] = await Promise.all([
+        supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId).order('display_name'),
+        supabase.from('prayer_requests').select('id, member_user_id, created_at'),
+      ])
+      const profileList = membersRes.data ?? []
+      const requestList = requestsRes.data ?? []
+      setMembers(profileList.map(m => ({
+        ...m,
+        prayer_requests: requestList.filter(r => r.member_user_id === m.user_id),
+      })))
+    } finally {
+      setLoading(false)
+    }
   }
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedMember)

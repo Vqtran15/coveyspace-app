@@ -6,7 +6,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
-import { nextScheduledDate } from '../utils/schedule.js'
+import { nextScheduledDate, weekOccToMode } from '../utils/schedule.js'
 import {
   AVATAR_ICON_LIST,
   AVATAR_COLOR_OPTIONS,
@@ -54,11 +54,6 @@ const FEATURE_TOGGLES = [
   { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Link to your discussion guide',   Icon: Link,           color: 'text-jade' },
 ]
 
-function weekOccToMode(occ) {
-  if (!occ || occ.length === 5) return 'weekly'
-  if (occ.length === 2 && ((occ[0]===1&&occ[1]===3)||(occ[0]===2&&occ[1]===4))) return 'biweekly'
-  return 'custom'
-}
 function weekOccToPat(occ) {
   return (occ?.[0]===1 && occ?.[1]===3) ? 'odd' : 'even'
 }
