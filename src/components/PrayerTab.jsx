@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, X, Plus, Trash, PencilSimple, Check, MagnifyingGlass } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
