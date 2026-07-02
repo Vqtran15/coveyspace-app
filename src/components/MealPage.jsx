@@ -204,7 +204,7 @@ export default function MealPage({ page, noun, itemNoun, editLabel, tables, reve
                   onClick={handleTogglePause}
                   disabled={pausing}
                   title={page.is_paused ? 'Resume signup' : 'Pause signup'}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
                 >
                   {page.is_paused
                     ? <><PlayCircle size={14} weight="fill" /> Resume</>

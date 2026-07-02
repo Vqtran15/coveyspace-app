@@ -189,7 +189,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
                       <button
                         onClick={() => handleDelete(page.id)}
                         disabled={deleting}
-                        className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+                        className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 ${
                           confirmDeleteId === page.id
                             ? 'bg-red-500 text-white'
                             : 'text-stone-300 hover:text-red-400'

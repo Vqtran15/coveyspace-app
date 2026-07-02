@@ -62,12 +62,12 @@ export default function NotesModal({ groupId, onClose }) {
             placeholder={loading ? 'Loading…' : 'Write notes for your group…'}
             disabled={loading}
             rows={8}
-            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent disabled:opacity-50"
+            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent disabled:opacity-40"
           />
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="mt-3 w-full py-2.5 bg-jade hover:bg-jade-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 text-sm"
+            className="mt-3 w-full py-2.5 bg-jade hover:bg-jade-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 text-sm"
           >
             {saving ? 'Saving…' : saved ? 'Saved!' : 'Save Notes'}
           </button>

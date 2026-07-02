@@ -120,7 +120,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+            className="w-full py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
           >
             {saving ? 'Saving…' : signup ? 'Update' : 'Sign Up'}
           </button>
@@ -131,7 +131,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
                 type="button"
                 onClick={() => { setConfirmDeleteItem(false); setConfirmRemove(true) }}
                 disabled={saving}
-                className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors text-sm font-medium"
+                className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-40 transition-colors text-sm font-medium"
               >
                 Remove my name
               </button>
@@ -142,7 +142,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
                   type="button"
                   onClick={() => setConfirmRemove(false)}
                   disabled={removing}
-                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-50"
+                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -150,7 +150,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
                   type="button"
                   onClick={handleRemove}
                   disabled={removing}
-                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-50 transition-colors"
+                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-40 transition-colors"
                 >
                   {removing ? 'Removing…' : 'Remove'}
                 </button>
@@ -163,7 +163,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
               type="button"
               onClick={() => { setConfirmRemove(false); setConfirmDeleteItem(true) }}
               disabled={saving}
-              className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors text-sm font-medium"
+              className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-40 transition-colors text-sm font-medium"
             >
               Delete this {itemNoun.toLowerCase()}
             </button>
@@ -176,7 +176,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
                 type="button"
                 onClick={() => setConfirmDeleteItem(false)}
                 disabled={deletingItem}
-                className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-50"
+                className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-40"
               >
                 Cancel
               </button>
@@ -184,7 +184,7 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
                 type="button"
                 onClick={handleDeleteItem}
                 disabled={deletingItem}
-                className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-50 transition-colors"
+                className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-40 transition-colors"
               >
                 {deletingItem ? 'Deleting…' : 'Delete'}
               </button>

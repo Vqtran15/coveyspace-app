@@ -11,6 +11,7 @@ import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../utils/format.js'
+import { haptic } from '../lib/haptic.js'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
@@ -591,6 +592,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // ── Reactions ─────────────────────────────────────────────────────────────
   async function toggleReaction(messageId, emoji) {
     const existing = reactions[messageId]?.[emoji]?.find(r => r.user_id === myId)
+    haptic()
     closeMenu()
     if (existing) {
       await supabase.from('reactions').delete().eq('id', existing.id)
@@ -879,7 +881,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
             {searchQuery ? (
               <>
-                <MagnifyingGlass size={48} className="text-stone-300 mb-3" />
+                <MagnifyingGlass size={40} className="text-stone-300 mb-3" />
                 <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
               </>
             ) : (

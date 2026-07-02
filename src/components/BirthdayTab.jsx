@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase.js'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
 import BirthdayCard from './BirthdayCard.jsx'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
+import { haptic } from '../lib/haptic.js'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 function daysInMonth(m) { return [0,31,29,31,30,31,30,31,31,30,31,30,31][m] ?? 31 }
@@ -136,7 +138,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+              className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
             >
               {saving ? 'Saving…' : birthday ? 'Save' : 'Add'}
             </button>
@@ -158,7 +160,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
                   type="button"
                   onClick={() => setConfirmDelete(false)}
                   disabled={deleting}
-                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-50"
+                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-3 py-2.5 min-h-[44px] disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -166,7 +168,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-50 transition-colors"
+                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-4 py-2.5 min-h-[44px] rounded-lg disabled:opacity-40 transition-colors"
                 >
                   {deleting ? 'Removing…' : 'Remove'}
                 </button>
@@ -179,12 +181,15 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
   )
 }
 
-export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, onClose }) {
+export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, onClose, onRefresh }) {
   const [modal, setModal] = useState(null) // null | 'add' | birthday object
+
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(onRefresh ?? (() => {}), !modal)
 
   const sorted = [...birthdays].sort((a, b) => daysUntilNext(a.birthday) - daysUntilNext(b.birthday))
 
   async function handleSave({ name, birthday }) {
+    haptic()
     if (modal && modal !== 'add') {
       const { data, error } = await supabase
         .from('birthdays')
@@ -215,6 +220,16 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+      {pullDistance > 0 && (
+        <div
+          className="fixed inset-x-0 z-30 flex justify-center transition-transform"
+          style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
+        >
+          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
+            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          </div>
+        </div>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-stone-800">Birthdays</h1>
@@ -244,7 +259,7 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
 
       {sorted.length === 0 ? (
         <div className="text-center py-16 text-stone-400">
-          <div className="flex justify-center mb-3"><Cake size={48} weight="fill" className="text-stone-300" /></div>
+          <div className="flex justify-center mb-3"><Cake size={40} weight="fill" className="text-stone-300" /></div>
           <p className="text-sm">Add birthdays to get reminded 30 days before</p>
         </div>
       ) : (

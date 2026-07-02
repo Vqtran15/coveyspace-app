@@ -20,6 +20,8 @@ export default function AuthPage() {
   const [notice, setNotice]         = useState(null)
   const [animKey, setAnimKey]       = useState(0)
   const [animDir, setAnimDir]       = useState(null)
+  const [pwLengthError, setPwLengthError]   = useState(false)
+  const [pwMismatchError, setPwMismatchError] = useState(false)
 
   function switchMode(next) {
     setAnimDir(MODE_ORDER[next] > MODE_ORDER[mode] ? 'right' : 'left')
@@ -27,6 +29,8 @@ export default function AuthPage() {
     setMode(next)
     setError(null)
     setNotice(null)
+    setPwLengthError(false)
+    setPwMismatchError(false)
     if (next === 'signup') {
       setJoinMode('join')
       setInviteCode('')
@@ -55,6 +59,11 @@ export default function AuthPage() {
     }
 
     if (mode === 'signup') {
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.')
+        setLoading(false)
+        return
+      }
       if (password !== confirmPassword) {
         setError('Passwords do not match.')
         setLoading(false)
@@ -296,14 +305,24 @@ export default function AuthPage() {
                   <input
                     type="password"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={e => {
+                      setPassword(e.target.value)
+                      if (pwLengthError) setPwLengthError(e.target.value.length > 0 && e.target.value.length < 6)
+                      if (pwMismatchError) setPwMismatchError(confirmPassword.length > 0 && e.target.value !== confirmPassword)
+                    }}
+                    onBlur={() => {
+                      if (mode === 'signup' && password.length > 0 && password.length < 6) setPwLengthError(true)
+                    }}
                     placeholder="••••••••"
                     required
                     minLength={6}
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                     className={inputClass}
                   />
-                  {mode === 'signup' && (
+                  {mode === 'signup' && pwLengthError && (
+                    <p className="text-xs text-red-500 mt-1">Minimum 6 characters</p>
+                  )}
+                  {mode === 'signup' && !pwLengthError && (
                     <p className="text-xs text-stone-400 mt-1">Minimum 6 characters</p>
                   )}
                 </div>
@@ -318,12 +337,21 @@ export default function AuthPage() {
                   <input
                     type="password"
                     value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
+                    onChange={e => {
+                      setConfirmPassword(e.target.value)
+                      if (pwMismatchError) setPwMismatchError(e.target.value !== password)
+                    }}
+                    onBlur={() => {
+                      if (confirmPassword.length > 0 && confirmPassword !== password) setPwMismatchError(true)
+                    }}
                     placeholder="••••••••"
                     required
                     autoComplete="new-password"
                     className={inputClass}
                   />
+                  {pwMismatchError && (
+                    <p className="text-xs text-red-500 mt-1">Passwords don't match</p>
+                  )}
                 </div>
               )}
 
@@ -341,11 +369,14 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-jade active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full py-3 bg-jade active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
               >
-                {loading
-                  ? 'Please wait…'
-                  : mode === 'signin'
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <span>Please wait…</span>
+                  </>
+                ) : mode === 'signin'
                   ? 'Sign In'
                   : mode === 'forgot'
                   ? 'Send Reset Link'

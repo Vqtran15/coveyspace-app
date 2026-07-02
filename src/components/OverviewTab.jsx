@@ -111,7 +111,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
                 type="button"
                 onClick={async () => { setSaving(true); await onSave(''); setSaving(false); close() }}
                 disabled={saving}
-                className="flex-1 py-2.5 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-40"
               >
                 Remove
               </button>
@@ -119,7 +119,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>

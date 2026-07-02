@@ -197,7 +197,7 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
               <button
                 type="submit"
                 disabled={saving || entries.length === 0}
-                className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -220,7 +220,7 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
                   type="button"
                   onClick={() => setConfirmDelete(false)}
                   disabled={deleting}
-                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-2 disabled:opacity-50"
+                  className="text-sm text-stone-500 hover:text-stone-700 font-medium px-2 disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -228,7 +228,7 @@ export default function EditDishesModal({ page, noun, signups, onClose, onSave, 
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-1 rounded-lg disabled:opacity-50 transition-colors"
+                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
                 >
                   {deleting ? 'Deleting…' : 'Delete'}
                 </button>

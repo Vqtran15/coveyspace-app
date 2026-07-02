@@ -422,6 +422,7 @@ export default function App() {
             onBirthdaysChange={setBirthdays}
             revealKey="birthdays"
             onClose={closeBirthdays}
+            onRefresh={() => supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(data ?? []))}
           />
         </div>
       )}
