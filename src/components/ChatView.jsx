@@ -1118,7 +1118,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {/* Scroll-to-bottom — floats inside messages area, above typing + input */}
       {!isAtBottom && !searchOpen && (
-        <div className="absolute bottom-3 inset-x-0 flex justify-center z-10 animate-overlay-in">
+        <div className="absolute bottom-3 inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none">
           <button
             onClick={() => {
               setIsAtBottom(true)
@@ -1129,7 +1129,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
               scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
             }}
-            className="relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
+            className="pointer-events-auto relative w-9 h-9 bg-jade text-white rounded-full shadow-lg flex items-center justify-center"
           >
             <ArrowDown size={16} weight="bold" />
             {unreadCount > 0 && (
