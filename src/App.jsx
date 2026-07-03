@@ -118,14 +118,17 @@ export default function App() {
   useEffect(() => {
     if (authLoading) return
     const elapsed = Date.now() - splashStartRef.current
-    const wait = Math.max(0, 1200 - elapsed)
+    // Only enforce minimum display time for logged-in users returning to the app.
+    // If there's no session, dismiss quickly so the auth page appears naturally.
+    const minTime = session ? 1200 : 0
+    const wait = Math.max(0, minTime - elapsed)
     let t2
     const t1 = setTimeout(() => {
       setSplashExiting(true)
       t2 = setTimeout(() => setSplashVisible(false), 350)
     }, wait)
     return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [authLoading])
+  }, [authLoading, session])
 
   useEffect(() => {
     if (!session) return
