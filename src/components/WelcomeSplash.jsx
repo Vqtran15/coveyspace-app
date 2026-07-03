@@ -51,7 +51,7 @@ const FEATURE_TOGGLES = [
   { key: 'chat_enabled',      label: 'Group Chat',        desc: 'Group and direct messages',        Icon: ChatCircleDots, color: 'text-sage-700' },
   { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',           Icon: HandsPraying,   color: 'text-sunrise' },
   { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral' },
-  { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Link to your discussion guide',   Icon: Link,           color: 'text-jade' },
+  { key: 'guide_enabled',     label: 'Community Guide',   desc: 'PDF, link, or written notes',     Icon: Link,           color: 'text-jade' },
 ]
 
 function weekOccToPat(occ) {
@@ -94,7 +94,6 @@ export default function WelcomeSplash({
     birthdays_enabled: groupSettings?.birthdays_enabled !== false,
     guide_enabled:     groupSettings?.guide_enabled     !== false,
   })
-  const [guideUrl,       setGuideUrl]       = useState(groupSettings?.guide_url ?? '')
   const [savingFeatures, setSavingFeatures] = useState(false)
 
   // ── Setup (admin) ──────────────────────────────────────────────────────────
@@ -164,7 +163,6 @@ export default function WelcomeSplash({
     const updates = {
       group_id: groupId,
       ...features,
-      guide_url: features.guide_enabled ? guideUrl : (groupSettings?.guide_url ?? null),
     }
     const { data, error } = await supabase.from('group_settings')
       .upsert(updates, { onConflict: 'group_id' })
@@ -434,15 +432,7 @@ export default function WelcomeSplash({
                   </button>
                 </div>
                 {key === 'guide_enabled' && features.guide_enabled && (
-                  <div className="px-4 pb-3">
-                    <input
-                      type="url"
-                      placeholder="https://your-guide-url.com"
-                      value={guideUrl}
-                      onChange={e => setGuideUrl(e.target.value)}
-                      className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                    />
-                  </div>
+                  <p className="px-4 pb-3 text-xs text-stone-400">Set up your guide content from the Guide tab after setup.</p>
                 )}
               </div>
             ))}
