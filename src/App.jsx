@@ -428,14 +428,28 @@ export default function App() {
           <GuideTab
             onClose={closeGuide}
             guideUrl={groupSettings?.guide_url}
+            guideType={groupSettings?.guide_type}
+            guideContent={groupSettings?.guide_content}
             isAdmin={isAdmin}
-            onGuideUrlSave={async (url) => {
-              const trimmed = url.trim()
-              const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
+            groupId={groupId}
+            onGuideSave={async ({ type, url, content }) => {
+              const normalized = type === 'url' && url
+                ? (!/^https?:\/\//i.test(url.trim()) ? `https://${url.trim()}` : url.trim())
+                : (url ?? null)
               const { error } = await supabase
                 .from('group_settings')
-                .upsert({ group_id: groupId, guide_url: normalized || null }, { onConflict: 'group_id' })
-              if (!error) setGroupSettings(prev => ({ ...prev, guide_url: normalized || null }))
+                .upsert({
+                  group_id: groupId,
+                  guide_type: type,
+                  guide_url: normalized,
+                  guide_content: content ?? null,
+                }, { onConflict: 'group_id' })
+              if (!error) setGroupSettings(prev => ({
+                ...prev,
+                guide_type: type,
+                guide_url: normalized,
+                guide_content: content ?? null,
+              }))
               return { error }
             }}
           />

@@ -121,11 +121,11 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
     setGuideUrlSaving(true)
     const { error } = await supabase
       .from('group_settings')
-      .upsert({ group_id: groupId, guide_url: normalized || null }, { onConflict: 'group_id' })
+      .upsert({ group_id: groupId, guide_url: normalized || null, guide_type: 'url' }, { onConflict: 'group_id' })
     if (error) {
       toast('Failed to save guide URL', 'error')
     } else {
-      onGroupSettingsChange?.(prev => ({ ...prev, guide_url: normalized || null }))
+      onGroupSettingsChange?.(prev => ({ ...prev, guide_url: normalized || null, guide_type: 'url' }))
       toast('Guide link saved', 'success')
       setGuideUrlOpen(false)
     }
@@ -626,45 +626,69 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
         </section>
 
-        {/* Guide URL */}
+        {/* Community Guide */}
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Community Guide</p>
-          {guideUrlOpen ? (
-            <form onSubmit={handleSaveGuideUrl} className="space-y-2">
-              <input
-                autoFocus
-                type="url"
-                value={guideUrlValue}
-                onChange={e => setGuideUrlValue(e.target.value)}
-                placeholder="https://example.com/guide"
-                className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setGuideUrlOpen(false)}
-                  className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={guideUrlSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                >
-                  {guideUrlSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-            >
-              <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left truncate">{groupSettings?.guide_url ?? 'Add a guide link…'}</span>
-            </button>
-          )}
+          {(() => {
+            const guideType = groupSettings?.guide_type
+            // File or notes types are managed via the Guide tab; show read-only state here
+            if (guideType === 'file') {
+              return (
+                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700">
+                  <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
+                  <span className="flex-1 text-left truncate text-stone-500">Uploaded file</span>
+                  <span className="text-xs text-stone-400 shrink-0">Edit in Guide tab</span>
+                </div>
+              )
+            }
+            if (guideType === 'notes') {
+              const preview = (groupSettings?.guide_content ?? '').slice(0, 40)
+              return (
+                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700">
+                  <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
+                  <span className="flex-1 text-left truncate text-stone-500">{preview ? `${preview}…` : 'Notes guide'}</span>
+                  <span className="text-xs text-stone-400 shrink-0">Edit in Guide tab</span>
+                </div>
+              )
+            }
+            // URL type (or no type yet) — keep inline editing
+            return guideUrlOpen ? (
+              <form onSubmit={handleSaveGuideUrl} className="space-y-2">
+                <input
+                  autoFocus
+                  type="text"
+                  value={guideUrlValue}
+                  onChange={e => setGuideUrlValue(e.target.value)}
+                  placeholder="https://example.com/guide"
+                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGuideUrlOpen(false)}
+                    className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={guideUrlSaving}
+                    className="flex-1 py-2.5 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                  >
+                    {guideUrlSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+              >
+                <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
+                <span className="flex-1 text-left truncate">{groupSettings?.guide_url ?? 'Add a guide link…'}</span>
+              </button>
+            )
+          })()}
         </section>
       </div>
     </div>
