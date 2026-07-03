@@ -67,7 +67,7 @@ export default function App() {
   const [authLoading, setAuthLoading]   = useState(true)
   const [splashVisible, setSplashVisible] = useState(true)
   const [splashExiting, setSplashExiting] = useState(false)
-  const splashStartRef = useRef(Date.now())
+  const [splashMinDone, setSplashMinDone] = useState(false)
   const [profile, setProfile]           = useState(null)
   const [unreadChatCount, setUnreadChatCount] = useState(0)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -113,19 +113,16 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (authLoading) return
-    const elapsed = Date.now() - splashStartRef.current
-    // Only enforce minimum display time for logged-in users returning to the app.
-    // If there's no session, dismiss quickly so the auth page appears naturally.
-    const minTime = session ? 1200 : 0
-    const wait = Math.max(0, minTime - elapsed)
-    let t2
-    const t1 = setTimeout(() => {
-      setSplashExiting(true)
-      t2 = setTimeout(() => setSplashVisible(false), 350)
-    }, wait)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [authLoading])
+    const t = setTimeout(() => setSplashMinDone(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (authLoading || !splashMinDone) return
+    setSplashExiting(true)
+    const t = setTimeout(() => setSplashVisible(false), 350)
+    return () => clearTimeout(t)
+  }, [authLoading, splashMinDone])
 
   useEffect(() => {
     if (!session) return
@@ -268,17 +265,23 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [location.pathname])
 
-  if (authLoading || splashVisible) {
-    return <SplashScreen exiting={splashExiting} />
-  }
+  if (authLoading) return splashVisible ? <SplashScreen exiting={splashExiting} /> : null
 
   if (!session) return (
-    <Routes>
-      <Route path="/login" element={<AuthPage />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+      {splashVisible && <SplashScreen exiting={splashExiting} />}
+    </>
   )
-  if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
+  if (isRecovery) return (
+    <>
+      <ResetPasswordPage onDone={() => setIsRecovery(false)} />
+      {splashVisible && <SplashScreen exiting={splashExiting} />}
+    </>
+  )
 
   const upcoming = getUpcomingBirthdays(birthdays)
   const isChat = location.pathname === '/chat'
@@ -455,6 +458,7 @@ export default function App() {
       )}
 
       <UpdatePrompt />
+      {splashVisible && <SplashScreen exiting={splashExiting} />}
     </div>
   )
 }
