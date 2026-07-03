@@ -15,6 +15,7 @@ import OverviewTab from './components/OverviewTab.jsx'
 import AuthPage from './components/AuthPage.jsx'
 import ResetPasswordPage from './components/ResetPasswordPage.jsx'
 import WelcomeSplash from './components/WelcomeSplash.jsx'
+import SplashScreen from './components/SplashScreen.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
 import AdminPage from './components/AdminPage.jsx'
 import UpdatePrompt from './components/UpdatePrompt.jsx'
@@ -64,6 +65,9 @@ export default function App() {
   const [birthdays, setBirthdays]       = useState([])
   const [session, setSession]           = useState(null)
   const [authLoading, setAuthLoading]   = useState(true)
+  const [splashVisible, setSplashVisible] = useState(true)
+  const [splashExiting, setSplashExiting] = useState(false)
+  const splashStartRef = useRef(Date.now())
   const [profile, setProfile]           = useState(null)
   const [unreadChatCount, setUnreadChatCount] = useState(0)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -110,6 +114,18 @@ export default function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (authLoading) return
+    const elapsed = Date.now() - splashStartRef.current
+    const wait = Math.max(0, 1200 - elapsed)
+    let t2
+    const t1 = setTimeout(() => {
+      setSplashExiting(true)
+      t2 = setTimeout(() => setSplashVisible(false), 350)
+    }, wait)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [authLoading])
 
   useEffect(() => {
     if (!session) return
@@ -252,12 +268,8 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [location.pathname])
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-sunrise-50 flex items-center justify-center">
-        <div className="text-stone-400 animate-pulse text-sm">Loading…</div>
-      </div>
-    )
+  if (authLoading || splashVisible) {
+    return <SplashScreen exiting={splashExiting} />
   }
 
   if (!session) return (
