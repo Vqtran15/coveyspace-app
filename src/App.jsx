@@ -102,12 +102,9 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setAuthLoading(false)
-    })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
+      if (event === 'INITIAL_SESSION') setAuthLoading(false)
       if (event === 'SIGNED_IN' && !PATHS.includes(window.location.pathname)) navigate('/home')
       if (event === 'PASSWORD_RECOVERY') setIsRecovery(true)
       if (!session) { setProfile(null); setIsRecovery(false) }
@@ -128,7 +125,7 @@ export default function App() {
       t2 = setTimeout(() => setSplashVisible(false), 350)
     }, wait)
     return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [authLoading, session])
+  }, [authLoading])
 
   useEffect(() => {
     if (!session) return
