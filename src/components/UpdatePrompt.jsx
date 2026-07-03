@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export default function UpdatePrompt() {
   const registrationRef = useRef(null)
+  const mountTimeRef = useRef(Date.now())
+  const [autoApplied, setAutoApplied] = useState(false)
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_, registration) {
       registrationRef.current = registration
@@ -19,7 +21,18 @@ export default function UpdatePrompt() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
-  if (!needRefresh) return null
+  // If a new SW is found within 5s of launch (during splash), auto-reload silently.
+  // After that, show the banner so we don't interrupt an active session.
+  useEffect(() => {
+    if (!needRefresh) return
+    const elapsed = Date.now() - mountTimeRef.current
+    if (elapsed < 5000) {
+      setAutoApplied(true)
+      updateServiceWorker(true)
+    }
+  }, [needRefresh])
+
+  if (!needRefresh || autoApplied) return null
 
   return (
     <div
