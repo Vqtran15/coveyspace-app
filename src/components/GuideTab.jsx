@@ -1,125 +1,355 @@
-import { useState } from 'react'
-import { BookOpen, ArrowSquareOut, ArrowLeft, Link } from '@phosphor-icons/react'
-import { useModalClose } from '../hooks/useModalClose.js'
+import { useState, useRef } from 'react'
+import {
+  BookOpen, ArrowSquareOut, ArrowLeft, Link,
+  File, NotePencil, PencilSimple, UploadSimple, X,
+} from '@phosphor-icons/react'
+import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 
-function AddGuideModal({ onClose, onSave }) {
-  const [closing, close] = useModalClose(onClose)
-  const [url, setUrl] = useState('')
+function formatBytes(bytes) {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function TypePicker({ onPick }) {
+  return (
+    <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
+      <p className="text-sm text-stone-500 text-center mb-1">How do you want to share the guide?</p>
+      {[
+        { type: 'url',   Icon: Link,        label: 'External Link', sub: 'Google Doc, Notion, website' },
+        { type: 'file',  Icon: File,        label: 'Upload a File', sub: 'PDF or Word document' },
+        { type: 'notes', Icon: NotePencil,  label: 'Write Notes',   sub: 'Type directly in the app' },
+      ].map(({ type, Icon, label, sub }) => (
+        <button
+          key={type}
+          onClick={() => onPick(type)}
+          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-jade hover:bg-jade/5 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-xl bg-sunrise-50 flex items-center justify-center shrink-0">
+            <Icon size={20} className="text-jade" weight="fill" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-stone-800">{label}</p>
+            <p className="text-xs text-stone-400 mt-0.5">{sub}</p>
+          </div>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function UrlEditor({ initial, onSave, onCancel }) {
+  const [url, setUrl] = useState(initial || '')
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
   const toast = useToast()
 
-  async function handleSave(e) {
+  async function handle(e) {
     e.preventDefault()
     setSaving(true)
-    setError(null)
-    const { error: saveError } = await onSave(url)
-    if (saveError) {
-      setError('Failed to save. Please try again.')
-      toast('Failed to save guide link', 'error')
-      setSaving(false)
-    } else {
-      toast('Guide link saved', 'success')
-      close()
-    }
+    const trimmed = url.trim()
+    const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
+    const { error } = await onSave({ type: 'url', url: normalized })
+    if (error) toast('Failed to save', 'error')
+    else toast('Guide saved', 'success')
+    setSaving(false)
   }
 
   return (
-    <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
-      onClick={close}
-    >
-      <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-5 pb-4">
-          <div className="flex items-center gap-2">
-            <BookOpen size={20} weight="fill" className="text-jade" />
-            <h2 className="text-lg font-bold text-stone-800">Add Community Guide</h2>
+    <form onSubmit={handle} className="w-full max-w-xs mx-auto flex flex-col gap-3">
+      <input
+        type="text"
+        value={url}
+        onChange={e => setUrl(e.target.value)}
+        placeholder="https://docs.google.com/…"
+        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+        autoFocus
+      />
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
+        <button type="submit" disabled={saving || !url.trim()} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function FileUploader({ groupId, onSave, onCancel }) {
+  const [file, setFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef(null)
+  const toast = useToast()
+
+  async function handle() {
+    if (!file || !groupId) return
+    setUploading(true)
+    const ext = file.name.split('.').pop().toLowerCase()
+    const path = `${groupId}/guide.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('guide-files')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (uploadError) {
+      toast('Upload failed — check file size and try again', 'error')
+      setUploading(false)
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('guide-files').getPublicUrl(path)
+    const { error } = await onSave({ type: 'file', url: publicUrl })
+    if (error) toast('Failed to save', 'error')
+    else toast('Guide uploaded', 'success')
+    setUploading(false)
+  }
+
+  return (
+    <div className="w-full max-w-xs mx-auto flex flex-col gap-3">
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+        onChange={e => setFile(e.target.files?.[0] || null)}
+      />
+      {!file ? (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="flex flex-col items-center gap-2 px-6 py-8 border-2 border-dashed border-stone-200 rounded-2xl hover:border-jade hover:bg-jade/5 transition-colors"
+        >
+          <UploadSimple size={28} className="text-stone-400" />
+          <span className="text-sm text-stone-500">Tap to choose a file</span>
+          <span className="text-xs text-stone-400">PDF or Word · max 10 MB</span>
+        </button>
+      ) : (
+        <div className="flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl">
+          <File size={20} weight="fill" className="text-jade shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-stone-800 truncate">{file.name}</p>
+            <p className="text-xs text-stone-400">{formatBytes(file.size)}</p>
           </div>
-          <button
-            onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
-          >
-            &times;
+          <button type="button" onClick={() => setFile(null)} className="text-stone-400 hover:text-stone-600 p-1">
+            <X size={16} />
           </button>
         </div>
-        <form onSubmit={handleSave} className="px-5 pb-6 space-y-4">
-          <input
-            type="text"
-            value={url}
-            onChange={e => { setUrl(e.target.value); setError(null) }}
-            placeholder="https://example.com/guide"
-            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-          />
-          {error && <p className="text-xs text-red-500">{error}</p>}
-          <button
-            type="submit"
-            disabled={saving || !url.trim()}
-            className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-        </form>
+      )}
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
+        <button type="button" onClick={handle} disabled={!file || uploading} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
+          {uploading ? 'Uploading…' : 'Upload'}
+        </button>
       </div>
     </div>
   )
 }
 
-export default function GuideTab({ onClose, guideUrl, isAdmin, onGuideUrlSave }) {
-  const [addingGuide, setAddingGuide] = useState(false)
+function NotesEditor({ initial, onSave, onCancel }) {
+  const [content, setContent] = useState(initial || '')
+  const [saving, setSaving] = useState(false)
+  const toast = useToast()
+
+  async function handle() {
+    setSaving(true)
+    const { error } = await onSave({ type: 'notes', content: content.trim() })
+    if (error) toast('Failed to save', 'error')
+    else toast('Notes saved', 'success')
+    setSaving(false)
+  }
 
   return (
-    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-      <div className="flex items-center justify-end mb-8">
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-          >
-            <ArrowLeft size={20} weight="bold" />
+    <div className="w-full flex flex-col gap-3">
+      <textarea
+        value={content}
+        onChange={e => setContent(e.target.value)}
+        placeholder="Type your community guide here — values, FAQs, contact info, house rules…"
+        className="w-full min-h-[280px] border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none leading-relaxed"
+        autoFocus
+      />
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
+        <button type="button" onClick={handle} disabled={saving || !content.trim()} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function EditHeader({ onClose, onEdit, showEdit }) {
+  return (
+    <div className="flex items-center justify-between mb-8">
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+        >
+          <ArrowLeft size={20} weight="bold" />
+        </button>
+      )}
+      {showEdit && (
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1.5 text-sm font-medium text-stone-500 hover:text-stone-700 transition-colors ml-auto"
+        >
+          <PencilSimple size={16} weight="bold" />
+          Edit
+        </button>
+      )}
+    </div>
+  )
+}
+
+export default function GuideTab({ onClose, guideUrl, guideType, guideContent, isAdmin, groupId, onGuideSave }) {
+  const [editMode, setEditMode] = useState(null) // null | 'pick' | 'url' | 'file' | 'notes'
+
+  // Backward compat: groups with guide_url but no guide_type treat it as 'url'
+  const effectiveType = guideType || (guideUrl ? 'url' : null)
+  const hasGuide = !!effectiveType
+
+  async function handleSave(data) {
+    const result = await onGuideSave(data)
+    if (!result?.error) setEditMode(null)
+    return result
+  }
+
+  function handleCancel() {
+    setEditMode(null)
+  }
+
+  // ── Edit: type picker ──────────────────────────────────────────────────────
+  if (editMode === 'pick') {
+    return (
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+        <EditHeader onClose={onClose} />
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+            <BookOpen size={44} weight="fill" className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-stone-800 mb-2">Set Up Guide</h1>
+          <p className="text-stone-500 text-sm max-w-xs">Choose how you'd like to share the guide with your community.</p>
+        </div>
+        <TypePicker onPick={type => setEditMode(type)} />
+      </div>
+    )
+  }
+
+  // ── Edit: URL ──────────────────────────────────────────────────────────────
+  if (editMode === 'url') {
+    return (
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+        <EditHeader onClose={onClose} />
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+            <Link size={44} weight="fill" className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-stone-800 mb-2">External Link</h1>
+          <p className="text-stone-500 text-sm max-w-xs mb-8">Paste a link to a Google Doc, Notion page, or any website.</p>
+          <UrlEditor initial={effectiveType === 'url' ? guideUrl : ''} onSave={handleSave} onCancel={handleCancel} />
+          {hasGuide && (
+            <button onClick={() => setEditMode('pick')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline">
+              Switch guide type
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Edit: file upload ──────────────────────────────────────────────────────
+  if (editMode === 'file') {
+    return (
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+        <EditHeader onClose={onClose} />
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+            <File size={44} weight="fill" className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-stone-800 mb-2">Upload File</h1>
+          <p className="text-stone-500 text-sm max-w-xs mb-8">Upload a PDF or Word document as your community guide.</p>
+          <FileUploader groupId={groupId} onSave={handleSave} onCancel={handleCancel} />
+          {hasGuide && (
+            <button onClick={() => setEditMode('pick')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline">
+              Switch guide type
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Edit: notes ────────────────────────────────────────────────────────────
+  if (editMode === 'notes') {
+    return (
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+        <EditHeader onClose={onClose} />
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+            <NotePencil size={44} weight="fill" className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-stone-800 mb-1">Write Notes</h1>
+          <p className="text-stone-500 text-sm max-w-xs mb-6">This content is visible to all group members.</p>
+        </div>
+        <NotesEditor initial={guideContent || ''} onSave={handleSave} onCancel={handleCancel} />
+        {hasGuide && effectiveType !== 'notes' && (
+          <button onClick={() => setEditMode('pick')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline block mx-auto">
+            Switch guide type
           </button>
         )}
       </div>
+    )
+  }
+
+  // ── Display mode ───────────────────────────────────────────────────────────
+  return (
+    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+      <EditHeader
+        onClose={onClose}
+        showEdit={isAdmin && hasGuide}
+        onEdit={() => setEditMode(effectiveType)}
+      />
+
       <div className="flex flex-col items-center text-center">
         <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
           <BookOpen size={44} weight="fill" className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-stone-800 mb-2">Guide</h1>
-        <p className="text-stone-500 text-sm mb-8 max-w-xs">
-          Read the latest guide posts from your community.
-        </p>
-        {guideUrl ? (
-          <button
-            onClick={() => window.open(guideUrl, '_blank', 'noopener,noreferrer')}
-            className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
-          >
-            Open Guide
-            <ArrowSquareOut size={18} weight="bold" />
-          </button>
+
+        {effectiveType === 'notes' && guideContent ? (
+          <>
+            <p className="text-stone-500 text-sm mb-6 max-w-xs">Community guide from your admin.</p>
+            <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">
+              {guideContent}
+            </div>
+          </>
+        ) : (effectiveType === 'url' || effectiveType === 'file') && guideUrl ? (
+          <>
+            <p className="text-stone-500 text-sm mb-8 max-w-xs">
+              {effectiveType === 'file'
+                ? 'Your community guide is available to view.'
+                : 'Read the latest guide from your community.'}
+            </p>
+            <button
+              onClick={() => window.open(guideUrl, '_blank', 'noopener,noreferrer')}
+              className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
+            >
+              Open Guide
+              <ArrowSquareOut size={18} weight="bold" />
+            </button>
+          </>
         ) : isAdmin ? (
-          <button
-            onClick={() => setAddingGuide(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
-          >
-            Add a guide
-            <Link size={18} weight="bold" />
-          </button>
+          <>
+            <p className="text-stone-500 text-sm mb-8 max-w-xs">Set up a guide for your community to reference anytime.</p>
+            <button
+              onClick={() => setEditMode('pick')}
+              className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
+            >
+              Set up guide
+            </button>
+          </>
         ) : (
-          <p className="text-sm text-stone-400 max-w-xs">
-            No guide available. Please ask your admin to upload the guide.
+          <p className="text-sm text-stone-400 max-w-xs mt-2">
+            No guide available yet. Ask your admin to set one up.
           </p>
         )}
       </div>
-
-      {addingGuide && (
-        <AddGuideModal
-          onClose={() => setAddingGuide(false)}
-          onSave={onGuideUrlSave}
-        />
-      )}
     </div>
   )
 }
