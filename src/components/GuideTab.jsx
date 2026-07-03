@@ -14,16 +14,19 @@ function formatBytes(bytes) {
 function TypePicker({ onPick }) {
   return (
     <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
-      <p className="text-sm text-stone-500 text-center mb-1">How do you want to share the guide?</p>
+      <p className="text-sm text-stone-500 text-center mb-1 animate-fade-up" style={{ animationDelay: '40ms' }}>
+        How do you want to share the guide?
+      </p>
       {[
-        { type: 'url',   Icon: Link,        label: 'External Link', sub: 'Google Doc, Notion, website' },
-        { type: 'file',  Icon: File,        label: 'Upload a File', sub: 'PDF or Word document' },
-        { type: 'notes', Icon: NotePencil,  label: 'Write Notes',   sub: 'Type directly in the app' },
-      ].map(({ type, Icon, label, sub }) => (
+        { type: 'url',   Icon: Link,       label: 'External Link', sub: 'Google Doc, Notion, website' },
+        { type: 'file',  Icon: File,       label: 'Upload a File', sub: 'PDF or Word document' },
+        { type: 'notes', Icon: NotePencil, label: 'Write Notes',   sub: 'Type directly in the app' },
+      ].map(({ type, Icon, label, sub }, i) => (
         <button
           key={type}
           onClick={() => onPick(type)}
-          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-jade hover:bg-jade/5 transition-colors"
+          style={{ animationDelay: `${80 + i * 70}ms` }}
+          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-jade hover:bg-jade/5 transition-colors animate-stack-in"
         >
           <div className="w-10 h-10 rounded-xl bg-sunrise-50 flex items-center justify-center shrink-0">
             <Icon size={20} className="text-jade" weight="fill" />
@@ -173,21 +176,19 @@ function NotesEditor({ initial, onSave, onCancel }) {
   )
 }
 
-function EditHeader({ onClose, onEdit, showEdit }) {
+function NavHeader({ onBack, onEdit, showEdit }) {
   return (
     <div className="flex items-center justify-between mb-8">
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
-        >
-          <ArrowLeft size={20} weight="bold" />
-        </button>
-      )}
+      <button
+        onClick={onBack}
+        className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+      >
+        <ArrowLeft size={20} weight="bold" />
+      </button>
       {showEdit && (
         <button
           onClick={onEdit}
-          className="flex items-center gap-1.5 text-sm font-medium text-stone-500 hover:text-stone-700 transition-colors ml-auto"
+          className="flex items-center gap-1.5 text-sm font-medium text-stone-500 hover:text-stone-700 transition-colors"
         >
           <PencilSimple size={16} weight="bold" />
           Edit
@@ -198,27 +199,39 @@ function EditHeader({ onClose, onEdit, showEdit }) {
 }
 
 export default function GuideTab({ onClose, guideUrl, guideType, guideContent, isAdmin, groupId, onGuideSave }) {
-  const [editMode, setEditMode] = useState(null) // null | 'pick' | 'url' | 'file' | 'notes'
+  const [editMode, setEditMode]     = useState(null) // null | 'pick' | 'url' | 'file' | 'notes'
+  const [slideDir, setSlideDir]     = useState('right')
+  const [backTarget, setBackTarget] = useState(null) // where Cancel/back-arrow goes from an editor
 
-  // Backward compat: groups with guide_url but no guide_type treat it as 'url'
+  // Skip entry animation on first render; only animate on internal navigation
+  const hasNavigated = useRef(false)
+
   const effectiveType = guideType || (guideUrl ? 'url' : null)
   const hasGuide = !!effectiveType
 
-  async function handleSave(data) {
-    const result = await onGuideSave(data)
-    if (!result?.error) setEditMode(null)
-    return result
+  function navigateTo(mode, dir, back = null) {
+    hasNavigated.current = true
+    setSlideDir(dir)
+    setBackTarget(back)
+    setEditMode(mode)
   }
 
-  function handleCancel() {
-    setEditMode(null)
+  function screenClass() {
+    if (!hasNavigated.current) return ''
+    return slideDir === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
+  }
+
+  async function handleSave(data) {
+    const result = await onGuideSave(data)
+    if (!result?.error) navigateTo(null, 'left')
+    return result
   }
 
   // ── Edit: type picker ──────────────────────────────────────────────────────
   if (editMode === 'pick') {
     return (
-      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-        <EditHeader onClose={onClose} />
+      <div key="pick" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+        <NavHeader onBack={() => navigateTo(null, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
             <BookOpen size={44} weight="fill" className="text-white" />
@@ -226,7 +239,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
           <h1 className="text-3xl font-bold text-stone-800 mb-2">Set Up Guide</h1>
           <p className="text-stone-500 text-sm max-w-xs">Choose how you'd like to share the guide with your community.</p>
         </div>
-        <TypePicker onPick={type => setEditMode(type)} />
+        <TypePicker onPick={type => navigateTo(type, 'right', 'pick')} />
       </div>
     )
   }
@@ -234,17 +247,21 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: URL ──────────────────────────────────────────────────────────────
   if (editMode === 'url') {
     return (
-      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-        <EditHeader onClose={onClose} />
+      <div key="url" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+        <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
             <Link size={44} weight="fill" className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-stone-800 mb-2">External Link</h1>
           <p className="text-stone-500 text-sm max-w-xs mb-8">Paste a link to a Google Doc, Notion page, or any website.</p>
-          <UrlEditor initial={effectiveType === 'url' ? guideUrl : ''} onSave={handleSave} onCancel={handleCancel} />
+          <UrlEditor
+            initial={effectiveType === 'url' ? guideUrl : ''}
+            onSave={handleSave}
+            onCancel={() => navigateTo(backTarget, 'left')}
+          />
           {hasGuide && (
-            <button onClick={() => setEditMode('pick')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline">
+            <button onClick={() => navigateTo('pick', 'left')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline">
               Switch guide type
             </button>
           )}
@@ -256,17 +273,21 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: file upload ──────────────────────────────────────────────────────
   if (editMode === 'file') {
     return (
-      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-        <EditHeader onClose={onClose} />
+      <div key="file" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+        <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
             <File size={44} weight="fill" className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-stone-800 mb-2">Upload File</h1>
           <p className="text-stone-500 text-sm max-w-xs mb-8">Upload a PDF or Word document as your community guide.</p>
-          <FileUploader groupId={groupId} onSave={handleSave} onCancel={handleCancel} />
+          <FileUploader
+            groupId={groupId}
+            onSave={handleSave}
+            onCancel={() => navigateTo(backTarget, 'left')}
+          />
           {hasGuide && (
-            <button onClick={() => setEditMode('pick')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline">
+            <button onClick={() => navigateTo('pick', 'left')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline">
               Switch guide type
             </button>
           )}
@@ -278,8 +299,8 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: notes ────────────────────────────────────────────────────────────
   if (editMode === 'notes') {
     return (
-      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-        <EditHeader onClose={onClose} />
+      <div key="notes" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+        <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
             <NotePencil size={44} weight="fill" className="text-white" />
@@ -287,9 +308,13 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
           <h1 className="text-3xl font-bold text-stone-800 mb-1">Write Notes</h1>
           <p className="text-stone-500 text-sm max-w-xs mb-6">This content is visible to all group members.</p>
         </div>
-        <NotesEditor initial={guideContent || ''} onSave={handleSave} onCancel={handleCancel} />
+        <NotesEditor
+          initial={guideContent || ''}
+          onSave={handleSave}
+          onCancel={() => navigateTo(backTarget, 'left')}
+        />
         {hasGuide && effectiveType !== 'notes' && (
-          <button onClick={() => setEditMode('pick')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline block mx-auto">
+          <button onClick={() => navigateTo('pick', 'left')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline block mx-auto">
             Switch guide type
           </button>
         )}
@@ -299,11 +324,11 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
 
   // ── Display mode ───────────────────────────────────────────────────────────
   return (
-    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-      <EditHeader
-        onClose={onClose}
+    <div key="display" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+      <NavHeader
+        onBack={onClose}
         showEdit={isAdmin && hasGuide}
-        onEdit={() => setEditMode(effectiveType)}
+        onEdit={() => navigateTo(effectiveType, 'right', null)}
       />
 
       <div className="flex flex-col items-center text-center">
@@ -338,7 +363,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
           <>
             <p className="text-stone-500 text-sm mb-8 max-w-xs">Set up a guide for your community to reference anytime.</p>
             <button
-              onClick={() => setEditMode('pick')}
+              onClick={() => navigateTo('pick', 'right')}
               className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
             >
               Set up guide
