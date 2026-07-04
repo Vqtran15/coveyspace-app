@@ -2,7 +2,10 @@ import { useState, useRef } from 'react'
 import {
   BookOpen, ArrowSquareOut, ArrowLeft, Link,
   File, NotePencil, PencilSimple, UploadSimple, X,
+  TextB, TextItalic, ListBullets,
 } from '@phosphor-icons/react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 
@@ -144,9 +147,52 @@ function FileUploader({ groupId, onSave, onCancel }) {
   )
 }
 
+const TOOLBAR_ACTIONS = [
+  { format: 'bold',   Icon: TextB,        title: 'Bold' },
+  { format: 'italic', Icon: TextItalic,   title: 'Italic' },
+  { format: 'bullet', Icon: ListBullets,  title: 'Bullet list' },
+]
+
+function applyFormat(el, format, setContent) {
+  const start = el.selectionStart
+  const end   = el.selectionEnd
+  const val   = el.value
+  const sel   = val.substring(start, end)
+
+  let newVal, nextStart, nextEnd
+
+  if (format === 'bold' || format === 'italic') {
+    const m = format === 'bold' ? '**' : '*'
+    const placeholder = format === 'bold' ? 'bold text' : 'italic text'
+    if (sel) {
+      const inserted = `${m}${sel}${m}`
+      newVal    = val.substring(0, start) + inserted + val.substring(end)
+      nextStart = start
+      nextEnd   = start + inserted.length
+    } else {
+      const inserted = `${m}${placeholder}${m}`
+      newVal    = val.substring(0, start) + inserted + val.substring(end)
+      nextStart = start + m.length
+      nextEnd   = start + m.length + placeholder.length
+    }
+  } else if (format === 'bullet') {
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1
+    newVal    = val.substring(0, lineStart) + '- ' + val.substring(lineStart)
+    nextStart = nextEnd = start + 2
+  }
+
+  setContent(newVal)
+  setTimeout(() => {
+    el.focus()
+    el.selectionStart = nextStart
+    el.selectionEnd   = nextEnd
+  }, 0)
+}
+
 function NotesEditor({ initial, onSave, onCancel }) {
   const [content, setContent] = useState(initial || '')
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const textareaRef = useRef(null)
   const toast = useToast()
 
   async function handle() {
@@ -159,13 +205,29 @@ function NotesEditor({ initial, onSave, onCancel }) {
 
   return (
     <div className="w-full flex flex-col gap-3">
-      <textarea
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        placeholder="Type your community guide here — values, FAQs, contact info, house rules…"
-        className="w-full min-h-[280px] border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none leading-relaxed"
-        autoFocus
-      />
+      <div className="border border-stone-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-jade focus-within:border-transparent">
+        <div className="flex items-center gap-0.5 px-2 py-1.5 bg-stone-50 border-b border-stone-100">
+          {TOOLBAR_ACTIONS.map(({ format, Icon, title }) => (
+            <button
+              key={format}
+              type="button"
+              title={title}
+              onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, format, setContent) }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors"
+            >
+              <Icon size={16} weight="bold" />
+            </button>
+          ))}
+        </div>
+        <textarea
+          ref={textareaRef}
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="Type your community guide here — values, FAQs, contact info, house rules…"
+          className="w-full min-h-[260px] px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none resize-none leading-relaxed bg-white"
+          autoFocus
+        />
+      </div>
       <div className="flex gap-2">
         <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
         <button type="button" onClick={handle} disabled={saving || !content.trim()} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
@@ -313,7 +375,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
           onSave={handleSave}
           onCancel={() => navigateTo(backTarget, 'left')}
         />
-        {hasGuide && effectiveType !== 'notes' && (
+        {hasGuide && (
           <button onClick={() => navigateTo('pick', 'left')} className="mt-5 text-xs text-stone-400 hover:text-stone-600 underline block mx-auto">
             Switch guide type
           </button>
@@ -340,8 +402,24 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
         {effectiveType === 'notes' && guideContent ? (
           <>
             <p className="text-stone-500 text-sm mb-6 max-w-xs">Community guide from your admin.</p>
-            <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">
-              {guideContent}
+            <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed prose-notes">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => <h1 className="text-base font-bold text-stone-800 mb-2 mt-4 first:mt-0">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-sm font-bold text-stone-800 mb-1.5 mt-3 first:mt-0">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-sm font-semibold text-stone-700 mb-1 mt-2 first:mt-0">{children}</h3>,
+                  p:  ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                  strong: ({ children }) => <strong className="font-semibold text-stone-800">{children}</strong>,
+                  em:     ({ children }) => <em className="italic">{children}</em>,
+                  ul: ({ children }) => <ul className="list-disc ml-5 mb-3 space-y-0.5">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal ml-5 mb-3 space-y-0.5">{children}</ol>,
+                  li: ({ children }) => <li>{children}</li>,
+                  hr: () => <hr className="border-stone-100 my-4" />,
+                }}
+              >
+                {guideContent}
+              </ReactMarkdown>
             </div>
           </>
         ) : (effectiveType === 'url' || effectiveType === 'file') && guideUrl ? (
