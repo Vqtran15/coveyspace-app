@@ -402,7 +402,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
         {effectiveType === 'notes' && guideContent ? (
           <>
             <p className="text-stone-500 text-sm mb-6 max-w-xs">Community guide from your admin.</p>
-            <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed prose-notes">
+            <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
