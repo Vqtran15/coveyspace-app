@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -7,7 +7,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [] }) {
+export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [], pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -23,6 +23,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [confirmDeleteConv, setConfirmDeleteConv] = useState(null)
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
+  const [notifDismissed, setNotifDismissed]   = useState(() => localStorage.getItem('notifBannerDismissed') === '1')
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
@@ -238,6 +239,8 @@ export default function ConversationList({ session, groupId, members, enterClass
 
   const otherMembers = members.filter(m => m.user_id !== myId)
 
+  const showNotifBanner = pushSupported && !pushSubscribed && pushPermission !== 'denied' && !notifDismissed
+
   return (
     <div
       className={`flex flex-col bg-sunrise-50 ${enterClass ?? ''}`}
@@ -249,8 +252,33 @@ export default function ConversationList({ session, groupId, members, enterClass
         </div>
       )}
 
+      {showNotifBanner && (
+        <div className="shrink-0 px-4 pt-4">
+          <div className="max-w-3xl mx-auto flex items-center gap-3 bg-jade/10 border border-jade/20 rounded-2xl px-4 py-3">
+            <Bell size={18} weight="fill" className="text-jade shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-stone-700">Chat notifications are off</p>
+              <p className="text-xs text-stone-400 mt-0.5">Tap Enable to get notified of new messages</p>
+            </div>
+            <button
+              onClick={onPushToggle}
+              disabled={pushToggling}
+              className="text-xs font-semibold text-white bg-jade px-3 py-1.5 rounded-lg shrink-0 hover:bg-jade-700 transition-colors disabled:opacity-40"
+            >
+              {pushToggling ? '…' : 'Enable'}
+            </button>
+            <button
+              onClick={() => { localStorage.setItem('notifBannerDismissed', '1'); setNotifDismissed(true) }}
+              className="text-stone-400 hover:text-stone-600 transition-colors shrink-0 p-0.5"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className={`max-w-3xl mx-auto w-full px-4 ${upcoming.length > 0 ? 'pt-4' : 'pt-8'} pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
+      <div className={`max-w-3xl mx-auto w-full px-4 ${upcoming.length > 0 || showNotifBanner ? 'pt-4' : 'pt-8'} pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
         </div>
