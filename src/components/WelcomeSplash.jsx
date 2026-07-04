@@ -1,7 +1,7 @@
 import {
   Confetti, DeviceMobile, BoxArrowUp, DotsThreeVertical,
   ShieldCheck, Users, ArrowLeft, ChatCircleDots, ForkKnife,
-  HandsPraying, Cake, CalendarCheck, Link, ShareNetwork,
+  HandsPraying, Cake, CalendarCheck, Link, ShareNetwork, Bell,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
@@ -116,6 +116,20 @@ export default function WelcomeSplash({
   // ── Tour (member) ──────────────────────────────────────────────────────────
   const [tourSlide, setTourSlide] = useState(0)
   const touchStartX = useRef(null)
+
+  // ── Notifications (install step) ───────────────────────────────────────────
+  const [notifPermission, setNotifPermission] = useState(() =>
+    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
+  )
+  const [notifRequesting, setNotifRequesting] = useState(false)
+
+  async function requestNotifPermission() {
+    if (typeof Notification === 'undefined') return
+    setNotifRequesting(true)
+    const perm = await Notification.requestPermission()
+    setNotifPermission(perm)
+    setNotifRequesting(false)
+  }
 
   useEffect(() => {
     if (!userId) return
@@ -822,7 +836,7 @@ export default function WelcomeSplash({
 
     // ── STEP: install ──────────────────────────────────────────────────────────
     return (
-      <div className="flex flex-col items-center justify-center flex-1 p-6">
+      <div className="flex flex-col items-center justify-center flex-1 p-6 overflow-y-auto overscroll-contain">
         <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
           <DeviceMobile size={72} weight="fill" />
         </div>
@@ -853,6 +867,30 @@ export default function WelcomeSplash({
               </div>
             </div>
           </div>
+          {'Notification' in window && 'PushManager' in window && (
+            <div className="bg-white border border-stone-100 rounded-2xl shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+              <div className="flex items-center gap-3 px-4 py-4">
+                <Bell size={22} className="shrink-0 text-jade" weight="fill" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-stone-700">Chat Notifications</p>
+                  <p className="text-xs text-stone-400 mt-0.5">Get notified when new messages arrive</p>
+                </div>
+                {notifPermission === 'granted' ? (
+                  <span className="text-xs font-semibold text-jade shrink-0">On ✓</span>
+                ) : notifPermission === 'denied' ? (
+                  <span className="text-xs text-stone-400 shrink-0">Blocked</span>
+                ) : (
+                  <button
+                    onClick={requestNotifPermission}
+                    disabled={notifRequesting}
+                    className="text-xs font-semibold text-white bg-jade px-3 py-1.5 rounded-lg shrink-0 hover:bg-jade-700 transition-colors disabled:opacity-40"
+                  >
+                    {notifRequesting ? '…' : 'Enable'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           <button
             onClick={close}
             className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
