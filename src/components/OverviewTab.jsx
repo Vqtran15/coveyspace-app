@@ -142,8 +142,10 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [announcement, setAnnouncement]     = useState(undefined)
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
+  const [loaded, setLoaded] = useState(false)
 
   async function load() {
+    setLoaded(false)
     const today = toDateString(new Date())
 
     const [mealRes, serviceRes] = await Promise.all([
@@ -193,6 +195,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         }
       }
     }
+    setLoaded(true)
   }
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
@@ -271,56 +274,63 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       </div>
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
-        {/* Announcement — always first */}
-        {isAdmin && announcement === undefined ? (
-          <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>
-        ) : showAnnouncement && (
-          announcement ? (
-            <div className="w-full animate-stack-in lg:col-span-2">
-              <div
-                className="w-full bg-jade rounded-2xl p-5 shadow-md shadow-jade/25 animate-announcement-shake"
-                style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
-              >
-                <div className="flex items-start gap-4">
-                  <Megaphone size={34} weight="fill" className="text-white/70 shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-white/60 uppercase tracking-wide mb-1.5">Announcement</p>
-                    <p className="text-base text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
+        {!loaded ? (
+          <>
+            {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
+            {mealsEnabled     && <CardSkeleton delay={isAdmin ? 80  : 0}   />}
+            {servicesEnabled  && <CardSkeleton delay={isAdmin ? 160 : 80}  />}
+            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
+            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 320 : 240} />}
+            {guideEnabled     && <CardSkeleton delay={isAdmin ? 400 : 320} />}
+          </>
+        ) : (
+          <>
+            {/* Announcement — always first */}
+            {showAnnouncement && (
+              announcement ? (
+                <div className="w-full animate-stack-in lg:col-span-2">
+                  <div
+                    className="w-full bg-jade rounded-2xl p-5 shadow-md shadow-jade/25 animate-announcement-shake"
+                    style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <Megaphone size={34} weight="fill" className="text-white/70 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-white/60 uppercase tracking-wide mb-1.5">Announcement</p>
+                        <p className="text-base text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => setEditingAnnouncement(true)}
+                          className="text-white/50 hover:text-white transition-colors shrink-0 mt-0.5 p-1"
+                        >
+                          <PencilSimple size={15} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => setEditingAnnouncement(true)}
-                      className="text-white/50 hover:text-white transition-colors shrink-0 mt-0.5 p-1"
-                    >
-                      <PencilSimple size={15} />
-                    </button>
-                  )}
                 </div>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setEditingAnnouncement(true)}
-              className="w-full bg-jade/8 border border-dashed border-jade/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
-              style={{ animationDelay: '0ms' }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-jade/10 flex items-center justify-center shrink-0">
-                  <Megaphone size={20} weight="fill" className="text-jade/50" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-jade/60 uppercase tracking-wide mb-0.5">Announcement</p>
-                  <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
-                </div>
-              </div>
-            </button>
-          )
-        )}
+              ) : (
+                <button
+                  onClick={() => setEditingAnnouncement(true)}
+                  className="w-full bg-jade/8 border border-dashed border-jade/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
+                  style={{ animationDelay: '0ms' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-jade/10 flex items-center justify-center shrink-0">
+                      <Megaphone size={20} weight="fill" className="text-jade/50" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-jade/60 uppercase tracking-wide mb-0.5">Announcement</p>
+                      <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
+                    </div>
+                  </div>
+                </button>
+              )
+            )}
 
-        {mealsEnabled && (
-          nextMeal === undefined
-            ? <CardSkeleton delay={showAnnouncement ? 80 : 0} />
-            : <Card
+            {mealsEnabled && (
+              <Card
                 onClick={() => navigate('/schedule')}
                 icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
                 iconBg="bg-jade/10"
@@ -329,11 +339,9 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
                 delay={showAnnouncement ? 80 : 0}
               />
-        )}
-        {servicesEnabled && (
-          nextService === undefined
-            ? <CardSkeleton delay={showAnnouncement ? 160 : 80} />
-            : <Card
+            )}
+            {servicesEnabled && (
+              <Card
                 onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
                 icon={<HandHeart size={24} weight="fill" className="text-coral" />}
                 iconBg="bg-coral/10"
@@ -342,11 +350,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
                 delay={showAnnouncement ? 160 : 80}
               />
-        )}
-        {prayerEnabled && (
-          prayerCard === undefined
-            ? <CardSkeleton delay={showAnnouncement ? 240 : 160} />
-            : prayerCard && (
+            )}
+            {prayerEnabled && prayerCard && (
               <Card
                 onClick={() => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } })}
                 icon={<HandsPraying size={24} weight="fill" className="text-sage-700" />}
@@ -356,31 +361,31 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 secondary={prayerCard.request}
                 delay={showAnnouncement ? 240 : 160}
               />
-            )
+            )}
+            {birthdaysEnabled && (
+              <Card
+                onClick={onOpenBirthdays}
+                icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
+                iconBg="bg-lagoon-50"
+                label="Upcoming Birthdays"
+                primary={birthdayPrimary()}
+                delay={showAnnouncement ? 320 : 240}
+                confetti={!!nextBirthday && nextBirthday.days <= 30}
+              />
+            )}
+            {guideEnabled && (
+              <Card
+                onClick={onOpenGuide}
+                icon={<BookOpen size={24} weight="fill" className="text-stone-500" />}
+                iconBg="bg-stone-100"
+                label="Guide"
+                primary="Community Guide"
+                secondary="Tap to open"
+                delay={showAnnouncement ? 400 : 320}
+              />
+            )}
+          </>
         )}
-        {birthdaysEnabled && (
-          <Card
-            onClick={onOpenBirthdays}
-            icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
-            iconBg="bg-lagoon-50"
-            label="Upcoming Birthdays"
-            primary={birthdayPrimary()}
-            delay={showAnnouncement ? 320 : 240}
-            confetti={!!nextBirthday && nextBirthday.days <= 30}
-          />
-        )}
-        {guideEnabled && (
-          <Card
-            onClick={onOpenGuide}
-            icon={<BookOpen size={24} weight="fill" className="text-stone-500" />}
-            iconBg="bg-stone-100"
-            label="Guide"
-            primary="Community Guide"
-            secondary="Tap to open"
-            delay={showAnnouncement ? 400 : 320}
-          />
-        )}
-
       </div>
 
       {editingAnnouncement && (
