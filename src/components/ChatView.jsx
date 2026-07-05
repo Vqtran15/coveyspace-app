@@ -678,6 +678,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       longPressRef.current = null
       longPressFiredRef.current = true
       lastTapRef.current = null
+      window.getSelection()?.removeAllRanges()
       if (isOwn) {
         setSelectedMsgId(prev => prev === msgId ? null : msgId)
         setConfirmDeleteId(null)
@@ -941,7 +942,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <div
                   id={`msg-${msg.id}`}
                   key={msg.id}
-                  className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
+                  className={`flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
                   onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
                   onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
                   onTouchStart={e => { if (msg._pending || msg._failed) return; handleLongPressStart(e, msg.id, isOwn) }}
