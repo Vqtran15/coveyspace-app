@@ -672,6 +672,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   function handleLongPressStart(e, msgId, isOwn) {
     if (e.target.closest('button, a')) return
+    const el = e.currentTarget
     longPressFiredRef.current = false
     longPressRef.current = setTimeout(() => {
       longPressRef.current = null
@@ -681,7 +682,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setSelectedMsgId(prev => prev === msgId ? null : msgId)
         setConfirmDeleteId(null)
       } else {
-        openMenuFromEl(e.currentTarget, msgId, isOwn)
+        openMenuFromEl(el, msgId, isOwn)
       }
     }, 500)
   }
