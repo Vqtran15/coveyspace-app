@@ -112,6 +112,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const presenceChannelRef = useRef(null)
   const typingTimeoutRef   = useRef(null)
   const lastTapRef         = useRef(null)
+  const longPressRef       = useRef(null)
+  const longPressFiredRef  = useRef(false)
   const preserveScrollRef  = useRef(null)
   const isAtBottomRef              = useRef(true)
   const initialScrollDoneRef       = useRef(false)
@@ -650,6 +652,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   function handleDoubleTap(e, msgId, isOwn) {
     if (e.target.closest('button, a')) return
+    if (longPressFiredRef.current) { longPressFiredRef.current = false; return }
     const now = Date.now()
     const last = lastTapRef.current
     if (last && last.msgId === msgId && now - last.time < 300) {
@@ -664,6 +667,29 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       lastTapRef.current = { time: now, msgId }
       setSelectedMsgId(null)
       setConfirmDeleteId(null)
+    }
+  }
+
+  function handleLongPressStart(e, msgId, isOwn) {
+    if (e.target.closest('button, a')) return
+    longPressFiredRef.current = false
+    longPressRef.current = setTimeout(() => {
+      longPressRef.current = null
+      longPressFiredRef.current = true
+      lastTapRef.current = null
+      if (isOwn) {
+        setSelectedMsgId(prev => prev === msgId ? null : msgId)
+        setConfirmDeleteId(null)
+      } else {
+        openMenuFromEl(e.currentTarget, msgId, isOwn)
+      }
+    }, 500)
+  }
+
+  function handleLongPressEnd() {
+    if (longPressRef.current) {
+      clearTimeout(longPressRef.current)
+      longPressRef.current = null
     }
   }
 
@@ -917,6 +943,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'} ${isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
                   onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
                   onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
+                  onTouchStart={e => { if (msg._pending || msg._failed) return; handleLongPressStart(e, msg.id, isOwn) }}
+                  onTouchEnd={handleLongPressEnd}
+                  onTouchMove={handleLongPressEnd}
                 >
                   {isOwn && selectedMsgId === msg.id && !editingMsgId && (
                     <div className="self-center flex items-center gap-2 animate-overlay-in">
