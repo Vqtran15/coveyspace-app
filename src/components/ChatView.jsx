@@ -1262,7 +1262,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {/* Action menu */}
       {activeMsg && menuPos && (
         <>
-        <div className="fixed inset-0 z-29" onTouchStart={closeMenu} onClick={closeMenu} />
+        <div className="fixed inset-0 z-29 select-none" onTouchStart={e => { e.preventDefault(); closeMenu() }} onClick={closeMenu} />
         <div
           className="fixed z-30"
           style={{ bottom: menuPos.bottom, ...('right' in menuPos ? { right: menuPos.right } : { left: '50%', transform: 'translateX(-50%)' }) }}
