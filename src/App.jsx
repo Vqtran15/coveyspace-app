@@ -462,7 +462,7 @@ export default function App() {
         </div>
       )}
 
-      <UpdatePrompt />
+      <UpdatePrompt splashActive={splashVisible} />
     </div>
     )}
     {splashVisible && <SplashScreen exiting={splashExiting} />}
