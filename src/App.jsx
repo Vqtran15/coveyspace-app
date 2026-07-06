@@ -265,25 +265,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [location.pathname])
 
-  if (authLoading) return splashVisible ? <SplashScreen exiting={splashExiting} /> : null
-
-  if (!session) return (
-    <>
-      <Routes>
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-      {splashVisible && <SplashScreen exiting={splashExiting} />}
-    </>
-  )
-  if (isRecovery) return (
-    <>
-      <ResetPasswordPage onDone={() => setIsRecovery(false)} />
-      {splashVisible && <SplashScreen exiting={splashExiting} />}
-    </>
-  )
-
-  const upcoming = getUpcomingBirthdays(birthdays)
+  const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
   const isChat = location.pathname === '/chat'
   const isFullHeight = isChat
 
@@ -297,6 +279,15 @@ export default function App() {
   }
 
   return (
+    <>
+    {authLoading ? null : !session ? (
+      <Routes>
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    ) : isRecovery ? (
+      <ResetPasswordPage onDone={() => setIsRecovery(false)} />
+    ) : (
     <div className="min-h-screen bg-sunrise-50 overflow-x-hidden lg:pl-56" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {!isOnline && (
         <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
@@ -472,7 +463,9 @@ export default function App() {
       )}
 
       <UpdatePrompt />
-      {splashVisible && <SplashScreen exiting={splashExiting} />}
     </div>
+    )}
+    {splashVisible && <SplashScreen exiting={splashExiting} />}
+    </>
   )
 }
