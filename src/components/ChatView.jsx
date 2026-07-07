@@ -68,7 +68,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [loadingMore, setLoadingMore]   = useState(false)
   const [text, setText]                 = useState(() => localStorage.getItem(DRAFT_KEY(conversation.id)) ?? '')
   const [sending, setSending]           = useState(false)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [imagePreviews, setImagePreviews] = useState([])
   const [searchOpen, setSearchOpen]     = useState(false)
   const [searchQuery, setSearchQuery]   = useState('')
   const [isAtBottom, setIsAtBottom]     = useState(true)
@@ -457,7 +457,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   async function handleSend(e) {
     e?.preventDefault()
     const trimmed = text.trim()
-    if (!trimmed && !imagePreview) return
+    if (!trimmed && imagePreviews.length === 0) return
     clearTimeout(typingTimeoutRef.current)
     presenceChannelRef.current?.track({ display_name: displayName, typing: false })
 
@@ -467,25 +467,33 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       : null
     setReplyingTo(null)
 
-    if (imagePreview) {
-      const tempId = `temp-${Date.now()}`
-      const captured = imagePreview
+    if (imagePreviews.length > 0) {
+      const captured = [...imagePreviews]
       const capturedText = trimmed || null
-      setIsAtBottom(true)
-      setMessages(prev => [...prev, {
-        _tempId: tempId, _pending: true, _file: captured.file,
-        _textBody: capturedText,
-        id: tempId, conversation_id: convId, user_id: myId,
+      const now = Date.now()
+      const tempMessages = captured.map((preview, i) => ({
+        _tempId: `temp-${now}-${i}`,
+        _pending: true,
+        _file: preview.file,
+        _textBody: null,
+        id: `temp-${now}-${i}`,
+        conversation_id: convId,
+        user_id: myId,
         display_name: displayName || 'Member',
-        body: null, image_url: captured.previewUrl,
-        reply_to_id: replyId, reply_message: replyMsg,
-        created_at: new Date().toISOString(), _isNew: true,
-      }])
+        body: null,
+        image_url: preview.previewUrl,
+        reply_to_id: i === 0 ? replyId : null,
+        reply_message: i === 0 ? replyMsg : null,
+        created_at: new Date(now + i).toISOString(),
+        _isNew: true,
+      }))
+      setIsAtBottom(true)
+      setMessages(prev => [...prev, ...tempMessages])
       setText('')
       localStorage.removeItem(DRAFT_KEY(convId))
-      setImagePreview(null)
+      setImagePreviews([])
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      sendImage(tempId, captured.file, captured.previewUrl, replyId, capturedText)
+      sendImages(tempMessages, capturedText)
       return
     }
 
@@ -511,6 +519,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       console.error('Send failed:', err)
     }
     setSending(false)
+  }
+
+  async function sendImages(tempMessages, textBody) {
+    for (const temp of tempMessages) {
+      await sendImage(temp._tempId, temp._file, temp.image_url, temp.reply_to_id, null)
+    }
+    if (textBody) {
+      const { data: textMsg } = await supabase.from('messages').insert({
+        community_group_id: groupId,
+        conversation_id: convId,
+        user_id: myId,
+        display_name: displayName || 'Member',
+        body: textBody,
+        image_url: null,
+        reply_to_id: null,
+      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
+      if (textMsg) {
+        setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
+      }
+    }
   }
 
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
@@ -545,20 +573,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
         })
 
-        if (textBody) {
-          const { data: textMsg } = await supabase.from('messages').insert({
-            community_group_id: groupId,
-            conversation_id: convId,
-            user_id: myId,
-            display_name: displayName || 'Member',
-            body: textBody,
-            image_url: null,
-            reply_to_id: null,
-          }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-          if (textMsg) {
-            setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
-          }
-        }
       }
     } catch (err) {
       console.error('Image send failed:', err)
@@ -598,14 +612,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   function handleFileChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files ?? [])
     e.target.value = ''
-    if (!file.type.startsWith('image/')) { toast('Only image files are supported', 'error'); return }
-    if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); return }
-    const reader = new FileReader()
-    reader.onload = ev => setImagePreview({ file, previewUrl: ev.target.result })
-    reader.readAsDataURL(file)
+    if (!files.length) return
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) { toast('Only image files are supported', 'error'); continue }
+      if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); continue }
+      const reader = new FileReader()
+      reader.onload = ev => setImagePreviews(prev => [...prev, { file, previewUrl: ev.target.result }])
+      reader.readAsDataURL(file)
+    }
   }
 
   // ── Reactions ─────────────────────────────────────────────────────────────
@@ -1216,15 +1232,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </button>
           </div>
         )}
-        {imagePreview && (
-          <div className="relative inline-block mb-2">
-            <img src={imagePreview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
-            <button
-              onClick={() => setImagePreview(null)}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
-            >
-              <X size={10} weight="bold" />
-            </button>
+        {imagePreviews.length > 0 && (
+          <div className="flex gap-2 mb-2 overflow-x-auto pb-0.5">
+            {imagePreviews.map((preview, i) => (
+              <div key={preview.previewUrl} className="relative shrink-0">
+                <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
+                <button
+                  onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
+                >
+                  <X size={10} weight="bold" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
         {(showEmojiPicker || emojiPickerClosing) && (
@@ -1247,7 +1267,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           >
             <ImageIcon size={22} />
           </button>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
           <textarea
             ref={textareaRef}
             value={text}
@@ -1268,7 +1288,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <button
             type="button"
             onClick={handleSend}
-            disabled={sending || (!text.trim() && !imagePreview)}
+            disabled={sending || (!text.trim() && imagePreviews.length === 0)}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-jade text-white hover:bg-jade-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <PaperPlaneTilt size={18} weight="fill" />
