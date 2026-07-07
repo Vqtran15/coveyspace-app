@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     if (!subs?.length) return new Response('No subscribers', { status: 200 })
 
     const title = reaction.display_name ?? 'Someone'
-    const body  = `${title} prayed for your request`
+    const body  = `${title} prayed for you`
     const notification = JSON.stringify({ title, body, url: '/prayer' })
 
     const staleIds: string[] = []
