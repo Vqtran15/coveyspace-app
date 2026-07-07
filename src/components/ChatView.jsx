@@ -470,12 +470,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (imagePreview) {
       const tempId = `temp-${Date.now()}`
       const captured = imagePreview
+      const capturedText = trimmed || null
       setIsAtBottom(true)
       setMessages(prev => [...prev, {
         _tempId: tempId, _pending: true, _file: captured.file,
+        _textBody: capturedText,
         id: tempId, conversation_id: convId, user_id: myId,
         display_name: displayName || 'Member',
-        body: trimmed || null, image_url: captured.previewUrl,
+        body: null, image_url: captured.previewUrl,
         reply_to_id: replyId, reply_message: replyMsg,
         created_at: new Date().toISOString(), _isNew: true,
       }])
@@ -483,7 +485,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       localStorage.removeItem(DRAFT_KEY(convId))
       setImagePreview(null)
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      sendImage(tempId, captured.file, captured.previewUrl, trimmed || null, replyId)
+      sendImage(tempId, captured.file, captured.previewUrl, replyId, capturedText)
       return
     }
 
@@ -511,7 +513,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setSending(false)
   }
 
-  async function sendImage(tempId, file, previewUrl, body, replyId) {
+  async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
       const ext = file.name.split('.').pop()
       const path = `${myId}/${convId}_${Date.now()}.${ext}`
@@ -526,7 +528,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         conversation_id: convId,
         user_id: myId,
         display_name: displayName || 'Member',
-        body,
+        body: null,
         image_url: publicUrl,
         reply_to_id: replyId,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
@@ -543,6 +545,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
         })
       }
+
+      if (textBody) {
+        const { data: textMsg } = await supabase.from('messages').insert({
+          community_group_id: groupId,
+          conversation_id: convId,
+          user_id: myId,
+          display_name: displayName || 'Member',
+          body: textBody,
+          image_url: null,
+          reply_to_id: null,
+        }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
+        if (textMsg) {
+          setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
+        }
+      }
     } catch (err) {
       console.error('Image send failed:', err)
       setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: false, _failed: true } : m))
@@ -553,7 +570,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const msg = messages.find(m => m._tempId === tempId)
     if (!msg?._file) return
     setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: true, _failed: false } : m))
-    sendImage(tempId, msg._file, msg.image_url, msg.body, msg.reply_to_id)
+    sendImage(tempId, msg._file, msg.image_url, msg.reply_to_id, msg._textBody ?? null)
   }
 
   function closeReactionPicker() {
