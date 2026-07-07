@@ -437,7 +437,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         if (msgRect.top < containerRect.bottom) setFirstUnreadId(null)
       }
     }
-    if (el.scrollTop < 60 && hasMore && !loadingMore) loadMore()
+    if (el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
   }
 
   async function loadMore() {
