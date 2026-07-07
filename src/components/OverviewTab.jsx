@@ -237,9 +237,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     const upcomingSoon = sortedBirthdays.filter(b => b.days <= 14)
     if (upcomingSoon.length > 1) {
       const maxDays = Math.max(...upcomingSoon.map(b => b.days))
-      return maxDays === 0
-        ? `${upcomingSoon.length} birthdays today!`
-        : `${upcomingSoon.length} birthdays coming up in less than ${maxDays} days!`
+      return `${upcomingSoon.length} birthdays coming up!`
     }
     const who = joinNames(sameDayGroup)
     if (nextBirthday.days === 0) return `🎂 Today is ${who}'s birthday!`
