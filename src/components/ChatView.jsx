@@ -310,33 +310,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(true)
   }, [loading, messages])
 
-  // Wait for all images in the initial render to load, then reveal.
-  // Messages are hidden in the DOM during this time so images can load,
-  // then we scroll to bottom and flip visible — user sees correct position.
+  // Wait for all images to be decoded (not just fetched) before revealing.
+  // img.decode() resolves when pixels are ready to paint — covers both uncached
+  // images (waits for network) and cached-but-not-yet-decoded images that would
+  // otherwise cause a layout-shift flicker immediately after reveal.
   useEffect(() => {
     if (!contentReady || !messagesContainerRef.current) return
     const imgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
-    const unloaded = imgs.filter(img => !img.complete)
 
-    const reveal = () => { setVisible(true) }
+    let cancelled = false
+    const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 3000)
 
-    if (!unloaded.length) { reveal(); return }
+    Promise.all(imgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+      .then(() => { if (!cancelled) { clearTimeout(fallback); setVisible(true) } })
 
-    let done = 0
-    const onDone = () => { if (++done >= unloaded.length) reveal() }
-    unloaded.forEach(img => {
-      img.addEventListener('load', onDone)
-      img.addEventListener('error', onDone)
-    })
-    const fallback = setTimeout(reveal, 3000)
-
-    return () => {
-      unloaded.forEach(img => {
-        img.removeEventListener('load', onDone)
-        img.removeEventListener('error', onDone)
-      })
-      clearTimeout(fallback)
-    }
+    return () => { cancelled = true; clearTimeout(fallback) }
   }, [contentReady])
 
   // Scroll to bottom synchronously before the first paint of the revealed messages.
