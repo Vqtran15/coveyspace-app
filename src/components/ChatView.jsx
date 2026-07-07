@@ -121,10 +121,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const wasAtBottomRef        = useRef(true)
   const messagesContainerRef  = useRef(null)
-  const messagesEndRef        = useRef(null)
 
   function scrollToBottom() {
-    messagesEndRef.current?.scrollIntoView()
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }
 
   const myId = session.user.id
@@ -312,8 +311,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(true)
   }, [loading, messages])
 
-  // Scroll to bottom after initial messages enter the DOM.
-  useEffect(() => {
+  // Scroll to bottom synchronously after messages enter the DOM (no flash).
+  useLayoutEffect(() => {
     if (!contentReady || !pendingScrollRef.current) return
     pendingScrollRef.current = null
     scrollToBottom()
@@ -1194,7 +1193,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 </div>
               )
             })}
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
