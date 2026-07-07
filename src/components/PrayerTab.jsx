@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass, Heart } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -31,7 +31,34 @@ function formatLastUpdated(requests) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function PrayerModal({ member, displayName, onClose, onCountChange }) {
+function ReactionAvatars({ reactions }) {
+  if (!reactions?.length) return null
+  const MAX = 5
+  const shown = reactions.slice(0, MAX)
+  const extra = reactions.length - MAX
+  return (
+    <div className="flex items-center mt-2">
+      {shown.map((rx, i) => (
+        <div
+          key={rx.user_id}
+          className={`w-6 h-6 rounded-full border-2 border-white ${avatarColor(rx.user_id, rx.avatar_color)} flex items-center justify-center shrink-0`}
+          style={{ marginLeft: i === 0 ? 0 : -6, zIndex: shown.length - i }}
+          title={rx.display_name}
+        >
+          {rx.avatar_icon
+            ? <AvatarIcon name={rx.avatar_icon} size={10} />
+            : <span className="text-white text-[8px] font-bold">{(rx.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          }
+        </div>
+      ))}
+      {extra > 0 && (
+        <span className="text-xs text-stone-400 ml-1.5">+{extra}</span>
+      )}
+    </div>
+  )
+}
+
+function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, onClose, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
   const toast = useToast()
   const [requests, setRequests]           = useState([])
@@ -50,6 +77,8 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
   const newIdTimerRef                     = useRef(null)
   const [confirmRequestId, setConfirmRequestId] = useState(null)
   const [keyboardOffset, setKeyboardOffset] = useState(0)
+  const [reactions, setReactions]         = useState({}) // { [prayer_request_id]: [reaction] }
+  const [togglingIds, setTogglingIds]     = useState(new Set())
 
   useEffect(() => {
     const vv = window.visualViewport
@@ -79,6 +108,83 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
         setLoading(false)
       })
   }, [member.user_id])
+
+  // Load reactions for all of this member's requests
+  useEffect(() => {
+    if (!groupId) return
+    supabase
+      .from('prayer_reactions')
+      .select('*')
+      .eq('prayer_request_owner_id', member.user_id)
+      .then(({ data }) => {
+        const map = {}
+        for (const r of data ?? []) {
+          if (!map[r.prayer_request_id]) map[r.prayer_request_id] = []
+          map[r.prayer_request_id].push(r)
+        }
+        setReactions(map)
+      })
+  }, [member.user_id, groupId])
+
+  async function toggleReaction(requestId) {
+    if (togglingIds.has(requestId)) return
+    const existing = reactions[requestId]?.find(r => r.user_id === currentUserId)
+    setTogglingIds(prev => new Set(prev).add(requestId))
+    haptic()
+
+    if (existing) {
+      // Optimistic remove
+      setReactions(prev => ({
+        ...prev,
+        [requestId]: (prev[requestId] ?? []).filter(r => r.user_id !== currentUserId),
+      }))
+      await supabase.from('prayer_reactions').delete().eq('id', existing.id)
+    } else {
+      // Optimistic add
+      const optimistic = {
+        id: `temp-${Date.now()}`,
+        prayer_request_id: requestId,
+        prayer_request_owner_id: member.user_id,
+        community_group_id: groupId,
+        user_id: currentUserId,
+        display_name: displayName,
+        avatar_icon: currentAvatarIcon,
+        avatar_color: currentAvatarColor,
+        created_at: new Date().toISOString(),
+      }
+      setReactions(prev => ({
+        ...prev,
+        [requestId]: [...(prev[requestId] ?? []), optimistic],
+      }))
+      const { data, error: err } = await supabase
+        .from('prayer_reactions')
+        .insert({
+          prayer_request_id:       requestId,
+          prayer_request_owner_id: member.user_id,
+          community_group_id:      groupId,
+          user_id:                 currentUserId,
+          display_name:            displayName,
+          avatar_icon:             currentAvatarIcon ?? null,
+          avatar_color:            currentAvatarColor ?? null,
+        })
+        .select()
+        .single()
+      if (err) {
+        toast('Failed to save reaction', 'error')
+        setReactions(prev => ({
+          ...prev,
+          [requestId]: (prev[requestId] ?? []).filter(r => r.id !== optimistic.id),
+        }))
+      } else if (data) {
+        setReactions(prev => ({
+          ...prev,
+          [requestId]: (prev[requestId] ?? []).map(r => r.id === optimistic.id ? data : r),
+        }))
+      }
+    }
+
+    setTogglingIds(prev => { const s = new Set(prev); s.delete(requestId); return s })
+  }
 
   function cancelAdd() {
     setAddingRequest(false)
@@ -114,6 +220,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
     const { error: err } = await supabase.from('prayer_requests').delete().eq('id', id)
     if (err) { toast('Failed to delete: ' + err.message, 'error'); return }
     setRequests(prev => prev.filter(r => r.id !== id))
+    setReactions(prev => { const next = { ...prev }; delete next[id]; return next })
     setConfirmRequestId(null)
     onCountChange(member.user_id, -1)
   }
@@ -232,7 +339,7 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
             </form>
           ) : (
             <div className="pb-4 space-y-3">
-              {/* Search — only show once loaded and there's more than one request */}
+              {/* Search */}
               {!loading && animDone && requests.length > 1 && (
                 <div className="relative">
                   <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
@@ -262,87 +369,107 @@ function PrayerModal({ member, displayName, onClose, onCountChange }) {
                   {q ? 'No requests match your search.' : 'No requests yet. Tap + to add one!'}
                 </p>
               ) : (
-                filteredRequests.map(r => (
-                  <div key={r.id} className={`bg-stone-50 rounded-xl p-3 ${newId === r.id ? 'animate-fade-up' : ''}`}>
-                    {editingId === r.id ? (
-                      <form onSubmit={handleSaveRequest} className="space-y-2">
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={e => setEditDate(e.target.value)}
-                          className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
-                        />
-                        <textarea
-                          value={editText}
-                          onChange={e => setEditText(e.target.value)}
-                          rows={3}
-                          className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
-                          required
-                          autoFocus
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                            className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={!editText.trim()}
-                            className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <div>
-                            <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
-                            {r.added_by && (
-                              <span className="text-xs text-stone-400"> · {r.added_by}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                filteredRequests.map(r => {
+                  const requestReactions = reactions[r.id] ?? []
+                  const hasReacted = requestReactions.some(rx => rx.user_id === currentUserId)
+                  const isOwnProfile = member.user_id === currentUserId
+                  return (
+                    <div key={r.id} className={`bg-stone-50 rounded-xl p-3 ${newId === r.id ? 'animate-fade-up' : ''}`}>
+                      {editingId === r.id ? (
+                        <form onSubmit={handleSaveRequest} className="space-y-2">
+                          <input
+                            type="date"
+                            value={editDate}
+                            onChange={e => setEditDate(e.target.value)}
+                            className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                          />
+                          <textarea
+                            value={editText}
+                            onChange={e => setEditText(e.target.value)}
+                            rows={3}
+                            className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                            required
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
                             <button
-                              onClick={() => { setConfirmRequestId(null); startEditRequest(r) }}
-                              className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
-                            >
-                              <PencilSimple size={14} />
-                            </button>
-                            <button
-                              onClick={() => setConfirmRequestId(r.id)}
-                              className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
-                            >
-                              <Trash size={14} />
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
-                        {confirmRequestId === r.id && (
-                          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
-                            <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
-                            <button
-                              onClick={() => setConfirmRequestId(null)}
-                              className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                              className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
                             >
                               Cancel
                             </button>
                             <button
-                              onClick={() => handleDeleteRequest(r.id)}
-                              className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                              type="submit"
+                              disabled={!editText.trim()}
+                              className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
                             >
-                              Delete
+                              Save
                             </button>
                           </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                ))
+                        </form>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div>
+                              <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
+                              {r.added_by && (
+                                <span className="text-xs text-stone-400"> · {r.added_by}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              {/* Heart button — hidden on your own requests */}
+                              {!isOwnProfile && (
+                                <button
+                                  onClick={() => toggleReaction(r.id)}
+                                  disabled={togglingIds.has(r.id)}
+                                  className="p-0.5 transition-colors disabled:opacity-40"
+                                >
+                                  <Heart
+                                    size={15}
+                                    weight={hasReacted ? 'fill' : 'regular'}
+                                    className={hasReacted ? 'text-coral' : 'text-stone-300 hover:text-coral'}
+                                  />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setConfirmRequestId(null); startEditRequest(r) }}
+                                className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
+                              >
+                                <PencilSimple size={14} />
+                              </button>
+                              <button
+                                onClick={() => setConfirmRequestId(r.id)}
+                                className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
+                              >
+                                <Trash size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                          <ReactionAvatars reactions={requestReactions} />
+                          {confirmRequestId === r.id && (
+                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
+                              <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
+                              <button
+                                onClick={() => setConfirmRequestId(null)}
+                                className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRequest(r.id)}
+                                className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
           )}
@@ -380,7 +507,7 @@ function MemberCard({ member, index, onClick }) {
   )
 }
 
-export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings }) {
+export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey }) {
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
   const [members, setMembers]               = useState([])
@@ -432,7 +559,6 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
-      {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div
           className="fixed inset-x-0 z-30 flex justify-center transition-transform"
@@ -456,7 +582,6 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         </div>
       </div>
 
-      {/* Search bar */}
       {!loading && members.length > 0 && (
         <div className="relative mb-4">
           <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
@@ -521,6 +646,10 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         <PrayerModal
           member={selectedMember}
           displayName={displayName}
+          groupId={groupId}
+          currentUserId={userId}
+          currentAvatarIcon={avatarIcon}
+          currentAvatarColor={avatarColorKey}
           onClose={() => setSelectedMember(null)}
           onCountChange={handleCountChange}
         />

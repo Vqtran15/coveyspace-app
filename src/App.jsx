@@ -19,6 +19,7 @@ import SplashScreen from './components/SplashScreen.jsx'
 import SettingsModal from './components/SettingsModal.jsx'
 import AdminPage from './components/AdminPage.jsx'
 import UpdatePrompt from './components/UpdatePrompt.jsx'
+import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -77,6 +78,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [guideClosing, setGuideClosing] = useState(false)
+  const [prayerBanner, setPrayerBanner] = useState(null) // { reactorName }
 
   function closeGuide() {
     setGuideClosing(true)
@@ -244,6 +246,22 @@ export default function App() {
     loadInitialUnread()
   }, [groupId, session?.user?.id])
 
+  // Prayer reaction banner — fires when someone prays for your request
+  useEffect(() => {
+    if (!session?.user?.id || !groupId) return
+    const channel = supabase
+      .channel(`prayer-reactions:${session.user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'prayer_reactions',
+        filter: `prayer_request_owner_id=eq.${session.user.id}`,
+      }, ({ new: reaction }) => {
+        if (reaction.user_id === session.user.id) return
+        setPrayerBanner({ reactorName: reaction.display_name ?? 'Someone' })
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [session?.user?.id, groupId])
+
   // Unread chat tracking — fires for any new message while not on /chat
   useEffect(() => {
     if (!groupId) return
@@ -296,6 +314,16 @@ export default function App() {
         </div>
       )}
       {!isFullHeight && birthdaysEnabled && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && <BirthdayBanner upcoming={upcoming} />}
+      {prayerBanner && prayerEnabled && (
+        <PrayerReactionBanner
+          reactorName={prayerBanner.reactorName}
+          onDismiss={() => setPrayerBanner(null)}
+          onTap={() => {
+            setPrayerBanner(null)
+            navigate('/prayer', { state: { featuredUserId: session.user.id } })
+          }}
+        />
+      )}
 
       <div
         key={location.pathname}
@@ -306,7 +334,7 @@ export default function App() {
           <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} prayerEnabled={prayerEnabled} />} />
           <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
-          <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} />} />
           <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
           <Route path="*"          element={<Navigate to="/home" replace />} />
         </Routes>
