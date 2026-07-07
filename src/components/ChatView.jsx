@@ -121,6 +121,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const wasAtBottomRef        = useRef(true)
   const messagesContainerRef  = useRef(null)
+  const messagesEndRef        = useRef(null)
+
+  function scrollToBottom() {
+    messagesEndRef.current?.scrollIntoView()
+  }
 
   const myId = session.user.id
   const convId = conversation.id
@@ -307,30 +312,18 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(true)
   }, [loading, messages])
 
-  // Scroll to bottom synchronously after messages enter the DOM.
-  useLayoutEffect(() => {
+  // Scroll to bottom after initial messages enter the DOM.
+  useEffect(() => {
     if (!contentReady || !pendingScrollRef.current) return
     pendingScrollRef.current = null
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [contentReady])
-
-  // Belt-and-suspenders: re-scroll after images may have affected layout height.
-  useEffect(() => {
-    if (!contentReady) return
-    const t = setTimeout(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }, 150)
-    return () => clearTimeout(t)
+    scrollToBottom()
   }, [contentReady])
 
   // Re-pin to bottom as images load and change content height.
-  // The 150ms timeout only catches fast loads; ResizeObserver covers slow ones.
   useEffect(() => {
     if (!contentReady || !messagesContainerRef.current) return
     const observer = new ResizeObserver(() => {
-      if (isAtBottomRef.current && !preserveScrollRef.current && scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-      }
+      if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom()
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
@@ -342,10 +335,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     function onVisibilityChange() {
       if (document.visibilityState === 'hidden') {
         wasAtBottomRef.current = isAtBottomRef.current
-      } else if (document.visibilityState === 'visible' && wasAtBottomRef.current && scrollRef.current) {
-        requestAnimationFrame(() => {
-          if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        })
+      } else if (document.visibilityState === 'visible' && wasAtBottomRef.current) {
+        requestAnimationFrame(scrollToBottom)
       }
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
@@ -388,7 +379,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       return
     }
     if (initialScrollDoneRef.current && isAtBottomRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollToBottom()
     }
   }, [messages])
 
@@ -1203,6 +1194,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 </div>
               )
             })}
+            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
