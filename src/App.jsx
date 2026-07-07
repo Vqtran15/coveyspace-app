@@ -93,6 +93,14 @@ export default function App() {
     setTimeout(() => { setBirthdayOpen(false); setBirthdayClosing(false) }, 200)
   }
 
+  const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
+  const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
+
+  function dismissBirthdayBanner() {
+    setBirthdayBannerClosing(true)
+    setTimeout(() => { setBirthdayBannerDismissed(true); setBirthdayBannerClosing(false) }, 260)
+  }
+
   useEffect(() => { locationRef.current = location.pathname }, [location.pathname])
 
   useEffect(() => {
@@ -322,7 +330,14 @@ export default function App() {
           You're offline
         </div>
       )}
-      {!isFullHeight && birthdaysEnabled && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && <BirthdayBanner upcoming={upcoming} />}
+      {!isFullHeight && birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
+        <BirthdayBanner
+          upcoming={upcoming}
+          closing={birthdayBannerClosing}
+          onDismiss={dismissBirthdayBanner}
+          onTap={() => { dismissBirthdayBanner(); setBirthdayOpen(true) }}
+        />
+      )}
       {prayerBanner && prayerEnabled && (
         <PrayerReactionBanner
           reactorName={prayerBanner.reactorName}
