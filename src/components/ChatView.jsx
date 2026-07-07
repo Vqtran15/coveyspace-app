@@ -520,6 +520,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         _isNew: true,
       }))
       setIsAtBottom(true)
+      isAtBottomRef.current = true
       setMessages(prev => [...prev, ...tempMessages])
       setText('')
       localStorage.removeItem(DRAFT_KEY(convId))
@@ -542,6 +543,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
       if (newMsg) {
         setIsAtBottom(true)
+        isAtBottomRef.current = true
         setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, _isNew: true }])
       }
       setText('')
