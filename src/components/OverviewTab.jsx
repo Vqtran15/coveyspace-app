@@ -234,6 +234,13 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   function birthdayPrimary() {
     if (!nextBirthday) return 'No upcoming birthdays'
+    const upcomingSoon = sortedBirthdays.filter(b => b.days <= 14)
+    if (upcomingSoon.length > 1) {
+      const maxDays = Math.max(...upcomingSoon.map(b => b.days))
+      return maxDays === 0
+        ? 'Multiple birthdays today!'
+        : `Multiple birthdays coming up in less than ${maxDays} days!`
+    }
     const who = joinNames(sameDayGroup)
     if (nextBirthday.days === 0) return `🎂 Today is ${who}'s birthday!`
     if (nextBirthday.days === 1) return `${who}'s birthday is tomorrow`
