@@ -1233,7 +1233,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           </div>
         )}
         {imagePreviews.length > 0 && (
-          <div className="flex gap-2 mb-2 overflow-x-auto pb-0.5">
+          <div className="flex gap-2 mb-2 overflow-x-auto pt-2 pb-0.5">
             {imagePreviews.map((preview, i) => (
               <div key={preview.previewUrl} className="relative shrink-0">
                 <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
