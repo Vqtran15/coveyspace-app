@@ -119,7 +119,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialScrollDoneRef       = useRef(false)
   const pendingScrollRef           = useRef(null)
 
-  const wasAtBottomRef = useRef(true)
+  const wasAtBottomRef        = useRef(true)
+  const messagesContainerRef  = useRef(null)
 
   const myId = session.user.id
   const convId = conversation.id
@@ -320,6 +321,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }, 150)
     return () => clearTimeout(t)
+  }, [contentReady])
+
+  // Re-pin to bottom as images load and change content height.
+  // The 150ms timeout only catches fast loads; ResizeObserver covers slow ones.
+  useEffect(() => {
+    if (!contentReady || !messagesContainerRef.current) return
+    const observer = new ResizeObserver(() => {
+      if (isAtBottomRef.current && !preserveScrollRef.current && scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }
+    })
+    observer.observe(messagesContainerRef.current)
+    return () => observer.disconnect()
   }, [contentReady])
 
   // Re-pin to bottom when returning from background if we were at the bottom.
@@ -968,7 +982,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             )}
           </div>
         ) : (
-          <div className="space-y-0.5 py-2 pb-4">
+          <div ref={messagesContainerRef} className="space-y-0.5 py-2 pb-4">
             {items.map((item, i) => {
               if (item.type === 'date') {
                 return (
