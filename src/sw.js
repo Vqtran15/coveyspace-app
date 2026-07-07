@@ -37,7 +37,7 @@ self.addEventListener('notificationclick', event => {
       .then(clientList => {
         for (const client of clientList) {
           if ('focus' in client) {
-            client.postMessage({ type: 'NAVIGATE', url })
+            client.postMessage({ type: 'NAVIGATE', url, notifTitle: event.notification.title, notifBody: event.notification.body })
             return client.focus()
           }
         }
