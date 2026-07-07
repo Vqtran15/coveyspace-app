@@ -544,20 +544,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           const without = prev.filter(m => m._tempId !== tempId)
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
         })
-      }
 
-      if (textBody) {
-        const { data: textMsg } = await supabase.from('messages').insert({
-          community_group_id: groupId,
-          conversation_id: convId,
-          user_id: myId,
-          display_name: displayName || 'Member',
-          body: textBody,
-          image_url: null,
-          reply_to_id: null,
-        }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-        if (textMsg) {
-          setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
+        if (textBody) {
+          const { data: textMsg } = await supabase.from('messages').insert({
+            community_group_id: groupId,
+            conversation_id: convId,
+            user_id: myId,
+            display_name: displayName || 'Member',
+            body: textBody,
+            image_url: null,
+            reply_to_id: null,
+          }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
+          if (textMsg) {
+            setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
+          }
         }
       }
     } catch (err) {
