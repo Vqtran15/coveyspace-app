@@ -77,6 +77,14 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
   const newIdTimerRef                     = useRef(null)
   const [confirmRequestId, setConfirmRequestId] = useState(null)
   const [openMenuId, setOpenMenuId]             = useState(null)
+  const [closingMenuId, setClosingMenuId]       = useState(null)
+
+  function openMenu(id) { setClosingMenuId(null); setOpenMenuId(id) }
+  function closeMenu() {
+    setClosingMenuId(openMenuId)
+    setOpenMenuId(null)
+    setTimeout(() => setClosingMenuId(null), 150)
+  }
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const [reactions, setReactions]         = useState({}) // { [prayer_request_id]: [reaction] }
   const [togglingIds, setTogglingIds]     = useState(new Set())
@@ -420,34 +428,34 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                             </div>
                             <div className="relative shrink-0">
                               <button
-                                onClick={() => setOpenMenuId(openMenuId === r.id ? null : r.id)}
+                                onClick={() => openMenuId === r.id ? closeMenu() : openMenu(r.id)}
                                 className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
                               >
                                 <DotsThreeVertical size={16} weight="bold" />
                               </button>
-                              {openMenuId === r.id && (
+                              {(openMenuId === r.id || closingMenuId === r.id) && (
                                 <>
-                                  <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
-                                  <div className="absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px]">
+                                  <div className="fixed inset-0 z-10" onClick={closeMenu} />
+                                  <div className={`absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] origin-top-right ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
                                     {!isOwnProfile && (
                                       <button
-                                        onClick={() => { toggleReaction(r.id); setOpenMenuId(null) }}
+                                        onClick={() => { toggleReaction(r.id); closeMenu() }}
                                         disabled={togglingIds.has(r.id)}
                                         className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40"
                                       >
                                         <Heart size={15} weight={hasReacted ? 'fill' : 'regular'} className={hasReacted ? 'text-coral' : 'text-stone-400'} />
-                                        {hasReacted ? 'Unprayed' : 'Prayed for'}
+                                        {hasReacted ? 'Undo prayer' : 'Pray for'}
                                       </button>
                                     )}
                                     <button
-                                      onClick={() => { startEditRequest(r); setOpenMenuId(null) }}
+                                      onClick={() => { startEditRequest(r); closeMenu() }}
                                       className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
                                     >
                                       <PencilSimple size={15} className="text-stone-400" />
                                       Edit
                                     </button>
                                     <button
-                                      onClick={() => { setConfirmRequestId(r.id); setOpenMenuId(null) }}
+                                      onClick={() => { setConfirmRequestId(r.id); closeMenu() }}
                                       className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                                     >
                                       <Trash size={15} className="text-red-400" />
