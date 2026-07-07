@@ -328,8 +328,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }, [contentReady])
 
   // Scroll to bottom synchronously before the first paint of the revealed messages.
+  // Also sync isAtBottomRef so the ResizeObserver re-pins correctly if slow images
+  // finish loading after the reveal (fallback timer or very late network responses).
   useLayoutEffect(() => {
-    if (visible) scrollToBottom()
+    if (visible) {
+      isAtBottomRef.current = true
+      setIsAtBottom(true)
+      scrollToBottom()
+    }
   }, [visible])
 
   // Re-pin to bottom as images in new realtime messages load after initial reveal.

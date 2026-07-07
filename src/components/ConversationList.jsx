@@ -7,7 +7,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [], pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [], onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -24,7 +24,14 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
   const [notifDismissed, setNotifDismissed]   = useState(() => localStorage.getItem('notifBannerDismissed') === '1')
+  const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
+  const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
   const searchInputRef = useRef(null)
+
+  function dismissBirthdayBanner() {
+    setBirthdayBannerClosing(true)
+    setTimeout(() => { setBirthdayBannerDismissed(true); setBirthdayBannerClosing(false) }, 260)
+  }
 
   const myId = session.user.id
   const { className: headerClass } = useEntranceAnimation('/chat', 0)
@@ -246,9 +253,14 @@ export default function ConversationList({ session, groupId, members, enterClass
       className={`flex flex-col bg-sunrise-50 ${enterClass ?? ''}`}
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
     >
-      {upcoming.length > 0 && (
+      {upcoming.length > 0 && !birthdayBannerDismissed && (
         <div className="shrink-0">
-          <BirthdayBanner upcoming={upcoming} />
+          <BirthdayBanner
+            upcoming={upcoming}
+            closing={birthdayBannerClosing}
+            onDismiss={dismissBirthdayBanner}
+            onTap={() => { dismissBirthdayBanner(); onOpenBirthdays?.() }}
+          />
         </div>
       )}
 

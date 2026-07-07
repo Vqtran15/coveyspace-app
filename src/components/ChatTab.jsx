@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 
-export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [], pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [], onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [activeConv, setActiveConv]           = useState(null)
   const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
   const [members, setMembers]                 = useState([])
@@ -84,6 +84,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       onRead={onRead}
       onOpenSettings={onOpenSettings}
       upcoming={upcoming}
+      onOpenBirthdays={onOpenBirthdays}
       pushSupported={pushSupported}
       pushSubscribed={pushSubscribed}
       pushPermission={pushPermission}
