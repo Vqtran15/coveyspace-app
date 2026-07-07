@@ -122,6 +122,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const wasAtBottomRef        = useRef(true)
   const messagesContainerRef  = useRef(null)
+  const sendingRef            = useRef(false)
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -502,6 +503,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // ── Send ──────────────────────────────────────────────────────────────────
   async function handleSend(e) {
     e?.preventDefault()
+    if (sendingRef.current) return
     const trimmed = text.trim()
     if (!trimmed && imagePreviews.length === 0) return
     clearTimeout(typingTimeoutRef.current)
@@ -533,6 +535,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         created_at: new Date(now + i).toISOString(),
         _isNew: true,
       }))
+      sendingRef.current = true
       setIsAtBottom(true)
       isAtBottomRef.current = true
       setMessages(prev => [...prev, ...tempMessages])
@@ -540,10 +543,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       localStorage.removeItem(DRAFT_KEY(convId))
       setImagePreviews([])
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
-      sendImages(tempMessages, capturedText)
+      sendImages(tempMessages, capturedText).finally(() => { sendingRef.current = false })
       return
     }
 
+    sendingRef.current = true
     setSending(true)
     try {
       const { data: newMsg } = await supabase.from('messages').insert({
@@ -565,8 +569,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
       console.error('Send failed:', err)
+    } finally {
+      sendingRef.current = false
+      setSending(false)
     }
-    setSending(false)
   }
 
   async function sendImages(tempMessages, textBody) {
@@ -966,7 +972,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
         {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
         {!visible && (
-          <div className="space-y-3 py-4">
+          <div className="flex flex-col py-4 gap-3">
             {[
               { side: 'left',  w: 'w-48' },
               { side: 'right', w: 'w-36' },
@@ -979,13 +985,53 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             ].map((item, i) => (
               <div
                 key={i}
-                className={`flex items-end gap-2 animate-pulse ${item.side === 'right' ? 'justify-end' : 'justify-start'}`}
-                style={{ animationDelay: `${i * 50}ms` }}
+                className={`flex items-end gap-2 ${item.side === 'right' ? 'justify-end animate-msg-in-right' : 'justify-start animate-msg-in-left'}`}
+                style={{ animationDelay: `${i * 70}ms` }}
               >
-                {item.side === 'left' && <div className="w-7 h-7 rounded-full bg-stone-200 shrink-0 mb-0.5" />}
-                <div className={`${item.w} h-10 rounded-2xl ${item.side === 'right' ? 'rounded-br-sm bg-jade/20' : 'rounded-bl-sm bg-stone-200'}`} />
+                {item.side === 'left' && (
+                  <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
+                      backgroundSize: '200% 100%',
+                      animation: `skeleton-shimmer 1.6s ease-in-out infinite`,
+                      animationDelay: `${i * 70}ms`,
+                    }}
+                  />
+                )}
+                <div
+                  className={`${item.w} h-10 rounded-2xl ${item.side === 'right' ? 'rounded-br-sm' : 'rounded-bl-sm'} overflow-hidden`}
+                  style={{
+                    background: item.side === 'right'
+                      ? 'linear-gradient(90deg, rgba(196,98,45,0.12) 25%, rgba(196,98,45,0.25) 50%, rgba(196,98,45,0.12) 75%)'
+                      : 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
+                    backgroundSize: '200% 100%',
+                    animation: `skeleton-shimmer 1.6s ease-in-out infinite`,
+                    animationDelay: `${i * 70 + 80}ms`,
+                  }}
+                />
               </div>
             ))}
+
+            {/* Typing indicator */}
+            <div className="flex items-end gap-2 animate-msg-in-left" style={{ animationDelay: '620ms' }}>
+              <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
+                style={{
+                  background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'skeleton-shimmer 1.6s ease-in-out infinite',
+                  animationDelay: '700ms',
+                }}
+              />
+              <div className="flex items-center gap-1 bg-stone-100 rounded-2xl rounded-bl-sm px-3.5 py-3">
+                {[0, 1, 2].map(j => (
+                  <div
+                    key={j}
+                    className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-dot-bounce"
+                    style={{ animationDelay: `${j * 180}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

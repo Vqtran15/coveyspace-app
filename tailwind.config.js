@@ -180,6 +180,14 @@ export default {
           '0%':   { opacity: '1' },
           '100%': { opacity: '0' },
         },
+        'skeleton-shimmer': {
+          '0%':   { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        'dot-bounce': {
+          '0%, 60%, 100%': { transform: 'translateY(0)', opacity: '0.5' },
+          '30%':           { transform: 'translateY(-5px)', opacity: '1' },
+        },
       },
       animation: {
         'modal-in':         'modal-in 0.25s cubic-bezier(0.32,0.72,0,1) backwards',
@@ -209,6 +217,8 @@ export default {
         'edit-close':          'edit-close 0.26s cubic-bezier(0.16,1,0.3,1)',
         'announcement-shake':  'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both',
         'splash-out':          'splash-out 0.35s ease-in forwards',
+        'skeleton-shimmer':    'skeleton-shimmer 1.6s ease-in-out infinite',
+        'dot-bounce':          'dot-bounce 1.1s ease-in-out infinite',
       },
     },
   },
