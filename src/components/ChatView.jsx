@@ -168,6 +168,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setFirstUnreadId(null)
     setOpenUnreadCount(0)
     initialScrollDoneRef.current = false
+    pendingScrollRef.current = null
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
 
     supabase
@@ -615,6 +616,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       img.src = url
     })
   }
+
 
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
