@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
     const notification = JSON.stringify({ title, body, url: '/prayer' })
 
     const staleIds: string[] = []
+    const errors: string[] = []
 
     await Promise.allSettled(
       subs.map(async (row) => {
@@ -43,6 +44,10 @@ Deno.serve(async (req) => {
         } catch (err: any) {
           if (err.statusCode === 410 || err.statusCode === 404) {
             staleIds.push(row.id)
+          } else {
+            const msg = `push failed [${err.statusCode}]: ${err.body ?? err.message}`
+            console.error(msg, row.endpoint)
+            errors.push(msg)
           }
         }
       })
@@ -52,7 +57,8 @@ Deno.serve(async (req) => {
       await supabase.from('push_subscriptions').delete().in('id', staleIds)
     }
 
-    return new Response(JSON.stringify({ sent: subs.length - staleIds.length }), {
+    const sent = subs.length - staleIds.length - errors.length
+    return new Response(JSON.stringify({ sent, stale: staleIds.length, errors }), {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err: any) {
