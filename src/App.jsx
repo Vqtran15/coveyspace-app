@@ -249,13 +249,15 @@ export default function App() {
   // Prayer reaction banner — fires when someone prays for your request
   useEffect(() => {
     if (!session?.user?.id || !groupId) return
+    const userId = session.user.id
     const channel = supabase
-      .channel(`prayer-reactions:${session.user.id}`)
+      .channel(`prayer-reactions:${groupId}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'prayer_reactions',
-        filter: `prayer_request_owner_id=eq.${session.user.id}`,
+        filter: `community_group_id=eq.${groupId}`,
       }, ({ new: reaction }) => {
-        if (reaction.user_id === session.user.id) return
+        if (reaction.prayer_request_owner_id !== userId) return
+        if (reaction.user_id === userId) return
         setPrayerBanner({ reactorName: reaction.display_name ?? 'Someone' })
       })
       .subscribe()
