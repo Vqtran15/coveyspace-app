@@ -100,6 +100,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [memberReadTimes, setMemberReadTimes] = useState({})
   const [unreadCount, setUnreadCount]         = useState(0)
   const [contentReady, setContentReady]       = useState(false)
+  const [visible, setVisible]                 = useState(false)
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
@@ -162,10 +163,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setMemberReadTimes({})
     setUnreadCount(0)
     setContentReady(false)
+    setVisible(false)
     setFirstUnreadId(null)
     setOpenUnreadCount(0)
     initialScrollDoneRef.current = false
-    pendingScrollRef.current = null
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
 
     supabase
@@ -294,11 +295,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }, [convId])
 
-  // ── Initial scroll: always go to bottom ─────────────────────────────────
+  // ── Initial load: mark contentReady once messages arrive ─────────────────
   useEffect(() => {
     if (loading || initialScrollDoneRef.current) return
     initialScrollDoneRef.current = true
-
     if (openedWithLastReadAt) {
       const unread = messages.filter(m => m.created_at > openedWithLastReadAt && m.user_id !== myId)
       if (unread.length > 0) {
@@ -306,30 +306,54 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setOpenUnreadCount(unread.length)
       }
     }
-
-    pendingScrollRef.current = { type: 'bottom' }
     setContentReady(true)
   }, [loading, messages])
 
-  // Scroll to bottom synchronously after messages enter the DOM (no flash).
-  useLayoutEffect(() => {
-    if (!contentReady || !pendingScrollRef.current) return
-    pendingScrollRef.current = null
-    scrollToBottom()
-  }, [contentReady])
-
-  // Re-pin to bottom as images load and change content height.
+  // Wait for all images in the initial render to load, then reveal.
+  // Messages are hidden in the DOM during this time so images can load,
+  // then we scroll to bottom and flip visible — user sees correct position.
   useEffect(() => {
     if (!contentReady || !messagesContainerRef.current) return
+    const imgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
+    const unloaded = imgs.filter(img => !img.complete)
+
+    const reveal = () => { setVisible(true) }
+
+    if (!unloaded.length) { reveal(); return }
+
+    let done = 0
+    const onDone = () => { if (++done >= unloaded.length) reveal() }
+    unloaded.forEach(img => {
+      img.addEventListener('load', onDone)
+      img.addEventListener('error', onDone)
+    })
+    const fallback = setTimeout(reveal, 3000)
+
+    return () => {
+      unloaded.forEach(img => {
+        img.removeEventListener('load', onDone)
+        img.removeEventListener('error', onDone)
+      })
+      clearTimeout(fallback)
+    }
+  }, [contentReady])
+
+  // Scroll to bottom synchronously before the first paint of the revealed messages.
+  useLayoutEffect(() => {
+    if (visible) scrollToBottom()
+  }, [visible])
+
+  // Re-pin to bottom as images in new realtime messages load after initial reveal.
+  useEffect(() => {
+    if (!visible || !messagesContainerRef.current) return
     const observer = new ResizeObserver(() => {
       if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom()
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
-  }, [contentReady])
+  }, [visible])
 
   // Re-pin to bottom when returning from background if we were at the bottom.
-  // iOS resets scrollTop before visibilitychange fires, so we snapshot on hide.
   useEffect(() => {
     function onVisibilityChange() {
       if (document.visibilityState === 'hidden') {
@@ -377,7 +401,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       preserveScrollRef.current = null
       return
     }
-    if (initialScrollDoneRef.current && isAtBottomRef.current) {
+    if (visible && isAtBottomRef.current) {
       scrollToBottom()
     }
   }, [messages])
@@ -940,7 +964,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           </div>
         )}
 
-        {(loading || !contentReady) ? (
+        {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
+        {!visible && (
           <div className="space-y-3 py-4">
             {[
               { side: 'left',  w: 'w-48' },
@@ -962,19 +987,30 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               </div>
             ))}
           </div>
-        ) : filteredMsgs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
-            {searchQuery ? (
-              <>
-                <MagnifyingGlass size={40} className="text-stone-300 mb-3" />
-                <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
-              </>
-            ) : (
-              <p className="text-sm">No messages yet. Say hello!</p>
-            )}
-          </div>
-        ) : (
-          <div ref={messagesContainerRef} className="space-y-0.5 py-2 pb-4">
+        )}
+
+        {/* Messages — rendered hidden when contentReady so images load in background,
+            then revealed after scroll-to-bottom via the visible flag */}
+        {contentReady && !loading && (
+          filteredMsgs.length === 0 ? (
+            visible && (
+              <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
+                {searchQuery ? (
+                  <>
+                    <MagnifyingGlass size={40} className="text-stone-300 mb-3" />
+                    <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
+                  </>
+                ) : (
+                  <p className="text-sm">No messages yet. Say hello!</p>
+                )}
+              </div>
+            )
+          ) : (
+          <div
+            ref={messagesContainerRef}
+            className="space-y-0.5 py-2 pb-4"
+            style={!visible ? { height: 0, overflow: 'hidden' } : {}}
+          >
             {items.map((item, i) => {
               if (item.type === 'date') {
                 return (
@@ -1194,6 +1230,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               )
             })}
           </div>
+          )
         )}
       </div>
 
