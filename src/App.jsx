@@ -209,6 +209,7 @@ export default function App() {
       if (e.data?.type !== 'NAVIGATE') return
       const url = e.data.url
       if (url === '/prayer' && session?.user?.id) {
+        if (e.data.notifTitle) setPrayerBanner({ reactorName: e.data.notifTitle })
         navigate('/prayer', { state: { featuredUserId: session.user.id } })
       } else {
         navigate(url)
