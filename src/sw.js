@@ -14,13 +14,14 @@ self.addEventListener('push', event => {
   try { data = event.data?.json() ?? {} } catch {}
 
   const title   = data.title ?? 'Covey Space'
+  const url     = data.url ?? '/chat'
   const options = {
     body:      data.body ?? '',
     icon:      '/icons/icon-192.png',
     badge:     '/icons/icon-192.png',
-    tag:       'chat-message',
+    tag:       url === '/prayer' ? 'prayer-reaction' : 'chat-message',
     renotify:  true,
-    data:      { url: data.url ?? '/chat' },
+    data:      { url },
   }
 
   event.waitUntil(self.registration.showNotification(title, options))

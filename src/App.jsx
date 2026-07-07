@@ -206,11 +206,17 @@ export default function App() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
     function onMessage(e) {
-      if (e.data?.type === 'NAVIGATE') navigate(e.data.url)
+      if (e.data?.type !== 'NAVIGATE') return
+      const url = e.data.url
+      if (url === '/prayer' && session?.user?.id) {
+        navigate('/prayer', { state: { featuredUserId: session.user.id } })
+      } else {
+        navigate(url)
+      }
     }
     navigator.serviceWorker.addEventListener('message', onMessage)
     return () => navigator.serviceWorker.removeEventListener('message', onMessage)
-  }, [])
+  }, [session?.user?.id])
 
   // Load initial unread state from DB on mount
   useEffect(() => {
