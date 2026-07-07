@@ -119,6 +119,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialScrollDoneRef       = useRef(false)
   const pendingScrollRef           = useRef(null)
 
+  const wasAtBottomRef = useRef(true)
+
   const myId = session.user.id
   const convId = conversation.id
 
@@ -320,6 +322,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => clearTimeout(t)
   }, [contentReady])
 
+  // Re-pin to bottom when returning from background if we were at the bottom.
+  // iOS resets scrollTop before visibilitychange fires, so we snapshot on hide.
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'hidden') {
+        wasAtBottomRef.current = isAtBottomRef.current
+      } else if (document.visibilityState === 'visible' && wasAtBottomRef.current && scrollRef.current) {
+        requestAnimationFrame(() => {
+          if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        })
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+
   // ── Typing presence ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!displayName) return
@@ -355,7 +373,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       preserveScrollRef.current = null
       return
     }
-    if (initialScrollDoneRef.current && isAtBottom) {
+    if (initialScrollDoneRef.current && isAtBottomRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
