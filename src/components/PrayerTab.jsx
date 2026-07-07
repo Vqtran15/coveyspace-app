@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass, Heart } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass, Heart, DotsThreeVertical } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -76,6 +76,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
   const [newId, setNewId]                 = useState(null)
   const newIdTimerRef                     = useRef(null)
   const [confirmRequestId, setConfirmRequestId] = useState(null)
+  const [openMenuId, setOpenMenuId]             = useState(null)
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const [reactions, setReactions]         = useState({}) // { [prayer_request_id]: [reaction] }
   const [togglingIds, setTogglingIds]     = useState(new Set())
@@ -417,33 +418,44 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 <span className="text-xs text-stone-400"> · {r.added_by}</span>
                               )}
                             </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {/* Heart button — hidden on your own requests */}
-                              {!isOwnProfile && (
-                                <button
-                                  onClick={() => toggleReaction(r.id)}
-                                  disabled={togglingIds.has(r.id)}
-                                  className="p-0.5 transition-colors disabled:opacity-40"
-                                >
-                                  <Heart
-                                    size={15}
-                                    weight={hasReacted ? 'fill' : 'regular'}
-                                    className={hasReacted ? 'text-coral' : 'text-stone-300 hover:text-coral'}
-                                  />
-                                </button>
+                            <div className="relative shrink-0">
+                              <button
+                                onClick={() => setOpenMenuId(openMenuId === r.id ? null : r.id)}
+                                className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
+                              >
+                                <DotsThreeVertical size={16} weight="bold" />
+                              </button>
+                              {openMenuId === r.id && (
+                                <>
+                                  <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                                  <div className="absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px]">
+                                    {!isOwnProfile && (
+                                      <button
+                                        onClick={() => { toggleReaction(r.id); setOpenMenuId(null) }}
+                                        disabled={togglingIds.has(r.id)}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40"
+                                      >
+                                        <Heart size={15} weight={hasReacted ? 'fill' : 'regular'} className={hasReacted ? 'text-coral' : 'text-stone-400'} />
+                                        {hasReacted ? 'Unprayed' : 'Prayed for'}
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => { startEditRequest(r); setOpenMenuId(null) }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                    >
+                                      <PencilSimple size={15} className="text-stone-400" />
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => { setConfirmRequestId(r.id); setOpenMenuId(null) }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                      <Trash size={15} className="text-red-400" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                </>
                               )}
-                              <button
-                                onClick={() => { setConfirmRequestId(null); startEditRequest(r) }}
-                                className="text-stone-300 hover:text-stone-500 transition-colors p-0.5"
-                              >
-                                <PencilSimple size={14} />
-                              </button>
-                              <button
-                                onClick={() => setConfirmRequestId(r.id)}
-                                className="text-stone-300 hover:text-red-500 active:text-red-600 transition-colors p-0.5"
-                              >
-                                <Trash size={14} />
-                              </button>
                             </div>
                           </div>
                           <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
