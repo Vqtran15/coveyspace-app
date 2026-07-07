@@ -12,7 +12,7 @@ export default function PrayerReactionBanner({ reactorName, onDismiss, onTap }) 
           <div className="flex items-center gap-2 min-w-0">
             <HandsPraying size={16} weight="fill" className="text-sunrise shrink-0" />
             <p className="text-sm font-semibold text-stone-800 truncate">
-              {reactorName} prayed for your request
+              {reactorName} prayed for you
             </p>
           </div>
           <button
