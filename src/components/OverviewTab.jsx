@@ -238,8 +238,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     if (upcomingSoon.length > 1) {
       const maxDays = Math.max(...upcomingSoon.map(b => b.days))
       return maxDays === 0
-        ? 'Multiple birthdays today!'
-        : `Multiple birthdays coming up in less than ${maxDays} days!`
+        ? `${upcomingSoon.length} birthdays today!`
+        : `${upcomingSoon.length} birthdays coming up in less than ${maxDays} days!`
     }
     const who = joinNames(sameDayGroup)
     if (nextBirthday.days === 0) return `🎂 Today is ${who}'s birthday!`
