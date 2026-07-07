@@ -589,13 +589,41 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }
 
+  function compressImage(file) {
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') return Promise.resolve(file)
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const MAX = 1200
+        const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight))
+        const w = Math.round(img.naturalWidth * scale)
+        const h = Math.round(img.naturalHeight * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        canvas.toBlob(
+          blob => resolve(blob
+            ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+            : file),
+          'image/jpeg', 0.82
+        )
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+      img.src = url
+    })
+  }
+
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
-      const ext = file.name.split('.').pop()
+      const compressed = await compressImage(file)
+      const ext = compressed.name.split('.').pop()
       const path = `${myId}/${convId}_${Date.now()}.${ext}`
       const { data: uploaded, error: upErr } = await supabase.storage
         .from('chat-images')
-        .upload(path, file, { contentType: file.type })
+        .upload(path, compressed, { contentType: compressed.type })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
 

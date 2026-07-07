@@ -7,7 +7,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [], onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -24,14 +24,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
   const [notifDismissed, setNotifDismissed]   = useState(() => localStorage.getItem('notifBannerDismissed') === '1')
-  const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
-  const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
   const searchInputRef = useRef(null)
-
-  function dismissBirthdayBanner() {
-    setBirthdayBannerClosing(true)
-    setTimeout(() => { setBirthdayBannerDismissed(true); setBirthdayBannerClosing(false) }, 260)
-  }
 
   const myId = session.user.id
   const { className: headerClass } = useEntranceAnimation('/chat', 0)
@@ -258,8 +251,8 @@ export default function ConversationList({ session, groupId, members, enterClass
           <BirthdayBanner
             upcoming={upcoming}
             closing={birthdayBannerClosing}
-            onDismiss={dismissBirthdayBanner}
-            onTap={() => { dismissBirthdayBanner(); onOpenBirthdays?.() }}
+            onDismiss={onDismissBirthdayBanner}
+            onTap={() => { onDismissBirthdayBanner?.(); onOpenBirthdays?.() }}
           />
         </div>
       )}
