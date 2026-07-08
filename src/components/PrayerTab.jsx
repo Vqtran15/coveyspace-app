@@ -76,9 +76,21 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
   const [editText, setEditText]           = useState('')
   const [newId, setNewId]                 = useState(null)
   const newIdTimerRef                     = useRef(null)
+  const lastTapRef                        = useRef({ id: null, time: 0 })
   const [confirmRequestId, setConfirmRequestId] = useState(null)
   const [openMenuId, setOpenMenuId]             = useState(null)
   const [closingMenuId, setClosingMenuId]       = useState(null)
+
+  function handleBubbleTap(requestId, isOwn) {
+    if (isOwn || togglingIds.has(requestId)) return
+    const now = Date.now()
+    if (lastTapRef.current.id === requestId && now - lastTapRef.current.time < 300) {
+      lastTapRef.current = { id: null, time: 0 }
+      toggleReaction(requestId)
+    } else {
+      lastTapRef.current = { id: requestId, time: now }
+    }
+  }
 
   function openMenu(id) { setClosingMenuId(null); setOpenMenuId(id) }
   function closeMenu() {
@@ -415,7 +427,10 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         </div>
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
-                          <div className="bg-stone-50 rounded-xl px-3 py-2.5">
+                          <div
+                            className="bg-white rounded-xl border border-stone-200 shadow-sm px-3 py-2.5 select-none"
+                            onClick={() => handleBubbleTap(r.id, isOwnProfile)}
+                          >
                           {editingId === r.id ? (
                             <form onSubmit={handleSaveRequest} className="space-y-2 pb-1">
                               <input
@@ -457,7 +472,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                   : <span />}
                                 <div className="relative shrink-0">
                                   <button
-                                    onClick={() => openMenuId === r.id ? closeMenu() : openMenu(r.id)}
+                                    onClick={e => { e.stopPropagation(); openMenuId === r.id ? closeMenu() : openMenu(r.id) }}
                                     className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
                                   >
                                     <DotsThreeVertical size={16} weight="bold" />
