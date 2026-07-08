@@ -428,7 +428,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
                           <div
-                            className="bg-white rounded-xl border border-stone-200 shadow-sm px-3 py-2.5 select-none"
+                            className="bg-jade/8 rounded-xl border border-jade/20 shadow-sm px-3 py-2.5 select-none"
                             onClick={() => handleBubbleTap(r.id, isOwnProfile)}
                           >
                           {editingId === r.id ? (
