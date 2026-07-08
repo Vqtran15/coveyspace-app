@@ -17,6 +17,17 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const [error, setError]           = useState(null)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function onResize() {
+      setKeyboardHeight(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    }
+    vv.addEventListener('resize', onResize)
+    return () => vv.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     supabase
@@ -57,6 +68,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      style={keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 16 } : undefined}
       onClick={close}
     >
       <div
