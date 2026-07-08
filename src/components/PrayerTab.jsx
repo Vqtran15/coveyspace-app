@@ -367,12 +367,22 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
 
               {/* Request list */}
               {loading || !animDone ? (
-                <div className="space-y-3">
+                <div>
                   {[0, 1, 2].map(i => (
-                    <div key={i} className="bg-stone-50 rounded-xl p-3 animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
-                      <div className="h-3 bg-stone-200 rounded w-1/3 mb-2" />
-                      <div className="h-3 bg-stone-200 rounded w-full mb-1.5" />
-                      <div className="h-3 bg-stone-200 rounded w-4/5" />
+                    <div key={i} className="flex animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
+                      <div className="w-14 shrink-0 pr-3 pt-0.5 flex flex-col items-end gap-1">
+                        <div className="h-2 bg-stone-200 rounded w-7" />
+                        <div className="h-6 bg-stone-200 rounded w-9" />
+                        <div className="h-2 bg-stone-200 rounded w-10" />
+                      </div>
+                      <div className="flex flex-col items-center w-5 shrink-0">
+                        <div className="w-2.5 h-2.5 rounded-full bg-stone-200 mt-1.5 shrink-0" />
+                        {i < 2 && <div className="w-px flex-1 bg-stone-200 mt-1" />}
+                      </div>
+                      <div className="flex-1 pl-2 pb-6">
+                        <div className="h-3 bg-stone-200 rounded w-full mb-2 mt-0.5" />
+                        <div className="h-3 bg-stone-200 rounded w-4/5" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -381,118 +391,135 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                   {q ? 'No requests match your search.' : 'No requests yet. Tap + to add one!'}
                 </p>
               ) : (
-                filteredRequests.map(r => {
-                  const requestReactions = reactions[r.id] ?? []
-                  const hasReacted = requestReactions.some(rx => rx.user_id === currentUserId)
-                  const isOwnProfile = member.user_id === currentUserId
-                  return (
-                    <div key={r.id} className={`bg-stone-50 rounded-xl p-3 ${newId === r.id ? 'animate-fade-up' : ''}`}>
-                      {editingId === r.id ? (
-                        <form onSubmit={handleSaveRequest} className="space-y-2">
-                          <input
-                            type="date"
-                            value={editDate}
-                            onChange={e => setEditDate(e.target.value)}
-                            className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
-                          />
-                          <textarea
-                            value={editText}
-                            onChange={e => setEditText(e.target.value)}
-                            rows={3}
-                            className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
-                            required
-                            autoFocus
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(null)}
-                              className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="submit"
-                              disabled={!editText.trim()}
-                              className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
-                            >
-                              Save
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        <>
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <div>
-                              <span className="text-xs text-stone-400">{formatDate(r.date)}</span>
-                              {r.added_by && (
-                                <span className="text-xs text-stone-400"> · {r.added_by}</span>
+                <div>
+                  {filteredRequests.map((r, idx) => {
+                    const requestReactions = reactions[r.id] ?? []
+                    const hasReacted = requestReactions.some(rx => rx.user_id === currentUserId)
+                    const isOwnProfile = member.user_id === currentUserId
+                    const isLast = idx === filteredRequests.length - 1
+                    const [yr, mo, dy] = r.date.split('-').map(Number)
+                    const dateObj = new Date(yr, mo - 1, dy)
+                    const mon = dateObj.toLocaleDateString('en-US', { month: 'short' })
+                    return (
+                      <div key={r.id} className={`flex ${newId === r.id ? 'animate-fade-up' : ''}`}>
+                        {/* Date column */}
+                        <div className="w-14 shrink-0 text-right pr-3 pt-0.5">
+                          <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider leading-none">{mon}</p>
+                          <p className="text-2xl font-bold text-stone-700 leading-none mt-0.5">{dy}</p>
+                          <p className="text-[10px] text-stone-400 leading-none mt-0.5">{yr}</p>
+                        </div>
+                        {/* Spine */}
+                        <div className="flex flex-col items-center w-5 shrink-0">
+                          <div className="w-2.5 h-2.5 rounded-full bg-jade mt-1.5 shrink-0 z-10" />
+                          {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
+                        </div>
+                        {/* Content */}
+                        <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
+                          {editingId === r.id ? (
+                            <form onSubmit={handleSaveRequest} className="space-y-2 pb-1">
+                              <input
+                                type="date"
+                                value={editDate}
+                                onChange={e => setEditDate(e.target.value)}
+                                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                              />
+                              <textarea
+                                value={editText}
+                                onChange={e => setEditText(e.target.value)}
+                                rows={3}
+                                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                                required
+                                autoFocus
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingId(null)}
+                                  className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={!editText.trim()}
+                                  className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between gap-1 -mt-0.5 mb-1">
+                                {r.added_by
+                                  ? <span className="text-xs text-stone-400">by {r.added_by}</span>
+                                  : <span />}
+                                <div className="relative shrink-0">
+                                  <button
+                                    onClick={() => openMenuId === r.id ? closeMenu() : openMenu(r.id)}
+                                    className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
+                                  >
+                                    <DotsThreeVertical size={16} weight="bold" />
+                                  </button>
+                                  {(openMenuId === r.id || closingMenuId === r.id) && (
+                                    <>
+                                      <div className="fixed inset-0 z-10" onClick={closeMenu} />
+                                      <div className={`absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] origin-top-right ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
+                                        {!isOwnProfile && (
+                                          <button
+                                            onClick={() => { toggleReaction(r.id); closeMenu() }}
+                                            disabled={togglingIds.has(r.id)}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40"
+                                          >
+                                            <Heart size={15} weight={hasReacted ? 'fill' : 'regular'} className={hasReacted ? 'text-coral' : 'text-stone-400'} />
+                                            {hasReacted ? 'Undo prayer' : 'Pray for'}
+                                          </button>
+                                        )}
+                                        <button
+                                          onClick={() => { startEditRequest(r); closeMenu() }}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                        >
+                                          <PencilSimple size={15} className="text-stone-400" />
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => { setConfirmRequestId(r.id); closeMenu() }}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                        >
+                                          <Trash size={15} className="text-red-400" />
+                                          Delete
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                              <ReactionAvatars reactions={requestReactions} />
+                              {confirmRequestId === r.id && (
+                                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
+                                  <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
+                                  <button
+                                    onClick={() => setConfirmRequestId(null)}
+                                    className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteRequest(r.id)}
+                                    className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               )}
-                            </div>
-                            <div className="relative shrink-0">
-                              <button
-                                onClick={() => openMenuId === r.id ? closeMenu() : openMenu(r.id)}
-                                className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
-                              >
-                                <DotsThreeVertical size={16} weight="bold" />
-                              </button>
-                              {(openMenuId === r.id || closingMenuId === r.id) && (
-                                <>
-                                  <div className="fixed inset-0 z-10" onClick={closeMenu} />
-                                  <div className={`absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] origin-top-right ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
-                                    {!isOwnProfile && (
-                                      <button
-                                        onClick={() => { toggleReaction(r.id); closeMenu() }}
-                                        disabled={togglingIds.has(r.id)}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40"
-                                      >
-                                        <Heart size={15} weight={hasReacted ? 'fill' : 'regular'} className={hasReacted ? 'text-coral' : 'text-stone-400'} />
-                                        {hasReacted ? 'Undo prayer' : 'Pray for'}
-                                      </button>
-                                    )}
-                                    <button
-                                      onClick={() => { startEditRequest(r); closeMenu() }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-                                    >
-                                      <PencilSimple size={15} className="text-stone-400" />
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => { setConfirmRequestId(r.id); closeMenu() }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                    >
-                                      <Trash size={15} className="text-red-400" />
-                                      Delete
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
-                          <ReactionAvatars reactions={requestReactions} />
-                          {confirmRequestId === r.id && (
-                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
-                              <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
-                              <button
-                                onClick={() => setConfirmRequestId(null)}
-                                className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => handleDeleteRequest(r.id)}
-                                className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
+                            </>
                           )}
-                        </>
-                      )}
-                    </div>
-                  )
-                })
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           )}
