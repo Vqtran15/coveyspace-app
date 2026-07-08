@@ -277,11 +277,11 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full lg:max-w-lg flex flex-col min-h-[50vh] max-h-[90vh] lg:max-h-[85vh] ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full lg:max-w-lg flex flex-col min-h-[50vh] max-h-[90vh] lg:max-h-[85vh] ${closing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
         style={{
           marginBottom: keyboardOffset,
           ...(keyboardOffset > 0 && { maxHeight: `${window.innerHeight - keyboardOffset - 32}px` }),
@@ -466,10 +466,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                             </form>
                           ) : (
                             <>
-                              <div className="flex items-center justify-between gap-1 mb-1">
-                                {r.added_by
-                                  ? <span className="text-xs text-stone-400">by {r.added_by}</span>
-                                  : <span />}
+                              <div className="flex items-center justify-end gap-1 mb-1">
                                 <div className="relative shrink-0">
                                   <button
                                     onClick={e => { e.stopPropagation(); openMenuId === r.id ? closeMenu() : openMenu(r.id) }}
