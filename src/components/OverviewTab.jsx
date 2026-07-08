@@ -71,6 +71,17 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   const [closing, close] = useModalClose(onClose)
   const [text, setText] = useState(value ?? '')
   const [saving, setSaving] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function onResize() {
+      setKeyboardHeight(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    }
+    vv.addEventListener('resize', onResize)
+    return () => vv.removeEventListener('resize', onResize)
+  }, [])
 
   async function handleSave(e) {
     e.preventDefault()
@@ -83,6 +94,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      style={keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 16 } : undefined}
       onClick={close}
     >
       <div
