@@ -506,8 +506,8 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 )}
                               </div>
                               <div className="flex items-center gap-1.5 mb-1.5">
-                                <HandsPraying size={13} weight="fill" className="text-stone-400" />
-                                <span className="text-xs text-stone-400">Prayer request</span>
+                                <HandsPraying size={13} weight="fill" className="text-jade" />
+                                <span className="text-xs text-jade">Prayer request</span>
                               </div>
                               <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                               <ReactionAvatars reactions={requestReactions} />
