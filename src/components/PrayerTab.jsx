@@ -8,6 +8,7 @@ import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
+import { trackEvent } from '../lib/analytics.js'
 
 function formatDate(dateStr) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
@@ -185,6 +186,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
           [requestId]: (prev[requestId] ?? []).filter(r => r.id !== optimistic.id),
         }))
       } else if (data) {
+        trackEvent('prayer_reaction')
         setReactions(prev => ({
           ...prev,
           [requestId]: (prev[requestId] ?? []).map(r => r.id === optimistic.id ? data : r),
@@ -213,6 +215,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
       .select()
       .single()
     if (err) { setError(err.message); setSaving(false); return }
+    trackEvent('prayer_request_added')
     setRequests(prev => [data, ...prev])
     setNewId(data.id)
     clearTimeout(newIdTimerRef.current)

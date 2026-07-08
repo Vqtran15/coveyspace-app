@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
+import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
@@ -298,6 +299,7 @@ export default function App() {
   useEffect(() => {
     if (location.pathname === '/chat') setUnreadChatCount(0)
     window.scrollTo({ top: 0, behavior: 'instant' })
+    trackPageView(location.pathname)
   }, [location.pathname])
 
   const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
+import { trackEvent } from '../lib/analytics.js'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
@@ -72,6 +73,7 @@ export function usePushNotifications(userId, groupId) {
 
       if (error) throw error
       setSubscribed(true)
+      trackEvent('push_notifications_enabled')
     } catch (err) {
       console.error('Push subscribe error:', err)
       toast(`Notification setup failed: ${err?.message ?? err}`, 'error')

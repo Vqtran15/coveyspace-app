@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { UsersThree, ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { trackEvent } from '../lib/analytics.js'
 
 const MODE_ORDER = { signin: 0, forgot: 1, signup: 2 }
 
@@ -96,8 +97,7 @@ export default function AuthPage() {
       if (err) {
         setError(err.message)
       } else {
-        window.dataLayer = window.dataLayer || []
-        window.dataLayer.push({ event: 'sign_up', method: joinMode === 'create' ? 'create_group' : 'join_group' })
+        trackEvent('sign_up', { method: joinMode === 'create' ? 'create_group' : 'join_group' })
         switchMode('signin')
         setNotice(
           joinMode === 'create'
@@ -110,8 +110,7 @@ export default function AuthPage() {
       if (err) {
         setError(err.message)
       } else {
-        window.dataLayer = window.dataLayer || []
-        window.dataLayer.push({ event: 'login', method: 'email' })
+        trackEvent('login', { method: 'email' })
       }
     }
 

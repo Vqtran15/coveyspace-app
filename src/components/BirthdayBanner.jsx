@@ -1,4 +1,5 @@
 import { Cake, X } from '@phosphor-icons/react'
+import { trackEvent } from '../lib/analytics.js'
 
 export default function BirthdayBanner({ upcoming, closing = false, onDismiss, onTap }) {
   if (!upcoming.length) return null
@@ -16,7 +17,7 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
     <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div
         className="relative overflow-hidden rounded-2xl bg-jade-50 border border-jade/30 shadow-sm px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
-        onClick={onTap}
+        onClick={() => { trackEvent('birthday_banner_tapped'); onTap?.() }}
       >
         <span className="absolute left-0 top-0 h-full w-1.5 bg-jade rounded-l-2xl" />
         <p className="text-xs font-bold text-jade uppercase tracking-wider mb-2 pl-3">
@@ -42,7 +43,7 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
             </div>
           )}
           <button
-            onClick={e => { e.stopPropagation(); onDismiss?.() }}
+            onClick={e => { e.stopPropagation(); trackEvent('birthday_banner_dismissed'); onDismiss?.() }}
             className="shrink-0 text-stone-400 hover:text-stone-600 transition-colors p-0.5"
           >
             <X size={16} weight="bold" />

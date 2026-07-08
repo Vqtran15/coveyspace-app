@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, PauseCircle, PlayCircle } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import SlotCard from './SlotCard.jsx'
@@ -80,6 +81,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
         throw new Error(error.message)
       }
     }
+    trackEvent('schedule_signup', { page_type: pageNoun.toLowerCase() })
     setSelectedSlot(null)
   }
 
@@ -88,6 +90,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     if (!existing) return
     const { error } = await supabase.from(tables.signups).delete().eq('id', existing.id)
     if (error) throw new Error(error.message)
+    trackEvent('schedule_cancel', { page_type: pageNoun.toLowerCase() })
     setSignups(s => s.filter(r => r.id !== existing.id))
     setSelectedSlot(null)
   }

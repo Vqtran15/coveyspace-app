@@ -12,6 +12,7 @@ import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../utils/format.js'
 import { haptic } from '../lib/haptic.js'
+import { trackEvent } from '../lib/analytics.js'
 
 const PAGE_SIZE = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
@@ -559,6 +560,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         isAtBottomRef.current = true
         setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, _isNew: true }])
       }
+      trackEvent('chat_message_sent', { type: 'text', conv_type: conversation.type })
       setText('')
       localStorage.removeItem(DRAFT_KEY(convId))
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
@@ -640,6 +642,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
+        trackEvent('chat_message_sent', { type: 'image', conv_type: conversation.type })
         await new Promise(resolve => {
           const img = new window.Image()
           img.onload = resolve

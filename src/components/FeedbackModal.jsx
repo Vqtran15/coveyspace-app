@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ChatTeardropDots, CheckCircle } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
+import { trackEvent } from '../lib/analytics.js'
 
 const TYPES = [
   { key: 'bug',     label: 'Bug Report' },
@@ -61,6 +62,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
       return
     }
 
+    trackEvent('feedback_submitted', { feedback_type: type })
     setSubmitted(true)
     setSubmitting(false)
   }
