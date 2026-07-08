@@ -250,9 +250,9 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
           )}
           <button
             onClick={() => setModal('add')}
-            className="flex items-center gap-1.5 px-4 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+            className="w-9 h-9 flex items-center justify-center bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-xl text-lg font-medium transition-colors"
           >
-            + Add Birthday
+            +
           </button>
         </div>
       </div>
