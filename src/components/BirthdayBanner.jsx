@@ -28,7 +28,7 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
               <Cake size={16} weight="fill" className="text-jade shrink-0" />
               {maxDays === 0
                 ? `${upcoming.length} birthdays today!`
-                : `${upcoming.length} birthdays coming up in less than ${maxDays} days!`}
+                : `${upcoming.length} Birthdays to celebrate soon!`}
             </p>
           ) : (
             <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
