@@ -415,6 +415,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         </div>
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
+                          <div className="bg-stone-50 rounded-xl px-3 py-2.5">
                           {editingId === r.id ? (
                             <form onSubmit={handleSaveRequest} className="space-y-2 pb-1">
                               <input
@@ -450,7 +451,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                             </form>
                           ) : (
                             <>
-                              <div className="flex items-center justify-between gap-1 -mt-0.5 mb-1">
+                              <div className="flex items-center justify-between gap-1 mb-1">
                                 {r.added_by
                                   ? <span className="text-xs text-stone-400">by {r.added_by}</span>
                                   : <span />}
@@ -515,6 +516,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                               )}
                             </>
                           )}
+                          </div>
                         </div>
                       </div>
                     )
