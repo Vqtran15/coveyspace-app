@@ -1,3 +1,13 @@
+// After 9 PM PT on Tuesdays, rolls the cutoff forward to Wednesday so the
+// current Tuesday meal is no longer shown as "next" on home or in the schedule.
+export function mealCutoffDate() {
+  const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  if (pst.getDay() === 2 && pst.getHours() >= 21) {
+    pst.setDate(pst.getDate() + 1)
+  }
+  return toDateString(pst)
+}
+
 // Returns the next Tuesday after today (7 days ahead if today is already Tuesday).
 export function getNextTuesday(from = new Date()) {
   const d = new Date(from)

@@ -3,21 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
-import { toDateString } from '../utils/dates.js'
+import { toDateString, mealCutoffDate } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import ConfettiDots from './ConfettiDots.jsx'
-
-// After 9 pm PT on Tuesdays, roll the meal cutoff forward to Wednesday
-// so the current Tuesday's meal is no longer shown as "next".
-function mealCutoffDate() {
-  const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
-  if (pst.getDay() === 2 && pst.getHours() >= 21) {
-    pst.setDate(pst.getDate() + 1)
-  }
-  return toDateString(pst)
-}
 
 
 function shortDate(dateStr) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from './lib/supabase.js'
-import { patchTitleDate, toDateString } from './utils/dates.js'
+import { patchTitleDate, toDateString, mealCutoffDate } from './utils/dates.js'
 import { nextScheduledDate } from './utils/schedule.js'
 import { haptic } from './lib/haptic.js'
 import MealPage from './components/MealPage.jsx'
@@ -63,8 +63,9 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
   return result
 }
 
-const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false }, ref) {
+const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false, cutoffDate }, ref) {
   const { label, Icon, editLabel, editSubLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null, weekOccurrences = null } = config
+  const effectiveCutoff = cutoffDate ?? toDateString(new Date())
 
   const [pages, setPages]       = useState([])
   const [viewIndex, setViewIndex] = useState(0)
@@ -81,8 +82,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     const { data, error: err } = await supabase.from(tables.pages).select('*').order('position')
     if (err) { setError(err.message); setLoading(false); return }
     const filled = autoFill ? await autoFillPages(data ?? [], tables, defaultTitle, intervalDays, targetDow, weekOccurrences) : (data ?? [])
-    const today = toDateString(new Date())
-    const upcomingIdx = filled.findIndex(p => p.week_date >= today)
+    const upcomingIdx = filled.findIndex(p => p.week_date >= effectiveCutoff)
     setPages(filled)
     setViewIndex(upcomingIdx === -1 ? Math.max(0, filled.length - 1) : upcomingIdx)
     setLoading(false)
@@ -184,8 +184,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   useImperativeHandle(ref, () => ({
     jumpToToday() {
-      const today = toDateString(new Date())
-      const idx = pages.findIndex(p => p.week_date >= today)
+      const idx = pages.findIndex(p => p.week_date >= effectiveCutoff)
       setViewIndex(idx === -1 ? pages.length - 1 : idx)
       window.scrollTo({ top: 0, behavior: 'instant' })
     },
@@ -225,8 +224,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           <div className="flex items-center gap-1">
             <button
               onClick={() => {
-                const today = toDateString(new Date())
-                const idx = pages.findIndex(p => p.week_date >= today)
+                const idx = pages.findIndex(p => p.week_date >= effectiveCutoff)
                 setViewIndex(idx === -1 ? pages.length - 1 : idx)
                 window.scrollTo({ top: 0, behavior: 'instant' })
               }}

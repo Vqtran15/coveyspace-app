@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ListBullets } from '@phosphor-icons/react'
 import RotationTab from '../RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
+import { mealCutoffDate } from '../utils/dates.js'
 
 export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin, groupSettings, refreshKey = 0 }) {
   const location = useLocation()
@@ -98,6 +99,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
             ? { ...mealsConfig, intervalDays: groupSettings?.meal_interval_days ?? 7, targetDow: groupSettings?.meal_day_of_week ?? null, weekOccurrences: groupSettings?.meal_week_occurrences ?? null }
             : { ...servicesConfig, autoFill: groupSettings?.service_autofill ?? false, intervalDays: groupSettings?.service_interval_days ?? 28, targetDow: groupSettings?.service_day_of_week ?? null, weekOccurrences: groupSettings?.service_week_occurrences ?? null }
           }
+          cutoffDate={segment === 'meals' ? mealCutoffDate() : undefined}
           revealKey={segment}
           groupName={groupName}
           displayName={displayName}
