@@ -428,7 +428,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
                           <div
-                            className="bg-jade/8 rounded-xl border border-jade/20 shadow-sm px-3 py-2.5 select-none"
+                            className="relative bg-jade/8 rounded-xl border border-jade/20 shadow-sm px-3 py-2.5 select-none"
                             onClick={() => handleBubbleTap(r.id, isOwnProfile)}
                           >
                           {editingId === r.id ? (
@@ -466,48 +466,46 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                             </form>
                           ) : (
                             <>
-                              <div className="flex items-center justify-end gap-1 mb-1">
-                                <div className="relative shrink-0">
-                                  <button
-                                    onClick={e => { e.stopPropagation(); openMenuId === r.id ? closeMenu() : openMenu(r.id) }}
-                                    className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
-                                  >
-                                    <DotsThreeVertical size={16} weight="bold" />
-                                  </button>
-                                  {(openMenuId === r.id || closingMenuId === r.id) && (
-                                    <>
-                                      <div className="fixed inset-0 z-10" onClick={closeMenu} />
-                                      <div className={`absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] origin-top-right ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
-                                        {!isOwnProfile && (
-                                          <button
-                                            onClick={() => { toggleReaction(r.id); closeMenu() }}
-                                            disabled={togglingIds.has(r.id)}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40"
-                                          >
-                                            <Heart size={15} weight={hasReacted ? 'fill' : 'regular'} className={hasReacted ? 'text-coral' : 'text-stone-400'} />
-                                            {hasReacted ? 'Undo prayer' : 'Pray for'}
-                                          </button>
-                                        )}
+                              <div className="absolute top-2 right-2">
+                                <button
+                                  onClick={e => { e.stopPropagation(); openMenuId === r.id ? closeMenu() : openMenu(r.id) }}
+                                  className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
+                                >
+                                  <DotsThreeVertical size={16} weight="bold" />
+                                </button>
+                                {(openMenuId === r.id || closingMenuId === r.id) && (
+                                  <>
+                                    <div className="fixed inset-0 z-10" onClick={closeMenu} />
+                                    <div className={`absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] origin-top-right ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
+                                      {!isOwnProfile && (
                                         <button
-                                          onClick={() => { startEditRequest(r); closeMenu() }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                          onClick={() => { toggleReaction(r.id); closeMenu() }}
+                                          disabled={togglingIds.has(r.id)}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40"
                                         >
-                                          <PencilSimple size={15} className="text-stone-400" />
-                                          Edit
+                                          <Heart size={15} weight={hasReacted ? 'fill' : 'regular'} className={hasReacted ? 'text-coral' : 'text-stone-400'} />
+                                          {hasReacted ? 'Undo prayer' : 'Pray for'}
                                         </button>
-                                        <button
-                                          onClick={() => { setConfirmRequestId(r.id); closeMenu() }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                        >
-                                          <Trash size={15} className="text-red-400" />
-                                          Delete
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
+                                      )}
+                                      <button
+                                        onClick={() => { startEditRequest(r); closeMenu() }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                      >
+                                        <PencilSimple size={15} className="text-stone-400" />
+                                        Edit
+                                      </button>
+                                      <button
+                                        onClick={() => { setConfirmRequestId(r.id); closeMenu() }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                      >
+                                        <Trash size={15} className="text-red-400" />
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
                               </div>
-                              <p className="text-sm text-stone-700 leading-relaxed">{r.request}</p>
+                              <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                               <ReactionAvatars reactions={requestReactions} />
                               {confirmRequestId === r.id && (
                                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
