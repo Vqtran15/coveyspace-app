@@ -267,7 +267,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           </div>
           <button
             onClick={handleAddSlot}
-            className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-stone-200 text-stone-400 hover:border-jade hover:text-jade transition-colors"
+            className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
           >
             <Plus size={16} weight="bold" />
             <span className="text-sm font-medium">Add {noun}</span>
