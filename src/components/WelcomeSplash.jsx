@@ -744,7 +744,7 @@ export default function WelcomeSplash({
               onClick={() => setStep('invite')}
               className="w-full py-2.5 text-stone-400 text-sm mt-1"
             >
-              Set up later in Admin settings →
+              Set up later
             </button>
           </div>
         </div>
@@ -778,7 +778,7 @@ export default function WelcomeSplash({
             )}
           </div>
 
-          {navigator.share ? (
+          {!loadingCode && (navigator.share ? (
             <div className="flex gap-2 mb-3">
               <button
                 onClick={copyCode}
@@ -800,7 +800,7 @@ export default function WelcomeSplash({
             >
               {codeCopied ? '✓ Copied!' : 'Copy code'}
             </button>
-          )}
+          ))}
 
           <button
             onClick={() => isStandalone ? close() : setStep('install')}
@@ -814,7 +814,7 @@ export default function WelcomeSplash({
 
     // ── STEP: tour (member only) ───────────────────────────────────────────────
     if (step === 'tour') {
-      const isLastSlide = tourSlide === visibleTourCards.length - 1
+      const isLastSlide = tourSlide === Math.max(0, visibleTourCards.length - 1)
       return (
         <div className="flex flex-col flex-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
           <div className="px-6 mb-6 flex items-start justify-between">
