@@ -102,9 +102,22 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
       .select()
       .single()
     if (err) throw new Error(err.message)
-    const updated = [...pages, newPage]
-    setPages(updated)
-    setViewIndex(updated.length - 1)
+
+    const sorted = [...pages, newPage].sort((a, b) => a.week_date.localeCompare(b.week_date))
+    const newIndex = sorted.findIndex(p => p.id === newPage.id)
+
+    if (newIndex < sorted.length - 1) {
+      // New page landed in the middle — update positions so they match date order
+      await Promise.all(
+        sorted.map((p, i) => {
+          const origPos = p.id === newPage.id ? pages.length : pages.find(x => x.id === p.id)?.position
+          return origPos !== i ? supabase.from(tables.pages).update({ position: i }).eq('id', p.id) : null
+        }).filter(Boolean)
+      )
+    }
+
+    setPages(sorted.map((p, i) => ({ ...p, position: i })))
+    setViewIndex(newIndex)
     setShowAddModal(false)
   }
 
