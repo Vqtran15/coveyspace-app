@@ -18,9 +18,7 @@ function getWeekdayOccurrencesInMonth(year, month, dow) {
   return results
 }
 
-// Returns the next scheduled date strictly after `fromDate` given a day-of-week
-// and an array of which week-of-month occurrences to include (e.g. [2,4])
-export function nextScheduledDate(fromDate, dow, weekOccurrences) {
+function nextScheduledDateSingle(fromDate, dow, weekOccurrences) {
   const from = new Date(fromDate)
   from.setHours(0, 0, 0, 0)
   let year  = from.getFullYear()
@@ -36,4 +34,13 @@ export function nextScheduledDate(fromDate, dow, weekOccurrences) {
     if (month > 11) { month = 0; year++ }
   }
   return null
+}
+
+// Returns the next scheduled date strictly after `fromDate` given a day-of-week
+// (int or int[]) and an array of which week-of-month occurrences to include.
+export function nextScheduledDate(fromDate, dow, weekOccurrences) {
+  const dows = Array.isArray(dow) ? dow : [dow]
+  const candidates = dows.map(d => nextScheduledDateSingle(fromDate, d, weekOccurrences)).filter(Boolean)
+  if (!candidates.length) return null
+  return candidates.reduce((a, b) => (a < b ? a : b))
 }

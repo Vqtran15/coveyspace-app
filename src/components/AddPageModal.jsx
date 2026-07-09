@@ -6,8 +6,10 @@ import { useModalClose } from '../hooks/useModalClose.js'
 function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const hasDow = targetDow != null && (!Array.isArray(targetDow) || targetDow.length > 0)
+  const dowArr = hasDow ? (Array.isArray(targetDow) ? targetDow : [targetDow]) : []
 
-  if (weekOccurrences && weekOccurrences.length > 0 && targetDow !== null) {
+  if (weekOccurrences && weekOccurrences.length > 0 && hasDow) {
     let d = nextScheduledDate(today, targetDow, weekOccurrences)
     while (d && existingDates.includes(toDateString(d))) {
       d = nextScheduledDate(d, targetDow, weekOccurrences)
@@ -16,16 +18,22 @@ function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7
   }
 
   let d = new Date(today)
-  if (targetDow !== null) {
-    const diff = d.getDay() === targetDow ? 7 : (targetDow - d.getDay() + 7) % 7
+  if (hasDow) {
+    const diff = dowArr.reduce((best, t) => {
+      const gap = d.getDay() === t ? 7 : (t - d.getDay() + 7) % 7
+      return gap < best ? gap : best
+    }, 7)
     d.setDate(d.getDate() + diff)
   } else {
     d.setDate(d.getDate() + intervalDays)
   }
   while (existingDates.includes(toDateString(d))) {
     d.setDate(d.getDate() + intervalDays)
-    if (targetDow !== null) {
-      const diff = (targetDow - d.getDay() + 7) % 7
+    if (hasDow) {
+      const diff = dowArr.reduce((best, t) => {
+        const gap = (t - d.getDay() + 7) % 7
+        return gap < best ? gap : best
+      }, 7)
       if (diff > 0) d.setDate(d.getDate() + diff)
     }
   }

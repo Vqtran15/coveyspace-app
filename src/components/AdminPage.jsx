@@ -420,19 +420,26 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             <div>
               <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
               <div className="flex gap-1.5">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSaveRotation({ meal_day_of_week: groupSettings?.meal_day_of_week === i ? null : i })}
-                    className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                      groupSettings?.meal_day_of_week === i
-                        ? 'bg-jade text-white'
-                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => {
+                  const mealDows = groupSettings?.meal_day_of_week ?? []
+                  const selected = mealDows.includes(i)
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        const next = selected
+                          ? mealDows.length > 1 ? mealDows.filter(x => x !== i) : mealDows
+                          : [...mealDows, i].sort((a, b) => a - b)
+                        handleSaveRotation({ meal_day_of_week: next })
+                      }}
+                      className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                        selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  )
+                })}
               </div>
             </div>
             <div>
@@ -534,19 +541,26 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 <div>
                   <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
                   <div className="flex gap-1.5">
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSaveRotation({ service_day_of_week: groupSettings?.service_day_of_week === i ? null : i })}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                          groupSettings?.service_day_of_week === i
-                            ? 'bg-jade text-white'
-                            : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                        }`}
-                      >
-                        {d}
-                      </button>
-                    ))}
+                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => {
+                      const svcDows = groupSettings?.service_day_of_week ?? []
+                      const selected = svcDows.includes(i)
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            const next = selected
+                              ? svcDows.length > 1 ? svcDows.filter(x => x !== i) : svcDows
+                              : [...svcDows, i].sort((a, b) => a - b)
+                            handleSaveRotation({ service_day_of_week: next })
+                          }}
+                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                            selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
                 <div>

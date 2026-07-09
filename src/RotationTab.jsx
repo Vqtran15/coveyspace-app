@@ -27,15 +27,20 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
     const lastPage = result[result.length - 1]
     const lastDate = new Date(lastPage.week_date + 'T12:00:00')
 
+    const hasDow = targetDow != null && (!Array.isArray(targetDow) || targetDow.length > 0)
     let nextDate
-    if (weekOccurrences && weekOccurrences.length > 0 && targetDow !== null) {
+    if (weekOccurrences && weekOccurrences.length > 0 && hasDow) {
       nextDate = nextScheduledDate(lastDate, targetDow, weekOccurrences)
       if (!nextDate) break
     } else {
       nextDate = new Date(lastDate)
       nextDate.setDate(nextDate.getDate() + intervalDays)
-      if (targetDow !== null) {
-        const diff = (targetDow - nextDate.getDay() + 7) % 7
+      if (hasDow) {
+        const dows = Array.isArray(targetDow) ? targetDow : [targetDow]
+        const diff = dows.reduce((best, t) => {
+          const gap = (t - nextDate.getDay() + 7) % 7
+          return gap < best ? gap : best
+        }, 7)
         nextDate.setDate(nextDate.getDate() + diff)
       }
     }

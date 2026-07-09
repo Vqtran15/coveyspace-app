@@ -215,7 +215,7 @@ export default function WelcomeSplash({
     }
 
     const names = mealNames.map(n => n.trim()).filter(Boolean)
-    if (features.meals_enabled && names.length > 0 && mealDow !== null) {
+    if (features.meals_enabled && names.length > 0 && mealDow && mealDow.length > 0) {
       const dates = []
       let from = new Date(); from.setHours(0, 0, 0, 0); from.setDate(from.getDate() - 1)
       for (let i = 0; i < names.length; i++) {
@@ -485,17 +485,26 @@ export default function WelcomeSplash({
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Which day do you meet?</p>
                     <div className="flex gap-1">
-                      {DOW_LABELS.map((d, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setMealDow(mealDow === i ? null : i)}
-                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            mealDow === i ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
-                        >
-                          {d}
-                        </button>
-                      ))}
+                      {DOW_LABELS.map((d, i) => {
+                        const current = mealDow ?? []
+                        const selected = current.includes(i)
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              const next = selected
+                                ? current.length > 1 ? current.filter(x => x !== i) : current
+                                : [...current, i].sort((a, b) => a - b)
+                              setMealDow(next.length > 0 ? next : null)
+                            }}
+                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                              selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            }`}
+                          >
+                            {d}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                   <div>
@@ -616,17 +625,26 @@ export default function WelcomeSplash({
                       <div>
                         <p className="text-xs text-stone-400 font-medium mb-2">Which day does service meet?</p>
                         <div className="flex gap-1">
-                          {DOW_LABELS.map((d, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setServiceDow(serviceDow === i ? null : i)}
-                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                serviceDow === i ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                              }`}
-                            >
-                              {d}
-                            </button>
-                          ))}
+                          {DOW_LABELS.map((d, i) => {
+                            const current = serviceDow ?? []
+                            const selected = current.includes(i)
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  const next = selected
+                                    ? current.length > 1 ? current.filter(x => x !== i) : current
+                                    : [...current, i].sort((a, b) => a - b)
+                                  setServiceDow(next.length > 0 ? next : null)
+                                }}
+                                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                                  selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                }`}
+                              >
+                                {d}
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                       <div>
