@@ -38,11 +38,11 @@ function ProgressDots({ steps, currentStep }) {
 }
 
 const TOUR_CARDS = [
-  { Icon: ChatCircleDots, color: 'bg-sage/20 text-sage-700',     title: 'Group Chat',        desc: 'A main group chat, plus direct messages and smaller group threads.' },
-  { Icon: ForkKnife,      color: 'bg-jade/10 text-jade',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
-  { Icon: HandsPraying,   color: 'bg-sunrise/10 text-sunrise',   title: 'Prayer Requests',   desc: 'Every member has a profile. Look back later and see what God has done.' },
-  { Icon: Cake,           color: 'bg-coral/10 text-coral',       title: 'Birthdays',         desc: 'Upcoming birthdays show on the home screen so no one gets forgotten.' },
-  { Icon: CalendarCheck,  color: 'bg-lagoon/10 text-lagoon-600', title: 'Service Schedules', desc: 'Monthly service sign-ups that rotate automatically.' },
+  { key: 'chat_enabled',      Icon: ChatCircleDots, color: 'bg-sage/20 text-sage-700',     title: 'Group Chat',        desc: 'A main group chat, plus direct messages and smaller group threads.' },
+  { key: 'meals_enabled',     Icon: ForkKnife,      color: 'bg-jade/10 text-jade',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
+  { key: 'prayer_enabled',    Icon: HandsPraying,   color: 'bg-sunrise/10 text-sunrise',   title: 'Prayer Requests',   desc: 'Every member has a profile. Look back later and see what God has done.' },
+  { key: 'birthdays_enabled', Icon: Cake,           color: 'bg-coral/10 text-coral',       title: 'Birthdays',         desc: 'Upcoming birthdays show on the home screen so no one gets forgotten.' },
+  { key: 'services_enabled',  Icon: CalendarCheck,  color: 'bg-lagoon/10 text-lagoon-600', title: 'Service Schedules', desc: 'Monthly service sign-ups that rotate automatically.' },
 ]
 
 const FEATURE_TOGGLES = [
@@ -70,10 +70,16 @@ export default function WelcomeSplash({
 }) {
   const [closing, close] = useModalClose(onDone)
 
+  const isStandalone =
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    ('standalone' in window.navigator && window.navigator.standalone === true)
+
+  const visibleTourCards = TOUR_CARDS.filter(c => groupSettings == null || groupSettings[c.key] !== false)
+
   const steps = useRef(
     isAdmin
-      ? ['welcome', 'personalize', 'features', 'setup', 'invite', 'install']
-      : ['welcome', 'personalize', 'tour', 'install']
+      ? ['welcome', 'personalize', 'features', 'setup', 'invite', ...(isStandalone ? [] : ['install'])]
+      : ['welcome', 'personalize', 'tour', ...(isStandalone ? [] : ['install'])]
   ).current
 
   const [step, setStep] = useState('welcome')
@@ -111,6 +117,7 @@ export default function WelcomeSplash({
 
   // ── Invite (admin) ─────────────────────────────────────────────────────────
   const [inviteCode, setInviteCode] = useState(null)
+  const [loadingCode, setLoadingCode] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
 
   // ── Tour (member) ──────────────────────────────────────────────────────────
@@ -145,7 +152,11 @@ export default function WelcomeSplash({
 
   useEffect(() => {
     if (isAdmin && step === 'invite') {
-      supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
+      setLoadingCode(true)
+      supabase.rpc('get_invite_code').then(({ data }) => {
+        setInviteCode(data ?? null)
+        setLoadingCode(false)
+      })
     }
   }, [isAdmin, step])
 
@@ -227,7 +238,7 @@ export default function WelcomeSplash({
       const rows = names.map((title, i) => ({
         title,
         week_date: dates[i] ? dateStr(dates[i]) : dateStr(new Date()),
-        slot_count: 4,
+        slot_count: 10,
         slot_dishes: [],
         position: i,
       }))
@@ -258,7 +269,7 @@ export default function WelcomeSplash({
     if (touchStartX.current === null) return
     const delta = touchStartX.current - e.changedTouches[0].clientX
     if (Math.abs(delta) > 40) {
-      if (delta > 0) setTourSlide(s => Math.min(s + 1, TOUR_CARDS.length - 1))
+      if (delta > 0) setTourSlide(s => Math.min(s + 1, visibleTourCards.length - 1))
       else           setTourSlide(s => Math.max(s - 1, 0))
     }
     touchStartX.current = null
@@ -733,7 +744,7 @@ export default function WelcomeSplash({
               onClick={() => setStep('invite')}
               className="w-full py-2.5 text-stone-400 text-sm mt-1"
             >
-              Set up later
+              Set up later in Admin settings →
             </button>
           </div>
         </div>
@@ -756,9 +767,15 @@ export default function WelcomeSplash({
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.35s' }}>
           <div className="bg-white border border-stone-100 rounded-2xl px-6 py-5 shadow-sm mb-3">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Invite code</p>
-            <p className="font-mono font-bold text-4xl tracking-widest text-jade mb-1">
-              {inviteCode ?? '——'}
-            </p>
+            {loadingCode ? (
+              <div className="flex items-center justify-center h-12">
+                <span className="w-6 h-6 rounded-full border-2 border-jade border-t-transparent animate-spin" />
+              </div>
+            ) : (
+              <p className="font-mono font-bold text-4xl tracking-widest text-jade mb-1">
+                {inviteCode ?? '——'}
+              </p>
+            )}
           </div>
 
           {navigator.share ? (
@@ -786,10 +803,10 @@ export default function WelcomeSplash({
           )}
 
           <button
-            onClick={() => setStep('install')}
+            onClick={() => isStandalone ? close() : setStep('install')}
             className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
           >
-            Continue →
+            {isStandalone ? 'Go to my group' : 'Continue →'}
           </button>
         </div>
       </div>
@@ -797,12 +814,20 @@ export default function WelcomeSplash({
 
     // ── STEP: tour (member only) ───────────────────────────────────────────────
     if (step === 'tour') {
-      const isLastSlide = tourSlide === TOUR_CARDS.length - 1
+      const isLastSlide = tourSlide === visibleTourCards.length - 1
       return (
         <div className="flex flex-col flex-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
-          <div className="px-6 mb-6">
-            <h1 className="text-2xl font-bold text-stone-800 mb-1">What's in here</h1>
-            <p className="text-stone-400 text-sm">Swipe to explore what your group can do.</p>
+          <div className="px-6 mb-6 flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-stone-800 mb-1">What's in here</h1>
+              <p className="text-stone-400 text-sm">Swipe to explore what your group can do.</p>
+            </div>
+            <button
+              onClick={() => isStandalone ? close() : setStep('install')}
+              className="text-stone-400 text-sm font-medium pt-1 shrink-0"
+            >
+              Skip
+            </button>
           </div>
 
           <div
@@ -815,7 +840,7 @@ export default function WelcomeSplash({
               className="flex h-full transition-transform duration-300 ease-in-out"
               style={{ transform: `translateX(calc(-${tourSlide * 100}% - ${tourSlide * 24}px))` }}
             >
-              {TOUR_CARDS.map(({ Icon, color, title, desc }) => (
+              {visibleTourCards.map(({ Icon, color, title, desc }) => (
                 <div key={title} className="w-full shrink-0 mr-6">
                   <div className="bg-white border border-stone-100 rounded-2xl p-8 shadow-sm h-full flex flex-col items-center justify-center text-center gap-4">
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${color}`}>
@@ -833,7 +858,7 @@ export default function WelcomeSplash({
 
           <div className="px-6 py-6 flex flex-col items-center gap-4">
             <div className="flex gap-1.5">
-              {TOUR_CARDS.map((_, i) => (
+              {visibleTourCards.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setTourSlide(i)}
@@ -842,7 +867,7 @@ export default function WelcomeSplash({
               ))}
             </div>
             <button
-              onClick={() => isLastSlide ? setStep('install') : setTourSlide(s => s + 1)}
+              onClick={() => isLastSlide ? (isStandalone ? close() : setStep('install')) : setTourSlide(s => s + 1)}
               className="w-full max-w-xs py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
               {isLastSlide ? 'Got it' : 'Next'}

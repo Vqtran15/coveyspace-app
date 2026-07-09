@@ -93,17 +93,21 @@ export default function AuthPage() {
         metadata = { display_name: displayName.trim(), community_group_name: newGroupName.trim() }
       }
 
-      const { error: err } = await supabase.auth.signUp({ email, password, options: { data: metadata } })
+      const { data: signUpData, error: err } = await supabase.auth.signUp({ email, password, options: { data: metadata } })
       if (err) {
         setError(err.message)
       } else {
         trackEvent('sign_up', { method: joinMode === 'create' ? 'create_group' : 'join_group' })
-        switchMode('signin')
-        setNotice(
-          joinMode === 'create'
-            ? 'Group created! Check your email to confirm, then sign in. Find your invite code in Admin settings.'
-            : 'Account created! Check your email to confirm, then sign in.'
-        )
+        if (signUpData?.session) {
+          // Email confirmation is disabled — user is already signed in; auth state change handles navigation
+        } else {
+          switchMode('signin')
+          setNotice(
+            joinMode === 'create'
+              ? 'Group created! Check your email to confirm, then sign in. Find your invite code in Admin settings.'
+              : 'Account created! Check your email to confirm, then sign in.'
+          )
+        }
       }
     } else {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
