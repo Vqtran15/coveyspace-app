@@ -87,9 +87,23 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     const { data, error: err } = await supabase.from(tables.pages).select('*').order('position')
     if (err) { setError(err.message); setLoading(false); return }
     const filled = autoFill ? await autoFillPages(data ?? [], tables, defaultTitle, intervalDays, targetDow, weekOccurrences) : (data ?? [])
-    const upcomingIdx = filled.findIndex(p => p.week_date >= effectiveCutoff)
-    setPages(filled)
-    setViewIndex(upcomingIdx === -1 ? Math.max(0, filled.length - 1) : upcomingIdx)
+
+    // Pages must always be in date order. Heal any drift (e.g. a page added out-of-order).
+    const sorted = [...filled].sort((a, b) => a.week_date.localeCompare(b.week_date))
+    const outOfOrder = sorted.some((p, i) => p.position !== i)
+    if (outOfOrder) {
+      await Promise.all(
+        sorted.map((p, i) => p.position !== i
+          ? supabase.from(tables.pages).update({ position: i }).eq('id', p.id)
+          : null
+        ).filter(Boolean)
+      )
+      sorted.forEach((p, i) => { p.position = i })
+    }
+
+    const upcomingIdx = sorted.findIndex(p => p.week_date >= effectiveCutoff)
+    setPages(sorted)
+    setViewIndex(upcomingIdx === -1 ? Math.max(0, sorted.length - 1) : upcomingIdx)
     setLoading(false)
   }
 
