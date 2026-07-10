@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .eq('community_group_id', record.community_group_id)
-    const action = count === 1 ? 'Created group' : 'Joined group'
+    const action = (count != null && count <= 1) ? 'Created group' : 'Joined group'
 
     const joinedAt = new Date(record.created_at).toLocaleString('en-US', {
       timeZone: 'America/Los_Angeles',
