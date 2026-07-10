@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, BookOpen, CaretDown } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, BookOpen, CaretDown, ShareNetwork } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -103,6 +103,16 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
     setRemovingId(null)
   }
 
+  async function handleShareLink() {
+    const url = `${window.location.origin}/login?code=${inviteCode}`
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Join my group on Covey Space', url }) } catch (_) {}
+    } else {
+      await navigator.clipboard.writeText(url)
+      toast('Invite link copied!', 'success')
+    }
+  }
+
   async function handleSaveRotation(patch) {
     onGroupSettingsChange?.(prev => ({ ...prev, ...patch }))
     const { error } = await supabase
@@ -168,6 +178,23 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       </div>
 
       <div className="space-y-8">
+        {/* Onboarding nudge — solo admin, nobody has joined yet */}
+        {members.length === 1 && inviteCode && (
+          <div className="bg-jade/5 border border-jade/25 rounded-2xl p-5 space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-jade">Your group is just you</p>
+              <p className="text-xs text-stone-500 mt-1">Share the invite link so people can join with one tap — no code to type.</p>
+            </div>
+            <button
+              onClick={handleShareLink}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-jade text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98]"
+            >
+              <ShareNetwork size={16} weight="bold" />
+              Share Invite Link
+            </button>
+          </div>
+        )}
+
         {/* Group Name */}
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Group Name</p>
@@ -271,7 +298,14 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 <p className="text-xs text-red-500 mb-1">The old code will stop working immediately.</p>
               )}
               {!confirmRotate && (
-                <p className="text-xs text-stone-400">Share this code with people you want to invite.</p>
+                <button
+                  onClick={handleShareLink}
+                  disabled={!inviteCode}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-jade/10 text-jade text-sm font-semibold rounded-xl transition-colors active:bg-jade/20 disabled:opacity-40"
+                >
+                  <ShareNetwork size={15} weight="bold" />
+                  Share Invite Link
+                </button>
               )}
             </div>
           </section>

@@ -8,10 +8,11 @@ const MODE_ORDER = { signin: 0, forgot: 1, signup: 2 }
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams()
-  const [mode, setMode]             = useState(searchParams.get('tab') === 'signup' ? 'signup' : 'signin')
+  const codeParam = searchParams.get('code')?.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) ?? null
+  const [mode, setMode]             = useState((codeParam || searchParams.get('tab') === 'signup') ? 'signup' : 'signin')
   const [joinMode, setJoinMode]     = useState('join') // 'join' | 'create'
   const [displayName, setDisplayName] = useState('')
-  const [inviteCode, setInviteCode] = useState('')
+  const [inviteCode, setInviteCode] = useState(codeParam ?? '')
   const [newGroupName, setNewGroupName] = useState('')
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
