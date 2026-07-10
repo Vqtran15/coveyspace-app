@@ -57,6 +57,30 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         })
         setMembers(sorted)
       })
+
+    const channel = supabase
+      .channel(`admin-members-${groupId}`)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'profiles' },
+        ({ old: deleted }) => {
+          if (deleted.user_id) setMembers(prev => prev.filter(m => m.user_id !== deleted.user_id))
+        }
+      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles', filter: `community_group_id=eq.${groupId}` },
+        ({ new: added }) => {
+          setMembers(prev => {
+            if (prev.some(m => m.user_id === added.user_id)) return prev
+            const next = [...prev, added]
+            return next.sort((a, b) => {
+              if (a.role === 'admin' && b.role !== 'admin') return -1
+              if (b.role === 'admin' && a.role !== 'admin') return 1
+              return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+            })
+          })
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [groupId, isAdmin])
 
   async function handleRotate() {
