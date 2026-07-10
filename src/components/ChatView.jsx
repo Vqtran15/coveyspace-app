@@ -55,6 +55,29 @@ function highlightText(text, query) {
   )
 }
 
+function renderMessageBody(body, query) {
+  // eslint-disable-next-line no-useless-escape
+  const URL_RE = /https?:\/\/[^\s<>'"]+[^\s<>'".,!?;:)\]']*/g
+  const parts = []
+  let last = 0, m
+  while ((m = URL_RE.exec(body)) !== null) {
+    if (m.index > last) parts.push({ type: 'text', value: body.slice(last, m.index) })
+    parts.push({ type: 'url', value: m[0] })
+    last = m.index + m[0].length
+  }
+  if (last < body.length) parts.push({ type: 'text', value: body.slice(last) })
+  if (!parts.length) return query ? highlightText(body, query) : body
+  return parts.map((part, i) =>
+    part.type === 'url'
+      ? <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="underline break-all text-inherit opacity-80 active:opacity-60">
+            {part.value}
+          </a>
+      : <span key={i}>{query ? highlightText(part.value, query) : part.value}</span>
+  )
+}
+
 function typingLabel(users) {
   if (!users.length) return ''
   if (users.length === 1) return `${users[0]} is typing…`
@@ -116,6 +139,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const lastTapRef         = useRef(null)
   const longPressRef       = useRef(null)
   const longPressFiredRef  = useRef(false)
+  const imgTapRef          = useRef(null)
   const preserveScrollRef  = useRef(null)
   const isAtBottomRef              = useRef(true)
   const initialScrollDoneRef       = useRef(false)
@@ -1206,9 +1230,28 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           <img
                             src={msg.image_url}
                             alt="shared"
+                            draggable={false}
                             className="block max-w-full cursor-pointer"
-                            style={{ maxHeight: 280 }}
-                            onClick={e => { e.stopPropagation(); setLightboxImg(msg.image_url) }}
+                            style={{ maxHeight: 280, WebkitTouchCallout: 'none' }}
+                            onContextMenu={e => e.preventDefault()}
+                            onClick={e => {
+                              e.stopPropagation()
+                              const now = Date.now()
+                              const last = imgTapRef.current
+                              if (last && last.msgId === msg.id && now - last.time < 350) {
+                                clearTimeout(last.timer)
+                                imgTapRef.current = null
+                                if (isOwn) setSelectedMsgId(prev => prev === msg.id ? null : msg.id)
+                                else openMenuFromEl(e.currentTarget, msg.id, false)
+                              } else {
+                                clearTimeout(last?.timer)
+                                const timer = setTimeout(() => {
+                                  imgTapRef.current = null
+                                  setLightboxImg(msg.image_url)
+                                }, 310)
+                                imgTapRef.current = { msgId: msg.id, time: now, timer }
+                              }
+                            }}
                           />
                         )
                       )}
@@ -1241,7 +1284,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         </form>
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
-                          {searchQuery.trim() ? highlightText(msg.body, searchQuery) : msg.body}
+                          {renderMessageBody(msg.body, searchQuery)}
                         </p>
                       )}
                     </div>
