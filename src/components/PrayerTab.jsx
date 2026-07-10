@@ -190,19 +190,21 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
           avatar_color:            currentAvatarColor ?? null,
         })
         .select()
-        .single()
+        .maybeSingle()
       if (err) {
         toast('Failed to save reaction', 'error')
         setReactions(prev => ({
           ...prev,
           [requestId]: (prev[requestId] ?? []).filter(r => r.id !== optimistic.id),
         }))
-      } else if (data) {
+      } else {
         trackEvent('prayer_reaction')
-        setReactions(prev => ({
-          ...prev,
-          [requestId]: (prev[requestId] ?? []).map(r => r.id === optimistic.id ? data : r),
-        }))
+        if (data) {
+          setReactions(prev => ({
+            ...prev,
+            [requestId]: (prev[requestId] ?? []).map(r => r.id === optimistic.id ? data : r),
+          }))
+        }
       }
     }
 
