@@ -39,10 +39,25 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    let query = supabase.from('push_subscriptions').select('id, subscription')
-    if (group_id) query = query.eq('community_group_id', group_id)
+    let subsQuery = supabase.from('push_subscriptions').select('id, subscription, user_id')
 
-    const { data: subs, error } = await query
+    if (group_id) {
+      // Resolve current members from profiles to avoid stale community_group_id on subscriptions
+      const { data: members, error: mErr } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('community_group_id', group_id)
+      if (mErr) throw mErr
+      const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id)
+      if (!memberIds.length) {
+        return new Response(JSON.stringify({ sent: 0, stale: 0 }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      subsQuery = subsQuery.in('user_id', memberIds)
+    }
+
+    const { data: subs, error } = await subsQuery
     if (error) throw error
     if (!subs?.length) {
       return new Response(JSON.stringify({ sent: 0, stale: 0 }), {
@@ -53,13 +68,13 @@ Deno.serve(async (req) => {
     const notification = JSON.stringify({ title, body, url: url || '/' })
 
     const staleIds: string[] = []
-    let sent = 0
+    const notifiedUsers = new Set<string>()
 
     await Promise.allSettled(
       subs.map(async (row) => {
         try {
           await webpush.sendNotification(row.subscription, notification)
-          sent++
+          notifiedUsers.add(row.user_id)
         } catch (err: any) {
           if (err.statusCode === 410 || err.statusCode === 404) staleIds.push(row.id)
         }
@@ -70,7 +85,7 @@ Deno.serve(async (req) => {
       await supabase.from('push_subscriptions').delete().in('id', staleIds)
     }
 
-    return new Response(JSON.stringify({ sent, stale: staleIds.length }), {
+    return new Response(JSON.stringify({ sent: notifiedUsers.size, stale: staleIds.length }), {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err: any) {
