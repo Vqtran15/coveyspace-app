@@ -9,10 +9,21 @@ const SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
+function jwtRole(authHeader: string): string | null {
+  try {
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.role ?? null
+  } catch {
+    return null
+  }
+}
+
 Deno.serve(async (req) => {
-  // Only callers with the service role key can use this — admin app only
-  const auth = req.headers.get('Authorization') ?? ''
-  if (auth !== `Bearer ${SERVICE_ROLE_KEY}`) {
+  // Supabase verifies the JWT signature before the function runs.
+  // We only need to check that the verified JWT carries the service_role claim.
+  const role = jwtRole(req.headers.get('Authorization') ?? '')
+  if (role !== 'service_role') {
     return new Response('Unauthorized', { status: 401 })
   }
 
