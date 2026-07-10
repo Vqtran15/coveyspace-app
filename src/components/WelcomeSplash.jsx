@@ -252,9 +252,7 @@ export default function WelcomeSplash({
 
   function copyCode() {
     if (!inviteCode) return
-    navigator.clipboard.writeText(inviteCode)
-      .then(() => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000) })
-      .catch(() => {})
+    navigator.clipboard.writeText(inviteCode).catch(() => {})
   }
 
   function copyLink() {

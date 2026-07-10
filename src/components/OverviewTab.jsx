@@ -7,6 +7,7 @@ import { toDateString, mealCutoffDate } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
+import { useToast } from '../lib/toast.jsx'
 import ConfettiDots from './ConfettiDots.jsx'
 
 
@@ -139,6 +140,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
 
 export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true }) {
   const navigate = useNavigate()
+  const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
   const [announcement, setAnnouncement]     = useState(undefined)
@@ -314,6 +316,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                         await navigator.share({ title: 'Join my group on Covey Space', url }).catch(() => {})
                       } else {
                         await navigator.clipboard.writeText(url)
+                        toast('Invite link copied!', 'success')
                       }
                     }}
                     className="flex items-center gap-1.5 px-4 py-2.5 bg-jade text-white text-sm font-semibold rounded-xl shrink-0 transition-all active:scale-[0.98]"
