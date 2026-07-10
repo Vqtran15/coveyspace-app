@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { group_id, title, body, url } = await req.json()
+    const { group_id, user_ids, title, body, url } = await req.json()
 
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'Missing title or body' }), {
@@ -41,8 +41,11 @@ Deno.serve(async (req) => {
 
     let subsQuery = supabase.from('push_subscriptions').select('id, subscription, user_id')
 
-    if (group_id) {
-      // Resolve current members from profiles to avoid stale community_group_id on subscriptions
+    if (user_ids?.length) {
+      // Specific selected users — filter directly by user_id
+      subsQuery = subsQuery.in('user_id', user_ids)
+    } else if (group_id) {
+      // All current members of a group — resolve via profiles to avoid stale group_id on subscriptions
       const { data: members, error: mErr } = await supabase
         .from('profiles')
         .select('user_id')
@@ -56,6 +59,7 @@ Deno.serve(async (req) => {
       }
       subsQuery = subsQuery.in('user_id', memberIds)
     }
+    // else: no filter → all subscribers across all groups
 
     const { data: subs, error } = await subsQuery
     if (error) throw error
