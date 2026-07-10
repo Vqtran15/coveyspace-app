@@ -257,11 +257,19 @@ export default function WelcomeSplash({
       .catch(() => {})
   }
 
+  function copyLink() {
+    if (!inviteCode) return
+    const url = `${window.location.origin}/login?code=${inviteCode}`
+    navigator.clipboard.writeText(url)
+      .then(() => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000) })
+      .catch(() => {})
+  }
+
   async function shareCode() {
     if (!inviteCode) return
     const url = `${window.location.origin}/login?code=${inviteCode}`
     if (navigator.share) await navigator.share({ title: 'Join my group on Covey Space', url }).catch(() => {})
-    else copyCode()
+    else copyLink()
   }
 
   function handleTouchStart(e) { touchStartX.current = e.touches[0].clientX }
@@ -761,50 +769,37 @@ export default function WelcomeSplash({
           Invite your members
         </h1>
         <p className="text-stone-400 text-sm max-w-xs mb-8 animate-fade-up" style={{ animationDelay: '0.25s' }}>
-          Share this code with everyone in your group. They'll enter it when they sign up.
+          Send your group an invite link — they can sign up with one tap, no code needed.
         </p>
 
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.35s' }}>
-          <div className="bg-white border border-stone-100 rounded-2xl px-6 py-5 shadow-sm mb-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Invite code</p>
-            {loadingCode ? (
-              <div className="flex items-center justify-center h-12">
-                <span className="w-6 h-6 rounded-full border-2 border-jade border-t-transparent animate-spin" />
-              </div>
-            ) : (
-              <p className="font-mono font-bold text-4xl tracking-widest text-jade mb-1">
-                {inviteCode ?? '——'}
-              </p>
-            )}
-          </div>
-
-          {!loadingCode && (navigator.share ? (
-            <div className="flex gap-2 mb-3">
-              <button
-                onClick={copyCode}
-                className="flex-1 py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors"
-              >
-                {codeCopied ? '✓ Copied!' : 'Copy code'}
-              </button>
-              <button
-                onClick={shareCode}
-                className="flex-1 py-3 bg-jade text-white text-sm font-semibold rounded-xl hover:bg-jade-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <ShareNetwork size={16} weight="bold" /> Share
-              </button>
+          {!loadingCode && (
+            <button
+              onClick={shareCode}
+              className="w-full py-3.5 bg-jade text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mb-4"
+            >
+              <ShareNetwork size={16} weight="bold" />
+              {codeCopied ? '✓ Copied!' : 'Share Invite Link'}
+            </button>
+          )}
+          {loadingCode && (
+            <div className="flex items-center justify-center mb-4 h-12">
+              <span className="w-6 h-6 rounded-full border-2 border-jade border-t-transparent animate-spin" />
             </div>
-          ) : (
+          )}
+
+          {!loadingCode && inviteCode && (
             <button
               onClick={copyCode}
-              className="w-full py-3 bg-white border border-stone-200 text-stone-700 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors mb-3"
+              className="w-full py-2.5 text-xs text-stone-400 mb-4 active:text-stone-600 transition-colors"
             >
-              {codeCopied ? '✓ Copied!' : 'Copy code'}
+              Or copy the code manually: <span className="font-mono font-bold tracking-widest text-stone-500">{inviteCode}</span>
             </button>
-          ))}
+          )}
 
           <button
             onClick={() => isStandalone ? close() : setStep('install')}
-            className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+            className="w-full py-3.5 bg-stone-100 hover:bg-stone-200 active:scale-[0.98] text-stone-600 font-semibold rounded-xl transition-all text-sm"
           >
             {isStandalone ? 'Go to my group' : 'Continue →'}
           </button>
