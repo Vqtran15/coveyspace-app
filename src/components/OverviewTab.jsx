@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -145,6 +145,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [soloAdmin, setSoloAdmin] = useState(false)
 
   async function load() {
     setLoaded(false)
@@ -159,13 +160,17 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
     if (groupId) {
       const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
-      const [{ data: groupData }, { data: memberData }] = await Promise.all([
+      const [{ data: groupData }, { data: memberData }, { count: mCount }] = await Promise.all([
         supabase.from('community_groups').select('announcement').eq('id', groupId).single(),
         prayerEnabled
           ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId)
           : Promise.resolve({ data: [] }),
+        isAdmin
+          ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('community_group_id', groupId)
+          : Promise.resolve({ count: null }),
       ])
       setAnnouncement(groupData?.announcement ?? null)
+      if (isAdmin) setSoloAdmin(mCount === 1)
 
       if (prayerEnabled) {
         const memberIds = (memberData ?? []).map(m => m.user_id)
@@ -292,6 +297,34 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           </>
         ) : (
           <>
+            {/* Solo-admin nudge — shown until someone joins */}
+            {soloAdmin && (
+              <div className="w-full animate-stack-in lg:col-span-2">
+                <div className="bg-jade/5 border border-jade/25 rounded-2xl p-5 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-jade mb-0.5">Your group is just you</p>
+                    <p className="text-xs text-stone-500">Share an invite link so your members can join with one tap.</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const { data: code } = await supabase.rpc('get_invite_code')
+                      if (!code) return
+                      const url = `${window.location.origin}/login?code=${code}`
+                      if (navigator.share) {
+                        await navigator.share({ title: 'Join my group on Covey Space', url }).catch(() => {})
+                      } else {
+                        await navigator.clipboard.writeText(url)
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-jade text-white text-sm font-semibold rounded-xl shrink-0 transition-all active:scale-[0.98]"
+                  >
+                    <ShareNetwork size={15} weight="bold" />
+                    Invite
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Announcement — always first */}
             {showAnnouncement && (
               announcement ? (
