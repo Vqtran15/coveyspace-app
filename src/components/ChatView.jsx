@@ -342,7 +342,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // images (waits for network) and cached-but-not-yet-decoded images that would
   // otherwise cause a layout-shift flicker immediately after reveal.
   useEffect(() => {
-    if (!contentReady || !messagesContainerRef.current) return
+    if (!contentReady) return
+    if (!messagesContainerRef.current) { setVisible(true); return }
     const imgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
 
     let cancelled = false
