@@ -490,6 +490,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (older.length) {
       preserveScrollRef.current = scrollRef.current?.scrollHeight ?? 0
       setMessages(prev => [...older, ...prev])
+      supabase
+        .from('reactions')
+        .select('id, message_id, emoji, user_id')
+        .in('message_id', older.map(m => m.id))
+        .then(({ data: rxData }) => {
+          if (!rxData?.length) return
+          setReactions(prev => {
+            const next = { ...prev }
+            for (const r of rxData) {
+              if (!next[r.message_id]) next[r.message_id] = {}
+              if (!next[r.message_id][r.emoji]) next[r.message_id][r.emoji] = []
+              if (!next[r.message_id][r.emoji].some(x => x.id === r.id))
+                next[r.message_id][r.emoji] = [...next[r.message_id][r.emoji], r]
+            }
+            return next
+          })
+        })
     }
     setHasMore(older.length === PAGE_SIZE)
     setLoadingMore(false)

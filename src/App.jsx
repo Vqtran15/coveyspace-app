@@ -8,10 +8,13 @@ import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import SplashScreen from './components/SplashScreen.jsx'
 
+import BirthdayBanner      from './components/BirthdayBanner.jsx'
+import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
+import UpdatePrompt         from './components/UpdatePrompt.jsx'
+
 const ScheduleTab         = lazy(() => import('./components/ScheduleTab.jsx'))
 const BirthdayTab         = lazy(() => import('./components/BirthdayTab.jsx'))
 const PrayerTab           = lazy(() => import('./components/PrayerTab.jsx'))
-const BirthdayBanner      = lazy(() => import('./components/BirthdayBanner.jsx'))
 const ChatTab             = lazy(() => import('./components/ChatTab.jsx'))
 const GuideTab            = lazy(() => import('./components/GuideTab.jsx'))
 const OverviewTab         = lazy(() => import('./components/OverviewTab.jsx'))
@@ -20,8 +23,6 @@ const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.js
 const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
 const SettingsModal       = lazy(() => import('./components/SettingsModal.jsx'))
 const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
-const UpdatePrompt        = lazy(() => import('./components/UpdatePrompt.jsx'))
-const PrayerReactionBanner = lazy(() => import('./components/PrayerReactionBanner.jsx'))
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -319,8 +320,8 @@ export default function App() {
   }
 
   return (
-    <Suspense fallback={null}>
     <>
+    <Suspense fallback={null}>
     {authLoading ? null : !session ? (
       <Routes>
         <Route path="/login" element={<AuthPage />} />
@@ -523,8 +524,8 @@ export default function App() {
       <UpdatePrompt splashActive={splashVisible} />
     </div>
     )}
+    </Suspense>
     {splashVisible && <SplashScreen exiting={splashExiting} />}
     </>
-    </Suspense>
   )
 }
