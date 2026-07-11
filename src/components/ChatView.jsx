@@ -27,7 +27,10 @@ function loadCache(convId) {
 }
 function saveCache(convId, msgs) {
   try {
-    const clean = msgs.filter(m => !m._tempId && !m._pending && !m._failed).slice(-CACHE_LIMIT)
+    const clean = msgs
+      .filter(m => !m._tempId && !m._pending && !m._failed)
+      .slice(-CACHE_LIMIT)
+      .map(({ _isNew, ...m }) => m)
     localStorage.setItem(CACHE_KEY(convId), JSON.stringify(clean))
   } catch {}
 }
@@ -202,6 +205,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setUnreadCount(0)
     setContentReady(false)
     setVisible(false)
+    setFetchingFresh(false)
     setFirstUnreadId(null)
     setOpenUnreadCount(0)
     initialScrollDoneRef.current = false
@@ -1073,7 +1077,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         )}
 
         {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
-        {!visible && (
+        {!visible && loading && (
           <div className="flex flex-col py-4 gap-3">
             {[
               { side: 'left',  w: 'w-48' },
