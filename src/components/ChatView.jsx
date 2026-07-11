@@ -1077,7 +1077,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         )}
 
         {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
-        {!visible && loading && (
+        {!visible && (
           <div className="flex flex-col py-4 gap-3">
             {[
               { side: 'left',  w: 'w-48' },
