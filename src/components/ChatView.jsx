@@ -14,11 +14,23 @@ import { initials, formatMessageTime } from '../utils/format.js'
 import { haptic } from '../lib/haptic.js'
 import { trackEvent } from '../lib/analytics.js'
 
-const PAGE_SIZE = 50
+const PAGE_SIZE   = 50
+const CACHE_LIMIT = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
 const GROUP_TIME_GAP = 5 * 60 * 1000
-const DRAFT_KEY  = convId => `draft:${convId}`
-const READ_AT_KEY = convId => `readAt:${convId}`
+const DRAFT_KEY    = convId => `draft:${convId}`
+const READ_AT_KEY  = convId => `readAt:${convId}`
+const CACHE_KEY    = convId => `chat_v1_${convId}`
+
+function loadCache(convId) {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY(convId)) ?? 'null') } catch { return null }
+}
+function saveCache(convId, msgs) {
+  try {
+    const clean = msgs.filter(m => !m._tempId && !m._pending && !m._failed).slice(-CACHE_LIMIT)
+    localStorage.setItem(CACHE_KEY(convId), JSON.stringify(clean))
+  } catch {}
+}
 
 function Initials({ name, userId, icon, colorKey }) {
   return (
@@ -125,6 +137,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [unreadCount, setUnreadCount]         = useState(0)
   const [contentReady, setContentReady]       = useState(false)
   const [visible, setVisible]                 = useState(false)
+  const [fetchingFresh, setFetchingFresh]     = useState(false)
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
@@ -183,7 +196,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // ── Messages + reactions + realtime ──────────────────────────────────────
   useEffect(() => {
     onRead?.()
-    setLoading(true)
     setMessages([])
     setReplyingTo(null)
     setMemberReadTimes({})
@@ -196,6 +208,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     pendingScrollRef.current = null
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
 
+    const cached = loadCache(convId)
+    if (cached?.length) {
+      setMessages(cached)
+      setHasMore(cached.length >= CACHE_LIMIT)
+      setLoading(false)
+      setFetchingFresh(true)
+    } else {
+      setLoading(true)
+    }
+
     supabase
       .from('messages')
       .select('*, reply_message:reply_to_id(id, body, display_name, image_url)')
@@ -204,9 +226,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .limit(PAGE_SIZE)
       .then(({ data }) => {
         const msgs = (data ?? []).reverse()
+        saveCache(convId, msgs)
         setMessages(msgs)
         setHasMore((data ?? []).length === PAGE_SIZE)
         setLoading(false)
+        setFetchingFresh(false)
         if (!msgs.length) return
         supabase
           .from('reactions')
@@ -229,7 +253,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         event: 'INSERT', schema: 'public', table: 'messages',
         filter: `conversation_id=eq.${convId}`,
       }, ({ new: msg }) => {
-        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, { ...msg, _isNew: true }])
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev
+          const updated = [...prev, { ...msg, _isNew: true }]
+          saveCache(convId, updated)
+          return updated
+        })
         if (msg.user_id !== myId) {
           if (isAtBottomRef.current) {
             const now = new Date().toISOString()
@@ -1369,6 +1398,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             })}
           </div>
           )
+        )}
+
+        {fetchingFresh && (
+          <div className="flex justify-center py-3">
+            <div className="w-4 h-4 rounded-full border-2 border-stone-200 border-t-stone-400 animate-spin" />
+          </div>
         )}
       </div>
 
