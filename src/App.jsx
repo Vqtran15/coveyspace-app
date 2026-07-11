@@ -312,6 +312,8 @@ export default function App() {
     enterFromRef.current = newIndex > prevIndexRef.current ? 'right' : 'left'
     prevIndexRef.current = newIndex
     if (path === '/chat') setUnreadChatCount(0)
+    const tabName = path.replace('/', '') || 'home'
+    trackEvent('tab_view', { tab_name: tabName })
     navigate(path)
   }
 
