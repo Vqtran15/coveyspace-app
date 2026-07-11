@@ -1,9 +1,9 @@
 import { X, MegaphoneSimple } from '@phosphor-icons/react'
 
-export default function AnnouncementBanner({ announcement, onDismiss }) {
+export default function AnnouncementBanner({ announcement, closing = false, onDismiss }) {
   if (!announcement) return null
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-4 animate-overlay-in">
+    <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div className="relative overflow-hidden rounded-2xl bg-jade-50 border border-jade/30 shadow-sm px-5 py-4">
         <span className="absolute left-0 top-0 h-full w-1.5 bg-jade rounded-l-2xl" />
         <p className="text-xs font-bold text-jade uppercase tracking-wider mb-2 pl-3 flex items-center gap-1.5">

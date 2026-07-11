@@ -99,7 +99,9 @@ export default function App() {
 
   const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
   const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
-  const [announcement, setAnnouncement] = useState(null)
+  const [announcement, setAnnouncement]         = useState(null)
+  const [announcementClosing, setAnnouncementClosing] = useState(false)
+  const [prayerBannerClosing, setPrayerBannerClosing] = useState(false)
 
   function dismissBirthdayBanner() {
     setBirthdayBannerClosing(true)
@@ -107,8 +109,17 @@ export default function App() {
   }
 
   function dismissAnnouncement() {
-    if (announcement) localStorage.setItem(`dismissed_announcement_${announcement.id}`, '1')
-    setAnnouncement(null)
+    setAnnouncementClosing(true)
+    setTimeout(() => {
+      if (announcement) localStorage.setItem(`dismissed_announcement_${announcement.id}`, '1')
+      setAnnouncement(null)
+      setAnnouncementClosing(false)
+    }, 260)
+  }
+
+  function dismissPrayerBanner() {
+    setPrayerBannerClosing(true)
+    setTimeout(() => { setPrayerBanner(null); setPrayerBannerClosing(false) }, 260)
   }
 
   useEffect(() => { locationRef.current = location.pathname }, [location.pathname])
@@ -360,8 +371,8 @@ export default function App() {
           You're offline
         </div>
       )}
-      {announcement && !isFullHeight && (
-        <AnnouncementBanner announcement={announcement} onDismiss={dismissAnnouncement} />
+      {(announcement || announcementClosing) && !isFullHeight && (
+        <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
       )}
       {!isFullHeight && birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
         <BirthdayBanner
@@ -371,12 +382,13 @@ export default function App() {
           onTap={() => { dismissBirthdayBanner(); setBirthdayOpen(true) }}
         />
       )}
-      {prayerBanner && prayerEnabled && (
+      {(prayerBanner || prayerBannerClosing) && prayerEnabled && (
         <PrayerReactionBanner
-          reactorName={prayerBanner.reactorName}
-          onDismiss={() => setPrayerBanner(null)}
+          reactorName={prayerBanner?.reactorName}
+          closing={prayerBannerClosing}
+          onDismiss={dismissPrayerBanner}
           onTap={() => {
-            setPrayerBanner(null)
+            dismissPrayerBanner()
             navigate('/prayer', { state: { featuredUserId: session.user.id } })
           }}
         />

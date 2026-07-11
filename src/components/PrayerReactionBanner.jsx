@@ -1,8 +1,8 @@
 import { HandsPraying, X } from '@phosphor-icons/react'
 
-export default function PrayerReactionBanner({ reactorName, onDismiss, onTap }) {
+export default function PrayerReactionBanner({ reactorName, closing = false, onDismiss, onTap }) {
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-4 animate-stack-in">
+    <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div
         className="relative overflow-hidden rounded-2xl bg-sunrise/10 border border-sunrise/30 shadow-sm px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
         onClick={onTap}

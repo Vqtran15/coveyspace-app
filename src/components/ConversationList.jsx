@@ -23,7 +23,8 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [confirmDeleteConv, setConfirmDeleteConv] = useState(null)
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
-  const [notifDismissed, setNotifDismissed]   = useState(() => localStorage.getItem('notifBannerDismissed') === '1')
+  const [notifDismissed, setNotifDismissed]     = useState(() => localStorage.getItem('notifBannerDismissed') === '1')
+  const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
@@ -257,8 +258,8 @@ export default function ConversationList({ session, groupId, members, enterClass
         </div>
       )}
 
-      {showNotifBanner && (
-        <div className="shrink-0 px-4 pt-4">
+      {(showNotifBanner || notifBannerClosing) && (
+        <div className={`shrink-0 px-4 pt-4 ${notifBannerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
           <div className="max-w-3xl mx-auto flex items-center gap-3 bg-jade/10 border border-jade/20 rounded-2xl px-4 py-3">
             <Bell size={18} weight="fill" className="text-jade shrink-0" />
             <div className="flex-1 min-w-0">
@@ -273,7 +274,14 @@ export default function ConversationList({ session, groupId, members, enterClass
               {pushToggling ? '…' : 'Enable'}
             </button>
             <button
-              onClick={() => { localStorage.setItem('notifBannerDismissed', '1'); setNotifDismissed(true) }}
+              onClick={() => {
+                setNotifBannerClosing(true)
+                setTimeout(() => {
+                  localStorage.setItem('notifBannerDismissed', '1')
+                  setNotifDismissed(true)
+                  setNotifBannerClosing(false)
+                }, 260)
+              }}
               className="text-stone-400 hover:text-stone-600 transition-colors shrink-0 p-0.5"
             >
               <X size={16} />
