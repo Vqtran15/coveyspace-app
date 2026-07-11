@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
@@ -6,21 +6,22 @@ import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
-import ScheduleTab from './components/ScheduleTab.jsx'
-import BirthdayTab from './components/BirthdayTab.jsx'
-import PrayerTab from './components/PrayerTab.jsx'
-import BirthdayBanner from './components/BirthdayBanner.jsx'
-import ChatTab from './components/ChatTab.jsx'
-import GuideTab from './components/GuideTab.jsx'
-import OverviewTab from './components/OverviewTab.jsx'
-import AuthPage from './components/AuthPage.jsx'
-import ResetPasswordPage from './components/ResetPasswordPage.jsx'
-import WelcomeSplash from './components/WelcomeSplash.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
-import SettingsModal from './components/SettingsModal.jsx'
-import AdminPage from './components/AdminPage.jsx'
-import UpdatePrompt from './components/UpdatePrompt.jsx'
-import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
+
+const ScheduleTab         = lazy(() => import('./components/ScheduleTab.jsx'))
+const BirthdayTab         = lazy(() => import('./components/BirthdayTab.jsx'))
+const PrayerTab           = lazy(() => import('./components/PrayerTab.jsx'))
+const BirthdayBanner      = lazy(() => import('./components/BirthdayBanner.jsx'))
+const ChatTab             = lazy(() => import('./components/ChatTab.jsx'))
+const GuideTab            = lazy(() => import('./components/GuideTab.jsx'))
+const OverviewTab         = lazy(() => import('./components/OverviewTab.jsx'))
+const AuthPage            = lazy(() => import('./components/AuthPage.jsx'))
+const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.jsx'))
+const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
+const SettingsModal       = lazy(() => import('./components/SettingsModal.jsx'))
+const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
+const UpdatePrompt        = lazy(() => import('./components/UpdatePrompt.jsx'))
+const PrayerReactionBanner = lazy(() => import('./components/PrayerReactionBanner.jsx'))
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -230,7 +231,7 @@ export default function App() {
 
   // Load initial unread state from DB on mount
   useEffect(() => {
-    if (!groupId || !session?.user?.id || location.pathname === '/chat') return
+    if (!groupId || !session?.user?.id || locationRef.current === '/chat') return
     async function loadInitialUnread() {
       const { data: memberships } = await supabase
         .from('conversation_members')
@@ -318,6 +319,7 @@ export default function App() {
   }
 
   return (
+    <Suspense fallback={null}>
     <>
     {authLoading ? null : !session ? (
       <Routes>
@@ -523,5 +525,6 @@ export default function App() {
     )}
     {splashVisible && <SplashScreen exiting={splashExiting} />}
     </>
+    </Suspense>
   )
 }

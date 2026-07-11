@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react'
 import EmojiPicker from 'emoji-picker-react'
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
@@ -203,23 +203,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE)
       .then(({ data }) => {
-        setMessages((data ?? []).reverse())
+        const msgs = (data ?? []).reverse()
+        setMessages(msgs)
         setHasMore((data ?? []).length === PAGE_SIZE)
         setLoading(false)
-      })
-
-    supabase
-      .from('reactions')
-      .select('*')
-      .eq('community_group_id', groupId)
-      .then(({ data }) => {
-        const map = {}
-        for (const r of data ?? []) {
-          if (!map[r.message_id]) map[r.message_id] = {}
-          if (!map[r.message_id][r.emoji]) map[r.message_id][r.emoji] = []
-          map[r.message_id][r.emoji].push(r)
-        }
-        setReactions(map)
+        if (!msgs.length) return
+        supabase
+          .from('reactions')
+          .select('id, message_id, emoji, user_id')
+          .in('message_id', msgs.map(m => m.id))
+          .then(({ data: rxData }) => {
+            const map = {}
+            for (const r of rxData ?? []) {
+              if (!map[r.message_id]) map[r.message_id] = {}
+              if (!map[r.message_id][r.emoji]) map[r.message_id][r.emoji] = []
+              map[r.message_id][r.emoji].push(r)
+            }
+            setReactions(map)
+          })
       })
 
     const msgCh = supabase
@@ -597,9 +598,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   async function sendImages(tempMessages, textBody) {
-    for (const temp of tempMessages) {
-      await sendImage(temp._tempId, temp._file, temp.image_url, temp.reply_to_id, null)
-    }
+    await Promise.all(tempMessages.map(temp =>
+      sendImage(temp._tempId, temp._file, temp.image_url, temp.reply_to_id, null)
+    ))
     if (textBody) {
       const { data: textMsg } = await supabase.from('messages').insert({
         community_group_id: groupId,
@@ -901,21 +902,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     items.push({ type: 'msg', msg })
   }
 
-  const readersAtMessage = {}
-  for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
-    if (!lastReadAt) continue
-    const readTime = new Date(lastReadAt)
-    let lastReadMsgId = null
-    for (let i = filteredMsgs.length - 1; i >= 0; i--) {
-      const m = filteredMsgs[i]
-      if (!m._tempId && new Date(m.created_at) <= readTime) { lastReadMsgId = m.id; break }
+  const readersAtMessage = useMemo(() => {
+    const map = {}
+    for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
+      if (!lastReadAt) continue
+      const readTime = new Date(lastReadAt)
+      let lastReadMsgId = null
+      for (let i = filteredMsgs.length - 1; i >= 0; i--) {
+        const m = filteredMsgs[i]
+        if (!m._tempId && new Date(m.created_at) <= readTime) { lastReadMsgId = m.id; break }
+      }
+      if (lastReadMsgId) {
+        if (!map[lastReadMsgId]) map[lastReadMsgId] = []
+        const member = members.find(m => m.user_id === userId)
+        if (member) map[lastReadMsgId].push(member)
+      }
     }
-    if (lastReadMsgId) {
-      if (!readersAtMessage[lastReadMsgId]) readersAtMessage[lastReadMsgId] = []
-      const member = members.find(m => m.user_id === userId)
-      if (member) readersAtMessage[lastReadMsgId].push(member)
-    }
-  }
+    return map
+  }, [memberReadTimes, filteredMsgs, members])
 
   const typing = typingLabel(typingUsers)
   const title = convTitle()
@@ -1210,7 +1214,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       {msg.image_url && (
                         msg._pending || msg._failed ? (
                           <div className="relative">
-                            <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} />
+                            <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} width="400" height="280" loading="lazy" />
                             {msg._pending && (
                               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />

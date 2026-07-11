@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -226,33 +226,33 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     setAnnouncement(text.trim() || null)
   }
 
-  const sortedBirthdays = [...birthdays]
-    .map(b => ({ ...b, days: daysUntilNext(b.birthday) }))
-    .sort((a, b) => a.days - b.days)
-
-  const nextBirthday = sortedBirthdays[0]
-  const sameDayGroup = nextBirthday
-    ? sortedBirthdays.filter(b => b.days === nextBirthday.days).map(b => { const p = (b.name ?? '').trim().split(' ').filter(Boolean); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? '' })
-    : []
-
-  function joinNames(names) {
-    if (names.length === 1) return names[0]
-    if (names.length === 2) return `${names[0]} & ${names[1]}`
-    return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`
-  }
-
-  function birthdayPrimary() {
-    if (!nextBirthday) return 'No upcoming birthdays'
-    const upcomingSoon = sortedBirthdays.filter(b => b.days <= 14)
-    if (upcomingSoon.length > 1) {
-      const maxDays = Math.max(...upcomingSoon.map(b => b.days))
-      return `${upcomingSoon.length} birthdays coming up!`
+  const { sortedBirthdays, nextBirthday, sameDayGroup, birthdayPrimary } = useMemo(() => {
+    function joinNames(names) {
+      if (names.length === 1) return names[0]
+      if (names.length === 2) return `${names[0]} & ${names[1]}`
+      return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`
     }
-    const who = joinNames(sameDayGroup)
-    if (nextBirthday.days === 0) return `🎂 Today is ${who}'s birthday!`
-    if (nextBirthday.days === 1) return `${who}'s birthday is tomorrow`
-    return `${who}'s birthday in ${nextBirthday.days} days`
-  }
+    const sorted = [...birthdays]
+      .map(b => ({ ...b, days: daysUntilNext(b.birthday) }))
+      .sort((a, b) => a.days - b.days)
+    const next = sorted[0]
+    const sameDay = next
+      ? sorted.filter(b => b.days === next.days).map(b => { const p = (b.name ?? '').trim().split(' ').filter(Boolean); return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? '' })
+      : []
+    let primary = 'No upcoming birthdays'
+    if (next) {
+      const upcomingSoon = sorted.filter(b => b.days <= 14)
+      if (upcomingSoon.length > 1) {
+        primary = `${upcomingSoon.length} birthdays coming up!`
+      } else {
+        const who = joinNames(sameDay)
+        if (next.days === 0) primary = `🎂 Today is ${who}'s birthday!`
+        else if (next.days === 1) primary = `${who}'s birthday is tomorrow`
+        else primary = `${who}'s birthday in ${next.days} days`
+      }
+    }
+    return { sortedBirthdays: sorted, nextBirthday: next, sameDayGroup: sameDay, birthdayPrimary: primary }
+  }, [birthdays])
 
   const showAnnouncement = isAdmin || !!announcement
 
@@ -411,7 +411,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
                 iconBg="bg-lagoon-50"
                 label="Upcoming Birthdays"
-                primary={birthdayPrimary()}
+                primary={birthdayPrimary}
                 delay={showAnnouncement ? 320 : 240}
                 confetti={!!nextBirthday && nextBirthday.days <= 30}
               />
