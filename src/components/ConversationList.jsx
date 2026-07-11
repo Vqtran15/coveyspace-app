@@ -282,31 +282,6 @@ export default function ConversationList({ session, groupId, members, enterClass
         </div>
       )}
 
-      {showNotifBanner && (
-        <div className="shrink-0 px-4 pt-4">
-          <div className="max-w-3xl mx-auto flex items-center gap-3 bg-jade/10 border border-jade/20 rounded-2xl px-4 py-3">
-            <Bell size={18} weight="fill" className="text-jade shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-stone-700">Chat notifications are off</p>
-              <p className="text-xs text-stone-400 mt-0.5">Tap Enable to get notified of new messages</p>
-            </div>
-            <button
-              onClick={onPushToggle}
-              disabled={pushToggling}
-              className="text-xs font-semibold text-white bg-jade px-3 py-1.5 rounded-lg shrink-0 hover:bg-jade-700 transition-colors disabled:opacity-40"
-            >
-              {pushToggling ? '…' : 'Enable'}
-            </button>
-            <button
-              onClick={() => { localStorage.setItem('notifBannerDismissed', '1'); setNotifDismissed(true) }}
-              className="text-stone-400 hover:text-stone-600 transition-colors shrink-0 p-0.5"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className={`max-w-3xl mx-auto w-full px-4 ${upcoming.length > 0 || showNotifBanner ? 'pt-4' : 'pt-8'} pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
         <div className="flex items-center gap-3">
