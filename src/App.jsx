@@ -11,6 +11,7 @@ import SplashScreen from './components/SplashScreen.jsx'
 import BirthdayBanner      from './components/BirthdayBanner.jsx'
 import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 import UpdatePrompt         from './components/UpdatePrompt.jsx'
+import AnnouncementBanner   from './components/AnnouncementBanner.jsx'
 
 const ScheduleTab         = lazy(() => import('./components/ScheduleTab.jsx'))
 const BirthdayTab         = lazy(() => import('./components/BirthdayTab.jsx'))
@@ -98,10 +99,16 @@ export default function App() {
 
   const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
   const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
+  const [announcement, setAnnouncement] = useState(null)
 
   function dismissBirthdayBanner() {
     setBirthdayBannerClosing(true)
     setTimeout(() => { setBirthdayBannerDismissed(true); setBirthdayBannerClosing(false) }, 260)
+  }
+
+  function dismissAnnouncement() {
+    if (announcement) localStorage.setItem(`dismissed_announcement_${announcement.id}`, '1')
+    setAnnouncement(null)
   }
 
   useEffect(() => { locationRef.current = location.pathname }, [location.pathname])
@@ -136,6 +143,22 @@ export default function App() {
     const t = setTimeout(() => setSplashVisible(false), 350)
     return () => clearTimeout(t)
   }, [authLoading, splashMinDone])
+
+  useEffect(() => {
+    if (!session) return
+    supabase
+      .from('announcements')
+      .select('id, message')
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        const a = data?.[0]
+        if (!a) return
+        if (localStorage.getItem(`dismissed_announcement_${a.id}`)) return
+        setAnnouncement(a)
+      })
+  }, [session])
 
   useEffect(() => {
     if (!session) return
@@ -336,6 +359,9 @@ export default function App() {
           <WifiSlash size={14} weight="bold" />
           You're offline
         </div>
+      )}
+      {announcement && !isFullHeight && (
+        <AnnouncementBanner announcement={announcement} onDismiss={dismissAnnouncement} />
       )}
       {!isFullHeight && birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
         <BirthdayBanner
