@@ -9,6 +9,19 @@ if (!url || !key) {
 
 export const supabase = createClient(url, key, {
   global: {
-    fetch: (input, init = {}) => fetch(input, { ...init, cache: 'no-store' }),
+    fetch: async (input, init = {}) => {
+      try {
+        return await fetch(input, { ...init, cache: 'no-store' })
+      } catch (err) {
+        // Only report non-auth network failures; auth 400s/401s are expected session events
+        const url = typeof input === 'string' ? input : input?.url ?? ''
+        if (!url.includes('/auth/v1/')) {
+          import('./error-reporter').then(({ reportError }) =>
+            reportError(err, { component: 'supabase-network' })
+          )
+        }
+        throw err
+      }
+    },
   },
 })

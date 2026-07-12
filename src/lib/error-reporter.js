@@ -13,6 +13,7 @@ export async function reportError(error, context = {}) {
 
   try {
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return // unauthenticated users can't insert; auth errors aren't app bugs
     let display_name = null
     if (user?.id) {
       const { data: profile } = await supabase
