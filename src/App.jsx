@@ -18,6 +18,7 @@ const BirthdayTab         = lazy(() => import('./components/BirthdayTab.jsx'))
 const PrayerTab           = lazy(() => import('./components/PrayerTab.jsx'))
 const ChatTab             = lazy(() => import('./components/ChatTab.jsx'))
 const GuideTab            = lazy(() => import('./components/GuideTab.jsx'))
+const GivingTab           = lazy(() => import('./components/GivingTab.jsx'))
 const OverviewTab         = lazy(() => import('./components/OverviewTab.jsx'))
 const AuthPage            = lazy(() => import('./components/AuthPage.jsx'))
 const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.jsx'))
@@ -82,11 +83,18 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [guideClosing, setGuideClosing] = useState(false)
+  const [givingOpen, setGivingOpen] = useState(false)
+  const [givingClosing, setGivingClosing] = useState(false)
   const [prayerBanner, setPrayerBanner] = useState(null) // { reactorName }
 
   function closeGuide() {
     setGuideClosing(true)
     setTimeout(() => { setGuideOpen(false); setGuideClosing(false) }, 200)
+  }
+
+  function closeGiving() {
+    setGivingClosing(true)
+    setTimeout(() => { setGivingOpen(false); setGivingClosing(false) }, 200)
   }
 
   const [birthdayOpen, setBirthdayOpen] = useState(false)
@@ -203,7 +211,7 @@ export default function App() {
   const prayerEnabled    = groupSettings?.prayer_enabled !== false
   const birthdaysEnabled = groupSettings?.birthdays_enabled !== false
   const guideEnabled     = groupSettings?.guide_enabled !== false
-  const givingEnabled    = groupSettings?.giving_enabled === true && !!groupSettings?.giving_url
+  const givingEnabled    = groupSettings?.giving_enabled === true
   const showScheduleTab  = mealsEnabled || servicesEnabled
   const visibleTabs      = TABS.filter(t => {
     if (t.path === '/schedule') return showScheduleTab
@@ -234,6 +242,7 @@ export default function App() {
     if (showWelcome) {
       setSettingsOpen(false)
       setGuideOpen(false)
+      setGivingOpen(false)
       setBirthdayOpen(false)
     }
   }, [showWelcome])
@@ -401,7 +410,7 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} onOpenGiving={() => { const u = groupSettings?.giving_url; if (u) window.open(u, '_blank', 'noopener,noreferrer') }} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} prayerEnabled={prayerEnabled} givingEnabled={givingEnabled} />} />
+          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} onOpenGiving={() => setGivingOpen(true)} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} prayerEnabled={prayerEnabled} givingEnabled={givingEnabled} />} />
           <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} birthdayBannerDismissed={birthdayBannerDismissed} birthdayBannerClosing={birthdayBannerClosing} onDismissBirthdayBanner={dismissBirthdayBanner} onOpenBirthdays={() => setBirthdayOpen(true)} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} />} />
@@ -556,6 +565,27 @@ export default function App() {
             revealKey="birthdays"
             onClose={closeBirthdays}
             onRefresh={() => supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(data ?? []))}
+          />
+        </div>
+      )}
+
+      {givingOpen && (
+        <div
+          className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${givingClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <GivingTab
+            onClose={closeGiving}
+            givingUrl={groupSettings?.giving_url}
+            isAdmin={isAdmin}
+            groupId={groupId}
+            onGivingSave={async (url) => {
+              const { error } = await supabase
+                .from('group_settings')
+                .upsert({ group_id: groupId, giving_url: url }, { onConflict: 'group_id' })
+              if (!error) setGroupSettings(prev => ({ ...prev, giving_url: url }))
+              return { error }
+            }}
           />
         </div>
       )}
