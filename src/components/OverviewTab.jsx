@@ -138,7 +138,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -435,7 +435,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 iconBg="bg-jade/10"
                 label="Giving"
                 primary="Give / Tithe"
-                secondary="Tap to open"
+                secondary={isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open'}
                 delay={showAnnouncement ? 480 : 400}
               />
             )}
