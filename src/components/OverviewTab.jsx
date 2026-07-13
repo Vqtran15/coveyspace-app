@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, HandCoins } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -138,7 +138,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -296,6 +296,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {prayerEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
             {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 320 : 240} />}
             {guideEnabled     && <CardSkeleton delay={isAdmin ? 400 : 320} />}
+            {givingEnabled    && <CardSkeleton delay={isAdmin ? 480 : 400} />}
           </>
         ) : (
           <>
@@ -425,6 +426,17 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 primary="Community Guide"
                 secondary="Tap to open"
                 delay={showAnnouncement ? 400 : 320}
+              />
+            )}
+            {givingEnabled && (
+              <Card
+                onClick={onOpenGiving}
+                icon={<HandCoins size={24} weight="fill" className="text-jade" />}
+                iconBg="bg-jade/10"
+                label="Giving"
+                primary="Give / Tithe"
+                secondary="Tap to open"
+                delay={showAnnouncement ? 480 : 400}
               />
             )}
           </>

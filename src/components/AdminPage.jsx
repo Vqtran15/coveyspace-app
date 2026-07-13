@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, BookOpen, CaretDown, ShareNetwork } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, BookOpen, CaretDown, ShareNetwork, HandCoins } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -38,6 +38,9 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [guideUrlOpen, setGuideUrlOpen] = useState(false)
   const [guideUrlValue, setGuideUrlValue] = useState('')
   const [guideUrlSaving, setGuideUrlSaving] = useState(false)
+  const [givingUrlOpen, setGivingUrlOpen] = useState(false)
+  const [givingUrlValue, setGivingUrlValue] = useState('')
+  const [givingUrlSaving, setGivingUrlSaving] = useState(false)
   const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
 
@@ -164,6 +167,24 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       setGuideUrlOpen(false)
     }
     setGuideUrlSaving(false)
+  }
+
+  async function handleSaveGivingUrl(e) {
+    e.preventDefault()
+    const trimmed = givingUrlValue.trim()
+    const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
+    setGivingUrlSaving(true)
+    const { error } = await supabase
+      .from('group_settings')
+      .upsert({ group_id: groupId, giving_url: normalized || null }, { onConflict: 'group_id' })
+    if (error) {
+      toast('Failed to save giving URL', 'error')
+    } else {
+      onGroupSettingsChange?.(prev => ({ ...prev, giving_url: normalized || null }))
+      toast('Giving link saved', 'success')
+      setGivingUrlOpen(false)
+    }
+    setGivingUrlSaving(false)
   }
 
   async function handleChangeGroupName() {
@@ -450,6 +471,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Prayer tab' },
               { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen card and birthday banner' },
               { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Home screen card' },
+              { key: 'giving_enabled',    label: 'Giving / Tithing',  desc: 'Home screen card' },
             ].map(({ key, label, desc }) => {
               const enabled = groupSettings?.[key] !== false
               return (
@@ -696,6 +718,47 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             )}
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
+        </section>
+
+        {/* Giving / Tithing */}
+        <section>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Giving / Tithing</p>
+          {givingUrlOpen ? (
+            <form onSubmit={handleSaveGivingUrl} className="space-y-2">
+              <input
+                autoFocus
+                type="text"
+                value={givingUrlValue}
+                onChange={e => setGivingUrlValue(e.target.value)}
+                placeholder="https://example.com/give"
+                className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGivingUrlOpen(false)}
+                  className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={givingUrlSaving}
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                >
+                  {givingUrlSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => { setGivingUrlValue(groupSettings?.giving_url ?? ''); setGivingUrlOpen(true) }}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+            >
+              <HandCoins size={16} weight="fill" className="text-stone-400 shrink-0" />
+              <span className="flex-1 text-left truncate">{groupSettings?.giving_url ?? 'Add a giving link…'}</span>
+            </button>
+          )}
         </section>
 
         {/* Community Guide */}
