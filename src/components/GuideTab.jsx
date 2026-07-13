@@ -29,10 +29,10 @@ function TypePicker({ onPick }) {
           key={type}
           onClick={() => onPick(type)}
           style={{ animationDelay: `${80 + i * 70}ms` }}
-          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-jade hover:bg-jade/5 transition-colors animate-stack-in"
+          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-sunrise hover:bg-sunrise/5 transition-colors animate-stack-in"
         >
           <div className="w-10 h-10 rounded-xl bg-sunrise-50 flex items-center justify-center shrink-0">
-            <Icon size={20} className="text-jade" weight="fill" />
+            <Icon size={20} className="text-sunrise" weight="fill" />
           </div>
           <div>
             <p className="text-sm font-semibold text-stone-800">{label}</p>
@@ -67,12 +67,12 @@ function UrlEditor({ initial, onSave, onCancel }) {
         value={url}
         onChange={e => setUrl(e.target.value)}
         placeholder="https://docs.google.com/…"
-        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-sunrise focus:border-transparent"
         autoFocus
       />
       <div className="flex gap-2">
         <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
-        <button type="submit" disabled={saving || !url.trim()} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
+        <button type="submit" disabled={saving || !url.trim()} className="flex-1 py-2.5 bg-sunrise rounded-xl text-sm font-medium text-white hover:bg-sunrise-800 transition-colors disabled:opacity-40">
           {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
@@ -119,7 +119,7 @@ function FileUploader({ groupId, onSave, onCancel }) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex flex-col items-center gap-2 px-6 py-8 border-2 border-dashed border-stone-200 rounded-2xl hover:border-jade hover:bg-jade/5 transition-colors"
+          className="flex flex-col items-center gap-2 px-6 py-8 border-2 border-dashed border-stone-200 rounded-2xl hover:border-sunrise hover:bg-sunrise/5 transition-colors"
         >
           <UploadSimple size={28} className="text-stone-400" />
           <span className="text-sm text-stone-500">Tap to choose a file</span>
@@ -127,7 +127,7 @@ function FileUploader({ groupId, onSave, onCancel }) {
         </button>
       ) : (
         <div className="flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl">
-          <File size={20} weight="fill" className="text-jade shrink-0" />
+          <File size={20} weight="fill" className="text-sunrise shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-stone-800 truncate">{file.name}</p>
             <p className="text-xs text-stone-400">{formatBytes(file.size)}</p>
@@ -139,7 +139,7 @@ function FileUploader({ groupId, onSave, onCancel }) {
       )}
       <div className="flex gap-2">
         <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
-        <button type="button" onClick={handle} disabled={!file || uploading} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
+        <button type="button" onClick={handle} disabled={!file || uploading} className="flex-1 py-2.5 bg-sunrise rounded-xl text-sm font-medium text-white hover:bg-sunrise-800 transition-colors disabled:opacity-40">
           {uploading ? 'Uploading…' : 'Upload'}
         </button>
       </div>
@@ -205,7 +205,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
 
   return (
     <div className="w-full flex flex-col gap-3">
-      <div className="border border-stone-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-jade focus-within:border-transparent">
+      <div className="border border-stone-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
         <div className="flex items-center gap-0.5 px-2 py-1.5 bg-stone-50 border-b border-stone-100">
           {TOOLBAR_ACTIONS.map(({ format, Icon, title }) => (
             <button
@@ -230,7 +230,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
       </div>
       <div className="flex gap-2">
         <button type="button" onClick={onCancel} className="flex-1 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
-        <button type="button" onClick={handle} disabled={saving || !content.trim()} className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40">
+        <button type="button" onClick={handle} disabled={saving || !content.trim()} className="flex-1 py-2.5 bg-sunrise rounded-xl text-sm font-medium text-white hover:bg-sunrise-800 transition-colors disabled:opacity-40">
           {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
@@ -295,7 +295,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
       <div key="pick" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(null, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+          <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
             <BookOpen size={44} weight="fill" className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-stone-800 mb-2">Set Up Guide</h1>
@@ -312,7 +312,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
       <div key="url" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+          <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
             <Link size={44} weight="fill" className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-stone-800 mb-2">External Link</h1>
@@ -338,7 +338,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
       <div key="file" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+          <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
             <File size={44} weight="fill" className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-stone-800 mb-2">Upload File</h1>
@@ -364,7 +364,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
       <div key="notes" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+          <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
             <NotePencil size={44} weight="fill" className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-stone-800 mb-1">Write Notes</h1>
@@ -394,7 +394,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
       />
 
       <div className="flex flex-col items-center text-center">
-        <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+        <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
           <BookOpen size={44} weight="fill" className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-stone-800 mb-2">Guide</h1>
@@ -431,7 +431,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
             </p>
             <button
               onClick={() => window.open(guideUrl, '_blank', 'noopener,noreferrer')}
-              className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-sunrise hover:bg-sunrise-800 active:bg-sunrise-800 text-white font-medium rounded-xl transition-colors"
             >
               Open Guide
               <ArrowSquareOut size={18} weight="bold" />
@@ -442,7 +442,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
             <p className="text-stone-500 text-sm mb-8 max-w-xs">Set up a guide for your community to reference anytime.</p>
             <button
               onClick={() => navigateTo('pick', 'right')}
-              className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-sunrise hover:bg-sunrise-800 active:bg-sunrise-800 text-white font-medium rounded-xl transition-colors"
             >
               Set up guide
             </button>
