@@ -46,7 +46,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
       </div>
 
       <div className="flex flex-col items-center text-center">
-        <div className="w-20 h-20 rounded-2xl bg-jade flex items-center justify-center mb-5">
+        <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
           <HandCoins size={44} weight="fill" className="text-white" />
         </div>
         <h1 className="text-3xl font-bold text-stone-800 mb-2">Giving</h1>
@@ -61,7 +61,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder="https://church.com/give"
-                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-sunrise focus:border-transparent"
               />
               <div className="flex gap-2">
                 <button
@@ -74,7 +74,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
                 <button
                   type="submit"
                   disabled={saving || !url.trim()}
-                  className="flex-1 py-2.5 bg-jade rounded-xl text-sm font-medium text-white hover:bg-jade-700 transition-colors disabled:opacity-40"
+                  className="flex-1 py-2.5 bg-sunrise rounded-xl text-sm font-medium text-white hover:bg-sunrise-800 transition-colors disabled:opacity-40"
                 >
                   {saving ? 'Saving…' : 'Save'}
                 </button>
@@ -86,7 +86,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
             <p className="text-stone-500 text-sm mb-8 max-w-xs">Support your church or community through your giving.</p>
             <button
               onClick={() => window.open(givingUrl, '_blank', 'noopener,noreferrer')}
-              className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-sunrise hover:bg-sunrise-800 active:bg-sunrise-900 text-white font-medium rounded-xl transition-colors"
             >
               Open Giving Page
               <ArrowSquareOut size={18} weight="bold" />
@@ -97,7 +97,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
             <p className="text-stone-500 text-sm mb-8 max-w-xs">Set up a giving link so your community can donate in one tap.</p>
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white font-medium rounded-xl transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-sunrise hover:bg-sunrise-800 active:bg-sunrise-900 text-white font-medium rounded-xl transition-colors"
             >
               Add giving link
             </button>

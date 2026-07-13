@@ -34,7 +34,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
       </div>
       <div className="relative flex-1 min-w-0">
         <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide mb-0.5">{label}</p>
-        <p className="text-base font-semibold text-stone-800 truncate leading-snug">{primary}</p>
+        <p className="text-base font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
       <CaretRight size={16} className="text-stone-300 shrink-0 relative" />
@@ -431,10 +431,10 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {givingEnabled && (
               <Card
                 onClick={onOpenGiving}
-                icon={<HandCoins size={24} weight="fill" className="text-jade" />}
-                iconBg="bg-jade/10"
+                icon={<HandCoins size={24} weight="fill" className="text-sunrise" />}
+                iconBg="bg-sunrise/10"
                 label="Giving"
-                primary="Give / Tithe"
+                primary="Monthly Giving"
                 secondary={isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open'}
                 delay={showAnnouncement ? 480 : 400}
               />
