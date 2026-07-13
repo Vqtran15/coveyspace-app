@@ -87,7 +87,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Jane Smith"
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent"
               required
               autoFocus
             />
@@ -99,7 +99,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
               <select
                 value={month}
                 onChange={e => { setMonth(Number(e.target.value)); setDay('') }}
-                className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+                className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent bg-white"
                 required
               >
                 <option value="">Month</option>
@@ -110,7 +110,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
               <select
                 value={day}
                 onChange={e => setDay(Number(e.target.value))}
-                className="w-24 border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+                className="w-24 border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent bg-white"
                 required
               >
                 <option value="">Day</option>
@@ -138,7 +138,7 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
+              className="flex-1 py-2 bg-coral hover:bg-coral-600 active:bg-coral-700 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
             >
               {saving ? 'Saving…' : birthday ? 'Save' : 'Add'}
             </button>
@@ -226,7 +226,7 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-coral border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -250,7 +250,7 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
           )}
           <button
             onClick={() => setModal('add')}
-            className="w-9 h-9 flex items-center justify-center bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-xl text-lg font-medium transition-colors"
+            className="w-9 h-9 flex items-center justify-center bg-coral hover:bg-coral-600 active:bg-coral-700 text-white rounded-xl text-lg font-medium transition-colors"
           >
             +
           </button>

@@ -313,7 +313,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
             ) : (
               <button
                 onClick={() => setAddingRequest(true)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-jade/10 hover:bg-jade/20 text-jade transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-lagoon/10 hover:bg-lagoon/20 text-lagoon transition-colors"
               >
                 <Plus size={18} weight="bold" />
               </button>
@@ -337,7 +337,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm"
                 />
               </div>
               <div>
@@ -348,7 +348,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                   onChange={e => setRequestText(e.target.value)}
                   placeholder="Write a prayer request…"
                   rows={4}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm resize-none"
                 />
               </div>
               {error && (
@@ -357,7 +357,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
               <button
                 type="submit"
                 disabled={saving || !requestText.trim()}
-                className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-lagoon hover:bg-lagoon-600 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
               >
                 <Plus size={16} weight="bold" />
                 {saving ? 'Adding…' : 'Add Request'}
@@ -374,7 +374,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search requests…"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent"
                   />
                 </div>
               )}
@@ -424,13 +424,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         </div>
                         {/* Spine */}
                         <div className="flex flex-col items-center w-5 shrink-0">
-                          <div className="w-2.5 h-2.5 rounded-full bg-jade mt-1.5 shrink-0 z-10" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-lagoon mt-1.5 shrink-0 z-10" />
                           {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                         </div>
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
                           <div
-                            className="relative bg-jade/8 rounded-xl border border-jade/20 shadow-sm px-3 py-2.5 select-none"
+                            className="relative bg-lagoon/8 rounded-xl border border-lagoon/20 shadow-sm px-3 py-2.5 select-none"
                             onClick={() => handleBubbleTap(r.id, isOwnProfile)}
                           >
                           {editingId === r.id ? (
@@ -439,13 +439,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 type="date"
                                 value={editDate}
                                 onChange={e => setEditDate(e.target.value)}
-                                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm"
                               />
                               <textarea
                                 value={editText}
                                 onChange={e => setEditText(e.target.value)}
                                 rows={3}
-                                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm resize-none"
                                 required
                                 autoFocus
                               />
@@ -460,7 +460,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 <button
                                   type="submit"
                                   disabled={!editText.trim()}
-                                  className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
+                                  className="flex-1 py-1.5 bg-lagoon hover:bg-lagoon-600 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
                                 >
                                   Save
                                 </button>
@@ -508,8 +508,8 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 )}
                               </div>
                               <div className="flex items-center gap-1.5 mb-1.5">
-                                <HandsPraying size={13} weight="fill" className="text-jade" />
-                                <span className="text-xs text-jade">Prayer request</span>
+                                <HandsPraying size={13} weight="fill" className="text-lagoon" />
+                                <span className="text-xs text-lagoon">Prayer request</span>
                               </div>
                               <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                               <ReactionAvatars reactions={requestReactions} />
@@ -555,7 +555,7 @@ function MemberCard({ member, index, onClick }) {
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`w-full text-left p-4 rounded-xl bg-white border-2 border-stone-200 hover:border-jade/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${entranceClass}`}
+      className={`w-full text-left p-4 rounded-xl bg-white border-2 border-stone-200 hover:border-lagoon/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-lagoon ${entranceClass}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -633,7 +633,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-lagoon border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -658,7 +658,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search members…"
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent"
           />
           {searchQuery && (
             <button
