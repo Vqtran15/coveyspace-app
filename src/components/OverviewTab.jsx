@@ -387,8 +387,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {servicesEnabled && (
               <Card
                 onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
-                icon={<HandHeart size={24} weight="fill" className="text-coral" />}
-                iconBg="bg-coral/10"
+                icon={<HandHeart size={24} weight="fill" className="text-sage-700" />}
+                iconBg="bg-sage-50"
                 label="Next Service"
                 primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
                 secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
@@ -398,8 +398,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {prayerEnabled && prayerCard && (
               <Card
                 onClick={() => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } })}
-                icon={<HandsPraying size={24} weight="fill" className="text-sage-700" />}
-                iconBg="bg-sage-50"
+                icon={<HandsPraying size={24} weight="fill" className="text-lagoon" />}
+                iconBg="bg-lagoon-50"
                 label="Pray for Today"
                 primary={shortName(prayerCard.profile?.display_name) || 'Someone'}
                 secondary={prayerCard.request}
@@ -409,8 +409,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {birthdaysEnabled && (
               <Card
                 onClick={onOpenBirthdays}
-                icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
-                iconBg="bg-lagoon-50"
+                icon={<Cake size={24} weight="fill" className="text-coral" />}
+                iconBg="bg-coral/10"
                 label="Upcoming Birthdays"
                 primary={birthdayPrimary}
                 delay={showAnnouncement ? 320 : 240}
@@ -420,8 +420,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {guideEnabled && (
               <Card
                 onClick={onOpenGuide}
-                icon={<BookOpen size={24} weight="fill" className="text-stone-500" />}
-                iconBg="bg-stone-100"
+                icon={<BookOpen size={24} weight="fill" className="text-sunrise" />}
+                iconBg="bg-sunrise/10"
                 label="Guide"
                 primary="Community Guide"
                 secondary="Tap to open"
@@ -431,8 +431,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {givingEnabled && (
               <Card
                 onClick={onOpenGiving}
-                icon={<HandCoins size={24} weight="fill" className="text-sunrise" />}
-                iconBg="bg-sunrise/10"
+                icon={<HandCoins size={24} weight="fill" className="text-lagoon-700" />}
+                iconBg="bg-lagoon-50"
                 label="Giving"
                 primary="Monthly Giving"
                 secondary={isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open'}
