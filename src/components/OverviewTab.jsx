@@ -395,7 +395,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {servicesEnabled && (
               <Card
                 onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
-                icon={<HandHeart size={24} weight="fill" className="text-sage-700" />}
+                icon={<HandHeart size={24} weight="fill" className="text-lagoon-700" />}
                 iconBg="bg-sage-50"
                 label="Next Service"
                 primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
@@ -439,7 +439,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {givingEnabled && (
               <Card
                 onClick={onOpenGiving}
-                icon={<Coins size={24} weight="fill" className="text-lagoon-700" />}
+                icon={<Coins size={24} weight="fill" className="text-sage-700" />}
                 iconBg="bg-lagoon-50"
                 label="Giving"
                 primary="Monthly Giving"
