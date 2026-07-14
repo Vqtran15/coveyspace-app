@@ -7,7 +7,7 @@ import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
-import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
+import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
 import { trackEvent } from '../lib/analytics.js'
 
 function formatDate(dateStr) {
@@ -298,14 +298,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
-              {member.avatar_image_url
-                ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                : member.avatar_icon
-                  ? <AvatarIcon name={member.avatar_icon} size={16} />
-                  : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
-              }
-            </div>
+            <AvatarCircle size="9" icon={member.avatar_icon} colorKey={member.avatar_color} userId={member.user_id} name={member.display_name} imageUrl={member.avatar_image_url} />
             <h2 className="text-xl font-bold text-stone-800 truncate">{member.display_name}</h2>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -565,14 +558,7 @@ function MemberCard({ member, index, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
-            {member.avatar_image_url
-              ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
-              : member.avatar_icon
-                ? <AvatarIcon name={member.avatar_icon} size={20} />
-                : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
-            }
-          </div>
+          <AvatarCircle size="md" icon={member.avatar_icon} colorKey={member.avatar_color} userId={member.user_id} name={member.display_name} imageUrl={member.avatar_image_url} />
           <div className="font-semibold text-stone-800">{member.display_name}</div>
         </div>
         {lastUpdated && (

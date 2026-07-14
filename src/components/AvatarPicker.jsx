@@ -53,15 +53,15 @@ export default function AvatarPicker({
   async function handleSelectIcon(name) {
     setSavingIcon(true)
     const updates = { avatar_icon: name }
-    if (imageUrl) {
-      updates.avatar_image_url = null
-      await deleteStoredPhoto()
-      setImageUrl(null)
-    }
+    if (imageUrl) updates.avatar_image_url = null
     const { error } = await supabase.from('profiles').update(updates).eq('user_id', userId)
     if (error) {
       toast('Failed to save avatar', 'error')
     } else {
+      if (imageUrl) {
+        await deleteStoredPhoto()
+        setImageUrl(null)
+      }
       setIcon(name)
       onSave?.({ icon: name, color: colorKey, imageUrl: null })
       doClose()
@@ -123,13 +123,13 @@ export default function AvatarPicker({
 
   async function handleRemovePhoto() {
     setSavingPhoto(true)
-    await deleteStoredPhoto()
     const { error } = await supabase.from('profiles')
       .update({ avatar_image_url: null })
       .eq('user_id', userId)
     if (error) {
       toast('Failed to remove photo', 'error')
     } else {
+      await deleteStoredPhoto()
       setImageUrl(null)
       onSave?.({ icon, color: colorKey, imageUrl: null })
       toast('Photo removed', 'success')

@@ -9,7 +9,7 @@ import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 
-export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarImageChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
+export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
   const [closing, close] = useModalClose(onClose)
   const navigate = useNavigate()
   const toast = useToast()
@@ -239,7 +239,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                   setAvatarIcon(icon)
                   setAvatarColorKey(color)
                   setAvatarImageUrl(imageUrl)
-                  onAvatarImageChange?.(imageUrl)
+                  onAvatarChange?.({ icon, color, imageUrl })
                 }}
                 onClose={() => setAvatarPickerOpen(false)}
               />,

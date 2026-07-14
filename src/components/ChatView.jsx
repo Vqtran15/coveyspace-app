@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
-import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
+import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../utils/format.js'
 import { haptic } from '../lib/haptic.js'
 import { trackEvent } from '../lib/analytics.js'
@@ -35,23 +35,6 @@ function saveCache(convId, msgs) {
   } catch {}
 }
 
-function Initials({ name, userId, icon, colorKey, imageUrl }) {
-  if (imageUrl) {
-    return (
-      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-stone-200 shadow ring-1 ring-black/10">
-        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
-      </div>
-    )
-  }
-  return (
-    <div className={`w-8 h-8 rounded-full ${avatarColor(userId, colorKey)} flex items-center justify-center shrink-0`}>
-      {icon
-        ? <AvatarIcon name={icon} size={16} />
-        : <span className="text-white text-xs font-bold">{initials(name)}</span>
-      }
-    </div>
-  )
-}
 
 function dateSeparatorLabel(iso) {
   const d = new Date(iso)
@@ -1238,7 +1221,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   )}
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
-                      {isFirstInGroup && (() => { const m = members.find(x => x.user_id === msg.user_id); return <Initials name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
+                      {isFirstInGroup && (() => { const m = members.find(x => x.user_id === msg.user_id); return <AvatarCircle size="8" name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
                     </div>
                   )}
 
