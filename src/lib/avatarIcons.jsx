@@ -180,8 +180,9 @@ export function AvatarCircle({ icon, name, userId, colorKey, size = 'md', imageU
   const dim = SIZE_DIM[size] ?? SIZE_DIM.md
   if (imageUrl) {
     return (
-      <div className={`${dim} rounded-full overflow-hidden shrink-0 bg-stone-200 shadow ring-1 ring-black/10`}>
+      <div className={`${dim} rounded-full overflow-hidden shrink-0 bg-stone-200 shadow-md relative`}>
         <img src={imageUrl} alt={name ?? ''} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 rounded-full ring-2 ring-inset ring-white/75" />
       </div>
     )
   }
