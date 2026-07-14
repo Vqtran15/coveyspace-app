@@ -224,9 +224,12 @@ export default function AvatarPicker({
             <div className="flex flex-col items-center gap-3 py-2">
               {imageUrl ? (
                 <>
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-200 shrink-0">
-                    <img src={imageUrl} alt="Current photo" className="w-full h-full object-cover" />
-                  </div>
+                  {/* In sheet mode show a preview circle; in inline mode the AvatarCircle above already serves as the preview */}
+                  {!inline && (
+                    <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-200 shrink-0">
+                      <img src={imageUrl} alt="Current photo" className="w-full h-full object-cover" />
+                    </div>
+                  )}
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={savingPhoto}

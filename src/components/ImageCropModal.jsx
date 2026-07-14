@@ -54,9 +54,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   function onPointerMove(e) {
     if (e.pointerType === 'touch') return
     if (!dragRef.current) return
-    const dx = e.clientX - dragRef.current.startX
-    const dy = e.clientY - dragRef.current.startY
-    const { x, y } = clampOffset(dragRef.current.startOX + dx, dragRef.current.startOY + dy, sRef.current)
+    const { x, y } = clampOffset(dragRef.current.startOX + (e.clientX - dragRef.current.startX), dragRef.current.startOY + (e.clientY - dragRef.current.startY), sRef.current)
     move(x, y, sRef.current)
   }
   function onPointerUp(e) {
@@ -80,14 +78,11 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   function onTouchMove(e) {
     e.preventDefault()
     if (e.touches.length === 2 && pinchRef.current) {
-      const ratio    = touchDist(e.touches) / pinchRef.current.dist
-      const newScale = Math.min(4, Math.max(1, pinchRef.current.startScale * ratio))
+      const newScale = Math.min(4, Math.max(1, pinchRef.current.startScale * (touchDist(e.touches) / pinchRef.current.dist)))
       const { x, y } = clampOffset(xRef.current, yRef.current, newScale)
       move(x, y, newScale)
     } else if (e.touches.length === 1 && dragRef.current) {
-      const dx = e.touches[0].clientX - dragRef.current.startX
-      const dy = e.touches[0].clientY - dragRef.current.startY
-      const { x, y } = clampOffset(dragRef.current.startOX + dx, dragRef.current.startOY + dy, sRef.current)
+      const { x, y } = clampOffset(dragRef.current.startOX + (e.touches[0].clientX - dragRef.current.startX), dragRef.current.startOY + (e.touches[0].clientY - dragRef.current.startY), sRef.current)
       move(x, y, sRef.current)
     }
   }
@@ -118,60 +113,62 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   const r = CROP_SIZE / 2
 
   return (
-    <div
-      className="fixed inset-0 z-[80] bg-black select-none cursor-grab active:cursor-grabbing"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      onWheel={onWheel}
-    >
-      {/* Image fills full screen, panned/zoomed by user */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <img
-          src={imageSrc}
-          alt=""
-          draggable={false}
-          className="max-w-none"
+    <div className="fixed inset-0 z-[80] bg-black flex flex-col select-none">
+
+      {/* ── Drag zone: image only renders here, clipped by overflow-hidden ── */}
+      <div
+        className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onWheel={onWheel}
+      >
+        {/* Image, panned/zoomed within the drag zone */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            src={imageSrc}
+            alt=""
+            draggable={false}
+            className="max-w-none"
+            style={{
+              width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
+              transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+              transformOrigin: 'center center',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+
+        {/* Dark overlay with circular cutout — radial-gradient renders correctly under overflow-hidden */}
+        <div
+          className="absolute inset-0 pointer-events-none"
           style={{
-            width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
-            transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
-            transformOrigin: 'center center',
-            pointerEvents: 'none',
+            background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
+          }}
+        />
+
+        {/* Circle border ring */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width: CROP_SIZE,
+            height: CROP_SIZE,
+            borderRadius: '50%',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            border: '2px solid rgba(255,255,255,0.35)',
           }}
         />
       </div>
 
-      {/* Dark overlay with circular cutout centered in the full screen */}
+      {/* ── Buttons: separate section below the image frame ── */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
-        }}
-      />
-
-      {/* White ring */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          width: CROP_SIZE,
-          height: CROP_SIZE,
-          borderRadius: '50%',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          border: '2px solid rgba(255,255,255,0.35)',
-        }}
-      />
-
-      {/* Buttons sit in the dark area below the circle */}
-      <div
-        className="absolute left-0 right-0 px-6 flex gap-3"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
-        onPointerDown={e => e.stopPropagation()}
-        onTouchStart={e => e.stopPropagation()}
+        className="shrink-0 bg-black px-6 pt-5 flex gap-3"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
       >
         <button
           onClick={onCancel}
@@ -187,6 +184,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
           {saving ? 'Saving…' : 'Use Photo'}
         </button>
       </div>
+
     </div>
   )
 }
