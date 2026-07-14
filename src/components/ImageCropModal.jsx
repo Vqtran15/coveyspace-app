@@ -102,6 +102,8 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
       const blob = await cropImageToBlob(file, { offsetX: posRef.current.x, offsetY: posRef.current.y, scale: posRef.current.s, cropSize: CROP_SIZE })
       onConfirm(blob)
     } catch {
+      // cropImageToBlob failed — stay mounted so user can retry
+    } finally {
       setSaving(false)
     }
   }

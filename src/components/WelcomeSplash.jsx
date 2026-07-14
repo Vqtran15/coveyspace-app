@@ -63,7 +63,7 @@ export default function WelcomeSplash({
   groupName, onDone, isAdmin,
   userId, displayName, groupId,
   groupSettings, onGroupSettingsChange,
-  onAvatarImageChange,
+  onAvatarChange,
 }) {
   const [closing, close] = useModalClose(onDone)
 
@@ -357,7 +357,7 @@ export default function WelcomeSplash({
                   setAvatarIcon(icon)
                   setColorKey(color)
                   setAvatarImageUrl(imageUrl)
-                  onAvatarImageChange?.(imageUrl)
+                  onAvatarChange?.({ icon, color, imageUrl })
                 }}
                 inline
               />
