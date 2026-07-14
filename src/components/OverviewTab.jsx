@@ -272,7 +272,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
       <div className="mb-7 flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-stone-800">
-          Hi, {(displayName ?? '').split(' ')[0] || 'there'}
+          Hi, {(displayName ?? '').split(' ')[0] || 'there'}!
         </h1>
         <button
           onClick={onOpenSettings}
