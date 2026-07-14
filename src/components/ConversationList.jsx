@@ -395,7 +395,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
                   >
                     <div className="relative shrink-0">
-                      <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : 'bg-jade'}`}>
+                      <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md ring-2 ring-jade/50' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : 'bg-jade'}`}>
                         {isDm
                           ? otherMember?.avatar_image_url
                             ? <img src={otherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
@@ -528,7 +528,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     disabled={starting}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-stone-50 transition-colors disabled:opacity-40"
                   >
-                    <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${m.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : avatarColor(m.user_id, m.avatar_color)}`}>
+                    <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${m.avatar_image_url ? 'bg-stone-200 shadow-md ring-2 ring-jade/50' : avatarColor(m.user_id, m.avatar_color)}`}>
                       {m.avatar_image_url
                         ? <img src={m.avatar_image_url} alt="" className="w-full h-full object-cover" />
                         : m.avatar_icon
@@ -568,7 +568,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                             onClick={() => toggleMember(m.user_id)}
                             className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
                           >
-                            <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${m.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : avatarColor(m.user_id, m.avatar_color)}`}>
+                            <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${m.avatar_image_url ? 'bg-stone-200 shadow-md ring-2 ring-jade/50' : avatarColor(m.user_id, m.avatar_color)}`}>
                               {m.avatar_image_url
                                 ? <img src={m.avatar_image_url} alt="" className="w-full h-full object-cover" />
                                 : m.avatar_icon
