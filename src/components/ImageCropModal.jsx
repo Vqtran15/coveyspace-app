@@ -118,74 +118,73 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   const r = CROP_SIZE / 2
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black flex flex-col select-none">
-      {/* Drag zone — fills everything above the buttons */}
-      <div
-        className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onWheel={onWheel}
-      >
-        {/* Image, panned/zoomed by user */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img
-            src={imageSrc}
-            alt=""
-            draggable={false}
-            className="max-w-none"
-            style={{
-              width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
-              transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
-              transformOrigin: 'center center',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-
-        {/* Dark overlay with circular cutout — radial-gradient avoids the overflow-hidden clipping issue */}
-        <div
-          className="absolute inset-0 pointer-events-none"
+    <div
+      className="fixed inset-0 z-[80] bg-black select-none cursor-grab active:cursor-grabbing"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onWheel={onWheel}
+    >
+      {/* Image fills full screen, panned/zoomed by user */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <img
+          src={imageSrc}
+          alt=""
+          draggable={false}
+          className="max-w-none"
           style={{
-            background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
-          }}
-        />
-
-        {/* White ring around the circle */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: CROP_SIZE,
-            height: CROP_SIZE,
-            borderRadius: '50%',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            border: '2px solid rgba(255,255,255,0.35)',
+            width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
+            transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+            transformOrigin: 'center center',
+            pointerEvents: 'none',
           }}
         />
       </div>
 
-      {/* Buttons — clearly below the photo */}
+      {/* Dark overlay with circular cutout centered in the full screen */}
       <div
-        className="shrink-0 px-6 pt-5 flex flex-col gap-3"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
+        }}
+      />
+
+      {/* White ring */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: CROP_SIZE,
+          height: CROP_SIZE,
+          borderRadius: '50%',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          border: '2px solid rgba(255,255,255,0.35)',
+        }}
+      />
+
+      {/* Buttons sit in the dark area below the circle */}
+      <div
+        className="absolute left-0 right-0 px-6 flex gap-3"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
+        onPointerDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
       >
+        <button
+          onClick={onCancel}
+          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium active:bg-white/10 transition-colors"
+        >
+          Cancel
+        </button>
         <button
           onClick={handleConfirm}
           disabled={saving}
-          className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40"
+          className="flex-1 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Use Photo'}
-        </button>
-        <button
-          onClick={onCancel}
-          className="w-full py-3 text-white/50 text-sm font-medium active:text-white/80 transition-colors"
-        >
-          Cancel
         </button>
       </div>
     </div>
