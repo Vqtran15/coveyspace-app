@@ -38,7 +38,7 @@ function saveCache(convId, msgs) {
 function Initials({ name, userId, icon, colorKey, imageUrl }) {
   if (imageUrl) {
     return (
-      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-stone-200">
+      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-stone-200 shadow ring-1 ring-black/10">
         <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
       </div>
     )
@@ -1676,7 +1676,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
             {/* Avatar + name */}
             <div className="flex flex-col items-center py-5 px-5">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 overflow-hidden ${conversation.type === 'group' ? 'bg-jade' : dmOtherMember?.avatar_image_url ? 'bg-stone-200' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 overflow-hidden ${conversation.type === 'group' ? 'bg-jade' : dmOtherMember?.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
                 {conversation.type === 'group'
                   ? <Users size={40} weight="fill" className="text-white" />
                   : dmOtherMember?.avatar_image_url
@@ -1726,7 +1726,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <div className="space-y-1">
                   {members.map(m => (
                     <div key={m.user_id} className="flex items-center gap-3 py-2">
-                      <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${m.avatar_image_url ? 'bg-stone-200' : `flex items-center justify-center ${avatarColor(m.user_id, m.avatar_color)}`}`}>
+                      <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${m.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : `flex items-center justify-center ${avatarColor(m.user_id, m.avatar_color)}`}`}>
                         {m.avatar_image_url
                           ? <img src={m.avatar_image_url} alt={m.display_name} className="w-full h-full object-cover" />
                           : m.avatar_icon

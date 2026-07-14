@@ -298,7 +298,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
+            <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
               {member.avatar_image_url
                 ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
                 : member.avatar_icon
@@ -565,7 +565,7 @@ function MemberCard({ member, index, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
+          <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200 shadow ring-1 ring-black/10' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
             {member.avatar_image_url
               ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
               : member.avatar_icon
