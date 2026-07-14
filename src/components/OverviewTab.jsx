@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, Sliders } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearFine } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -280,7 +280,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
           <div className="absolute -bottom-0.5 -right-0.5 w-[14px] h-[14px] rounded-full bg-white ring-1 ring-stone-200 shadow-sm flex items-center justify-center">
-            <Sliders size={9} weight="fill" className="text-stone-400" />
+            <GearFine size={9} weight="fill" className="text-stone-400" />
           </div>
         </button>
       </div>
