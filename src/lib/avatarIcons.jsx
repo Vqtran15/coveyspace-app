@@ -168,9 +168,9 @@ export function avatarColor(userId = '', colorKey = null) {
   return AVATAR_COLORS_DEFAULT[n % AVATAR_COLORS_DEFAULT.length]
 }
 
-const SIZE_DIM    = { lg: 'w-16 h-16', md: 'w-10 h-10', sm: 'w-7 h-7' }
-const SIZE_ICON   = { lg: 28, md: 20, sm: 13 }
-const SIZE_TEXT   = { lg: 'text-xl font-bold', md: 'text-sm font-bold', sm: 'text-[11px] font-bold' }
+const SIZE_DIM  = { xs: 'w-4 h-4', '8': 'w-8 h-8', '9': 'w-9 h-9', sm: 'w-7 h-7', md: 'w-10 h-10', '11': 'w-11 h-11', lg: 'w-16 h-16' }
+const SIZE_ICON = { xs: 7,         '8': 16,          '9': 18,         sm: 13,         md: 20,          '11': 22,          lg: 28 }
+const SIZE_TEXT = { xs: 'text-[7px] font-bold', '8': 'text-xs font-bold', '9': 'text-xs font-bold', sm: 'text-[11px] font-bold', md: 'text-sm font-bold', '11': 'text-sm font-bold', lg: 'text-xl font-bold' }
 
 function _initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()

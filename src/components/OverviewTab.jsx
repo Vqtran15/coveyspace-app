@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins } from '@phosphor-icons/react'
-import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
+import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
@@ -278,20 +278,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           onClick={onOpenSettings}
           className="active:opacity-70 transition-opacity shrink-0"
         >
-          {avatarImageUrl ? (
-            <div className="w-11 h-11 rounded-full overflow-hidden bg-stone-200 shadow ring-1 ring-black/10">
-              <img src={avatarImageUrl} alt={displayName} className="w-full h-full object-cover" />
-            </div>
-          ) : (
-            <div className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center`}>
-              {avatarIcon
-                ? <AvatarIcon name={avatarIcon} size={22} />
-                : <span className="text-white text-sm font-bold">
-                    {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-                  </span>
-              }
-            </div>
-          )}
+          <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
         </button>
       </div>
 

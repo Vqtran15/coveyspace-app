@@ -7,18 +7,15 @@ const CROP_SIZE = 280
 export default function ImageCropModal({ file, onConfirm, onCancel }) {
   const [imageSrc, setImageSrc]   = useState(null)
   const [naturalSize, setNatural] = useState(null)
-  const [offsetX, setOffsetX]     = useState(0)
-  const [offsetY, setOffsetY]     = useState(0)
-  const [scale, setScale]         = useState(1)
   const [saving, setSaving]       = useState(false)
 
-  const xRef = useRef(0)
-  const yRef = useRef(0)
-  const sRef = useRef(1)
+  // Single ref tracks all drag/zoom state; DOM is written directly to avoid re-renders during drag
+  const posRef = useRef({ x: 0, y: 0, s: 1 })
+  const imgRef = useRef(null)
 
   function move(x, y, s) {
-    xRef.current = x; yRef.current = y; sRef.current = s
-    setOffsetX(x); setOffsetY(y); setScale(s)
+    posRef.current = { x, y, s }
+    if (imgRef.current) imgRef.current.style.transform = `translate(${x}px, ${y}px) scale(${s})`
   }
 
   useEffect(() => {
@@ -50,13 +47,13 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   function onPointerDown(e) {
     if (e.pointerType === 'touch') return
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { startX: e.clientX, startY: e.clientY, startOX: xRef.current, startOY: yRef.current }
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startOX: posRef.current.x, startOY: posRef.current.y }
   }
   function onPointerMove(e) {
     if (e.pointerType === 'touch') return
     if (!dragRef.current) return
-    const { x, y } = clampOffset(dragRef.current.startOX + (e.clientX - dragRef.current.startX), dragRef.current.startOY + (e.clientY - dragRef.current.startY), sRef.current)
-    move(x, y, sRef.current)
+    const { x, y } = clampOffset(dragRef.current.startOX + (e.clientX - dragRef.current.startX), dragRef.current.startOY + (e.clientY - dragRef.current.startY), posRef.current.s)
+    move(x, y, posRef.current.s)
   }
   function onPointerUp(e) {
     if (e.pointerType === 'touch') return
@@ -69,10 +66,10 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   function onTouchStart(e) {
     e.preventDefault()
     if (e.touches.length === 2) {
-      pinchRef.current = { dist: touchDist(e.touches), startScale: sRef.current }
+      pinchRef.current = { dist: touchDist(e.touches), startScale: posRef.current.s }
       dragRef.current = null
     } else if (e.touches.length === 1) {
-      dragRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, startOX: xRef.current, startOY: yRef.current }
+      dragRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, startOX: posRef.current.x, startOY: posRef.current.y }
       pinchRef.current = null
     }
   }
@@ -80,11 +77,11 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     e.preventDefault()
     if (e.touches.length === 2 && pinchRef.current) {
       const newScale = Math.min(4, Math.max(1, pinchRef.current.startScale * (touchDist(e.touches) / pinchRef.current.dist)))
-      const { x, y } = clampOffset(xRef.current, yRef.current, newScale)
+      const { x, y } = clampOffset(posRef.current.x, posRef.current.y, newScale)
       move(x, y, newScale)
     } else if (e.touches.length === 1 && dragRef.current) {
-      const { x, y } = clampOffset(dragRef.current.startOX + (e.touches[0].clientX - dragRef.current.startX), dragRef.current.startOY + (e.touches[0].clientY - dragRef.current.startY), sRef.current)
-      move(x, y, sRef.current)
+      const { x, y } = clampOffset(dragRef.current.startOX + (e.touches[0].clientX - dragRef.current.startX), dragRef.current.startOY + (e.touches[0].clientY - dragRef.current.startY), posRef.current.s)
+      move(x, y, posRef.current.s)
     }
   }
   function onTouchEnd(e) {
@@ -94,15 +91,15 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
 
   function onWheel(e) {
     e.preventDefault()
-    const newScale = Math.min(4, Math.max(1, sRef.current + (e.deltaY > 0 ? -0.1 : 0.1)))
-    const { x, y } = clampOffset(xRef.current, yRef.current, newScale)
+    const newScale = Math.min(4, Math.max(1, posRef.current.s + (e.deltaY > 0 ? -0.1 : 0.1)))
+    const { x, y } = clampOffset(posRef.current.x, posRef.current.y, newScale)
     move(x, y, newScale)
   }
 
   async function handleConfirm() {
     setSaving(true)
     try {
-      const blob = await cropImageToBlob(file, { offsetX: xRef.current, offsetY: yRef.current, scale: sRef.current, cropSize: CROP_SIZE })
+      const blob = await cropImageToBlob(file, { offsetX: posRef.current.x, offsetY: posRef.current.y, scale: posRef.current.s, cropSize: CROP_SIZE })
       onConfirm(blob)
     } catch {
       setSaving(false)
@@ -132,13 +129,14 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         {/* Image centered and panned/zoomed within the drag zone */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img
+            ref={imgRef}
             src={imageSrc}
             alt=""
             draggable={false}
             className="max-w-none"
             style={{
               width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
-              transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+              transform: 'translate(0px, 0px) scale(1)',
               transformOrigin: 'center center',
               pointerEvents: 'none',
             }}
