@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cropImageToBlob } from '../lib/cropImage.js'
 
 const CROP_SIZE = 280
@@ -112,12 +113,14 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
 
   const r = CROP_SIZE / 2
 
-  return (
-    <div className="fixed inset-0 z-[80] bg-black select-none">
+  // Portal renders directly in document.body, bypassing any ancestor transform
+  // stacking contexts that would make `fixed` behave like `absolute`.
+  return createPortal(
+    <div className="fixed inset-0 z-[80] bg-black flex flex-col select-none">
 
-      {/* ── Drag zone: full screen so the circle centers at true screen center ── */}
+      {/* ── Drag zone: takes all space above the button bar ── */}
       <div
-        className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -126,7 +129,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         onTouchEnd={onTouchEnd}
         onWheel={onWheel}
       >
-        {/* Image, panned/zoomed within the drag zone */}
+        {/* Image centered and panned/zoomed within the drag zone */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img
             src={imageSrc}
@@ -142,18 +145,12 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
           />
         </div>
 
-        {/* Dark overlay with circular cutout */}
+        {/* Dark overlay with circular cutout — radial-gradient works correctly under overflow-hidden */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
           }}
-        />
-
-        {/* Extra darkening at the bottom so floating buttons stay readable */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-40 pointer-events-none"
-          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' }}
         />
 
         {/* Circle border ring */}
@@ -171,9 +168,9 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         />
       </div>
 
-      {/* ── Buttons float over the dark overlay — no background so no visible black bar ── */}
+      {/* ── Button bar: sits below the drag zone, never overlaps it ── */}
       <div
-        className="absolute left-0 right-0 bottom-0 px-6 pt-5 flex gap-3"
+        className="shrink-0 bg-black px-6 pt-5 flex gap-3"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
       >
         <button
@@ -185,12 +182,13 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 py-3.5 rounded-xl border border-white/30 text-white/80 text-sm font-medium active:bg-white/10 transition-colors"
+          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium active:bg-white/10 transition-colors"
         >
           Cancel
         </button>
       </div>
 
-    </div>
+    </div>,
+    document.body
   )
 }
