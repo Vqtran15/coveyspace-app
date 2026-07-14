@@ -128,52 +128,10 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   if (!imageSrc) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[80] bg-black flex flex-col overflow-hidden touch-none select-none"
-      onWheel={onWheel}
-    >
-      {/* Image layer */}
-      <div
-        className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        <img
-          src={imageSrc}
-          alt=""
-          draggable={false}
-          className="max-w-none"
-          style={{
-            width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
-            transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
-            transformOrigin: 'center center',
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
-
-      {/* Circular mask — box-shadow darkens everything outside the circle */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          width:  CROP_SIZE,
-          height: CROP_SIZE,
-          borderRadius: '50%',
-          top:  '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
-          border: '2px solid rgba(255,255,255,0.25)',
-        }}
-      />
-
+    <div className="fixed inset-0 z-[80] bg-black flex flex-col overflow-hidden touch-none select-none">
       {/* Header */}
       <div
-        className="relative z-10 flex items-center justify-between px-5 py-3"
+        className="shrink-0 flex items-center justify-between px-5 py-3"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}
       >
         <button
@@ -186,9 +144,52 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         <div className="w-20" />
       </div>
 
+      {/* Crop area — sandwiched between header and footer */}
+      <div
+        className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onWheel={onWheel}
+      >
+        {/* Image centered within the crop area */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            src={imageSrc}
+            alt=""
+            draggable={false}
+            className="max-w-none"
+            style={{
+              width: naturalSize ? `${naturalSize.w * (CROP_SIZE / Math.min(naturalSize.w, naturalSize.h))}px` : '100%',
+              transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale})`,
+              transformOrigin: 'center center',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+
+        {/* Circular mask — box-shadow darkens everything outside the circle */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            width:  CROP_SIZE,
+            height: CROP_SIZE,
+            borderRadius: '50%',
+            top:  '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
+            border: '2px solid rgba(255,255,255,0.25)',
+          }}
+        />
+      </div>
+
       {/* Footer */}
       <div
-        className="relative z-10 mt-auto px-6 py-4"
+        className="shrink-0 px-6 py-4"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
       >
         <button

@@ -430,6 +430,7 @@ export default function App() {
           groupId={groupId}
           groupSettings={groupSettings}
           onGroupSettingsChange={setGroupSettings}
+          onAvatarImageChange={url => setProfile(p => ({ ...p, avatar_image_url: url }))}
         />
       )}
 
