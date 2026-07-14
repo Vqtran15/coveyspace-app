@@ -138,7 +138,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -165,7 +165,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       const [{ data: groupData }, { data: memberData }, { count: mCount }] = await Promise.all([
         supabase.from('community_groups').select('announcement').eq('id', groupId).single(),
         prayerEnabled
-          ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId)
+          ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId)
           : Promise.resolve({ data: [] }),
         isAdmin
           ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('community_group_id', groupId)
@@ -276,14 +276,22 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         </div>
         <button
           onClick={onOpenSettings}
-          className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center shrink-0 active:opacity-70 transition-opacity`}
+          className="active:opacity-70 transition-opacity shrink-0"
         >
-          {avatarIcon
-            ? <AvatarIcon name={avatarIcon} size={22} />
-            : <span className="text-white text-sm font-bold">
-                {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
-          }
+          {avatarImageUrl ? (
+            <div className="w-11 h-11 rounded-full overflow-hidden bg-stone-200">
+              <img src={avatarImageUrl} alt={displayName} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center`}>
+              {avatarIcon
+                ? <AvatarIcon name={avatarIcon} size={22} />
+                : <span className="text-white text-sm font-bold">
+                    {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                  </span>
+              }
+            </div>
+          )}
         </button>
       </div>
 

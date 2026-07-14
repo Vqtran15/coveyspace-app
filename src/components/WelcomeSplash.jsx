@@ -7,12 +7,8 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { nextScheduledDate, weekOccToMode } from '../utils/schedule.js'
-import {
-  AVATAR_ICON_LIST,
-  AVATAR_COLOR_OPTIONS,
-  AvatarIcon,
-  avatarColor as getAvatarColor,
-} from '../lib/avatarIcons.jsx'
+import { AvatarCircle } from '../lib/avatarIcons.jsx'
+import AvatarPicker from './AvatarPicker.jsx'
 
 const MONTHS    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS      = Array.from({ length: 31 }, (_, i) => i + 1)
@@ -85,9 +81,9 @@ export default function WelcomeSplash({
   const [step, setStep] = useState('welcome')
 
   // ── Personalize ────────────────────────────────────────────────────────────
-  const [avatarIcon,   setAvatarIcon]   = useState(null)
-  const [colorKey,     setColorKey]     = useState(null)
-  const [savingAvatar, setSavingAvatar] = useState(false)
+  const [avatarIcon,    setAvatarIcon]    = useState(null)
+  const [colorKey,      setColorKey]      = useState(null)
+  const [avatarImageUrl,setAvatarImageUrl]= useState(null)
   const [bdMonth, setBdMonth] = useState('')
   const [bdDay,   setBdDay]   = useState('')
 
@@ -141,12 +137,13 @@ export default function WelcomeSplash({
   useEffect(() => {
     if (!userId) return
     supabase.from('profiles')
-      .select('avatar_icon, avatar_color')
+      .select('avatar_icon, avatar_color, avatar_image_url')
       .eq('user_id', userId)
       .single()
       .then(({ data }) => {
         setAvatarIcon(data?.avatar_icon ?? null)
         setColorKey(data?.avatar_color ?? null)
+        setAvatarImageUrl(data?.avatar_image_url ?? null)
       })
   }, [userId])
 
@@ -160,17 +157,6 @@ export default function WelcomeSplash({
     }
   }, [isAdmin, step])
 
-  async function handleSelectIcon(icon) {
-    setSavingAvatar(true)
-    await supabase.from('profiles').update({ avatar_icon: icon }).eq('user_id', userId)
-    setAvatarIcon(icon)
-    setSavingAvatar(false)
-  }
-
-  async function handleSelectColor(ck) {
-    setColorKey(ck)
-    await supabase.from('profiles').update({ avatar_color: ck }).eq('user_id', userId)
-  }
 
   async function handlePersonalizeNext() {
     if (bdMonth && bdDay) {
@@ -341,7 +327,6 @@ export default function WelcomeSplash({
 
     // ── STEP: personalize ──────────────────────────────────────────────────────
     if (step === 'personalize') {
-      const bgClass = getAvatarColor(userId, colorKey)
       return (
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
@@ -351,55 +336,32 @@ export default function WelcomeSplash({
             </p>
 
             <div className="flex justify-center mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${bgClass}`}>
-                {avatarIcon
-                  ? <AvatarIcon name={avatarIcon} size={28} />
-                  : <span className="text-xl font-bold text-white">
-                      {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-                    </span>
-                }
-              </div>
+              <AvatarCircle
+                icon={avatarIcon}
+                name={displayName}
+                userId={userId}
+                colorKey={colorKey}
+                size="lg"
+                imageUrl={avatarImageUrl}
+              />
             </div>
 
             <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Color</p>
-              <div className="flex gap-2 flex-wrap">
-                {AVATAR_COLOR_OPTIONS.map(({ key, bgClass: cls, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => handleSelectColor(key)}
-                    title={label}
-                    className={`w-9 h-9 rounded-full ${cls} flex items-center justify-center transition-transform active:scale-95 ${
-                      colorKey === key ? 'ring-2 ring-offset-2 ring-stone-400 scale-110' : ''
-                    }`}
-                  >
-                    {colorKey === key && <span className="w-2 h-2 rounded-full bg-white/80" />}
-                  </button>
-                ))}
-              </div>
+              <AvatarPicker
+                userId={userId}
+                currentIcon={avatarIcon}
+                currentColor={colorKey}
+                currentImageUrl={avatarImageUrl}
+                onSave={({ icon, color, imageUrl }) => {
+                  setAvatarIcon(icon)
+                  setColorKey(color)
+                  setAvatarImageUrl(imageUrl)
+                }}
+                inline
+              />
             </div>
 
-            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-5 animate-fade-up" style={{ animationDelay: '0.28s' }}>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Icon</p>
-              <div className="grid grid-cols-6 gap-1.5 max-h-44 overflow-y-auto scrollbar-hide">
-                {AVATAR_ICON_LIST.map(({ name, Icon }) => (
-                  <button
-                    key={name}
-                    onClick={() => handleSelectIcon(name)}
-                    disabled={savingAvatar}
-                    className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
-                      avatarIcon === name
-                        ? `${bgClass} ring-2 ring-offset-1 ring-jade`
-                        : 'bg-stone-100 hover:bg-stone-200'
-                    }`}
-                  >
-                    <Icon size={22} weight="fill" className={avatarIcon === name ? 'text-white' : 'text-stone-500'} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.36s' }}>
+            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.28s' }}>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday</p>
               <p className="text-xs text-stone-400 mb-3">Your group will be reminded so they can celebrate you.</p>
               <div className="flex gap-2">

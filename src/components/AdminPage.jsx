@@ -3,20 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
-import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
-import { initials } from '../utils/format.js'
+import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import { weekOccToMode } from '../utils/schedule.js'
-
-function AvatarCircle({ icon, name, userId, colorKey }) {
-  return (
-    <div className={`w-10 h-10 rounded-full ${avatarColor(userId, colorKey)} flex items-center justify-center shrink-0`}>
-      {icon
-        ? <AvatarIcon name={icon} size={20} />
-        : <span className="text-sm font-bold text-white">{initials(name)}</span>
-      }
-    </div>
-  )
-}
 
 export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange }) {
   const navigate = useNavigate()
@@ -43,7 +31,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
     supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
     supabase
       .from('profiles')
-      .select('user_id, display_name, role, avatar_icon, avatar_color')
+      .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url')
       .eq('community_group_id', groupId)
       .order('display_name')
       .then(({ data }) => {
@@ -335,7 +323,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 {members.map(m => (
                   <div key={m.user_id} className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} />
+                      <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-medium text-stone-700 truncate">{m.display_name}</span>

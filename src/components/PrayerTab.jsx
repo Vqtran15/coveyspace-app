@@ -42,13 +42,15 @@ function ReactionAvatars({ reactions }) {
       {shown.map((rx, i) => (
         <div
           key={rx.user_id}
-          className={`w-6 h-6 rounded-full border-2 border-white ${avatarColor(rx.user_id, rx.avatar_color)} flex items-center justify-center shrink-0`}
+          className={`w-6 h-6 rounded-full border-2 border-white shrink-0 overflow-hidden ${rx.avatar_image_url ? 'bg-stone-200' : `${avatarColor(rx.user_id, rx.avatar_color)} flex items-center justify-center`}`}
           style={{ marginLeft: i === 0 ? 0 : -6, zIndex: shown.length - i }}
           title={rx.display_name}
         >
-          {rx.avatar_icon
-            ? <AvatarIcon name={rx.avatar_icon} size={10} />
-            : <span className="text-white text-[8px] font-bold">{(rx.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          {rx.avatar_image_url
+            ? <img src={rx.avatar_image_url} alt="" className="w-full h-full object-cover" />
+            : rx.avatar_icon
+              ? <AvatarIcon name={rx.avatar_icon} size={10} />
+              : <span className="text-white text-[8px] font-bold">{(rx.display_name ?? '?').charAt(0).toUpperCase()}</span>
           }
         </div>
       ))}
@@ -59,7 +61,7 @@ function ReactionAvatars({ reactions }) {
   )
 }
 
-function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, onClose, onCountChange }) {
+function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, currentAvatarImageUrl, onClose, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
   const toast = useToast()
   const [requests, setRequests]           = useState([])
@@ -172,6 +174,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         display_name: displayName,
         avatar_icon: currentAvatarIcon,
         avatar_color: currentAvatarColor,
+        avatar_image_url: currentAvatarImageUrl ?? null,
         created_at: new Date().toISOString(),
       }
       setReactions(prev => ({
@@ -188,6 +191,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
           display_name:            displayName,
           avatar_icon:             currentAvatarIcon ?? null,
           avatar_color:            currentAvatarColor ?? null,
+          avatar_image_url:        currentAvatarImageUrl ?? null,
         })
         .select()
         .maybeSingle()
@@ -294,10 +298,12 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-full ${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center shrink-0`}>
-              {member.avatar_icon
-                ? <AvatarIcon name={member.avatar_icon} size={16} />
-                : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+            <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
+              {member.avatar_image_url
+                ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                : member.avatar_icon
+                  ? <AvatarIcon name={member.avatar_icon} size={16} />
+                  : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
               }
             </div>
             <h2 className="text-xl font-bold text-stone-800 truncate">{member.display_name}</h2>
@@ -559,10 +565,12 @@ function MemberCard({ member, index, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full ${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center shrink-0`}>
-            {member.avatar_icon
-              ? <AvatarIcon name={member.avatar_icon} size={20} />
-              : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
+            {member.avatar_image_url
+              ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+              : member.avatar_icon
+                ? <AvatarIcon name={member.avatar_icon} size={20} />
+                : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
             }
           </div>
           <div className="font-semibold text-stone-800">{member.display_name}</div>
@@ -575,7 +583,7 @@ function MemberCard({ member, index, onClick }) {
   )
 }
 
-export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey }) {
+export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey, avatarImageUrl }) {
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
   const [members, setMembers]               = useState([])
@@ -593,7 +601,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
     if (!groupId) return
     try {
       const [membersRes, requestsRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId).order('display_name'),
+        supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId).order('display_name'),
         supabase.from('prayer_requests').select('id, member_user_id, created_at'),
       ])
       const profileList = membersRes.data ?? []
@@ -718,6 +726,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           currentUserId={userId}
           currentAvatarIcon={avatarIcon}
           currentAvatarColor={avatarColorKey}
+          currentAvatarImageUrl={avatarImageUrl}
           onClose={() => setSelectedMember(null)}
           onCountChange={handleCountChange}
         />
