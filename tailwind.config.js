@@ -135,7 +135,7 @@ export default {
         },
         'toast-in': {
           '0%':   { opacity: '0', transform: 'translateY(-8px) scale(0.96)' },
-          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+          '100%': { opacity: '1', transform: 'none' },
         },
         'confetti-float': {
           '0%':   { opacity: '0', transform: 'scale(0)' },
@@ -152,7 +152,7 @@ export default {
           '0%':   { transform: 'scale(1)' },
           '25%':  { transform: 'scale(0.96)' },
           '70%':  { transform: 'scale(1.03)' },
-          '100%': { transform: 'scale(1)' },
+          '100%': { transform: 'none' },
         },
         'popup-in': {
           '0%':   { opacity: '0', transform: 'scale(0.88) translateY(10px)' },
@@ -166,7 +166,7 @@ export default {
         'edit-close': {
           '0%':   { transform: 'scale(1.02)' },
           '55%':  { transform: 'scale(0.97)' },
-          '100%': { transform: 'scale(1)' },
+          '100%': { transform: 'none' },
         },
         'announcement-shake': {
           '0%':   { transform: 'translateX(0) rotate(0deg)' },
