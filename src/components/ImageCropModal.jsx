@@ -11,6 +11,16 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   const [scale, setScale]         = useState(1)
   const [saving, setSaving]       = useState(false)
 
+  // Refs mirror state for synchronous reads inside rapid event handlers
+  const xRef = useRef(0)
+  const yRef = useRef(0)
+  const sRef = useRef(1)
+
+  function move(x, y, s) {
+    xRef.current = x; yRef.current = y; sRef.current = s
+    setOffsetX(x); setOffsetY(y); setScale(s)
+  }
+
   // Load the file as an object URL
   useEffect(() => {
     const url = URL.createObjectURL(file)
@@ -36,23 +46,27 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     }
   }, [naturalSize])
 
-  // ── Pointer drag ─────────────────────────────────────────────────────────────
-  const dragRef  = useRef(null) // { startX, startY, startOX, startOY }
-  const pinchRef = useRef(null) // { dist, startScale }
+  // ── Pointer drag (mouse only — touch is handled separately) ──────────────────
+  const dragRef  = useRef(null)
+  const pinchRef = useRef(null)
 
   function onPointerDown(e) {
-    if (e.touches) return // handled by touch handlers
+    if (e.pointerType === 'touch') return
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { startX: e.clientX, startY: e.clientY, startOX: offsetX, startOY: offsetY }
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startOX: xRef.current, startOY: yRef.current }
   }
   function onPointerMove(e) {
+    if (e.pointerType === 'touch') return
     if (!dragRef.current) return
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
-    const { x, y } = clampOffset(dragRef.current.startOX + dx, dragRef.current.startOY + dy, scale)
-    setOffsetX(x); setOffsetY(y)
+    const { x, y } = clampOffset(dragRef.current.startOX + dx, dragRef.current.startOY + dy, sRef.current)
+    move(x, y, sRef.current)
   }
-  function onPointerUp() { dragRef.current = null }
+  function onPointerUp(e) {
+    if (e.pointerType === 'touch') return
+    dragRef.current = null
+  }
 
   // ── Touch (pinch + pan) ───────────────────────────────────────────────────────
   function touchDist(t) {
@@ -64,10 +78,10 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   function onTouchStart(e) {
     e.preventDefault()
     if (e.touches.length === 2) {
-      pinchRef.current = { dist: touchDist(e.touches), startScale: scale }
+      pinchRef.current = { dist: touchDist(e.touches), startScale: sRef.current }
       dragRef.current = null
     } else if (e.touches.length === 1) {
-      dragRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, startOX: offsetX, startOY: offsetY }
+      dragRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, startOX: xRef.current, startOY: yRef.current }
       pinchRef.current = null
     }
   }
@@ -77,14 +91,13 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     if (e.touches.length === 2 && pinchRef.current) {
       const ratio    = touchDist(e.touches) / pinchRef.current.dist
       const newScale = Math.min(4, Math.max(1, pinchRef.current.startScale * ratio))
-      setScale(newScale)
-      const { x, y } = clampOffset(offsetX, offsetY, newScale)
-      setOffsetX(x); setOffsetY(y)
+      const { x, y } = clampOffset(xRef.current, yRef.current, newScale)
+      move(x, y, newScale)
     } else if (e.touches.length === 1 && dragRef.current) {
       const dx = e.touches[0].clientX - dragRef.current.startX
       const dy = e.touches[0].clientY - dragRef.current.startY
-      const { x, y } = clampOffset(dragRef.current.startOX + dx, dragRef.current.startOY + dy, scale)
-      setOffsetX(x); setOffsetY(y)
+      const { x, y } = clampOffset(dragRef.current.startOX + dx, dragRef.current.startOY + dy, sRef.current)
+      move(x, y, sRef.current)
     }
   }
 
@@ -97,16 +110,15 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   function onWheel(e) {
     e.preventDefault()
     const delta    = e.deltaY > 0 ? -0.1 : 0.1
-    const newScale = Math.min(4, Math.max(1, scale + delta))
-    setScale(newScale)
-    const { x, y } = clampOffset(offsetX, offsetY, newScale)
-    setOffsetX(x); setOffsetY(y)
+    const newScale = Math.min(4, Math.max(1, sRef.current + delta))
+    const { x, y } = clampOffset(xRef.current, yRef.current, newScale)
+    move(x, y, newScale)
   }
 
   async function handleConfirm() {
     setSaving(true)
     try {
-      const blob = await cropImageToBlob(file, { offsetX, offsetY, scale, cropSize: CROP_SIZE })
+      const blob = await cropImageToBlob(file, { offsetX: xRef.current, offsetY: yRef.current, scale: sRef.current, cropSize: CROP_SIZE })
       onConfirm(blob)
     } catch {
       setSaving(false)

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -8,7 +9,7 @@ import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 
-export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
+export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarImageChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
   const [closing, close] = useModalClose(onClose)
   const navigate = useNavigate()
   const toast = useToast()
@@ -228,7 +229,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
               </div>
             </div>
 
-            {avatarPickerOpen && (
+            {avatarPickerOpen && createPortal(
               <AvatarPicker
                 userId={userId}
                 currentIcon={avatarIcon}
@@ -238,10 +239,11 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                   setAvatarIcon(icon)
                   setAvatarColorKey(color)
                   setAvatarImageUrl(imageUrl)
-                  setAvatarPickerOpen(false)
+                  onAvatarImageChange?.(imageUrl)
                 }}
                 onClose={() => setAvatarPickerOpen(false)}
-              />
+              />,
+              document.body
             )}
 
             {/* Change display name */}

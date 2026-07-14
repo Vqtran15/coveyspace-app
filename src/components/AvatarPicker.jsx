@@ -54,14 +54,21 @@ export default function AvatarPicker({
     } else {
       setIcon(name)
       onSave?.({ icon: name, color: colorKey, imageUrl: null })
+      onClose?.()
     }
     setSavingIcon(false)
   }
 
   async function handleSelectColor(key) {
+    const prevKey = colorKey
     setColorKey(key)
-    await supabase.from('profiles').update({ avatar_color: key }).eq('user_id', userId)
-    onSave?.({ icon, color: key, imageUrl })
+    const { error } = await supabase.from('profiles').update({ avatar_color: key }).eq('user_id', userId)
+    if (error) {
+      setColorKey(prevKey)
+      toast('Failed to save color', 'error')
+    } else {
+      onSave?.({ icon, color: key, imageUrl })
+    }
   }
 
   // ── Photo tab handlers ───────────────────────────────────────────────────────
@@ -97,6 +104,7 @@ export default function AvatarPicker({
       setImageUrl(urlWithBust)
       onSave?.({ icon, color: colorKey, imageUrl: urlWithBust })
       toast('Photo saved', 'success')
+      onClose?.()
     } catch (err) {
       toast('Failed to save photo', 'error')
       console.error(err)
@@ -116,6 +124,7 @@ export default function AvatarPicker({
       setImageUrl(null)
       onSave?.({ icon, color: colorKey, imageUrl: null })
       toast('Photo removed', 'success')
+      onClose?.()
     }
     setSavingPhoto(false)
   }

@@ -505,6 +505,7 @@ export default function App() {
           userId={session.user.id}
           onClose={() => setSettingsOpen(false)}
           onDisplayNameChange={name => setProfile(p => ({ ...p, display_name: name }))}
+          onAvatarImageChange={url => setProfile(p => ({ ...p, avatar_image_url: url }))}
           pushSupported={push.supported}
           pushSubscribed={push.subscribed}
           pushPermission={push.permission}
