@@ -111,13 +111,16 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   if (!imageSrc) return null
 
   const r = CROP_SIZE / 2
+  // Button section height: 20px top padding + 52px button + safe area + 20px bottom padding
+  const BTN_H = 'calc(env(safe-area-inset-bottom) + 92px)'
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black flex flex-col select-none">
+    <div className="fixed inset-0 z-[80] bg-black select-none">
 
-      {/* ── Drag zone: image only renders here, clipped by overflow-hidden ── */}
+      {/* ── Drag zone: positioned above the button section, never shares a parent with buttons ── */}
       <div
-        className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
+        className="absolute left-0 right-0 top-0 overflow-hidden cursor-grab active:cursor-grabbing"
+        style={{ bottom: BTN_H }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -165,23 +168,23 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         />
       </div>
 
-      {/* ── Buttons: separate section below the image frame ── */}
+      {/* ── Buttons: absolutely at the bottom, outside and below the image div ── */}
       <div
-        className="shrink-0 bg-black px-6 pt-5 flex gap-3"
+        className="absolute left-0 right-0 bottom-0 bg-black px-6 pt-5 flex gap-3"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
       >
-        <button
-          onClick={onCancel}
-          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium active:bg-white/10 transition-colors"
-        >
-          Cancel
-        </button>
         <button
           onClick={handleConfirm}
           disabled={saving}
           className="flex-1 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Use Photo'}
+        </button>
+        <button
+          onClick={onCancel}
+          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium active:bg-white/10 transition-colors"
+        >
+          Cancel
         </button>
       </div>
 
