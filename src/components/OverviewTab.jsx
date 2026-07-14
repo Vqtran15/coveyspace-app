@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, HandCoins } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -439,7 +439,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {givingEnabled && (
               <Card
                 onClick={onOpenGiving}
-                icon={<HandCoins size={24} weight="fill" className="text-lagoon-700" />}
+                icon={<Coins size={24} weight="fill" className="text-lagoon-700" />}
                 iconBg="bg-lagoon-50"
                 label="Giving"
                 primary="Monthly Giving"

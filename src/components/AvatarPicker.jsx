@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Image, X } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
+import { useModalClose } from '../hooks/useModalClose.js'
 import { AVATAR_ICON_LIST, AVATAR_COLOR_OPTIONS, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import ImageCropModal from './ImageCropModal.jsx'
 
@@ -30,19 +31,28 @@ export default function AvatarPicker({
   const fileInputRef = useRef(null)
 
   const [tab,         setTab]         = useState(currentImageUrl ? 'photo' : 'icon')
+  const [tabDir,      setTabDir]      = useState(null) // 'left' | 'right' — drives enter animation
   const [icon,        setIcon]        = useState(currentIcon)
   const [colorKey,    setColorKey]    = useState(currentColor)
   const [imageUrl,    setImageUrl]    = useState(currentImageUrl)
-  const [pendingFile, setPendingFile] = useState(null) // File awaiting crop
+  const [pendingFile, setPendingFile] = useState(null)
   const [savingIcon,  setSavingIcon]  = useState(false)
   const [savingPhoto, setSavingPhoto] = useState(false)
+
+  const [closing, animatedClose] = useModalClose(onClose ?? (() => {}))
+  const doClose = inline ? () => {} : animatedClose
+
+  function switchTab(t) {
+    if (t === tab) return
+    setTabDir(t === 'photo' ? 'right' : 'left')
+    setTab(t)
+  }
 
   // ── Icon tab handlers ────────────────────────────────────────────────────────
 
   async function handleSelectIcon(name) {
     setSavingIcon(true)
     const updates = { avatar_icon: name }
-    // If switching from photo to icon, clear the image URL
     if (imageUrl) {
       updates.avatar_image_url = null
       await deleteStoredPhoto()
@@ -54,7 +64,7 @@ export default function AvatarPicker({
     } else {
       setIcon(name)
       onSave?.({ icon: name, color: colorKey, imageUrl: null })
-      onClose?.()
+      doClose()
     }
     setSavingIcon(false)
   }
@@ -93,7 +103,6 @@ export default function AvatarPicker({
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path)
-      // Cache-bust so the browser reloads the new photo
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
 
       const { error: dbError } = await supabase.from('profiles')
@@ -104,7 +113,7 @@ export default function AvatarPicker({
       setImageUrl(urlWithBust)
       onSave?.({ icon, color: colorKey, imageUrl: urlWithBust })
       toast('Photo saved', 'success')
-      onClose?.()
+      doClose()
     } catch (err) {
       toast('Failed to save photo', 'error')
       console.error(err)
@@ -124,7 +133,7 @@ export default function AvatarPicker({
       setImageUrl(null)
       onSave?.({ icon, color: colorKey, imageUrl: null })
       toast('Photo removed', 'success')
-      onClose?.()
+      doClose()
     }
     setSavingPhoto(false)
   }
@@ -137,6 +146,12 @@ export default function AvatarPicker({
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
+  const tabAnimClass = tabDir === 'right'
+    ? 'animate-slide-in-right'
+    : tabDir === 'left'
+      ? 'animate-slide-in-left'
+      : ''
+
   const content = (
     <div className="space-y-3">
       {/* Tab switcher */}
@@ -144,7 +159,7 @@ export default function AvatarPicker({
         {['icon', 'photo'].map(t => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => switchTab(t)}
             className={`flex-1 py-2 text-xs font-semibold rounded-lg capitalize transition-colors ${
               tab === t ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400 hover:text-stone-600'
             }`}
@@ -154,104 +169,111 @@ export default function AvatarPicker({
         ))}
       </div>
 
-      {/* Icon tab */}
-      {tab === 'icon' && (
-        <>
-          <div>
-            <p className="text-xs text-stone-400 font-medium mb-2">Color</p>
-            <div className="flex gap-2">
-              {AVATAR_COLOR_OPTIONS.map(({ key, bgClass, label }) => (
-                <button
-                  key={key}
-                  onClick={() => handleSelectColor(key)}
-                  title={label}
-                  className={`w-9 h-9 rounded-full ${bgClass} flex items-center justify-center transition-transform active:scale-95 ${
-                    colorKey === key ? 'ring-2 ring-offset-2 ring-stone-400 scale-110' : ''
-                  }`}
-                >
-                  {colorKey === key && <span className="w-2 h-2 rounded-full bg-white/80" />}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-stone-400 font-medium mb-2">Icon</p>
-            <div className="grid grid-cols-6 gap-1.5 max-h-44 overflow-y-auto scrollbar-hide">
-              {AVATAR_ICON_LIST.map(({ name, Icon }) => (
-                <button
-                  key={name}
-                  onClick={() => handleSelectIcon(name)}
-                  disabled={savingIcon}
-                  className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
-                    icon === name && !imageUrl
-                      ? `${avatarColor(userId, colorKey)} ring-2 ring-offset-1 ring-jade`
-                      : 'bg-stone-100 hover:bg-stone-200 active:bg-stone-200'
-                  }`}
-                >
-                  <Icon
-                    size={22}
-                    weight="fill"
-                    className={icon === name && !imageUrl ? 'text-white' : 'text-stone-500'}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+      {/* Keyed wrapper so the entering panel re-mounts and plays its slide animation */}
+      <div className="overflow-hidden">
+        <div key={tab} className={tabAnimClass}>
 
-      {/* Photo tab */}
-      {tab === 'photo' && (
-        <div className="flex flex-col items-center gap-3 py-2">
-          {imageUrl ? (
+          {/* Icon tab */}
+          {tab === 'icon' && (
             <>
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-200 shrink-0">
-                <img src={imageUrl} alt="Current photo" className="w-full h-full object-cover" />
+              <div>
+                <p className="text-xs text-stone-400 font-medium mb-2">Color</p>
+                <div className="flex gap-2">
+                  {AVATAR_COLOR_OPTIONS.map(({ key, bgClass, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => handleSelectColor(key)}
+                      title={label}
+                      className={`w-9 h-9 rounded-full ${bgClass} flex items-center justify-center transition-transform active:scale-95 ${
+                        colorKey === key ? 'ring-2 ring-offset-2 ring-stone-400 scale-110' : ''
+                      }`}
+                    >
+                      {colorKey === key && <span className="w-2 h-2 rounded-full bg-white/80" />}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={savingPhoto}
-                className="px-5 py-2.5 text-sm font-semibold text-jade border border-jade rounded-xl hover:bg-jade/5 active:scale-[0.98] transition-all disabled:opacity-40"
-              >
-                Replace photo
-              </button>
-              <button
-                onClick={handleRemovePhoto}
-                disabled={savingPhoto}
-                className="text-xs text-stone-400 hover:text-red-500 transition-colors disabled:opacity-40"
-              >
-                {savingPhoto ? 'Saving…' : 'Remove photo'}
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
-                <Image size={32} className="text-stone-300" />
+              <div className="mt-3">
+                <p className="text-xs text-stone-400 font-medium mb-2">Icon</p>
+                <div className="grid grid-cols-6 gap-1.5 max-h-44 overflow-y-auto scrollbar-hide">
+                  {AVATAR_ICON_LIST.map(({ name, Icon }) => (
+                    <button
+                      key={name}
+                      onClick={() => handleSelectIcon(name)}
+                      disabled={savingIcon}
+                      className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
+                        icon === name && !imageUrl
+                          ? `${avatarColor(userId, colorKey)} ring-2 ring-offset-1 ring-jade`
+                          : 'bg-stone-100 hover:bg-stone-200 active:bg-stone-200'
+                      }`}
+                    >
+                      <Icon
+                        size={22}
+                        weight="fill"
+                        className={icon === name && !imageUrl ? 'text-white' : 'text-stone-500'}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
-              {savingPhoto ? (
-                <p className="text-sm text-stone-400">Saving…</p>
-              ) : (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-xl transition-all"
-                >
-                  Choose photo
-                </button>
-              )}
-              <p className="text-xs text-stone-400 text-center max-w-[200px]">
-                You can move and resize the photo to fit.
-              </p>
             </>
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+
+          {/* Photo tab */}
+          {tab === 'photo' && (
+            <div className="flex flex-col items-center gap-3 py-2">
+              {imageUrl ? (
+                <>
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-200 shrink-0">
+                    <img src={imageUrl} alt="Current photo" className="w-full h-full object-cover" />
+                  </div>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={savingPhoto}
+                    className="px-5 py-2.5 text-sm font-semibold text-jade border border-jade rounded-xl hover:bg-jade/5 active:scale-[0.98] transition-all disabled:opacity-40"
+                  >
+                    Replace photo
+                  </button>
+                  <button
+                    onClick={handleRemovePhoto}
+                    disabled={savingPhoto}
+                    className="text-xs text-stone-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                  >
+                    {savingPhoto ? 'Saving…' : 'Remove photo'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                    <Image size={32} className="text-stone-300" />
+                  </div>
+                  {savingPhoto ? (
+                    <p className="text-sm text-stone-400">Saving…</p>
+                  ) : (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-5 py-2.5 text-sm font-semibold text-white bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-xl transition-all"
+                    >
+                      Choose photo
+                    </button>
+                  )}
+                  <p className="text-xs text-stone-400 text-center max-w-[200px]">
+                    You can move and resize the photo to fit.
+                  </p>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
     </div>
   )
 
@@ -268,19 +290,22 @@ export default function AvatarPicker({
       {inline ? (
         content
       ) : (
-        <div
-          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40"
-          onClick={onClose}
-        >
+        <div className="fixed inset-0 z-[60] flex items-end justify-center">
+          {/* Backdrop */}
           <div
-            className="w-full max-w-sm bg-white rounded-t-2xl p-4 pb-safe space-y-1"
+            className={`absolute inset-0 bg-black/40 ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+            onClick={animatedClose}
+          />
+          {/* Sheet */}
+          <div
+            className={`relative w-full max-w-sm bg-white rounded-t-2xl p-4 space-y-1 ${closing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold text-stone-700">Edit photo</p>
               <button
-                onClick={onClose}
+                onClick={animatedClose}
                 className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200"
               >
                 <X size={14} weight="bold" />
