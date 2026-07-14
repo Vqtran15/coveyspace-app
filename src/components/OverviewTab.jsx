@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -33,7 +33,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
         {icon}
       </div>
       <div className="relative flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide mb-0.5">{label}</p>
+        <p className="text-[11px] font-semibold text-stone-500 uppercase tracking-wide mb-0.5">{label}</p>
         <p className="text-base font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
@@ -271,14 +271,17 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       )}
 
       <div className="mb-7 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-stone-800">Covey Space</h1>
-        </div>
+        <h1 className="text-3xl font-bold text-stone-800">
+          Hi, {(displayName ?? '').split(' ')[0] || 'there'}
+        </h1>
         <button
           onClick={onOpenSettings}
-          className="active:opacity-70 transition-opacity shrink-0"
+          className="relative active:opacity-70 transition-opacity shrink-0"
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-white ring-1 ring-stone-200 shadow-sm flex items-center justify-center">
+            <GearSix size={11} weight="fill" className="text-stone-400" />
+          </div>
         </button>
       </div>
 
