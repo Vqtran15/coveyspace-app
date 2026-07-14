@@ -279,8 +279,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           className="relative active:opacity-70 transition-opacity shrink-0"
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
-          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white ring-1 ring-stone-200 shadow-sm flex items-center justify-center">
-            <GearSix size={10} weight="fill" className="text-stone-400" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-[14px] h-[14px] rounded-full bg-white ring-1 ring-stone-200 shadow-sm flex items-center justify-center">
+            <GearSix size={9} weight="fill" className="text-stone-400" />
           </div>
         </button>
       </div>
