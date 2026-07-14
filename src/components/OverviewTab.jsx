@@ -279,7 +279,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           className="active:opacity-70 transition-opacity shrink-0"
         >
           {avatarImageUrl ? (
-            <div className="w-11 h-11 rounded-full overflow-hidden bg-stone-200">
+            <div className="w-11 h-11 rounded-full overflow-hidden bg-stone-200 shadow ring-1 ring-black/10">
               <img src={avatarImageUrl} alt={displayName} className="w-full h-full object-cover" />
             </div>
           ) : (
@@ -396,7 +396,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               <Card
                 onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
                 icon={<HandHeart size={24} weight="fill" className="text-lagoon-700" />}
-                iconBg="bg-sage-50"
+                iconBg="bg-lagoon-50"
                 label="Next Service"
                 primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
                 secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
@@ -440,7 +440,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               <Card
                 onClick={onOpenGiving}
                 icon={<Coins size={24} weight="fill" className="text-sage-700" />}
-                iconBg="bg-lagoon-50"
+                iconBg="bg-sage-50"
                 label="Giving"
                 primary="Monthly Giving"
                 secondary={isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open'}
