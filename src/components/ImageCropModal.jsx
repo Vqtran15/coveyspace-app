@@ -142,12 +142,18 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
           />
         </div>
 
-        {/* Dark overlay with circular cutout — radial-gradient renders correctly under overflow-hidden */}
+        {/* Dark overlay with circular cutout */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
           }}
+        />
+
+        {/* Extra darkening at the bottom so floating buttons stay readable */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-40 pointer-events-none"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' }}
         />
 
         {/* Circle border ring */}
@@ -165,9 +171,9 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         />
       </div>
 
-      {/* ── Buttons: absolutely at the bottom, outside and below the image div ── */}
+      {/* ── Buttons float over the dark overlay — no background so no visible black bar ── */}
       <div
-        className="absolute left-0 right-0 bottom-0 bg-black px-6 pt-5 flex gap-3"
+        className="absolute left-0 right-0 bottom-0 px-6 pt-5 flex gap-3"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
       >
         <button
@@ -179,7 +185,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium active:bg-white/10 transition-colors"
+          className="flex-1 py-3.5 rounded-xl border border-white/30 text-white/80 text-sm font-medium active:bg-white/10 transition-colors"
         >
           Cancel
         </button>
