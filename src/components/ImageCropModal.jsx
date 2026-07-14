@@ -111,16 +111,13 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
   if (!imageSrc) return null
 
   const r = CROP_SIZE / 2
-  // Button section height: 20px top padding + 52px button + safe area + 20px bottom padding
-  const BTN_H = 'calc(env(safe-area-inset-bottom) + 92px)'
 
   return (
     <div className="fixed inset-0 z-[80] bg-black select-none">
 
-      {/* ── Drag zone: positioned above the button section, never shares a parent with buttons ── */}
+      {/* ── Drag zone: full screen so the circle centers at true screen center ── */}
       <div
-        className="absolute left-0 right-0 top-0 overflow-hidden cursor-grab active:cursor-grabbing"
-        style={{ bottom: BTN_H }}
+        className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
