@@ -5,13 +5,12 @@ const CROP_SIZE = 280
 
 export default function ImageCropModal({ file, onConfirm, onCancel }) {
   const [imageSrc, setImageSrc]   = useState(null)
-  const [naturalSize, setNatural] = useState(null) // { w, h }
+  const [naturalSize, setNatural] = useState(null)
   const [offsetX, setOffsetX]     = useState(0)
   const [offsetY, setOffsetY]     = useState(0)
   const [scale, setScale]         = useState(1)
   const [saving, setSaving]       = useState(false)
 
-  // Refs mirror state for synchronous reads inside rapid event handlers
   const xRef = useRef(0)
   const yRef = useRef(0)
   const sRef = useRef(1)
@@ -21,7 +20,6 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     setOffsetX(x); setOffsetY(y); setScale(s)
   }
 
-  // Load the file as an object URL
   useEffect(() => {
     const url = URL.createObjectURL(file)
     setImageSrc(url)
@@ -31,7 +29,6 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     return () => URL.revokeObjectURL(url)
   }, [file])
 
-  // Compute clamp bounds to keep the crop circle always covered
   const clampOffset = useCallback((ox, oy, sc) => {
     if (!naturalSize) return { x: ox, y: oy }
     const baseScale  = CROP_SIZE / Math.min(naturalSize.w, naturalSize.h)
@@ -46,7 +43,6 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     }
   }, [naturalSize])
 
-  // ── Pointer drag (mouse only — touch is handled separately) ──────────────────
   const dragRef  = useRef(null)
   const pinchRef = useRef(null)
 
@@ -68,13 +64,9 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
     dragRef.current = null
   }
 
-  // ── Touch (pinch + pan) ───────────────────────────────────────────────────────
   function touchDist(t) {
-    const dx = t[0].clientX - t[1].clientX
-    const dy = t[0].clientY - t[1].clientY
-    return Math.hypot(dx, dy)
+    return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
   }
-
   function onTouchStart(e) {
     e.preventDefault()
     if (e.touches.length === 2) {
@@ -85,7 +77,6 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
       pinchRef.current = null
     }
   }
-
   function onTouchMove(e) {
     e.preventDefault()
     if (e.touches.length === 2 && pinchRef.current) {
@@ -100,17 +91,14 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
       move(x, y, sRef.current)
     }
   }
-
   function onTouchEnd(e) {
     if (e.touches.length < 2) pinchRef.current = null
     if (e.touches.length === 0) dragRef.current = null
   }
 
-  // ── Scroll to zoom ────────────────────────────────────────────────────────────
   function onWheel(e) {
     e.preventDefault()
-    const delta    = e.deltaY > 0 ? -0.1 : 0.1
-    const newScale = Math.min(4, Math.max(1, sRef.current + delta))
+    const newScale = Math.min(4, Math.max(1, sRef.current + (e.deltaY > 0 ? -0.1 : 0.1)))
     const { x, y } = clampOffset(xRef.current, yRef.current, newScale)
     move(x, y, newScale)
   }
@@ -127,24 +115,11 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
 
   if (!imageSrc) return null
 
-  return (
-    <div className="fixed inset-0 z-[80] bg-black flex flex-col overflow-hidden touch-none select-none">
-      {/* Header */}
-      <div
-        className="shrink-0 flex items-center justify-between px-5 py-3"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}
-      >
-        <button
-          onClick={onCancel}
-          className="text-white text-sm font-medium px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
-        >
-          Cancel
-        </button>
-        <p className="text-white text-sm font-semibold">Move and scale</p>
-        <div className="w-20" />
-      </div>
+  const r = CROP_SIZE / 2
 
-      {/* Crop area — sandwiched between header and footer */}
+  return (
+    <div className="fixed inset-0 z-[80] bg-black flex flex-col select-none">
+      {/* Drag zone — fills everything above the buttons */}
       <div
         className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
         onPointerDown={onPointerDown}
@@ -155,7 +130,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         onTouchEnd={onTouchEnd}
         onWheel={onWheel}
       >
-        {/* Image centered within the crop area */}
+        {/* Image, panned/zoomed by user */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img
             src={imageSrc}
@@ -171,26 +146,33 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
           />
         </div>
 
-        {/* Circular mask — box-shadow darkens everything outside the circle */}
+        {/* Dark overlay with circular cutout — radial-gradient avoids the overflow-hidden clipping issue */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle ${r}px at 50% 50%, transparent ${r - 1}px, rgba(0,0,0,0.65) ${r}px)`,
+          }}
+        />
+
+        {/* White ring around the circle */}
         <div
           className="absolute pointer-events-none"
           style={{
-            width:  CROP_SIZE,
+            width: CROP_SIZE,
             height: CROP_SIZE,
             borderRadius: '50%',
-            top:  '50%',
+            top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
-            border: '2px solid rgba(255,255,255,0.25)',
+            border: '2px solid rgba(255,255,255,0.35)',
           }}
         />
       </div>
 
-      {/* Footer */}
+      {/* Buttons — clearly below the photo */}
       <div
-        className="shrink-0 px-6 py-4"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+        className="shrink-0 px-6 pt-5 flex flex-col gap-3"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
       >
         <button
           onClick={handleConfirm}
@@ -198,6 +180,12 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
           className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Use Photo'}
+        </button>
+        <button
+          onClick={onCancel}
+          className="w-full py-3 text-white/50 text-sm font-medium active:text-white/80 transition-colors"
+        >
+          Cancel
         </button>
       </div>
     </div>
