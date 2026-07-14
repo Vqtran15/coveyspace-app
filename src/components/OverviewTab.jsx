@@ -138,7 +138,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -209,7 +209,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
-  useEffect(() => { load() }, [groupId, refreshKey])
+  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin])
 
   useEffect(() => {
     if (!groupId) return
@@ -424,7 +424,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 iconBg="bg-sunrise/10"
                 label="Guide"
                 primary="Community Guide"
-                secondary="Tap to open"
+                secondary={isAdmin && !guideType && !guideUrl ? 'Tap to set up' : 'Tap to open'}
                 delay={showAnnouncement ? 400 : 320}
               />
             )}

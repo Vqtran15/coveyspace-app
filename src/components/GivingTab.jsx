@@ -23,6 +23,19 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
     setSaving(false)
   }
 
+  async function handleRemove() {
+    setSaving(true)
+    const { error } = await onGivingSave(null)
+    if (error) {
+      toast('Failed to remove giving link', 'error')
+    } else {
+      toast('Giving link removed', 'success')
+      setUrl('')
+      setEditing(false)
+    }
+    setSaving(false)
+  }
+
   return (
     <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
 
@@ -79,6 +92,16 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>
+              {givingUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  disabled={saving}
+                  className="w-full py-2 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-40"
+                >
+                  Remove link
+                </button>
+              )}
             </form>
           </>
         ) : givingUrl ? (
