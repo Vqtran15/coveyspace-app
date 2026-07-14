@@ -280,7 +280,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
           <div className="absolute -bottom-0.5 -right-0.5">
-            <GearSix size={14} weight="bold" className="text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]" />
+            <GearSix size={14} weight="fill" className="text-stone-500 [filter:drop-shadow(0_0_3px_rgba(255,255,255,1))]" />
           </div>
         </button>
       </div>
