@@ -98,7 +98,7 @@ export default {
           '0%':   { opacity: '0', transform: 'scale(0.3)' },
           '60%':  { opacity: '1', transform: 'scale(1.15)' },
           '80%':  { transform: 'scale(0.95)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '1', transform: 'none' },
         },
         'fade-up': {
           '0%':   { opacity: '0', transform: 'translateY(16px)' },
