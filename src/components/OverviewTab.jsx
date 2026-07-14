@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, HandCoins } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -34,7 +34,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
       </div>
       <div className="relative flex-1 min-w-0">
         <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wide mb-0.5">{label}</p>
-        <p className="text-base font-semibold text-stone-800 truncate leading-snug">{primary}</p>
+        <p className="text-base font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
       <CaretRight size={16} className="text-stone-300 shrink-0 relative" />
@@ -138,7 +138,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -165,7 +165,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       const [{ data: groupData }, { data: memberData }, { count: mCount }] = await Promise.all([
         supabase.from('community_groups').select('announcement').eq('id', groupId).single(),
         prayerEnabled
-          ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId)
+          ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId)
           : Promise.resolve({ data: [] }),
         isAdmin
           ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('community_group_id', groupId)
@@ -209,7 +209,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
-  useEffect(() => { load() }, [groupId, refreshKey])
+  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin])
 
   useEffect(() => {
     if (!groupId) return
@@ -276,14 +276,22 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         </div>
         <button
           onClick={onOpenSettings}
-          className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center shrink-0 active:opacity-70 transition-opacity`}
+          className="active:opacity-70 transition-opacity shrink-0"
         >
-          {avatarIcon
-            ? <AvatarIcon name={avatarIcon} size={22} />
-            : <span className="text-white text-sm font-bold">
-                {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-              </span>
-          }
+          {avatarImageUrl ? (
+            <div className="w-11 h-11 rounded-full overflow-hidden bg-stone-200">
+              <img src={avatarImageUrl} alt={displayName} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className={`w-11 h-11 rounded-full ${avatarColor(userId, avatarColorKey)} flex items-center justify-center`}>
+              {avatarIcon
+                ? <AvatarIcon name={avatarIcon} size={22} />
+                : <span className="text-white text-sm font-bold">
+                    {(displayName ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                  </span>
+              }
+            </div>
+          )}
         </button>
       </div>
 
@@ -296,6 +304,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {prayerEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
             {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 320 : 240} />}
             {guideEnabled     && <CardSkeleton delay={isAdmin ? 400 : 320} />}
+            {givingEnabled    && <CardSkeleton delay={isAdmin ? 480 : 400} />}
           </>
         ) : (
           <>
@@ -386,8 +395,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {servicesEnabled && (
               <Card
                 onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
-                icon={<HandHeart size={24} weight="fill" className="text-coral" />}
-                iconBg="bg-coral/10"
+                icon={<HandHeart size={24} weight="fill" className="text-sage-700" />}
+                iconBg="bg-sage-50"
                 label="Next Service"
                 primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
                 secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
@@ -397,8 +406,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {prayerEnabled && prayerCard && (
               <Card
                 onClick={() => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } })}
-                icon={<HandsPraying size={24} weight="fill" className="text-sage-700" />}
-                iconBg="bg-sage-50"
+                icon={<HandsPraying size={24} weight="fill" className="text-lagoon" />}
+                iconBg="bg-lagoon-50"
                 label="Pray for Today"
                 primary={shortName(prayerCard.profile?.display_name) || 'Someone'}
                 secondary={prayerCard.request}
@@ -408,8 +417,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {birthdaysEnabled && (
               <Card
                 onClick={onOpenBirthdays}
-                icon={<Cake size={24} weight="fill" className="text-lagoon-700" />}
-                iconBg="bg-lagoon-50"
+                icon={<Cake size={24} weight="fill" className="text-coral" />}
+                iconBg="bg-coral/10"
                 label="Upcoming Birthdays"
                 primary={birthdayPrimary}
                 delay={showAnnouncement ? 320 : 240}
@@ -419,12 +428,23 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {guideEnabled && (
               <Card
                 onClick={onOpenGuide}
-                icon={<BookOpen size={24} weight="fill" className="text-stone-500" />}
-                iconBg="bg-stone-100"
+                icon={<BookOpen size={24} weight="fill" className="text-sunrise" />}
+                iconBg="bg-sunrise/10"
                 label="Guide"
                 primary="Community Guide"
-                secondary="Tap to open"
+                secondary={isAdmin && !guideType && !guideUrl ? 'Tap to set up' : 'Tap to open'}
                 delay={showAnnouncement ? 400 : 320}
+              />
+            )}
+            {givingEnabled && (
+              <Card
+                onClick={onOpenGiving}
+                icon={<HandCoins size={24} weight="fill" className="text-lagoon-700" />}
+                iconBg="bg-lagoon-50"
+                label="Giving"
+                primary="Monthly Giving"
+                secondary={isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open'}
+                delay={showAnnouncement ? 480 : 400}
               />
             )}
           </>

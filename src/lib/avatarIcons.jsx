@@ -167,3 +167,30 @@ export function avatarColor(userId = '', colorKey = null) {
   const n = (userId.charCodeAt(0) ?? 0) + (userId.charCodeAt((userId.length - 1) || 0) ?? 0)
   return AVATAR_COLORS_DEFAULT[n % AVATAR_COLORS_DEFAULT.length]
 }
+
+const SIZE_DIM    = { lg: 'w-16 h-16', md: 'w-10 h-10', sm: 'w-7 h-7' }
+const SIZE_ICON   = { lg: 28, md: 20, sm: 13 }
+const SIZE_TEXT   = { lg: 'text-xl font-bold', md: 'text-sm font-bold', sm: 'text-[11px] font-bold' }
+
+function _initials(name) {
+  return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
+export function AvatarCircle({ icon, name, userId, colorKey, size = 'md', imageUrl }) {
+  const dim = SIZE_DIM[size] ?? SIZE_DIM.md
+  if (imageUrl) {
+    return (
+      <div className={`${dim} rounded-full overflow-hidden shrink-0 bg-stone-200`}>
+        <img src={imageUrl} alt={name ?? ''} className="w-full h-full object-cover" />
+      </div>
+    )
+  }
+  return (
+    <div className={`${dim} rounded-full ${avatarColor(userId, colorKey)} flex items-center justify-center shrink-0`}>
+      {icon
+        ? <AvatarIcon name={icon} size={SIZE_ICON[size] ?? SIZE_ICON.md} />
+        : <span className={`${SIZE_TEXT[size] ?? SIZE_TEXT.md} text-white`}>{_initials(name)}</span>
+      }
+    </div>
+  )
+}

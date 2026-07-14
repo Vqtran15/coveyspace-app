@@ -35,7 +35,14 @@ function saveCache(convId, msgs) {
   } catch {}
 }
 
-function Initials({ name, userId, icon, colorKey }) {
+function Initials({ name, userId, icon, colorKey, imageUrl }) {
+  if (imageUrl) {
+    return (
+      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-stone-200">
+        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+      </div>
+    )
+  }
   return (
     <div className={`w-8 h-8 rounded-full ${avatarColor(userId, colorKey)} flex items-center justify-center shrink-0`}>
       {icon
@@ -1231,7 +1238,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   )}
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
-                      {isFirstInGroup && <Initials name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={members.find(m => m.user_id === msg.user_id)?.avatar_icon} colorKey={members.find(m => m.user_id === msg.user_id)?.avatar_color} />}
+                      {isFirstInGroup && (() => { const m = members.find(x => x.user_id === msg.user_id); return <Initials name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
                     </div>
                   )}
 
@@ -1386,11 +1393,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           <div
                             key={member.user_id}
                             title={member.display_name}
-                            className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${avatarColor(member.user_id, member.avatar_color)}`}
+                            className={`w-4 h-4 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `flex items-center justify-center ${avatarColor(member.user_id, member.avatar_color)}`}`}
                           >
-                            {member.avatar_icon
-                              ? <AvatarIcon name={member.avatar_icon} size={9} />
-                              : <span className="text-white text-[8px] font-bold leading-none">{initials(member.display_name)}</span>
+                            {member.avatar_image_url
+                              ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                              : member.avatar_icon
+                                ? <AvatarIcon name={member.avatar_icon} size={9} />
+                                : <span className="text-white text-[8px] font-bold leading-none">{initials(member.display_name)}</span>
                             }
                           </div>
                         ))}
@@ -1667,12 +1676,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
             {/* Avatar + name */}
             <div className="flex flex-col items-center py-5 px-5">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ${conversation.type === 'group' ? 'bg-jade' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 overflow-hidden ${conversation.type === 'group' ? 'bg-jade' : dmOtherMember?.avatar_image_url ? 'bg-stone-200' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
                 {conversation.type === 'group'
                   ? <Users size={40} weight="fill" className="text-white" />
-                  : dmOtherMember?.avatar_icon
-                    ? <AvatarIcon name={dmOtherMember.avatar_icon} size={40} />
-                    : <span className="text-white text-2xl font-bold">{initials(title)}</span>
+                  : dmOtherMember?.avatar_image_url
+                    ? <img src={dmOtherMember.avatar_image_url} alt={title} className="w-full h-full object-cover" />
+                    : dmOtherMember?.avatar_icon
+                      ? <AvatarIcon name={dmOtherMember.avatar_icon} size={40} />
+                      : <span className="text-white text-2xl font-bold">{initials(title)}</span>
                 }
               </div>
               {renamingGroup ? (
@@ -1715,10 +1726,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <div className="space-y-1">
                   {members.map(m => (
                     <div key={m.user_id} className="flex items-center gap-3 py-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${avatarColor(m.user_id, m.avatar_color)}`}>
-                        {m.avatar_icon
-                          ? <AvatarIcon name={m.avatar_icon} size={20} />
-                          : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
+                      <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${m.avatar_image_url ? 'bg-stone-200' : `flex items-center justify-center ${avatarColor(m.user_id, m.avatar_color)}`}`}>
+                        {m.avatar_image_url
+                          ? <img src={m.avatar_image_url} alt={m.display_name} className="w-full h-full object-cover" />
+                          : m.avatar_icon
+                            ? <AvatarIcon name={m.avatar_icon} size={20} />
+                            : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
                         }
                       </div>
                       <div className="flex-1 min-w-0">

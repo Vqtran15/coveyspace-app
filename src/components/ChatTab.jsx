@@ -29,7 +29,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
     if (!groupId) return
     supabase
       .from('profiles')
-      .select('user_id, display_name, role, avatar_icon, avatar_color')
+      .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url')
       .eq('community_group_id', groupId)
       .then(({ data }) => setMembers(data ?? []))
   }, [groupId])

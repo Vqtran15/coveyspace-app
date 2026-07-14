@@ -42,13 +42,15 @@ function ReactionAvatars({ reactions }) {
       {shown.map((rx, i) => (
         <div
           key={rx.user_id}
-          className={`w-6 h-6 rounded-full border-2 border-white ${avatarColor(rx.user_id, rx.avatar_color)} flex items-center justify-center shrink-0`}
+          className={`w-6 h-6 rounded-full border-2 border-white shrink-0 overflow-hidden ${rx.avatar_image_url ? 'bg-stone-200' : `${avatarColor(rx.user_id, rx.avatar_color)} flex items-center justify-center`}`}
           style={{ marginLeft: i === 0 ? 0 : -6, zIndex: shown.length - i }}
           title={rx.display_name}
         >
-          {rx.avatar_icon
-            ? <AvatarIcon name={rx.avatar_icon} size={10} />
-            : <span className="text-white text-[8px] font-bold">{(rx.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          {rx.avatar_image_url
+            ? <img src={rx.avatar_image_url} alt="" className="w-full h-full object-cover" />
+            : rx.avatar_icon
+              ? <AvatarIcon name={rx.avatar_icon} size={10} />
+              : <span className="text-white text-[8px] font-bold">{(rx.display_name ?? '?').charAt(0).toUpperCase()}</span>
           }
         </div>
       ))}
@@ -59,7 +61,7 @@ function ReactionAvatars({ reactions }) {
   )
 }
 
-function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, onClose, onCountChange }) {
+function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, currentAvatarImageUrl, onClose, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
   const toast = useToast()
   const [requests, setRequests]           = useState([])
@@ -172,6 +174,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         display_name: displayName,
         avatar_icon: currentAvatarIcon,
         avatar_color: currentAvatarColor,
+        avatar_image_url: currentAvatarImageUrl ?? null,
         created_at: new Date().toISOString(),
       }
       setReactions(prev => ({
@@ -188,6 +191,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
           display_name:            displayName,
           avatar_icon:             currentAvatarIcon ?? null,
           avatar_color:            currentAvatarColor ?? null,
+          avatar_image_url:        currentAvatarImageUrl ?? null,
         })
         .select()
         .maybeSingle()
@@ -294,10 +298,12 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-full ${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center shrink-0`}>
-              {member.avatar_icon
-                ? <AvatarIcon name={member.avatar_icon} size={16} />
-                : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+            <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
+              {member.avatar_image_url
+                ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                : member.avatar_icon
+                  ? <AvatarIcon name={member.avatar_icon} size={16} />
+                  : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
               }
             </div>
             <h2 className="text-xl font-bold text-stone-800 truncate">{member.display_name}</h2>
@@ -313,7 +319,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
             ) : (
               <button
                 onClick={() => setAddingRequest(true)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-jade/10 hover:bg-jade/20 text-jade transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-lagoon/10 hover:bg-lagoon/20 text-lagoon transition-colors"
               >
                 <Plus size={18} weight="bold" />
               </button>
@@ -337,7 +343,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm"
                 />
               </div>
               <div>
@@ -348,7 +354,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                   onChange={e => setRequestText(e.target.value)}
                   placeholder="Write a prayer request…"
                   rows={4}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm resize-none"
                 />
               </div>
               {error && (
@@ -357,7 +363,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
               <button
                 type="submit"
                 disabled={saving || !requestText.trim()}
-                className="w-full py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-lagoon hover:bg-lagoon-600 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
               >
                 <Plus size={16} weight="bold" />
                 {saving ? 'Adding…' : 'Add Request'}
@@ -374,7 +380,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search requests…"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent"
                   />
                 </div>
               )}
@@ -424,13 +430,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         </div>
                         {/* Spine */}
                         <div className="flex flex-col items-center w-5 shrink-0">
-                          <div className="w-2.5 h-2.5 rounded-full bg-jade mt-1.5 shrink-0 z-10" />
+                          <div className="w-2.5 h-2.5 rounded-full bg-lagoon mt-1.5 shrink-0 z-10" />
                           {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                         </div>
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
                           <div
-                            className="relative bg-jade/8 rounded-xl border border-jade/20 shadow-sm px-3 py-2.5 select-none"
+                            className="relative bg-lagoon/8 rounded-xl border border-lagoon/20 shadow-sm px-3 py-2.5 select-none"
                             onClick={() => handleBubbleTap(r.id, isOwnProfile)}
                           >
                           {editingId === r.id ? (
@@ -439,13 +445,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 type="date"
                                 value={editDate}
                                 onChange={e => setEditDate(e.target.value)}
-                                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                                className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm"
                               />
                               <textarea
                                 value={editText}
                                 onChange={e => setEditText(e.target.value)}
                                 rows={3}
-                                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm resize-none"
                                 required
                                 autoFocus
                               />
@@ -460,7 +466,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 <button
                                   type="submit"
                                   disabled={!editText.trim()}
-                                  className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
+                                  className="flex-1 py-1.5 bg-lagoon hover:bg-lagoon-600 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
                                 >
                                   Save
                                 </button>
@@ -508,8 +514,8 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 )}
                               </div>
                               <div className="flex items-center gap-1.5 mb-1.5">
-                                <HandsPraying size={13} weight="fill" className="text-jade" />
-                                <span className="text-xs text-jade">Prayer request</span>
+                                <HandsPraying size={13} weight="fill" className="text-lagoon" />
+                                <span className="text-xs text-lagoon">Prayer request</span>
                               </div>
                               <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                               <ReactionAvatars reactions={requestReactions} />
@@ -555,14 +561,16 @@ function MemberCard({ member, index, onClick }) {
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`w-full text-left p-4 rounded-xl bg-white border-2 border-stone-200 hover:border-jade/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${entranceClass}`}
+      className={`w-full text-left p-4 rounded-xl bg-white border-2 border-stone-200 hover:border-lagoon/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-lagoon ${entranceClass}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full ${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center shrink-0`}>
-            {member.avatar_icon
-              ? <AvatarIcon name={member.avatar_icon} size={20} />
-              : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(member.user_id, member.avatar_color)} flex items-center justify-center`}`}>
+            {member.avatar_image_url
+              ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+              : member.avatar_icon
+                ? <AvatarIcon name={member.avatar_icon} size={20} />
+                : <span className="text-white font-bold text-sm">{(member.display_name ?? '?').charAt(0).toUpperCase()}</span>
             }
           </div>
           <div className="font-semibold text-stone-800">{member.display_name}</div>
@@ -575,7 +583,7 @@ function MemberCard({ member, index, onClick }) {
   )
 }
 
-export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey }) {
+export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey, avatarImageUrl }) {
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
   const [members, setMembers]               = useState([])
@@ -593,7 +601,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
     if (!groupId) return
     try {
       const [membersRes, requestsRes] = await Promise.all([
-        supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color').eq('community_group_id', groupId).order('display_name'),
+        supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId).order('display_name'),
         supabase.from('prayer_requests').select('id, member_user_id, created_at'),
       ])
       const profileList = membersRes.data ?? []
@@ -633,7 +641,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-lagoon border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -658,7 +666,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search members…"
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent"
           />
           {searchQuery && (
             <button
@@ -718,6 +726,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           currentUserId={userId}
           currentAvatarIcon={avatarIcon}
           currentAvatarColor={avatarColorKey}
+          currentAvatarImageUrl={avatarImageUrl}
           onClose={() => setSelectedMember(null)}
           onCountChange={handleCountChange}
         />

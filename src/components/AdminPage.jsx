@@ -1,22 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, BookOpen, CaretDown, ShareNetwork } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
-import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
-import { initials } from '../utils/format.js'
+import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import { weekOccToMode } from '../utils/schedule.js'
-
-function AvatarCircle({ icon, name, userId, colorKey }) {
-  return (
-    <div className={`w-10 h-10 rounded-full ${avatarColor(userId, colorKey)} flex items-center justify-center shrink-0`}>
-      {icon
-        ? <AvatarIcon name={icon} size={20} />
-        : <span className="text-sm font-bold text-white">{initials(name)}</span>
-      }
-    </div>
-  )
-}
 
 export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange }) {
   const navigate = useNavigate()
@@ -35,9 +23,6 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
   const [groupNameSaving, setGroupNameSaving] = useState(false)
   const [membersOpen, setMembersOpen] = useState(false)
-  const [guideUrlOpen, setGuideUrlOpen] = useState(false)
-  const [guideUrlValue, setGuideUrlValue] = useState('')
-  const [guideUrlSaving, setGuideUrlSaving] = useState(false)
   const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
 
@@ -46,7 +31,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
     supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
     supabase
       .from('profiles')
-      .select('user_id, display_name, role, avatar_icon, avatar_color')
+      .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url')
       .eq('community_group_id', groupId)
       .order('display_name')
       .then(({ data }) => {
@@ -146,24 +131,6 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       toast('Failed to save', 'error')
       onGroupSettingsChange?.(groupSettings)
     }
-  }
-
-  async function handleSaveGuideUrl(e) {
-    e.preventDefault()
-    const trimmed = guideUrlValue.trim()
-    const normalized = trimmed && !/^https?:\/\//i.test(trimmed) ? `https://${trimmed}` : trimmed
-    setGuideUrlSaving(true)
-    const { error } = await supabase
-      .from('group_settings')
-      .upsert({ group_id: groupId, guide_url: normalized || null, guide_type: 'url' }, { onConflict: 'group_id' })
-    if (error) {
-      toast('Failed to save guide URL', 'error')
-    } else {
-      onGroupSettingsChange?.(prev => ({ ...prev, guide_url: normalized || null, guide_type: 'url' }))
-      toast('Guide link saved', 'success')
-      setGuideUrlOpen(false)
-    }
-    setGuideUrlSaving(false)
   }
 
   async function handleChangeGroupName() {
@@ -356,7 +323,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 {members.map(m => (
                   <div key={m.user_id} className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} />
+                      <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-medium text-stone-700 truncate">{m.display_name}</span>
@@ -450,6 +417,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Prayer tab' },
               { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen card and birthday banner' },
               { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Home screen card' },
+              { key: 'giving_enabled',    label: 'Giving / Tithing',  desc: 'Home screen card' },
             ].map(({ key, label, desc }) => {
               const enabled = groupSettings?.[key] !== false
               return (
@@ -698,70 +666,6 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
         </section>
 
-        {/* Community Guide */}
-        <section>
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Community Guide</p>
-          {(() => {
-            const guideType = groupSettings?.guide_type
-            // File or notes types are managed via the Guide tab; show read-only state here
-            if (guideType === 'file') {
-              return (
-                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700">
-                  <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
-                  <span className="flex-1 text-left truncate text-stone-500">Uploaded file</span>
-                  <span className="text-xs text-stone-400 shrink-0">Edit in Guide tab</span>
-                </div>
-              )
-            }
-            if (guideType === 'notes') {
-              const preview = (groupSettings?.guide_content ?? '').slice(0, 40)
-              return (
-                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700">
-                  <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
-                  <span className="flex-1 text-left truncate text-stone-500">{preview ? `${preview}…` : 'Notes guide'}</span>
-                  <span className="text-xs text-stone-400 shrink-0">Edit in Guide tab</span>
-                </div>
-              )
-            }
-            // URL type (or no type yet) — keep inline editing
-            return guideUrlOpen ? (
-              <form onSubmit={handleSaveGuideUrl} className="space-y-2">
-                <input
-                  autoFocus
-                  type="text"
-                  value={guideUrlValue}
-                  onChange={e => setGuideUrlValue(e.target.value)}
-                  placeholder="https://example.com/guide"
-                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setGuideUrlOpen(false)}
-                    className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={guideUrlSaving}
-                    className="flex-1 py-2.5 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                  >
-                    {guideUrlSaving ? 'Saving…' : 'Save'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                onClick={() => { setGuideUrlValue(groupSettings?.guide_url ?? ''); setGuideUrlOpen(true) }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-              >
-                <BookOpen size={16} weight="fill" className="text-stone-400 shrink-0" />
-                <span className="flex-1 text-left truncate">{groupSettings?.guide_url ?? 'Add a guide link…'}</span>
-              </button>
-            )
-          })()}
-        </section>
       </div>
     </div>
   )
