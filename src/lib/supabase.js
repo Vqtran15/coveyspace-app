@@ -7,7 +7,30 @@ if (!url || !key) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env')
 }
 
+// Cookie-based storage so the session is shared between Safari and the
+// installed PWA standalone context on iOS (localStorage is not shared).
+const secure = location.protocol === 'https:' ? '; Secure' : ''
+const cookieStorage = {
+  getItem(key) {
+    const match = document.cookie.match(
+      new RegExp('(?:^|; )' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)')
+    )
+    return match ? decodeURIComponent(match[1]) : null
+  },
+  setItem(key, value) {
+    const expires = new Date(Date.now() + 365 * 864e5).toUTCString()
+    document.cookie = `${key}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax${secure}`
+  },
+  removeItem(key) {
+    document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax${secure}`
+  },
+}
+
 export const supabase = createClient(url, key, {
+  auth: {
+    storage: cookieStorage,
+    persistSession: true,
+  },
   global: {
     fetch: async (input, init = {}) => {
       try {
