@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { getCookie, setCookie } from '../lib/cookies.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import BirthdayBanner from './BirthdayBanner.jsx'
@@ -23,7 +24,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [confirmDeleteConv, setConfirmDeleteConv] = useState(null)
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
-  const [notifDismissed, setNotifDismissed]     = useState(() => localStorage.getItem('notifBannerDismissed') === '1')
+  const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
 
@@ -277,7 +278,7 @@ export default function ConversationList({ session, groupId, members, enterClass
               onClick={() => {
                 setNotifBannerClosing(true)
                 setTimeout(() => {
-                  localStorage.setItem('notifBannerDismissed', '1')
+                  setCookie('notifBannerDismissed')
                   setNotifDismissed(true)
                   setNotifBannerClosing(false)
                 }, 260)

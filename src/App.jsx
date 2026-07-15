@@ -6,6 +6,7 @@ import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
+import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
 import SplashScreen from './components/SplashScreen.jsx'
 
 import BirthdayBanner      from './components/BirthdayBanner.jsx'
@@ -26,19 +27,6 @@ const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
 const SettingsModal       = lazy(() => import('./components/SettingsModal.jsx'))
 const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
 
-// Cookies are shared between Safari and the PWA standalone context on iOS;
-// localStorage is not. Use these for any flag that must survive the transition.
-const _cookieSecure = location.protocol === 'https:' ? '; Secure' : ''
-function getCookie(key) {
-  return document.cookie.split('; ').some(c => c.startsWith(key + '='))
-}
-function setCookie(key) {
-  const exp = new Date(Date.now() + 365 * 864e5).toUTCString()
-  document.cookie = `${key}=1; expires=${exp}; path=/; SameSite=Lax${_cookieSecure}`
-}
-function removeCookie(key) {
-  document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax${_cookieSecure}`
-}
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -133,7 +121,7 @@ export default function App() {
   function dismissAnnouncement() {
     setAnnouncementClosing(true)
     setTimeout(() => {
-      if (announcement) localStorage.setItem(`dismissed_announcement_${announcement.id}`, '1')
+      if (announcement) setCookie(`dismissed_announcement_${announcement.id}`)
       setAnnouncement(null)
       setAnnouncementClosing(false)
     }, 260)
@@ -188,7 +176,7 @@ export default function App() {
       .then(({ data }) => {
         const a = data?.[0]
         if (!a) return
-        if (localStorage.getItem(`dismissed_announcement_${a.id}`)) return
+        if (getCookie(`dismissed_announcement_${a.id}`)) return
         setAnnouncement(a)
       })
   }, [session])
