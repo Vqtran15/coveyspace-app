@@ -86,8 +86,8 @@ export default function WelcomeSplash({
   const [avatarIcon,    setAvatarIcon]    = useState(null)
   const [colorKey,      setColorKey]      = useState(null)
   const [avatarImageUrl,setAvatarImageUrl]= useState(null)
-  const [bdMonth, setBdMonth] = useState(() => existingBirthday ? String(parseInt(existingBirthday.slice(5, 7), 10)) : '')
-  const [bdDay,   setBdDay]   = useState(() => existingBirthday ? String(parseInt(existingBirthday.slice(8, 10), 10)) : '')
+  const [bdMonth, setBdMonth] = useState(() => existingBirthday ? existingBirthday.slice(5, 7) : '')
+  const [bdDay,   setBdDay]   = useState(() => existingBirthday ? existingBirthday.slice(8, 10) : '')
 
   // ── Features (admin) ───────────────────────────────────────────────────────
   const [features, setFeatures] = useState({
