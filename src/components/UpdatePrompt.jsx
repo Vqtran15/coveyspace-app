@@ -7,6 +7,7 @@ export default function UpdatePrompt({ splashActive = false }) {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_, registration) {
       registrationRef.current = registration
+      setInterval(() => registration?.update(), 60 * 60 * 1000)
     },
   })
 
