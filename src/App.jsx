@@ -425,7 +425,14 @@ export default function App() {
       {showWelcome && (
         <WelcomeSplash
           groupName={groupName}
-          onDone={() => setShowWelcome(false)}
+          onDone={() => {
+            setShowWelcome(false)
+            supabase.from('profiles')
+              .select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, birthday, community_groups(name)')
+              .eq('user_id', session.user.id)
+              .single()
+              .then(({ data }) => { if (data) setProfile(data) })
+          }}
           isAdmin={isAdmin}
           userId={session.user.id}
           displayName={displayName}
