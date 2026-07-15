@@ -192,9 +192,11 @@ export default function App() {
         if (!data) return
         setProfile(data)
         const key = `cg_welcomed_${session.user.id}_${data.community_group_id}`
-        if (!getCookie(key)) {
+        if (!getCookie(key) && !localStorage.getItem(key)) {
           setCookie(key)
           setShowWelcome(true)
+        } else {
+          setCookie(key) // migrate existing localStorage users to cookie
         }
       })
   }, [session])
