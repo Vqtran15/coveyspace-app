@@ -63,6 +63,7 @@ export default function WelcomeSplash({
   groupName, onDone, isAdmin,
   userId, displayName, groupId,
   groupSettings, onGroupSettingsChange,
+  existingBirthday,
   onAvatarChange,
 }) {
   const [closing, close] = useModalClose(onDone)
@@ -85,8 +86,8 @@ export default function WelcomeSplash({
   const [avatarIcon,    setAvatarIcon]    = useState(null)
   const [colorKey,      setColorKey]      = useState(null)
   const [avatarImageUrl,setAvatarImageUrl]= useState(null)
-  const [bdMonth, setBdMonth] = useState('')
-  const [bdDay,   setBdDay]   = useState('')
+  const [bdMonth, setBdMonth] = useState(() => existingBirthday ? String(parseInt(existingBirthday.slice(5, 7), 10)) : '')
+  const [bdDay,   setBdDay]   = useState(() => existingBirthday ? String(parseInt(existingBirthday.slice(8, 10), 10)) : '')
 
   // ── Features (admin) ───────────────────────────────────────────────────────
   const [features, setFeatures] = useState({

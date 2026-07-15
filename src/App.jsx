@@ -26,6 +26,20 @@ const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
 const SettingsModal       = lazy(() => import('./components/SettingsModal.jsx'))
 const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
 
+// Cookies are shared between Safari and the PWA standalone context on iOS;
+// localStorage is not. Use these for any flag that must survive the transition.
+const _cookieSecure = location.protocol === 'https:' ? '; Secure' : ''
+function getCookie(key) {
+  return document.cookie.split('; ').some(c => c.startsWith(key + '='))
+}
+function setCookie(key) {
+  const exp = new Date(Date.now() + 365 * 864e5).toUTCString()
+  document.cookie = `${key}=1; expires=${exp}; path=/; SameSite=Lax${_cookieSecure}`
+}
+function removeCookie(key) {
+  document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax${_cookieSecure}`
+}
+
 const MEALS_CONFIG = {
   label: 'Meal Signup',
   Icon: ForkKnife,
@@ -183,15 +197,15 @@ export default function App() {
     if (!session) return
     supabase
       .from('profiles')
-      .select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, community_groups(name)')
+      .select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, birthday, community_groups(name)')
       .eq('user_id', session.user.id)
       .single()
       .then(({ data }) => {
         if (!data) return
         setProfile(data)
         const key = `cg_welcomed_${session.user.id}_${data.community_group_id}`
-        if (!localStorage.getItem(key)) {
-          localStorage.setItem(key, '1')
+        if (!getCookie(key)) {
+          setCookie(key)
           setShowWelcome(true)
         }
       })
@@ -430,6 +444,7 @@ export default function App() {
           groupId={groupId}
           groupSettings={groupSettings}
           onGroupSettingsChange={setGroupSettings}
+          existingBirthday={profile?.birthday ?? null}
           onAvatarChange={({ icon, color, imageUrl }) => setProfile(p => ({ ...p, avatar_icon: icon, avatar_color: color, avatar_image_url: imageUrl }))}
         />
       )}
@@ -514,7 +529,7 @@ export default function App() {
           onPushToggle={push.toggle}
           onRevisitGuide={() => {
             const key = `cg_welcomed_${session.user.id}_${groupId}`
-            localStorage.removeItem(key)
+            removeCookie(key)
             setSettingsOpen(false)
             setShowWelcome(true)
           }}
