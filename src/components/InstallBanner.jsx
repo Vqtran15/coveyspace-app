@@ -52,7 +52,7 @@ export default function InstallBanner() {
     <div
       className={`rounded-2xl border border-jade/30 bg-jade/5 p-4 mb-3 animate-stack-in transition-opacity duration-[250ms] ${closing ? 'opacity-0' : 'opacity-100'}`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-jade/15 flex items-center justify-center shrink-0">
           <DeviceMobile size={18} weight="fill" className="text-jade" />
         </div>
