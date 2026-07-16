@@ -9,6 +9,7 @@ import { useModalClose } from '../hooks/useModalClose.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { useToast } from '../lib/toast.jsx'
 import ConfettiDots from './ConfettiDots.jsx'
+import InstallBanner from './InstallBanner.jsx'
 
 
 function shortDate(dateStr) {
@@ -284,6 +285,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           </div>
         </button>
       </div>
+
+      <InstallBanner />
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {!loaded ? (
