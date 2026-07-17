@@ -95,7 +95,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
     }
   }
 
-  function openMenu(id) { setClosingMenuId(null); setOpenMenuId(id) }
+  const [menuUpward, setMenuUpward] = useState(false)
+  function openMenu(id, e) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setMenuUpward(window.innerHeight - rect.bottom < 170)
+    setClosingMenuId(null)
+    setOpenMenuId(id)
+  }
   function closeMenu() {
     setClosingMenuId(openMenuId)
     setOpenMenuId(null)
@@ -507,7 +513,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                             <>
                               <div className="absolute top-2 right-2">
                                 <button
-                                  onClick={e => { e.stopPropagation(); openMenuId === r.id ? closeMenu() : openMenu(r.id) }}
+                                  onClick={e => { e.stopPropagation(); openMenuId === r.id ? closeMenu() : openMenu(r.id, e) }}
                                   className="p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
                                 >
                                   <DotsThreeVertical size={16} weight="bold" />
@@ -515,7 +521,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 {(openMenuId === r.id || closingMenuId === r.id) && (
                                   <>
                                     <div className="fixed inset-0 z-10" onClick={closeMenu} />
-                                    <div className={`absolute right-0 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] ${isLast ? 'bottom-6 origin-bottom-right' : 'top-6 origin-top-right'} ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
+                                    <div className={`absolute right-0 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] ${menuUpward ? 'bottom-6 origin-bottom-right' : 'top-6 origin-top-right'} ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
                                       {!isOwnProfile && (
                                         <button
                                           onClick={() => { toggleReaction(r.id); closeMenu() }}
