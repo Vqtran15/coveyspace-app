@@ -508,7 +508,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 {(openMenuId === r.id || closingMenuId === r.id) && (
                                   <>
                                     <div className="fixed inset-0 z-10" onClick={closeMenu} />
-                                    <div className={`absolute right-0 top-6 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] origin-top-right ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
+                                    <div className={`absolute right-0 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] ${isLast ? 'bottom-6 origin-bottom-right' : 'top-6 origin-top-right'} ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
                                       {!isOwnProfile && (
                                         <button
                                           onClick={() => { toggleReaction(r.id); closeMenu() }}
@@ -525,7 +525,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                           className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
                                         >
                                           <CheckCircle size={15} weight={r.answered ? 'fill' : 'regular'} className={r.answered ? 'text-sage-700' : 'text-stone-400'} />
-                                          {r.answered ? 'Unmark answered' : 'Mark as answered'}
+                                          {r.answered ? 'Unmark' : 'Answered'}
                                         </button>
                                       )}
                                       <button
