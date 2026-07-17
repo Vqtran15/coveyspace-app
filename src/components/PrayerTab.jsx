@@ -95,10 +95,15 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
     }
   }
 
-  const [menuUpward, setMenuUpward] = useState(false)
+  const [menuStyle, setMenuStyle] = useState({})
   function openMenu(id, e) {
     const rect = e.currentTarget.getBoundingClientRect()
-    setMenuUpward(window.innerHeight - rect.bottom < 170)
+    const spaceBelow = window.innerHeight - rect.bottom
+    const upward = spaceBelow < 180
+    setMenuStyle(upward
+      ? { position: 'fixed', bottom: window.innerHeight - rect.top + 4, right: window.innerWidth - rect.right, transformOrigin: 'bottom right' }
+      : { position: 'fixed', top: rect.bottom + 4,                       right: window.innerWidth - rect.right, transformOrigin: 'top right' }
+    )
     setClosingMenuId(null)
     setOpenMenuId(id)
   }
@@ -520,8 +525,8 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 </button>
                                 {(openMenuId === r.id || closingMenuId === r.id) && (
                                   <>
-                                    <div className="fixed inset-0 z-10" onClick={closeMenu} />
-                                    <div className={`absolute right-0 bg-white rounded-xl shadow-lg border border-stone-200 z-20 py-1 min-w-[150px] ${menuUpward ? 'bottom-6 origin-bottom-right' : 'top-6 origin-top-right'} ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
+                                    <div className="fixed inset-0 z-[199]" onClick={closeMenu} />
+                                    <div style={menuStyle} className={`bg-white rounded-xl shadow-lg border border-stone-200 z-[200] py-1 min-w-[150px] ${closingMenuId === r.id ? 'animate-popup-out' : 'animate-popup-in'}`}>
                                       {!isOwnProfile && (
                                         <button
                                           onClick={() => { toggleReaction(r.id); closeMenu() }}
