@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass, Heart, DotsThreeVertical } from '@phosphor-icons/react'
+import { HandsPraying, X, Plus, Trash, PencilSimple, MagnifyingGlass, Heart, DotsThreeVertical, CheckCircle, Confetti } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -61,7 +61,7 @@ function ReactionAvatars({ reactions }) {
   )
 }
 
-function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, currentAvatarImageUrl, onClose, onCountChange }) {
+function PrayerModal({ member, displayName, groupId, currentUserId, currentAvatarIcon, currentAvatarColor, currentAvatarImageUrl, isAdmin, onClose, onCountChange }) {
   const [closing, close] = useModalClose(onClose)
   const toast = useToast()
   const [requests, setRequests]           = useState([])
@@ -82,6 +82,7 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
   const [confirmRequestId, setConfirmRequestId] = useState(null)
   const [openMenuId, setOpenMenuId]             = useState(null)
   const [closingMenuId, setClosingMenuId]       = useState(null)
+  const [celebratingIds, setCelebratingIds]     = useState(() => new Set())
 
   function handleBubbleTap(requestId, isOwn) {
     if (isOwn || togglingIds.has(requestId)) return
@@ -128,8 +129,20 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .then(({ data }) => {
-        setRequests(data ?? [])
+        const loaded = data ?? []
+        setRequests(loaded)
         setLoading(false)
+        const now = Date.now()
+        const recent = loaded.filter(r =>
+          r.answered && r.answered_at &&
+          now - new Date(r.answered_at).getTime() < 24 * 60 * 60 * 1000
+        )
+        recent.forEach((r, i) => {
+          setTimeout(() => {
+            setCelebratingIds(prev => new Set([...prev, r.id]))
+            setTimeout(() => setCelebratingIds(prev => { const s = new Set(prev); s.delete(r.id); return s }), 1500)
+          }, i * 400 + 600)
+        })
       })
   }, [member.user_id])
 
@@ -253,6 +266,24 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
     setReactions(prev => { const next = { ...prev }; delete next[id]; return next })
     setConfirmRequestId(null)
     onCountChange(member.user_id, -1)
+  }
+
+  async function handleToggleAnswered(req) {
+    const nowAnswered = !req.answered
+    const nowAt = nowAnswered ? new Date().toISOString() : null
+    setRequests(prev => prev.map(r => r.id === req.id ? { ...r, answered: nowAnswered, answered_at: nowAt } : r))
+    if (nowAnswered) {
+      setCelebratingIds(prev => new Set([...prev, req.id]))
+      setTimeout(() => setCelebratingIds(prev => { const s = new Set(prev); s.delete(req.id); return s }), 1500)
+    }
+    const { error: err } = await supabase
+      .from('prayer_requests')
+      .update({ answered: nowAnswered, answered_at: nowAt })
+      .eq('id', req.id)
+    if (err) {
+      toast('Failed to update', 'error')
+      setRequests(prev => prev.map(r => r.id === req.id ? { ...r, answered: req.answered, answered_at: req.answered_at } : r))
+    }
   }
 
   function startEditRequest(r) {
@@ -423,13 +454,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                         </div>
                         {/* Spine */}
                         <div className="flex flex-col items-center w-5 shrink-0">
-                          <div className="w-2.5 h-2.5 rounded-full bg-lagoon mt-1.5 shrink-0 z-10" />
+                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 ${r.answered ? 'bg-sage-700' : 'bg-lagoon'}`} />
                           {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                         </div>
                         {/* Content */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
                           <div
-                            className="relative bg-lagoon/8 rounded-xl border border-lagoon/20 shadow-sm px-3 py-2.5 select-none"
+                            className={`relative rounded-xl border shadow-sm px-3 py-2.5 select-none ${r.answered ? 'bg-sage/8 border-sage/20' : 'bg-lagoon/8 border-lagoon/20'}`}
                             onClick={() => handleBubbleTap(r.id, isOwnProfile)}
                           >
                           {editingId === r.id ? (
@@ -488,6 +519,15 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                           {hasReacted ? 'Undo prayer' : 'Pray for'}
                                         </button>
                                       )}
+                                      {(isOwnProfile || isAdmin) && (
+                                        <button
+                                          onClick={() => { handleToggleAnswered(r); closeMenu() }}
+                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                        >
+                                          <CheckCircle size={15} weight={r.answered ? 'fill' : 'regular'} className={r.answered ? 'text-sage-700' : 'text-stone-400'} />
+                                          {r.answered ? 'Unmark answered' : 'Mark as answered'}
+                                        </button>
+                                      )}
                                       <button
                                         onClick={() => { startEditRequest(r); closeMenu() }}
                                         className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
@@ -507,9 +547,14 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                 )}
                               </div>
                               <div className="flex items-center gap-1.5 mb-1.5">
-                                <HandsPraying size={13} weight="fill" className="text-lagoon" />
-                                <span className="text-xs text-lagoon">Prayer request</span>
+                                <HandsPraying size={13} weight="fill" className={r.answered ? 'text-sage-700' : 'text-lagoon'} />
+                                <span className={`text-xs ${r.answered ? 'text-sage-700' : 'text-lagoon'}`}>Prayer request</span>
                               </div>
+                              {r.answered && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sage-700 bg-sage/15 px-2 py-0.5 rounded-full mb-1.5">
+                                  <CheckCircle size={10} weight="fill" /> Answered
+                                </span>
+                              )}
                               <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                               <ReactionAvatars reactions={requestReactions} />
                               {confirmRequestId === r.id && (
@@ -527,6 +572,11 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                   >
                                     Delete
                                   </button>
+                                </div>
+                              )}
+                              {celebratingIds.has(r.id) && (
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl overflow-hidden">
+                                  <Confetti size={56} weight="fill" className="text-sage-700 animate-celebration" />
                                 </div>
                               )}
                             </>
@@ -713,6 +763,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           currentAvatarIcon={avatarIcon}
           currentAvatarColor={avatarColorKey}
           currentAvatarImageUrl={avatarImageUrl}
+          isAdmin={isAdmin}
           onClose={() => setSelectedMember(null)}
           onCountChange={handleCountChange}
         />
