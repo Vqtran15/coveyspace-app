@@ -132,17 +132,24 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
         const loaded = data ?? []
         setRequests(loaded)
         setLoading(false)
+        const seenKey = 'prayer_celebrated_ids'
+        const seen = new Set(JSON.parse(localStorage.getItem(seenKey) ?? '[]'))
         const now = Date.now()
-        const recent = loaded.filter(r =>
+        const unseen = loaded.filter(r =>
           r.answered && r.answered_at &&
-          now - new Date(r.answered_at).getTime() < 24 * 60 * 60 * 1000
+          now - new Date(r.answered_at).getTime() < 24 * 60 * 60 * 1000 &&
+          !seen.has(r.id)
         )
-        recent.forEach((r, i) => {
-          setTimeout(() => {
-            setCelebratingIds(prev => new Set([...prev, r.id]))
-            setTimeout(() => setCelebratingIds(prev => { const s = new Set(prev); s.delete(r.id); return s }), 1500)
-          }, i * 400 + 600)
-        })
+        if (unseen.length) {
+          const next = [...seen, ...unseen.map(r => r.id)]
+          localStorage.setItem(seenKey, JSON.stringify(next))
+          unseen.forEach((r, i) => {
+            setTimeout(() => {
+              setCelebratingIds(prev => new Set([...prev, r.id]))
+              setTimeout(() => setCelebratingIds(prev => { const s = new Set(prev); s.delete(r.id); return s }), 1500)
+            }, i * 400 + 600)
+          })
+        }
       })
   }, [member.user_id])
 
