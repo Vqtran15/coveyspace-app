@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, MagnifyingGlass, X } from '@phosphor-icons/react'
+import { HandsPraying, MagnifyingGlass, X, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
@@ -52,9 +52,10 @@ function MemberCard({ member, index, onClick }) {
           <AvatarCircle size="md" icon={member.avatar_icon} colorKey={member.avatar_color} userId={member.user_id} name={member.display_name} imageUrl={member.avatar_image_url} />
           <div className="font-semibold text-stone-800">{member.display_name}</div>
         </div>
-        {lastUpdated && (
-          <span className="text-xs text-stone-400 shrink-0">{lastUpdated}</span>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {lastUpdated && <span className="text-xs text-stone-400">{lastUpdated}</span>}
+          <CaretRight size={14} weight="bold" className="text-stone-300" />
+        </div>
       </div>
     </button>
   )
@@ -261,13 +262,13 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             onClick={() => setViewMode('members')}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
-            Members
+            By Member
           </button>
           <button
             onClick={() => setViewMode('feed')}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
-            Requests
+            Feed
           </button>
         </div>
       )}
