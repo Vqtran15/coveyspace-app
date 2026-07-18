@@ -311,7 +311,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           ) : (
             <button
               onClick={() => { setAddFormExiting(false); setAddingRequest(true) }}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-lagoon/10 hover:bg-lagoon/20 text-lagoon transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-jade/10 hover:bg-jade/20 text-jade transition-colors"
               aria-label="Add prayer request"
             >
               <Plus size={18} weight="bold" />
@@ -329,7 +329,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm"
+                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
                 />
               </div>
               <div>
@@ -349,7 +349,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
               <button
                 type="submit"
                 disabled={saving || !requestText.trim()}
-                className={`w-full py-2.5 text-white rounded-xl font-medium transition-all text-sm flex items-center justify-center gap-2 ${requestText.trim() ? 'bg-lagoon-600 hover:bg-lagoon-700 shadow-sm' : 'bg-lagoon/40 cursor-not-allowed'}`}
+                className={`w-full py-2.5 text-white rounded-xl font-medium transition-all text-sm flex items-center justify-center gap-2 ${requestText.trim() ? 'bg-jade hover:bg-jade-700 shadow-sm' : 'bg-jade/40 cursor-not-allowed'}`}
               >
                 <Plus size={16} weight="bold" />
                 {saving ? 'Adding…' : 'Add Request'}
@@ -366,7 +366,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search requests…"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
                   />
                 </div>
               )}
@@ -414,13 +414,13 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                         </div>
                         {/* Spine */}
                         <div className="flex flex-col items-center w-5 shrink-0">
-                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 ${r.answered ? 'bg-sage-700' : 'bg-lagoon'}`} />
+                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 ${r.answered ? 'bg-sage-700' : 'bg-jade'}`} />
                           {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                         </div>
                         {/* Content bubble */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-4' : 'pb-5'}`}>
                           <div
-                            className={`relative rounded-xl border shadow-sm px-3 py-2.5 select-none ${r.answered ? 'bg-sage/8 border-sage/20' : 'bg-lagoon/8 border-lagoon/20'}`}
+                            className={`relative rounded-xl border shadow-sm px-3 py-2.5 select-none ${r.answered ? 'bg-sage/8 border-sage/20' : 'bg-jade/8 border-jade/20'}`}
                             onClick={() => !isOwnProfile && handleBubbleTap(r.id)}
                           >
                             {editingId === r.id ? (
@@ -429,7 +429,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                   type="date"
                                   value={editDate}
                                   onChange={e => setEditDate(e.target.value)}
-                                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm"
+                                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
                                 />
                                 <textarea
                                   value={editText}
@@ -450,7 +450,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                   <button
                                     type="submit"
                                     disabled={!editText.trim()}
-                                    className="flex-1 py-1.5 bg-lagoon hover:bg-lagoon-600 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
+                                    className="flex-1 py-1.5 bg-jade hover:bg-jade-700 text-white rounded-lg text-xs font-medium disabled:opacity-40 transition-colors"
                                   >
                                     Save
                                   </button>
@@ -466,8 +466,8 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                   <DotsThreeVertical size={16} weight="bold" />
                                 </button>
                                 <div className="flex items-center gap-1.5 mb-1.5">
-                                  <HandsPraying size={13} weight="fill" className={r.answered ? 'text-sage-700' : 'text-lagoon'} />
-                                  <span className={`text-xs ${r.answered ? 'text-sage-700' : 'text-lagoon'}`}>Prayer request</span>
+                                  <HandsPraying size={13} weight="fill" className={r.answered ? 'text-sage-700' : 'text-jade'} />
+                                  <span className={`text-xs ${r.answered ? 'text-sage-700' : 'text-jade'}`}>Prayer request</span>
                                 </div>
                                 {r.answered && (
                                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sage-700 bg-sage/15 px-2 py-0.5 rounded-full mb-1.5">
