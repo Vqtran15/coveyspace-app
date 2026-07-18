@@ -41,14 +41,27 @@ export default function UpdatePrompt({ splashActive = false }) {
       className="fixed inset-x-0 top-0 z-[60] animate-toast-in"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <button
-        onClick={() => updateServiceWorker(true)}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-jade text-white active:bg-jade-700 transition-colors"
-      >
-        <ArrowClockwise size={16} weight="bold" className="shrink-0" />
-        <span className="text-sm font-medium flex-1 text-left">Update available</span>
-        <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
-      </button>
+      <div className="relative bg-jade">
+        <button
+          onClick={() => updateServiceWorker(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-jade-700 transition-colors"
+        >
+          <ArrowClockwise size={16} weight="bold" className="shrink-0" />
+          <span className="text-sm font-medium flex-1 text-left">Update available</span>
+          <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
+        </button>
+
+        {/* Wavy bottom edge */}
+        <svg
+          viewBox="0 0 1440 20"
+          preserveAspectRatio="none"
+          className="absolute bottom-0 left-0 w-full translate-y-full fill-jade pointer-events-none"
+          style={{ height: '20px' }}
+          aria-hidden="true"
+        >
+          <path d="M0,0 L1440,0 C1350,18 1200,4 1080,14 C900,20 720,4 540,18 C360,20 180,4 0,14 Z" />
+        </svg>
+      </div>
     </div>
   )
 }
