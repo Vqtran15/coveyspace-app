@@ -62,7 +62,13 @@ export default function UpdatePrompt({ splashActive = false }) {
     >
       <div className="relative bg-jade">
         <button
-          onClick={() => updateServiceWorker(true)}
+          onClick={() => {
+            updateServiceWorker(true)
+            // vite-plugin-pwa's updateServiceWorker doesn't call window.location.reload()
+            // directly — it waits for Workbox's 'controlling' event, which can silently
+            // fail on iOS PWA. Force the reload after 800ms as a guaranteed fallback.
+            setTimeout(() => window.location.reload(), 800)
+          }}
           className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-jade-700 transition-colors"
         >
           <ArrowClockwise size={16} weight="bold" className="shrink-0" />
