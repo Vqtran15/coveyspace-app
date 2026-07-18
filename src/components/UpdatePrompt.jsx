@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { ArrowClockwise } from '@phosphor-icons/react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export default function UpdatePrompt({ splashActive = false }) {
@@ -33,5 +34,21 @@ export default function UpdatePrompt({ splashActive = false }) {
     if (needRefresh && splashActive) updateServiceWorker(true)
   }, [needRefresh, splashActive])
 
-  return null
+  if (!needRefresh || splashActive) return null
+
+  return (
+    <div
+      className="fixed inset-x-0 top-0 z-[60] animate-toast-in"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <button
+        onClick={() => updateServiceWorker(true)}
+        className="w-full flex items-center gap-3 px-4 py-3 bg-jade text-white active:bg-jade-700 transition-colors"
+      >
+        <ArrowClockwise size={16} weight="bold" className="shrink-0" />
+        <span className="text-sm font-medium flex-1 text-left">Update available</span>
+        <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
+      </button>
+    </div>
+  )
 }
