@@ -25,8 +25,11 @@ function formatLastUpdated(requests) {
 }
 
 function formatRelativeDate(dateStr) {
-  const d = new Date(dateStr)
-  const diffDays = Math.floor((Date.now() - d) / 86400000)
+  const d    = new Date(dateStr)
+  const now  = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const dDay  = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const diffDays = Math.round((today - dDay) / 86400000)
   if (diffDays === 0) return 'Today'
   if (diffDays === 1) return 'Yesterday'
   if (diffDays < 7)  return `${diffDays}d ago`
