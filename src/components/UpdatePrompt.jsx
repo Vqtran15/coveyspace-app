@@ -34,7 +34,7 @@ export default function UpdatePrompt({ splashActive = false }) {
     if (needRefresh && splashActive) updateServiceWorker(true)
   }, [needRefresh, splashActive])
 
-  if (false && (!needRefresh || splashActive)) return null // TEMP: force-show for staging preview
+  if (!needRefresh || splashActive) return null
 
   return (
     <div
