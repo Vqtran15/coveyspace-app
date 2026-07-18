@@ -14,7 +14,7 @@ export function getUpcomingBirthdays(birthdays, today = new Date()) {
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   return birthdays
     .map(b => ({ ...b, daysUntil: daysUntilNext(b.birthday, todayStart) }))
-    .filter(b => b.daysUntil <= 14)
+    .filter(b => b.daysUntil <= 3)
     .sort((a, b) => a.daysUntil - b.daysUntil)
 }
 
