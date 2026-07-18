@@ -537,15 +537,13 @@ function PrayerModal({ member, displayName, groupId, currentUserId, currentAvata
                                           {hasReacted ? 'Undo prayer' : 'Pray for'}
                                         </button>
                                       )}
-                                      {(isOwnProfile || isAdmin) && (
-                                        <button
-                                          onClick={() => { handleToggleAnswered(r); closeMenu() }}
-                                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-                                        >
-                                          <CheckCircle size={15} weight={r.answered ? 'fill' : 'regular'} className={r.answered ? 'text-sage-700' : 'text-stone-400'} />
-                                          {r.answered ? 'Unmark' : 'Answered'}
-                                        </button>
-                                      )}
+                                      <button
+                                        onClick={() => { handleToggleAnswered(r); closeMenu() }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                      >
+                                        <CheckCircle size={15} weight={r.answered ? 'fill' : 'regular'} className={r.answered ? 'text-sage-700' : 'text-stone-400'} />
+                                        {r.answered ? 'Unmark' : 'Answered'}
+                                      </button>
                                       <button
                                         onClick={() => { startEditRequest(r); closeMenu() }}
                                         className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
