@@ -242,6 +242,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       : []
     let primary = 'No upcoming birthdays'
     if (next) {
+      // 14 days is intentional — wider than the banner (3 days) so the home card
+      // previews upcoming birthdays well in advance without triggering the banner.
       const upcomingSoon = sorted.filter(b => b.days <= 14)
       if (upcomingSoon.length > 1) {
         primary = `${upcomingSoon.length} birthdays coming up!`

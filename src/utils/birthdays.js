@@ -14,7 +14,7 @@ export function getUpcomingBirthdays(birthdays, today = new Date()) {
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   return birthdays
     .map(b => ({ ...b, daysUntil: daysUntilNext(b.birthday, todayStart) }))
-    .filter(b => b.daysUntil <= 3)
+    .filter(b => b.daysUntil <= 3) // 3 days is intentional — banner is urgent-only; home card uses 14 days separately
     .sort((a, b) => a.daysUntil - b.daysUntil)
 }
 
