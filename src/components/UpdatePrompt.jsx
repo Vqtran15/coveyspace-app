@@ -51,15 +51,15 @@ export default function UpdatePrompt({ splashActive = false }) {
           <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
         </button>
 
-        {/* Wavy bottom edge */}
+        {/* Paint drip bottom edge */}
         <svg
-          viewBox="0 0 1440 20"
+          viewBox="0 0 1440 72"
           preserveAspectRatio="none"
           className="absolute bottom-0 left-0 w-full translate-y-full fill-jade pointer-events-none"
-          style={{ height: '20px' }}
+          style={{ height: '72px' }}
           aria-hidden="true"
         >
-          <path d="M0,0 L1440,0 C1350,18 1200,4 1080,14 C900,20 720,4 540,18 C360,20 180,4 0,14 Z" />
+          <path d="M0,0 L1440,0 C1410,4 1370,6 1320,5 C1290,4 1270,4 1250,46 C1230,62 1200,68 1170,64 C1145,60 1130,8 1100,5 C1060,2 1000,4 940,5 C905,6 890,5 872,42 C854,58 836,64 810,60 C788,56 776,8 748,5 C710,2 650,4 580,5 C545,6 525,5 508,52 C490,66 465,72 435,66 C410,60 398,8 368,5 C332,2 268,4 210,6 C180,8 162,5 144,40 C130,54 116,60 94,56 C74,52 66,8 42,5 L0,5 Z" />
         </svg>
       </div>
     </div>
