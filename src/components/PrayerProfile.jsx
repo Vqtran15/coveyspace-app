@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { HandsPraying, Plus, Trash, PencilSimple, MagnifyingGlass, Heart, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical } from '@phosphor-icons/react'
+import { HandsPraying, Plus, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
@@ -225,12 +225,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     setNewId(data.id)
     clearTimeout(newIdTimerRef.current)
     newIdTimerRef.current = setTimeout(() => setNewId(null), 500)
-    setRequestText('')
-    setDate(new Date().toISOString().split('T')[0])
     setSaving(false)
-    setAddingRequest(false)
     haptic()
     onCountChange(member.user_id, +1)
+    setAddFormExiting(true)
+    setTimeout(() => {
+      setAddingRequest(false)
+      setAddFormExiting(false)
+      setRequestText('')
+      setDate(new Date().toISOString().split('T')[0])
+    }, 200)
   }
 
   async function handleDeleteRequest(id) {
@@ -358,7 +362,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           ) : (
             <div className="px-4 pt-4 space-y-3">
               {/* Search */}
-              {!loading && animDone && requests.length > 1 && (
+              {!loading && requests.length > 1 && (
                 <div className="relative">
                   <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
                   <input
@@ -537,7 +541,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   disabled={togglingIds.has(actionSheetReq.id)}
                   className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-40"
                 >
-                  <Heart size={22} weight={sheetHasReacted ? 'fill' : 'regular'} className={sheetHasReacted ? 'text-coral' : 'text-stone-400'} />
+                  <HandsPraying size={22} weight={sheetHasReacted ? 'fill' : 'regular'} className={sheetHasReacted ? 'text-jade' : 'text-stone-400'} />
                   <span className="text-base text-stone-800 font-medium">{sheetHasReacted ? 'Undo prayer' : 'Pray for'}</span>
                 </button>
               )}

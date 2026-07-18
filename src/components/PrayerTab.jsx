@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -120,24 +120,33 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   const [searchQuery, setSearchQuery]   = useState('')
   const [viewMode, setViewMode]         = useState('members')
   const [togglingIds, setTogglingIds]   = useState(new Set())
+  const hasAutoOpenedRef = useRef(false)
 
   useEffect(() => {
+    if (hasAutoOpenedRef.current) return
     if (!featuredUserId || members.length === 0 || selectedMember) return
     const featured = members.find(m => m.user_id === featuredUserId)
-    if (featured) setSelectedMember(featured)
+    if (featured) {
+      hasAutoOpenedRef.current = true
+      setSelectedMember(featured)
+    }
   }, [members, featuredUserId])
 
   async function load() {
     if (!groupId) return
     try {
-      const [membersRes, requestsRes, reactionsRes] = await Promise.all([
+      const [membersRes, reactionsRes] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId).order('display_name'),
-        supabase.from('prayer_requests').select('id, member_user_id, created_at, date, request, answered').order('created_at', { ascending: false }),
         supabase.from('prayer_reactions').select('id, prayer_request_id, user_id, display_name, avatar_icon, avatar_color, avatar_image_url, prayer_request_owner_id, community_group_id').eq('community_group_id', groupId),
       ])
       const profileList  = membersRes.data  ?? []
-      const requestList  = requestsRes.data ?? []
       const reactionList = reactionsRes.data ?? []
+
+      const memberIds = profileList.map(m => m.user_id)
+      const requestsRes = memberIds.length
+        ? await supabase.from('prayer_requests').select('id, member_user_id, created_at, date, request, answered, answered_at').in('member_user_id', memberIds).order('created_at', { ascending: false })
+        : { data: [] }
+      const requestList = requestsRes.data ?? []
 
       const reactionMap = {}
       for (const rx of reactionList) {
@@ -161,11 +170,10 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   useEffect(() => { if (groupId) load() }, [groupId])
 
   function handleCountChange(memberId, delta) {
+    if (delta <= 0) return  // deletions refresh on close via load()
     setMembers(prev => prev.map(m => {
       if (m.user_id !== memberId) return m
-      const updated = delta > 0
-        ? [...(m.prayer_requests ?? []), { id: 'temp', created_at: new Date().toISOString() }]
-        : (m.prayer_requests ?? []).slice(1)
+      const updated = [...(m.prayer_requests ?? []), { id: 'temp', created_at: new Date().toISOString() }]
       return { ...m, prayer_requests: updated }
     }))
   }
