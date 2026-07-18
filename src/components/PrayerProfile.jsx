@@ -63,6 +63,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
   const [celebratingIds, setCelebratingIds] = useState(() => new Set())
   const [actionSheetReq, setActionSheetReq] = useState(null)
   const [sheetClosing, setSheetClosing]     = useState(false)
+  const [addFormExiting, setAddFormExiting] = useState(false)
 
   const isOwnProfile = member.user_id === currentUserId
 
@@ -198,10 +199,14 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
   }
 
   function cancelAdd() {
-    setAddingRequest(false)
-    setRequestText('')
-    setDate(new Date().toISOString().split('T')[0])
-    setError(null)
+    setAddFormExiting(true)
+    setTimeout(() => {
+      setAddingRequest(false)
+      setAddFormExiting(false)
+      setRequestText('')
+      setDate(new Date().toISOString().split('T')[0])
+      setError(null)
+    }, 200)
   }
 
   async function handleAdd(e) {
@@ -305,7 +310,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             </button>
           ) : (
             <button
-              onClick={() => setAddingRequest(true)}
+              onClick={() => { setAddFormExiting(false); setAddingRequest(true) }}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-lagoon/10 hover:bg-lagoon/20 text-lagoon transition-colors"
               aria-label="Add prayer request"
             >
@@ -315,9 +320,9 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+        <div className="flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: 'max(5rem, env(safe-area-inset-bottom))' }}>
           {addingRequest ? (
-            <form onSubmit={handleAdd} className="space-y-3 px-4 pt-4 pb-5">
+            <form onSubmit={handleAdd} className={`space-y-3 px-4 pt-4 pb-5 ${addFormExiting ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
               <div>
                 <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
                 <input
@@ -344,7 +349,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
               <button
                 type="submit"
                 disabled={saving || !requestText.trim()}
-                className="w-full py-2.5 bg-lagoon hover:bg-lagoon-600 text-white rounded-xl font-medium disabled:opacity-40 transition-colors text-sm flex items-center justify-center gap-2"
+                className={`w-full py-2.5 text-white rounded-xl font-medium transition-all text-sm flex items-center justify-center gap-2 ${requestText.trim() ? 'bg-lagoon-600 hover:bg-lagoon-700 shadow-sm' : 'bg-lagoon/40 cursor-not-allowed'}`}
               >
                 <Plus size={16} weight="bold" />
                 {saving ? 'Adding…' : 'Add Request'}
@@ -413,7 +418,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                           {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                         </div>
                         {/* Content bubble */}
-                        <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-1' : 'pb-5'}`}>
+                        <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-4' : 'pb-5'}`}>
                           <div
                             className={`relative rounded-xl border shadow-sm px-3 py-2.5 select-none ${r.answered ? 'bg-sage/8 border-sage/20' : 'bg-lagoon/8 border-lagoon/20'}`}
                             onClick={() => !isOwnProfile && handleBubbleTap(r.id)}
