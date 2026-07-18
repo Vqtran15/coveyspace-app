@@ -3,13 +3,8 @@ import { ArrowClockwise } from '@phosphor-icons/react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export default function UpdatePrompt({ splashActive = false }) {
-  const registrationRef  = useRef(null)
-  const needRefreshRef   = useRef(false)
-  // Track whether a SW was already controlling the page on mount.
-  // controllerchange fires on first install too (clientsClaim), so we guard
-  // against an unwanted reload by only reloading on actual updates.
-  const hadControllerRef = useRef(typeof navigator !== 'undefined' && !!navigator.serviceWorker?.controller)
-
+  const registrationRef = useRef(null)
+  const needRefreshRef  = useRef(false)
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_, registration) {
       registrationRef.current = registration
@@ -18,20 +13,6 @@ export default function UpdatePrompt({ splashActive = false }) {
   })
 
   useEffect(() => { needRefreshRef.current = needRefresh }, [needRefresh])
-
-  // Native controllerchange listener — more reliable than Workbox's 'controlling'
-  // event on iOS PWA (which silently skips the reload when isUpdate is falsy).
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return
-    function onControllerChange() {
-      if (hadControllerRef.current) {
-        window.location.reload()
-      }
-      hadControllerRef.current = true
-    }
-    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
-    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
-  }, [])
 
   // Check for updates whenever the app comes back to the foreground.
   // If a new SW is already waiting, apply it immediately at that natural moment.
@@ -62,13 +43,7 @@ export default function UpdatePrompt({ splashActive = false }) {
     >
       <div className="relative bg-jade">
         <button
-          onClick={() => {
-            updateServiceWorker(true)
-            // vite-plugin-pwa's updateServiceWorker doesn't call window.location.reload()
-            // directly — it waits for Workbox's 'controlling' event, which can silently
-            // fail on iOS PWA. Force the reload after 800ms as a guaranteed fallback.
-            setTimeout(() => window.location.reload(), 800)
-          }}
+          onClick={() => updateServiceWorker(true)}
           className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-jade-700 transition-colors"
         >
           <ArrowClockwise size={16} weight="bold" className="shrink-0" />
@@ -76,15 +51,15 @@ export default function UpdatePrompt({ splashActive = false }) {
           <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
         </button>
 
-        {/* Paint drip bottom edge */}
+        {/* Wavy bottom edge */}
         <svg
-          viewBox="0 0 1440 86"
+          viewBox="0 0 1440 20"
           preserveAspectRatio="none"
           className="absolute bottom-0 left-0 w-full translate-y-full fill-jade pointer-events-none"
-          style={{ height: '86px' }}
+          style={{ height: '20px' }}
           aria-hidden="true"
         >
-          <path d="M0,0 L1440,0 C1420,4 1360,6 1310,5 C1295,4 1282,5 1270,28 C1264,46 1248,56 1220,56 C1192,56 1176,46 1170,28 C1158,5 1145,4 1130,5 C1090,3 1020,4 980,5 C960,5 945,5 930,28 C918,52 908,70 896,74 C882,82 860,84 840,84 C820,84 798,82 784,74 C772,70 762,52 750,28 C735,5 720,5 700,5 C670,3 580,4 540,5 C520,5 510,5 500,18 C495,26 480,30 460,30 C440,30 424,26 420,18 C410,5 400,5 385,5 C350,3 280,4 230,5 C215,4 202,5 200,18 C196,36 186,58 172,68 C164,76 154,78 140,78 C126,78 116,76 108,68 C94,58 84,36 80,18 C78,5 65,4 50,5 C30,4 10,5 0,5 Z" />
+          <path d="M0,0 L1440,0 C1350,18 1200,4 1080,14 C900,20 720,4 540,18 C360,20 180,4 0,14 Z" />
         </svg>
       </div>
     </div>

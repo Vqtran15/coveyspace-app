@@ -3,10 +3,6 @@ import { precacheAndRoute } from 'workbox-precaching'
 
 precacheAndRoute(self.__WB_MANIFEST)
 
-// Skip waiting immediately on install so updates are never blocked by an
-// existing SW. clientsClaim() then takes over all open clients, which fires
-// controllerchange in UpdatePrompt and triggers a page reload.
-self.addEventListener('install', () => self.skipWaiting())
 clientsClaim()
 
 self.addEventListener('message', event => {
