@@ -57,7 +57,8 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
   const [newId, setNewId]                   = useState(null)
   const newIdTimerRef                       = useRef(null)
   const lastTapRef                          = useRef({ id: null, time: 0 })
-  const [confirmRequestId, setConfirmRequestId] = useState(null)
+  const [deleteSheetReq, setDeleteSheetReq]     = useState(null)
+  const [deleteSheetClosing, setDeleteSheetClosing] = useState(false)
   const [reactions, setReactions]           = useState({})
   const [togglingIds, setTogglingIds]       = useState(new Set())
   const [celebratingIds, setCelebratingIds] = useState(() => new Set())
@@ -84,6 +85,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     setTimeout(() => {
       setActionSheetReq(null)
       setSheetClosing(false)
+      callback?.(captured)
+    }, 260)
+  }
+
+  function closeDeleteSheet(callback) {
+    const captured = deleteSheetReq
+    setDeleteSheetClosing(true)
+    setTimeout(() => {
+      setDeleteSheetReq(null)
+      setDeleteSheetClosing(false)
       callback?.(captured)
     }, 260)
   }
@@ -242,7 +253,6 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     if (err) { toast('Failed to delete: ' + err.message, 'error'); return }
     setRequests(prev => prev.filter(r => r.id !== id))
     setReactions(prev => { const next = { ...prev }; delete next[id]; return next })
-    setConfirmRequestId(null)
     onCountChange(member.user_id, -1)
   }
 
@@ -316,7 +326,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             <button
               onClick={() => { setAddFormExiting(false); setAddingRequest(true) }}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-jade/10 hover:bg-jade/20 text-jade transition-colors"
-              aria-label="Add prayer request"
+              aria-label={isOwnProfile ? 'Add prayer request' : `Add request for ${member.display_name}`}
             >
               <Plus size={18} weight="bold" />
             </button>
@@ -328,15 +338,6 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           {addingRequest ? (
             <form onSubmit={handleAdd} className={`space-y-3 px-4 pt-4 pb-5 ${addFormExiting ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
               <div>
-                <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
-                />
-              </div>
-              <div>
                 <label className="block text-xs font-medium text-stone-500 mb-1">Prayer Request</label>
                 <textarea
                   autoFocus
@@ -344,7 +345,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   onChange={e => setRequestText(e.target.value)}
                   placeholder="Write a prayer request…"
                   rows={4}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm resize-none"
+                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
                 />
               </div>
               {error && (
@@ -439,7 +449,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                   value={editText}
                                   onChange={e => setEditText(e.target.value)}
                                   rows={3}
-                                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-lagoon focus:border-transparent text-sm resize-none"
+                                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
                                   required
                                   autoFocus
                                 />
@@ -480,23 +490,6 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                 )}
                                 <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                                 <ReactionAvatars reactions={requestReactions} />
-                                {confirmRequestId === r.id && (
-                                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-stone-200">
-                                    <span className="text-xs text-stone-500 flex-1">Delete this request?</span>
-                                    <button
-                                      onClick={() => setConfirmRequestId(null)}
-                                      className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteRequest(r.id)}
-                                      className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
                                 {celebratingIds.has(r.id) && (
                                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl overflow-hidden">
                                     <Confetti size={56} weight="fill" className="text-sage-700 animate-celebration" />
@@ -560,7 +553,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                 <span className="text-base text-stone-800 font-medium">Edit</span>
               </button>
               <button
-                onClick={() => closeActionSheet(req => setConfirmRequestId(req.id))}
+                onClick={() => closeActionSheet(req => { setDeleteSheetClosing(false); setDeleteSheetReq(req) })}
                 className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-red-50 active:bg-red-100 transition-colors"
               >
                 <Trash size={22} className="text-red-400" />
@@ -571,6 +564,42 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             <div className="px-4 pt-1 pb-2">
               <button
                 onClick={() => closeActionSheet()}
+                className="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 active:bg-stone-300 transition-colors text-stone-600 font-semibold text-base"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete confirmation sheet */}
+      {deleteSheetReq && (
+        <div
+          className={`fixed inset-0 z-50 flex items-end bg-black/50 ${deleteSheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+          onClick={() => closeDeleteSheet()}
+        >
+          <div
+            className={`bg-white rounded-t-2xl w-full ${deleteSheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
+            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-5 pt-4 pb-3 border-b border-stone-100">
+              <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
+              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Delete request?</p>
+              <p className="text-sm text-stone-700 line-clamp-2">{deleteSheetReq.request}</p>
+            </div>
+            <div className="py-1">
+              <button
+                onClick={() => closeDeleteSheet(req => handleDeleteRequest(req.id))}
+                className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-red-50 active:bg-red-100 transition-colors"
+              >
+                <Trash size={22} className="text-red-400" />
+                <span className="text-base text-red-600 font-medium">Delete forever</span>
+              </button>
+            </div>
+            <div className="px-4 pt-1 pb-2">
+              <button
+                onClick={() => closeDeleteSheet()}
                 className="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 active:bg-stone-300 transition-colors text-stone-600 font-semibold text-base"
               >
                 Cancel
