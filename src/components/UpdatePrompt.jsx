@@ -3,8 +3,13 @@ import { ArrowClockwise } from '@phosphor-icons/react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export default function UpdatePrompt({ splashActive = false }) {
-  const registrationRef = useRef(null)
-  const needRefreshRef  = useRef(false)
+  const registrationRef  = useRef(null)
+  const needRefreshRef   = useRef(false)
+  // Track whether a SW was already controlling the page on mount.
+  // controllerchange fires on first install too (clientsClaim), so we guard
+  // against an unwanted reload by only reloading on actual updates.
+  const hadControllerRef = useRef(typeof navigator !== 'undefined' && !!navigator.serviceWorker?.controller)
+
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_, registration) {
       registrationRef.current = registration
@@ -13,6 +18,20 @@ export default function UpdatePrompt({ splashActive = false }) {
   })
 
   useEffect(() => { needRefreshRef.current = needRefresh }, [needRefresh])
+
+  // Native controllerchange listener — more reliable than Workbox's 'controlling'
+  // event on iOS PWA (which silently skips the reload when isUpdate is falsy).
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    function onControllerChange() {
+      if (hadControllerRef.current) {
+        window.location.reload()
+      }
+      hadControllerRef.current = true
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+  }, [])
 
   // Check for updates whenever the app comes back to the foreground.
   // If a new SW is already waiting, apply it immediately at that natural moment.
