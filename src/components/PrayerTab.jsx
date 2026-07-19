@@ -262,13 +262,13 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         <div className="flex bg-stone-100 rounded-xl p-1 mb-4">
           <button
             onClick={() => setViewMode('members')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             By Member
           </button>
           <button
             onClick={() => setViewMode('feed')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             Feed
           </button>
