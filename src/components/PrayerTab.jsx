@@ -4,7 +4,7 @@ import { HandsPraying, MagnifyingGlass, X, CaretRight } from '@phosphor-icons/re
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
-import { AvatarCircle } from '../lib/avatarIcons.jsx'
+import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { haptic } from '../lib/haptic.js'
 import PrayerProfile from './PrayerProfile.jsx'
 
@@ -61,6 +61,33 @@ function MemberCard({ member, index, onClick }) {
   )
 }
 
+function ReactionAvatars({ reactions }) {
+  if (!reactions?.length) return null
+  const MAX = 5
+  const shown = reactions.slice(0, MAX)
+  const extra = reactions.length - MAX
+  return (
+    <div className="flex items-center">
+      {shown.map((rx, i) => (
+        <div
+          key={rx.user_id}
+          className={`w-6 h-6 rounded-full border-2 border-white shrink-0 overflow-hidden ${rx.avatar_image_url ? 'bg-stone-200' : `${avatarColor(rx.user_id, rx.avatar_color)} flex items-center justify-center`}`}
+          style={{ marginLeft: i === 0 ? 0 : -6, zIndex: shown.length - i }}
+          title={rx.display_name}
+        >
+          {rx.avatar_image_url
+            ? <img src={rx.avatar_image_url} alt="" className="w-full h-full object-cover" />
+            : rx.avatar_icon
+              ? <AvatarIcon name={rx.avatar_icon} size={10} />
+              : <span className="text-white text-[8px] font-bold">{(rx.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          }
+        </div>
+      ))}
+      {extra > 0 && <span className="text-xs text-stone-400 ml-1.5">+{extra}</span>}
+    </div>
+  )
+}
+
 function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, toggling, onPray, onOpen, index }) {
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
   const reactionCount = reactions?.length ?? 0
@@ -80,31 +107,25 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
         <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{req.request}</p>
       </button>
 
-      <div className="flex justify-end mt-3 pt-2.5 border-t border-stone-100">
-        {isOwnRequest ? (
-          reactionCount > 0 && (
-            <span className="flex items-center gap-1.5 text-sm text-stone-500">
-              <HandsPraying size={16} weight="fill" className="text-jade" />
-              <span className="font-medium text-jade">{reactionCount}</span>
-              <span>{reactionCount === 1 ? 'person praying' : 'people praying'}</span>
-            </span>
-          )
-        ) : (
-          <button
-            onClick={onPray}
-            disabled={toggling}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-              userReacted
-                ? 'bg-jade/10 text-jade'
-                : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
-            }`}
-          >
-            <HandsPraying size={16} weight={userReacted ? 'fill' : 'regular'} />
-            {reactionCount > 0 && <span>{reactionCount}</span>}
-            <span>{userReacted ? 'Praying' : 'Pray'}</span>
-          </button>
-        )}
-      </div>
+      {(reactionCount > 0 || !isOwnRequest) && (
+        <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-stone-100">
+          <ReactionAvatars reactions={reactions} />
+          {!isOwnRequest && (
+            <button
+              onClick={onPray}
+              disabled={toggling}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                userReacted
+                  ? 'bg-jade/10 text-jade'
+                  : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
+              }`}
+            >
+              <HandsPraying size={16} weight={userReacted ? 'fill' : 'regular'} />
+              <span>{userReacted ? 'Praying' : 'Pray'}</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
