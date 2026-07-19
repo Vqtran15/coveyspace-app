@@ -55,29 +55,18 @@ export default function UpdatePrompt({ splashActive = false }) {
       className="fixed inset-x-0 top-0 z-[60] animate-toast-in"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="relative bg-jade">
+      <div className="bg-jade rounded-b-3xl">
         <button
           onClick={() => {
             updateServiceWorker(true)
             setTimeout(() => window.location.reload(), 500)
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-jade-700 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-jade-700 transition-colors rounded-b-3xl"
         >
           <ArrowClockwise size={16} weight="bold" className="shrink-0" />
           <span className="text-sm font-medium flex-1 text-left">Update available</span>
           <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
         </button>
-
-        {/* Wavy bottom edge - 4 cycles */}
-        <svg
-          viewBox="0 0 1440 36"
-          preserveAspectRatio="none"
-          className="absolute bottom-0 left-0 w-full translate-y-full fill-jade pointer-events-none"
-          style={{ height: '36px' }}
-          aria-hidden="true"
-        >
-          <path d="M0,0 L1440,0 C1390,30 1150,4 1080,16 C1010,32 760,4 720,20 C680,34 430,4 360,16 C290,30 50,2 0,0 Z" />
-        </svg>
       </div>
     </div>
   )
