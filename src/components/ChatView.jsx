@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react'
-import EmojiPicker from 'emoji-picker-react'
+import { useState, useEffect, useRef, useLayoutEffect, useMemo, lazy, Suspense } from 'react'
+const EmojiPicker = lazy(() => import('emoji-picker-react'))
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
   MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
@@ -1479,14 +1479,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         )}
         {(showEmojiPicker || emojiPickerClosing) && (
           <div className={`mb-2 ${emojiPickerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
-            <EmojiPicker
-              onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-              width="100%"
-              height={350}
-              searchPlaceholder="Search emojis…"
-              previewConfig={{ showPreview: false }}
-              autoFocusSearch={false}
-            />
+            <Suspense fallback={null}>
+              <EmojiPicker
+                onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
+                width="100%"
+                height={350}
+                searchPlaceholder="Search emojis…"
+                previewConfig={{ showPreview: false }}
+                autoFocusSearch={false}
+              />
+            </Suspense>
           </div>
         )}
         <div className="flex items-end gap-2">
@@ -1619,14 +1621,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         <>
           <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
           <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
-            <EmojiPicker
-              onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
-              width="100%"
-              height={350}
-              searchPlaceholder="Search emojis…"
-              previewConfig={{ showPreview: false }}
-              autoFocusSearch={false}
-            />
+            <Suspense fallback={null}>
+              <EmojiPicker
+                onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
+                width="100%"
+                height={350}
+                searchPlaceholder="Search emojis…"
+                previewConfig={{ showPreview: false }}
+                autoFocusSearch={false}
+              />
+            </Suspense>
           </div>
         </>
       )}
