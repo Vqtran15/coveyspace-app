@@ -108,7 +108,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
       </button>
 
       {(reactionCount > 0 || !isOwnRequest) && (
-        <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-stone-100">
+        <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
           <ReactionAvatars reactions={reactions} />
           {!isOwnRequest && (
             <button
