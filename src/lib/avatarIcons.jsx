@@ -10,18 +10,17 @@ import {
   // Food & drink (Cherries kept — in use)
   Coffee, Cookie, IceCream, Cherries, Pizza, Hamburger, Flame, Campfire,
   // Faith & heart
-  HandsPraying, Heart, Peace, Handshake, HandHeart, Infinity,
+  HandsPraying, Heart, Handshake, HandHeart,
   // Achievement
   Star,
   // Creative
-  MusicNote, Guitar, Book, Palette, Camera, MagicWand,
-  PianoKeys, Microphone, VinylRecord,
+  MusicNote, Guitar, Camera,
   // Activity & misc
   Smiley, Sailboat,
   // Travel
-  Mountains, Tent, Boat,
+  Mountains, Tent,
   // Fun & misc
-  Balloon, Confetti, Popcorn, Anchor,
+  Balloon, Anchor,
 } from '@phosphor-icons/react'
 
 export { avatarColor, AVATAR_COLOR_OPTIONS, AvatarCircle } from './avatarDisplay.jsx'
@@ -68,33 +67,22 @@ export const AVATAR_ICON_LIST = [
   // Faith & heart
   { name: 'HandsPraying',  Icon: HandsPraying },
   { name: 'Heart',         Icon: Heart },
-  { name: 'Peace',         Icon: Peace },
   { name: 'Handshake',     Icon: Handshake },
   { name: 'HandHeart',     Icon: HandHeart },
-  { name: 'Infinity',      Icon: Infinity },
   // Achievement
   { name: 'Star',          Icon: Star },
   // Creative
   { name: 'MusicNote',     Icon: MusicNote },
   { name: 'Guitar',        Icon: Guitar },
-  { name: 'Book',          Icon: Book },
-  { name: 'Palette',       Icon: Palette },
   { name: 'Camera',        Icon: Camera },
-  { name: 'MagicWand',     Icon: MagicWand },
-  { name: 'PianoKeys',     Icon: PianoKeys },
-  { name: 'Microphone',    Icon: Microphone },
-  { name: 'VinylRecord',   Icon: VinylRecord },
   // Activity & misc
   { name: 'Smiley',        Icon: Smiley },
   { name: 'Sailboat',      Icon: Sailboat },
   // Travel
   { name: 'Mountains',     Icon: Mountains },
   { name: 'Tent',          Icon: Tent },
-  { name: 'Boat',          Icon: Boat },
   // Fun & misc
   { name: 'Balloon',       Icon: Balloon },
-  { name: 'Confetti',      Icon: Confetti },
-  { name: 'Popcorn',       Icon: Popcorn },
   { name: 'Anchor',        Icon: Anchor },
 ]
 
