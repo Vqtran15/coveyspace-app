@@ -76,7 +76,7 @@ export default function UpdatePrompt({ splashActive = false }) {
           style={{ height: '36px' }}
           aria-hidden="true"
         >
-          <path d="M0,0 L1440,0 C1390,30 1150,4 1080,16 C1010,32 760,4 720,20 C680,34 430,4 360,16 C290,30 50,6 0,18 Z" />
+          <path d="M0,0 L1440,0 C1390,30 1150,4 1080,16 C1010,32 760,4 720,20 C680,34 430,4 360,16 C290,30 50,2 0,0 Z" />
         </svg>
       </div>
     </div>
