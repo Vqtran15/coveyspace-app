@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent horizontal overflow from slide animations without creating a scroll
+   container. overflow-x:hidden on a non-root div computes overflow-y to auto,
+   turning it into a scroll container that breaks position:fixed on iOS Safari. */
+body {
+  overflow-x: hidden;
+}
+
 /* Hide emoji picker category shortcut bar */
 #epr-category-nav-id {
   display: none !important;
