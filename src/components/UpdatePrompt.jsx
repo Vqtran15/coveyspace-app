@@ -68,7 +68,7 @@ export default function UpdatePrompt({ splashActive = false }) {
           <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
         </button>
 
-        {/* Wavy bottom edge */}
+        {/* Wavy bottom edge - 4 cycles */}
         <svg
           viewBox="0 0 1440 36"
           preserveAspectRatio="none"
