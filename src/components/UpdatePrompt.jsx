@@ -70,13 +70,13 @@ export default function UpdatePrompt({ splashActive = false }) {
 
         {/* Wavy bottom edge */}
         <svg
-          viewBox="0 0 1440 20"
+          viewBox="0 0 1440 36"
           preserveAspectRatio="none"
           className="absolute bottom-0 left-0 w-full translate-y-full fill-jade pointer-events-none"
-          style={{ height: '20px' }}
+          style={{ height: '36px' }}
           aria-hidden="true"
         >
-          <path d="M0,0 L1440,0 C1350,18 1200,4 1080,14 C900,20 720,4 540,18 C360,20 180,4 0,14 Z" />
+          <path d="M0,0 L1440,0 C1390,30 1150,4 1080,16 C1010,32 760,4 720,20 C680,34 430,4 360,16 C290,30 50,6 0,18 Z" />
         </svg>
       </div>
     </div>
