@@ -255,12 +255,6 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
-        <p className="text-stone-500 mt-1 text-sm">
-          {!loading && (members.length === 0
-            ? 'No members yet'
-            : `${members.length} member${members.length !== 1 ? 's' : ''}`
-          )}
-        </p>
       </div>
 
       {/* View toggle */}
