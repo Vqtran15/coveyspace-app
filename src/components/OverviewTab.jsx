@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix } from '@phosphor-icons/react'
-import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
+import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
 import { daysUntilNext } from '../utils/birthdays.js'
