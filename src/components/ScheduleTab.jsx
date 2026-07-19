@@ -64,13 +64,13 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
           </div>
         </div>
         {mealsEnabled && servicesEnabled && (
-          <div className="flex gap-2">
+          <div className="flex bg-stone-100 rounded-xl p-1">
             <button
               onClick={() => switchTo('meals')}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
                 segment === 'meals'
                   ? 'bg-jade text-white shadow-sm'
-                  : 'bg-stone-100 text-stone-500'
+                  : 'text-stone-500 hover:text-stone-700'
               }`}
             >
               <ForkKnife size={17} weight="fill" />
@@ -78,10 +78,10 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
             </button>
             <button
               onClick={() => switchTo('services')}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
                 segment === 'services'
                   ? 'bg-jade text-white shadow-sm'
-                  : 'bg-stone-100 text-stone-500'
+                  : 'text-stone-500 hover:text-stone-700'
               }`}
             >
               <HandHeart size={17} weight="fill" />
