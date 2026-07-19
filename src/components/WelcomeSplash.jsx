@@ -466,7 +466,7 @@ export default function WelcomeSplash({
                 <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Which day do you meet?</p>
-                    <div className="flex gap-1">
+                    <div className="flex bg-stone-100 rounded-xl p-1">
                       {DOW_LABELS.map((d, i) => {
                         const current = mealDow ?? []
                         const selected = current.includes(i)
@@ -479,8 +479,8 @@ export default function WelcomeSplash({
                                 : [...current, i].sort((a, b) => a - b)
                               setMealDow(next.length > 0 ? next : null)
                             }}
-                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                              selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                              selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                             }`}
                           >
                             {d}
@@ -491,14 +491,14 @@ export default function WelcomeSplash({
                   </div>
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">How often?</p>
-                    <div className="flex gap-1.5">
+                    <div className="flex bg-stone-100 rounded-xl p-1">
                       {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
                         <button
                           key={value}
                           type="button"
                           onClick={() => setMealFreqMode(value)}
-                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            mealFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                            mealFreqMode === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                           }`}
                         >
                           {label}
@@ -509,14 +509,14 @@ export default function WelcomeSplash({
                   {mealFreqMode === 'biweekly' && (
                     <div>
                       <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
-                      <div className="flex gap-1.5">
+                      <div className="flex bg-stone-100 rounded-xl p-1">
                         {[{ label: '1st & 3rd', value: 'odd' }, { label: '2nd & 4th', value: 'even' }].map(({ label, value }) => (
                           <button
                             key={value}
                             type="button"
                             onClick={() => setMealBiweeklyPat(value)}
-                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                              mealBiweeklyPat === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                              mealBiweeklyPat === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                             }`}
                           >
                             {label}
@@ -528,7 +528,7 @@ export default function WelcomeSplash({
                   {mealFreqMode === 'custom' && (
                     <div>
                       <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
-                      <div className="flex gap-1">
+                      <div className="flex bg-stone-100 rounded-xl p-1">
                         {['1st', '2nd', '3rd', '4th', '5th'].map((label, idx) => {
                           const n = idx + 1
                           const selected = mealCustomWeeks.includes(n)
@@ -541,8 +541,8 @@ export default function WelcomeSplash({
                                   ? prev.length > 1 ? prev.filter(x => x !== n) : prev
                                   : [...prev, n].sort((a, b) => a - b)
                               )}
-                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                               }`}
                             >
                               {label}
@@ -588,13 +588,13 @@ export default function WelcomeSplash({
                 <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Auto-schedule monthly rotations?</p>
-                    <div className="flex gap-2">
+                    <div className="flex bg-stone-100 rounded-xl p-1">
                       {[{ label: 'Yes', val: true }, { label: 'No', val: false }].map(({ label, val }) => (
                         <button
                           key={String(val)}
                           onClick={() => setServiceAutofill(val)}
-                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            serviceAutofill === val ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                            serviceAutofill === val ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                           }`}
                         >
                           {label}
@@ -606,7 +606,7 @@ export default function WelcomeSplash({
                     <>
                       <div>
                         <p className="text-xs text-stone-400 font-medium mb-2">Which day does service meet?</p>
-                        <div className="flex gap-1">
+                        <div className="flex bg-stone-100 rounded-xl p-1">
                           {DOW_LABELS.map((d, i) => {
                             const current = serviceDow ?? []
                             const selected = current.includes(i)
@@ -619,8 +619,8 @@ export default function WelcomeSplash({
                                     : [...current, i].sort((a, b) => a - b)
                                   setServiceDow(next.length > 0 ? next : null)
                                 }}
-                                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                  selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                  selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                 }`}
                               >
                                 {d}
@@ -631,14 +631,14 @@ export default function WelcomeSplash({
                       </div>
                       <div>
                         <p className="text-xs text-stone-400 font-medium mb-2">How often?</p>
-                        <div className="flex gap-1.5">
+                        <div className="flex bg-stone-100 rounded-xl p-1">
                           {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
                             <button
                               key={value}
                               type="button"
                               onClick={() => setServiceFreqMode(value)}
-                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                serviceFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                                serviceFreqMode === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                               }`}
                             >
                               {label}
@@ -649,14 +649,14 @@ export default function WelcomeSplash({
                       {serviceFreqMode === 'biweekly' && (
                         <div>
                           <p className="text-xs text-stone-400 font-medium mb-2">Which pattern?</p>
-                          <div className="flex gap-1.5">
+                          <div className="flex bg-stone-100 rounded-xl p-1">
                             {[{ label: '1st & 3rd', value: 'odd' }, { label: '2nd & 4th', value: 'even' }].map(({ label, value }) => (
                               <button
                                 key={value}
                                 type="button"
                                 onClick={() => setServiceBiweeklyPat(value)}
-                                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                  serviceBiweeklyPat === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                                  serviceBiweeklyPat === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                 }`}
                               >
                                 {label}
@@ -668,7 +668,7 @@ export default function WelcomeSplash({
                       {serviceFreqMode === 'custom' && (
                         <div>
                           <p className="text-xs text-stone-400 font-medium mb-2">Which weeks of the month?</p>
-                          <div className="flex gap-1">
+                          <div className="flex bg-stone-100 rounded-xl p-1">
                             {['1st', '2nd', '3rd', '4th', '5th'].map((label, idx) => {
                               const n = idx + 1
                               const selected = serviceCustomWeeks.includes(n)
@@ -681,8 +681,8 @@ export default function WelcomeSplash({
                                       ? prev.length > 1 ? prev.filter(x => x !== n) : prev
                                       : [...prev, n].sort((a, b) => a - b)
                                   )}
-                                  className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                    selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                    selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                   }`}
                                 >
                                   {label}
