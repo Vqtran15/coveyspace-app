@@ -5,6 +5,7 @@ const CATEGORY_CHIP = {
   Main:    'bg-coral/15 text-coral-700',
   Side:    'bg-lagoon/15 text-lagoon-700',
   Dessert: 'bg-amber-50 text-amber-600',
+  Other:   'bg-stone-100 text-stone-500',
 }
 
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, category, signup, revealKey, isNew = false, onClick }) {

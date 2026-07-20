@@ -199,10 +199,12 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   const selectedCategory     = selectedSlot != null ? (page.slot_categories?.[selectedSlot - 1] ?? '') : ''
 
   // Build category groups — only show headers if at least one slot has a category
+  // 'Other' and uncategorized ('') are merged into the same trailing bucket
   const hasAnyCategory = slots.some(n => page.slot_categories?.[n - 1])
   const groups = {}
   slots.forEach(n => {
-    const cat = page.slot_categories?.[n - 1] || ''
+    const rawCat = page.slot_categories?.[n - 1] || ''
+    const cat = rawCat === 'Other' ? '' : rawCat
     ;(groups[cat] ??= []).push(n)
   })
   const orderedGroups = hasAnyCategory

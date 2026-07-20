@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
-const CATEGORIES = ['Main', 'Side', 'Dessert']
+const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
 
 const CATEGORY_STYLES = {
   Main:    'bg-coral/15 text-coral-700 border-coral/30',
   Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
   Dessert: 'bg-amber-50 text-amber-600 border-amber-200',
+  Other:   'bg-stone-100 text-stone-600 border-stone-300',
 }
 
 export default function SignupModal({ slot, itemNoun, dishName, category: initialCategory = '', signup, onClose, onSave, onRemove, onDeleteItem }) {
@@ -64,11 +65,11 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">
