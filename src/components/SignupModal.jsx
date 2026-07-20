@@ -3,6 +3,13 @@ import { useModalClose } from '../hooks/useModalClose.js'
 
 const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
 
+const CATEGORY_STYLES = {
+  Main:    'bg-coral/15 text-coral-700 border-coral/30',
+  Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
+  Dessert: 'bg-amber-50 text-amber-600 border-amber-200',
+  Other:   'bg-stone-100 text-stone-600 border-stone-300',
+}
+
 export default function SignupModal({ slot, itemNoun, dishName, category: initialCategory = '', signup, onClose, onSave, onRemove, onDeleteItem }) {
   const [closing, close] = useModalClose(onClose)
   const overlayRef = useRef(null)
@@ -107,29 +114,30 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
           </button>
         </div>
 
-        <div className="mx-6 mb-4 flex gap-3 items-end">
-          <div className="flex-1 min-w-0">
-            <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
-            <input
-              type="text"
-              value={dish}
-              onChange={e => setDish(e.target.value)}
-              placeholder={`Add a ${itemNoun.toLowerCase()}`}
-              className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-            />
-          </div>
-          <div className="shrink-0 w-32">
-            <label className="block text-xs font-medium text-stone-400 uppercase tracking-wide mb-1">Category</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="w-full border border-stone-300 rounded-lg px-2 py-2 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
-            >
-              <option value="">None</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+        <div className="mx-6 mb-4">
+          <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
+          <input
+            type="text"
+            value={dish}
+            onChange={e => setDish(e.target.value)}
+            placeholder={`Add a ${itemNoun.toLowerCase()}`}
+            className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          />
+          <div className="flex gap-2 mt-2">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategory(prev => prev === cat ? '' : cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                  category === cat
+                    ? CATEGORY_STYLES[cat]
+                    : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
 
