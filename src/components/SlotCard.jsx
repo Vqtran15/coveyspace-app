@@ -39,7 +39,7 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
       {filled && <span className="absolute left-0 top-0 h-full w-1 bg-jade" />}
 
       {chipStyle && (
-        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold mb-1 ${chipStyle}`}>
+        <span className={`absolute top-2.5 right-2.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${chipStyle}`}>
           {category}
         </span>
       )}
