@@ -48,7 +48,7 @@ export default function ConversationList({ session, groupId, members, enterClass
         if (groupConv) {
           const draftKey = `draft:${groupConv.id}`
           if (!localStorage.getItem(draftKey)) {
-            localStorage.setItem(draftKey, "Hi all, I'm here! 👋")
+            localStorage.setItem(draftKey, "Hey everyone, just joined! 👋")
           }
           onSelect(groupConv)
         }
