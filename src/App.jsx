@@ -166,6 +166,11 @@ export default function App() {
   }, [authLoading, splashMinDone])
 
   useEffect(() => {
+    if (!session?.user?.id) return
+    supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('user_id', session.user.id)
+  }, [session?.user?.id])
+
+  useEffect(() => {
     if (!session) return
     supabase
       .from('announcements')
