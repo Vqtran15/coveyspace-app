@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
@@ -8,6 +8,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   const { state: locationState } = useLocation()
   const navigateRouter = useNavigate()
   const [autoOpenGroupChat, setAutoOpenGroupChat] = useState(!!locationState?.openGroupChat)
+  const consumeAutoOpen = useCallback(() => setAutoOpenGroupChat(false), [])
   const [activeConv, setActiveConv]           = useState(null)
   const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
   const [members, setMembers]                 = useState([])
@@ -91,7 +92,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       members={members}
       enterClass={listClass}
       autoOpenGroupChat={autoOpenGroupChat}
-      onAutoOpenConsumed={() => setAutoOpenGroupChat(false)}
+      onAutoOpenConsumed={consumeAutoOpen}
       onSelect={openConv}
       onRead={onRead}
       onOpenSettings={onOpenSettings}

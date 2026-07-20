@@ -69,6 +69,8 @@ export default function WelcomeSplash({
 }) {
   const [closing, close] = useModalClose(onDone)
   const navigate = useNavigate()
+  const navTimerRef = useRef(null)
+  useEffect(() => () => clearTimeout(navTimerRef.current), [])
 
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -185,15 +187,15 @@ export default function WelcomeSplash({
   }, [isAdmin, groupId, step])
 
   useEffect(() => {
-    if (!isAdmin || !groupId) return
+    if (!isAdmin || !groupId || step !== 'features') return
     localStorage.setItem(`cg_onb_features_${groupId}`, JSON.stringify(features))
-  }, [isAdmin, groupId, features])
+  }, [isAdmin, groupId, step, features])
 
   useEffect(() => {
-    if (!isAdmin || !groupId) return
+    if (!isAdmin || !groupId || step !== 'setup') return
     const draft = { mealDow, mealFreqMode, mealBiweeklyPat, mealCustomWeeks, mealNames, serviceDow, serviceFreqMode, serviceBiweeklyPat, serviceCustomWeeks, serviceAutofill }
     localStorage.setItem(`cg_onb_setup_${groupId}`, JSON.stringify(draft))
-  }, [isAdmin, groupId, mealDow, mealFreqMode, mealBiweeklyPat, mealCustomWeeks, mealNames, serviceDow, serviceFreqMode, serviceBiweeklyPat, serviceCustomWeeks, serviceAutofill])
+  }, [isAdmin, groupId, step, mealDow, mealFreqMode, mealBiweeklyPat, mealCustomWeeks, mealNames, serviceDow, serviceFreqMode, serviceBiweeklyPat, serviceCustomWeeks, serviceAutofill])
 
   // Context-aware CTA for members at the end of onboarding
   const memberCta = !isAdmin
@@ -205,7 +207,7 @@ export default function WelcomeSplash({
 
   function closeAndNavigate(path, state) {
     close()
-    if (path) setTimeout(() => navigate(path, state ? { state } : undefined), 260)
+    if (path) navTimerRef.current = setTimeout(() => navigate(path, state ? { state } : undefined), 260)
   }
 
   useEffect(() => {
