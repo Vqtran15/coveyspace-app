@@ -205,7 +205,7 @@ export default function WelcomeSplash({
 
   function closeAndNavigate(path) {
     close()
-    if (path) setTimeout(() => navigate(path), 380)
+    if (path) setTimeout(() => navigate(path), 260)
   }
 
   useEffect(() => {
