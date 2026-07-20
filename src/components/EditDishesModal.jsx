@@ -3,13 +3,6 @@ import { useModalClose } from '../hooks/useModalClose.js'
 
 const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
 
-const CATEGORY_STYLES = {
-  Main:    'bg-coral/15 text-coral-700 border-coral/30',
-  Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
-  Dessert: 'bg-amber-50 text-amber-600 border-amber-200',
-  Other:   'bg-stone-100 text-stone-600 border-stone-300',
-}
-
 export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete }) {
   const [closing, close] = useModalClose(onClose)
   const [title, setTitle]   = useState(page.title)
@@ -47,7 +40,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
   }
 
   function updateCategory(key, value) {
-    setEntries(prev => prev.map(e => e.key === key ? { ...e, category: e.category === value ? '' : value } : e))
+    setEntries(prev => prev.map(e => e.key === key ? { ...e, category: value } : e))
   }
 
   function removeEntry(key) {
@@ -171,22 +164,16 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                         Signed up: {signup.name}
                       </p>
                     )}
-                    <div className="flex gap-1 mt-1.5">
+                    <select
+                      value={entry.category}
+                      onChange={e => updateCategory(entry.key, e.target.value)}
+                      className="mt-1.5 w-full border border-stone-200 rounded-lg px-2 py-1 text-xs text-stone-600 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+                    >
+                      <option value="">No category</option>
                       {CATEGORIES.map(cat => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => updateCategory(entry.key, cat)}
-                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
-                            entry.category === cat
-                              ? CATEGORY_STYLES[cat]
-                              : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
-                          }`}
-                        >
-                          {cat}
-                        </button>
+                        <option key={cat} value={cat}>{cat}</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
                   <button
                     type="button"

@@ -3,16 +3,10 @@ import { useModalClose } from '../hooks/useModalClose.js'
 
 const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
 
-const CATEGORY_STYLES = {
-  Main:    'bg-coral/15 text-coral-700 border-coral/30',
-  Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
-  Dessert: 'bg-amber-50 text-amber-600 border-amber-200',
-  Other:   'bg-stone-100 text-stone-600 border-stone-300',
-}
-
 export default function SignupModal({ slot, itemNoun, dishName, category: initialCategory = '', signup, onClose, onSave, onRemove, onDeleteItem }) {
   const [closing, close] = useModalClose(onClose)
   const overlayRef = useRef(null)
+  const modalRef   = useRef(null)
   const [name, setName]     = useState(signup?.name ?? '')
   const [dish, setDish]     = useState(dishName ?? '')
   const [category, setCategory] = useState(initialCategory)
@@ -25,12 +19,24 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
   const [deletingItem, setDeletingItem]           = useState(false)
 
   useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
     function update() {
-      if (!overlayRef.current) return
-      const offset = window.innerHeight - vv.height - vv.offsetTop
-      overlayRef.current.style.paddingBottom = offset > 0 ? `${offset}px` : ''
+      if (!overlayRef.current || !modalRef.current) return
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      if (offset > 0) {
+        overlayRef.current.style.paddingBottom = `${offset}px`
+        modalRef.current.style.maxHeight = `${vv.height - 16}px`
+      } else {
+        overlayRef.current.style.paddingBottom = ''
+        modalRef.current.style.maxHeight = ''
+      }
     }
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
@@ -39,10 +45,6 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
       vv.removeEventListener('scroll', update)
     }
   }, [])
-
-  function toggleCategory(cat) {
-    setCategory(prev => prev === cat ? '' : cat)
-  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -87,6 +89,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
       onClick={close}
     >
       <div
+        ref={modalRef}
         className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
@@ -104,7 +107,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
           </button>
         </div>
 
-        <div className="mx-6 mb-4 flex gap-3 items-start">
+        <div className="mx-6 mb-4 flex gap-3 items-end">
           <div className="flex-1 min-w-0">
             <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
             <input
@@ -116,24 +119,18 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
               className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
             />
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 w-32">
             <label className="block text-xs font-medium text-stone-400 uppercase tracking-wide mb-1">Category</label>
-            <div className="grid grid-cols-2 gap-1">
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="w-full border border-stone-300 rounded-lg px-2 py-2 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+            >
+              <option value="">None</option>
               {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => toggleCategory(cat)}
-                  className={`px-2 py-1 rounded-full text-[11px] font-medium border transition-all text-center ${
-                    category === cat
-                      ? CATEGORY_STYLES[cat]
-                      : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
-                  }`}
-                >
-                  {cat}
-                </button>
+                <option key={cat} value={cat}>{cat}</option>
               ))}
-            </div>
+            </select>
           </div>
         </div>
 
