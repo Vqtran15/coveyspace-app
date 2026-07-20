@@ -4,6 +4,7 @@ import {
   HandsPraying, Cake, CalendarCheck, Link, ShareNetwork, Bell,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { nextScheduledDate, weekOccToMode } from '../utils/schedule.js'
@@ -67,6 +68,7 @@ export default function WelcomeSplash({
   onAvatarChange,
 }) {
   const [closing, close] = useModalClose(onDone)
+  const navigate = useNavigate()
 
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -80,7 +82,15 @@ export default function WelcomeSplash({
       : ['welcome', 'personalize', 'tour', ...(isStandalone ? [] : ['install'])]
   ).current
 
-  const [step, setStep] = useState('welcome')
+  const [step, setStep] = useState(() => {
+    if (isAdmin && groupId) {
+      try {
+        const s = localStorage.getItem(`cg_onb_step_${groupId}`)
+        if (s === 'features' || s === 'setup') return s
+      } catch {}
+    }
+    return 'welcome'
+  })
 
   // ── Personalize ────────────────────────────────────────────────────────────
   const [avatarIcon,    setAvatarIcon]    = useState(null)
@@ -90,27 +100,44 @@ export default function WelcomeSplash({
   const [bdDay,   setBdDay]   = useState(() => existingBirthday ? existingBirthday.slice(8, 10) : '')
 
   // ── Features (admin) ───────────────────────────────────────────────────────
-  const [features, setFeatures] = useState({
-    meals_enabled:     groupSettings?.meals_enabled     !== false,
-    services_enabled:  groupSettings?.services_enabled  !== false,
-    chat_enabled:      groupSettings?.chat_enabled      !== false,
-    prayer_enabled:    groupSettings?.prayer_enabled    !== false,
-    birthdays_enabled: groupSettings?.birthdays_enabled !== false,
-    guide_enabled:     groupSettings?.guide_enabled     !== false,
+  const [features, setFeatures] = useState(() => {
+    if (isAdmin && groupId) {
+      try {
+        const s = localStorage.getItem(`cg_onb_features_${groupId}`)
+        if (s) return JSON.parse(s)
+      } catch {}
+    }
+    return {
+      meals_enabled:     groupSettings?.meals_enabled     !== false,
+      services_enabled:  groupSettings?.services_enabled  !== false,
+      chat_enabled:      groupSettings?.chat_enabled      !== false,
+      prayer_enabled:    groupSettings?.prayer_enabled    !== false,
+      birthdays_enabled: groupSettings?.birthdays_enabled !== false,
+      guide_enabled:     groupSettings?.guide_enabled     !== false,
+    }
   })
   const [savingFeatures, setSavingFeatures] = useState(false)
 
   // ── Setup (admin) ──────────────────────────────────────────────────────────
-  const [mealDow,           setMealDow]           = useState(groupSettings?.meal_day_of_week ?? null)
-  const [mealFreqMode,      setMealFreqMode]      = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
-  const [mealBiweeklyPat,   setMealBiweeklyPat]   = useState(() => weekOccToPat(groupSettings?.meal_week_occurrences))
-  const [mealCustomWeeks,   setMealCustomWeeks]   = useState(groupSettings?.meal_week_occurrences ?? [1, 2, 3, 4, 5])
-  const [mealNames,         setMealNames]         = useState(['', ''])
-  const [serviceDow,        setServiceDow]        = useState(groupSettings?.service_day_of_week ?? null)
-  const [serviceFreqMode,   setServiceFreqMode]   = useState(() => weekOccToMode(groupSettings?.service_week_occurrences ?? [1]))
-  const [serviceBiweeklyPat,setServiceBiweeklyPat]= useState(() => weekOccToPat(groupSettings?.service_week_occurrences ?? [1]))
-  const [serviceCustomWeeks,setServiceCustomWeeks]= useState(groupSettings?.service_week_occurrences ?? [1])
-  const [serviceAutofill,   setServiceAutofill]   = useState(groupSettings?.service_autofill ?? false)
+  const _setupDraft = (() => {
+    if (isAdmin && groupId) {
+      try {
+        const s = localStorage.getItem(`cg_onb_setup_${groupId}`)
+        return s ? JSON.parse(s) : null
+      } catch {}
+    }
+    return null
+  })()
+  const [mealDow,           setMealDow]           = useState(_setupDraft?.mealDow           ?? groupSettings?.meal_day_of_week ?? null)
+  const [mealFreqMode,      setMealFreqMode]      = useState(_setupDraft?.mealFreqMode      ?? weekOccToMode(groupSettings?.meal_week_occurrences))
+  const [mealBiweeklyPat,   setMealBiweeklyPat]   = useState(_setupDraft?.mealBiweeklyPat   ?? weekOccToPat(groupSettings?.meal_week_occurrences))
+  const [mealCustomWeeks,   setMealCustomWeeks]   = useState(_setupDraft?.mealCustomWeeks   ?? groupSettings?.meal_week_occurrences ?? [1, 2, 3, 4, 5])
+  const [mealNames,         setMealNames]         = useState(_setupDraft?.mealNames         ?? ['', ''])
+  const [serviceDow,        setServiceDow]        = useState(_setupDraft?.serviceDow        ?? groupSettings?.service_day_of_week ?? null)
+  const [serviceFreqMode,   setServiceFreqMode]   = useState(_setupDraft?.serviceFreqMode   ?? weekOccToMode(groupSettings?.service_week_occurrences ?? [1]))
+  const [serviceBiweeklyPat,setServiceBiweeklyPat]= useState(_setupDraft?.serviceBiweeklyPat ?? weekOccToPat(groupSettings?.service_week_occurrences ?? [1]))
+  const [serviceCustomWeeks,setServiceCustomWeeks]= useState(_setupDraft?.serviceCustomWeeks ?? groupSettings?.service_week_occurrences ?? [1])
+  const [serviceAutofill,   setServiceAutofill]   = useState(_setupDraft?.serviceAutofill   ?? groupSettings?.service_autofill ?? false)
   const [savingSetup,    setSavingSetup]    = useState(false)
 
   // ── Invite (admin) ─────────────────────────────────────────────────────────
@@ -149,6 +176,38 @@ export default function WelcomeSplash({
       })
   }, [userId])
 
+  // Persist admin onboarding drafts to localStorage so closing mid-flow doesn't lose work
+  useEffect(() => {
+    if (!isAdmin || !groupId) return
+    if (step === 'features' || step === 'setup') {
+      localStorage.setItem(`cg_onb_step_${groupId}`, step)
+    }
+  }, [isAdmin, groupId, step])
+
+  useEffect(() => {
+    if (!isAdmin || !groupId) return
+    localStorage.setItem(`cg_onb_features_${groupId}`, JSON.stringify(features))
+  }, [isAdmin, groupId, features])
+
+  useEffect(() => {
+    if (!isAdmin || !groupId) return
+    const draft = { mealDow, mealFreqMode, mealBiweeklyPat, mealCustomWeeks, mealNames, serviceDow, serviceFreqMode, serviceBiweeklyPat, serviceCustomWeeks, serviceAutofill }
+    localStorage.setItem(`cg_onb_setup_${groupId}`, JSON.stringify(draft))
+  }, [isAdmin, groupId, mealDow, mealFreqMode, mealBiweeklyPat, mealCustomWeeks, mealNames, serviceDow, serviceFreqMode, serviceBiweeklyPat, serviceCustomWeeks, serviceAutofill])
+
+  // Context-aware CTA for members at the end of onboarding
+  const memberCta = !isAdmin
+    ? groupSettings?.chat_enabled !== false      ? { label: 'Say hi in the chat →',         path: '/chat' }
+    : groupSettings?.meals_enabled !== false     ? { label: 'See this week\'s meals →',      path: '/schedule' }
+    : groupSettings?.prayer_enabled !== false    ? { label: 'View prayer requests →',        path: '/prayer' }
+    : null
+    : null
+
+  function closeAndNavigate(path) {
+    close()
+    if (path) setTimeout(() => navigate(path), 380)
+  }
+
   useEffect(() => {
     if (isAdmin && step === 'invite') {
       setLoadingCode(true)
@@ -183,6 +242,7 @@ export default function WelcomeSplash({
     setSavingFeatures(false)
     if (error) { console.error('Failed to save features:', error.message); return }
     if (data) onGroupSettingsChange?.(data)
+    localStorage.removeItem(`cg_onb_features_${groupId}`)
     setStep('setup')
   }
 
@@ -235,6 +295,8 @@ export default function WelcomeSplash({
     }
 
     setSavingSetup(false)
+    localStorage.removeItem(`cg_onb_setup_${groupId}`)
+    localStorage.removeItem(`cg_onb_step_${groupId}`)
     setStep('invite')
   }
 
@@ -825,10 +887,14 @@ export default function WelcomeSplash({
               ))}
             </div>
             <button
-              onClick={() => isLastSlide ? (isStandalone ? close() : setStep('install')) : setTourSlide(s => s + 1)}
+              onClick={() => {
+                if (!isLastSlide) { setTourSlide(s => s + 1); return }
+                if (isStandalone) memberCta ? closeAndNavigate(memberCta.path) : close()
+                else setStep('install')
+              }}
               className="w-full max-w-xs py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
-              {isLastSlide ? 'Got it' : 'Next'}
+              {isLastSlide ? (isStandalone && memberCta ? memberCta.label : 'Got it') : 'Next'}
             </button>
           </div>
         </div>
@@ -892,12 +958,29 @@ export default function WelcomeSplash({
               </div>
             </div>
           )}
-          <button
-            onClick={close}
-            className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
-          >
-            {isAdmin ? 'Go to my group' : "I'm ready"}
-          </button>
+          {!isAdmin && memberCta ? (
+            <>
+              <button
+                onClick={() => closeAndNavigate(memberCta.path)}
+                className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              >
+                {memberCta.label}
+              </button>
+              <button
+                onClick={close}
+                className="w-full py-2.5 text-stone-400 text-sm mt-1"
+              >
+                Go to home
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={close}
+              className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+            >
+              {isAdmin ? 'Go to my group' : "I'm ready"}
+            </button>
+          )}
         </div>
       </div>
     )
