@@ -70,6 +70,12 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
       for (let i = 0; i < Math.min(prev.length, slotCount); i++) next[i] = prev[i]
       return next
     })
+    setDuplicateCategories(prev => {
+      if (!prev.length) return prev
+      const next = Array(slotCount).fill('')
+      for (let i = 0; i < Math.min(prev.length, slotCount); i++) next[i] = prev[i]
+      return next
+    })
   }, [slotCount])
 
   function handleDateChange(e) {

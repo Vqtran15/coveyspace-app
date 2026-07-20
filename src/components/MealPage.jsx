@@ -274,7 +274,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
       ) : (
         <>
           {orderedGroups.map(cat => (
-            <div key={cat} className="mb-5">
+            <div key={cat} className="mb-4">
               {hasAnyCategory && cat && (
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">
                   {CATEGORY_LABELS[cat] ?? cat}
@@ -303,7 +303,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           ))}
           <button
             onClick={handleAddSlot}
-            className="mt-1 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
           >
             <Plus size={16} weight="bold" />
             <span className="text-sm font-medium">Add {noun}</span>
