@@ -486,8 +486,8 @@ export default function WelcomeSplash({
 
           <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
             {FEATURE_TOGGLES.map(({ key, label, desc, Icon, color }, i) => (
-              <div key={key}>
-                <div className={`flex items-center gap-3 px-4 py-3.5 ${i < FEATURE_TOGGLES.length - 1 ? 'border-b border-stone-100' : ''}`}>
+              <div key={key} className={i < FEATURE_TOGGLES.length - 1 ? 'border-b border-stone-100' : ''}>
+                <div className="flex items-center gap-3 px-4 py-3.5">
                   <Icon size={18} weight="fill" className={`${color} shrink-0`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-stone-700">{label}</p>
@@ -501,7 +501,10 @@ export default function WelcomeSplash({
                   </button>
                 </div>
                 {key === 'guide_enabled' && features.guide_enabled && (
-                  <p className="px-4 pb-3 text-xs text-stone-400">Set up your guide content from the Guide tab after setup.</p>
+                  <p className="px-4 pb-3 text-xs text-stone-400">Tap the Guide card on the home screen to set it up after onboarding.</p>
+                )}
+                {key === 'giving_enabled' && features.giving_enabled && (
+                  <p className="px-4 pb-3 text-xs text-stone-400">Tap the Giving card on the home screen to add your link after onboarding.</p>
                 )}
               </div>
             ))}
