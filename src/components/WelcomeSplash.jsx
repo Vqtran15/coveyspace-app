@@ -197,15 +197,15 @@ export default function WelcomeSplash({
 
   // Context-aware CTA for members at the end of onboarding
   const memberCta = !isAdmin
-    ? groupSettings?.chat_enabled !== false      ? { label: 'Say hi in the chat →',         path: '/chat' }
-    : groupSettings?.meals_enabled !== false     ? { label: 'See this week\'s meals →',      path: '/schedule' }
-    : groupSettings?.prayer_enabled !== false    ? { label: 'View prayer requests →',        path: '/prayer' }
+    ? groupSettings?.chat_enabled !== false      ? { label: 'Let the group know you\'re here →', path: '/chat',     state: { openGroupChat: true } }
+    : groupSettings?.meals_enabled !== false     ? { label: 'See this week\'s meals →',           path: '/schedule', state: null }
+    : groupSettings?.prayer_enabled !== false    ? { label: 'View prayer requests →',             path: '/prayer',   state: null }
     : null
     : null
 
-  function closeAndNavigate(path) {
+  function closeAndNavigate(path, state) {
     close()
-    if (path) setTimeout(() => navigate(path), 260)
+    if (path) setTimeout(() => navigate(path, state ? { state } : undefined), 260)
   }
 
   useEffect(() => {
@@ -889,7 +889,7 @@ export default function WelcomeSplash({
             <button
               onClick={() => {
                 if (!isLastSlide) { setTourSlide(s => s + 1); return }
-                if (isStandalone) memberCta ? closeAndNavigate(memberCta.path) : close()
+                if (isStandalone) memberCta ? closeAndNavigate(memberCta.path, memberCta.state) : close()
                 else setStep('install')
               }}
               className="w-full max-w-xs py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
@@ -961,7 +961,7 @@ export default function WelcomeSplash({
           {!isAdmin && memberCta ? (
             <>
               <button
-                onClick={() => closeAndNavigate(memberCta.path)}
+                onClick={() => closeAndNavigate(memberCta.path, memberCta.state)}
                 className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
               >
                 {memberCta.label}

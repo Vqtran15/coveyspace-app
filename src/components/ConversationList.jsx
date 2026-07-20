@@ -8,7 +8,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-export default function ConversationList({ session, groupId, members, enterClass, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -42,6 +42,11 @@ export default function ConversationList({ session, groupId, members, enterClass
       if (!convs?.length) return
 
       setConversations(convs)
+
+      if (autoOpenGroupChat) {
+        const groupConv = convs.find(c => c.type === 'group')
+        if (groupConv) onSelect(groupConv)
+      }
 
       const convIds = convs.map(c => c.id)
       const [{ data: msgs }, { data: myMemberships }] = await Promise.all([

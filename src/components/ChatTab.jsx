@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 
 export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+  const { state: locationState } = useLocation()
   const [activeConv, setActiveConv]           = useState(null)
   const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
   const [members, setMembers]                 = useState([])
@@ -80,6 +82,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       groupId={groupId}
       members={members}
       enterClass={listClass}
+      autoOpenGroupChat={locationState?.openGroupChat}
       onSelect={openConv}
       onRead={onRead}
       onOpenSettings={onOpenSettings}
