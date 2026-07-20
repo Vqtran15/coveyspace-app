@@ -167,7 +167,13 @@ export default function App() {
 
   useEffect(() => {
     if (!session?.user?.id) return
-    supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('user_id', session.user.id)
+    const userId = session.user.id
+    const ping = () =>
+      supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('user_id', userId).then()
+    ping()
+    const onVisible = () => { if (document.visibilityState === 'visible') ping() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [session?.user?.id])
 
   useEffect(() => {
