@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
+const CATEGORIES = ['Main', 'Side', 'Dessert']
+
+const CATEGORY_STYLES = {
+  Main:    'bg-coral/15 text-coral-700 border-coral/30',
+  Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
+  Dessert: 'bg-sunrise/15 text-sunrise-700 border-sunrise/30',
+}
+
 export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete }) {
   const [closing, close] = useModalClose(onClose)
   const [title, setTitle]   = useState(page.title)
@@ -9,6 +17,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
     Array.from({ length: page.slot_count }, (_, i) => ({
       key: `o${i}`,
       dish: page.slot_dishes?.[i] ?? '',
+      category: page.slot_categories?.[i] ?? '',
       origSlot: i + 1,
     }))
   )
@@ -36,12 +45,16 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
     setEntries(prev => prev.map(e => e.key === key ? { ...e, dish: value } : e))
   }
 
+  function updateCategory(key, value) {
+    setEntries(prev => prev.map(e => e.key === key ? { ...e, category: e.category === value ? '' : value } : e))
+  }
+
   function removeEntry(key) {
     setEntries(prev => prev.filter(e => e.key !== key))
   }
 
   function addSlot() {
-    setEntries(prev => [...prev, { key: `n${Date.now()}`, dish: '', origSlot: null }])
+    setEntries(prev => [...prev, { key: `n${Date.now()}`, dish: '', category: '', origSlot: null }])
   }
 
   const removedWithSignups = (() => {
@@ -55,7 +68,8 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
     setSaving(true)
     setError(null)
 
-    const newDishes = entries.map(e => e.dish.trim())
+    const newDishes     = entries.map(e => e.dish.trim())
+    const newCategories = entries.map(e => e.category)
 
     const keptOrig = new Set(entries.filter(e => e.origSlot).map(e => e.origSlot))
     const removedOrigSlots = Array.from(
@@ -72,7 +86,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
       .sort((a, b) => a.to - b.to)
 
     try {
-      await onSave({ newTitle: title.trim(), newDate: date, newDishes, removedOrigSlots, renames })
+      await onSave({ newTitle: title.trim(), newDate: date, newDishes, newCategories, removedOrigSlots, renames })
     } catch (err) {
       setError(err.message ?? 'Could not save.')
       setSaving(false)
@@ -112,7 +126,6 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          {/* Title and date fields */}
           <div className="px-6 pb-4 shrink-0 space-y-3">
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">Title</label>
@@ -136,7 +149,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
             </div>
           </div>
 
-          <div className="px-6 pb-2 space-y-2 overflow-y-auto flex-1">
+          <div className="px-6 pb-2 space-y-3 overflow-y-auto flex-1">
             {entries.map((entry, i) => {
               const signup = signupForEntry(entry)
               return (
@@ -144,7 +157,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                   <span className="text-xs text-stone-400 w-20 shrink-0 text-right pt-2">
                     {noun} {i + 1}
                   </span>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <input
                       type="text"
                       value={entry.dish}
@@ -157,6 +170,22 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                         Signed up: {signup.name}
                       </p>
                     )}
+                    <div className="flex gap-1 mt-1.5">
+                      {CATEGORIES.map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => updateCategory(entry.key, cat)}
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
+                            entry.category === cat
+                              ? CATEGORY_STYLES[cat]
+                              : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <button
                     type="button"

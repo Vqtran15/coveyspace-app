@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, PauseCircle, PlayCircle } from '@phosphor-icons/react'
+import { Plus, PauseCircle, PlayCircle, PencilSimple } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
@@ -8,7 +8,10 @@ import SlotCard from './SlotCard.jsx'
 import SignupModal from './SignupModal.jsx'
 import EditDishesModal from './EditDishesModal.jsx'
 
-export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, isAdmin = false }) {
+const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
+const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
+
+export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -114,10 +117,11 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
       if (error) throw new Error(error.message)
     }
 
-    const newDishes = (page.slot_dishes ?? []).filter((_, i) => i !== slotNumber - 1)
+    const newDishes     = (page.slot_dishes ?? []).filter((_, i) => i !== slotNumber - 1)
+    const newCategories = (page.slot_categories ?? []).filter((_, i) => i !== slotNumber - 1)
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ slot_count: page.slot_count - 1, slot_dishes: newDishes })
+      .update({ slot_count: page.slot_count - 1, slot_dishes: newDishes, slot_categories: newCategories })
       .eq('id', page.id)
       .select()
       .single()
@@ -134,10 +138,11 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
   async function handleAddSlot() {
     const newSlotNumber = page.slot_count + 1
-    const newDishes = [...(page.slot_dishes ?? []), '']
+    const newDishes     = [...(page.slot_dishes ?? []), '']
+    const newCategories = [...(page.slot_categories ?? []), '']
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ slot_count: newSlotNumber, slot_dishes: newDishes })
+      .update({ slot_count: newSlotNumber, slot_dishes: newDishes, slot_categories: newCategories })
       .eq('id', page.id)
       .select()
       .single()
@@ -146,7 +151,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     onPageUpdate(data)
   }
 
-  async function handleSaveDishes({ newTitle, newDate, newDishes, removedOrigSlots, renames }) {
+  async function handleSaveDishes({ newTitle, newDate, newDishes, newCategories, removedOrigSlots, renames }) {
     if (removedOrigSlots.length > 0) {
       const { error } = await supabase
         .from(tables.signups)
@@ -167,7 +172,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ title: newTitle, week_date: newDate, slot_count: newDishes.length, slot_dishes: newDishes })
+      .update({ title: newTitle, week_date: newDate, slot_count: newDishes.length, slot_dishes: newDishes, slot_categories: newCategories })
       .eq('id', page.id)
       .select()
       .single()
@@ -184,8 +189,18 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   }
 
   const slots = Array.from({ length: page.slot_count }, (_, i) => i + 1)
-  const filledCount = signups.length
   const selectedDishName = selectedSlot != null ? (page.slot_dishes?.[selectedSlot - 1] ?? '') : ''
+
+  // Build category groups — only show headers if at least one slot has a category
+  const hasAnyCategory = slots.some(n => page.slot_categories?.[n - 1])
+  const groups = {}
+  slots.forEach(n => {
+    const cat = page.slot_categories?.[n - 1] || ''
+    ;(groups[cat] ??= []).push(n)
+  })
+  const orderedGroups = hasAnyCategory
+    ? [...CATEGORY_ORDER.filter(c => groups[c]), ...(groups[''] ? [''] : [])]
+    : ['']
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
@@ -203,17 +218,25 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           {(isAdmin || pageCount > 1) && (
             <div className="shrink-0 flex flex-col items-end gap-2">
               {isAdmin && (
-                <button
-                  onClick={handleTogglePause}
-                  disabled={pausing}
-                  title={page.is_paused ? 'Resume signup' : 'Pause signup'}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
-                >
-                  {page.is_paused
-                    ? <><PlayCircle size={14} weight="fill" /> Resume</>
-                    : <><PauseCircle size={14} weight="fill" /> Pause</>
-                  }
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={onEditOpen}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border border-stone-200 text-stone-500 hover:border-jade hover:text-jade hover:bg-jade/5"
+                  >
+                    <PencilSimple size={13} weight="bold" /> Edit
+                  </button>
+                  <button
+                    onClick={handleTogglePause}
+                    disabled={pausing}
+                    title={page.is_paused ? 'Resume signup' : 'Pause signup'}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
+                  >
+                    {page.is_paused
+                      ? <><PlayCircle size={14} weight="fill" /> Resume</>
+                      : <><PauseCircle size={14} weight="fill" /> Pause</>
+                    }
+                  </button>
+                </div>
               )}
               {pageCount > 1 && (
                 <div className="flex items-center gap-1">
@@ -250,24 +273,37 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {slots.map(n => (
-              <SlotCard
-                key={`${page.id}-${n}`}
-                slotNumber={n}
-                noun={noun}
-                itemNoun={itemNoun}
-                dishName={page.slot_dishes?.[n - 1] ?? ''}
-                signup={signups.find(s => s.slot_number === n)}
-                revealKey={`${revealKey}-${page.id}`}
-                isNew={n === justAddedSlot}
-                onClick={() => setSelectedSlot(n)}
-              />
-            ))}
-          </div>
+          {orderedGroups.map(cat => (
+            <div key={cat} className="mb-5">
+              {hasAnyCategory && cat && (
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">
+                  {CATEGORY_LABELS[cat] ?? cat}
+                </p>
+              )}
+              {hasAnyCategory && !cat && groups['']?.length > 0 && (
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">Other</p>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(groups[cat] ?? []).map(n => (
+                  <SlotCard
+                    key={`${page.id}-${n}`}
+                    slotNumber={n}
+                    noun={noun}
+                    itemNoun={itemNoun}
+                    dishName={page.slot_dishes?.[n - 1] ?? ''}
+                    category={page.slot_categories?.[n - 1] ?? ''}
+                    signup={signups.find(s => s.slot_number === n)}
+                    revealKey={`${revealKey}-${page.id}`}
+                    isNew={n === justAddedSlot}
+                    onClick={() => setSelectedSlot(n)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
           <button
             onClick={handleAddSlot}
-            className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
+            className="mt-1 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
           >
             <Plus size={16} weight="bold" />
             <span className="text-sm font-medium">Add {noun}</span>

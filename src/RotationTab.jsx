@@ -55,6 +55,7 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
         week_date: nextDateStr,
         slot_count: template.slot_count,
         slot_dishes: template.slot_dishes ?? [],
+        slot_categories: template.slot_categories ?? [],
         position: result.length,
       })
       .select()
@@ -293,6 +294,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             onPageDelete={handlePageDeleted}
             editOpen={showEditPage}
             onEditClose={() => setShowEditPage(false)}
+            onEditOpen={() => setShowEditPage(true)}
             isAdmin={isAdmin}
           />
         ) : (

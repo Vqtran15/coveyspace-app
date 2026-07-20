@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 
-export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup, revealKey, isNew = false, onClick }) {
+const CATEGORY_CHIP = {
+  Main:    'bg-coral/15 text-coral-700',
+  Side:    'bg-lagoon/15 text-lagoon-700',
+  Dessert: 'bg-sunrise/15 text-sunrise-700',
+}
+
+export default function SlotCard({ slotNumber, noun, itemNoun, dishName, category, signup, revealKey, isNew = false, onClick }) {
   const filled = Boolean(signup)
   const [pulse, setPulse] = useState(false)
   const prevRef = useRef({ dishName, signupId: signup?.id, signupName: signup?.name })
@@ -17,6 +23,8 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup,
     return () => clearTimeout(t)
   }, [dishName, signup?.id, signup?.name])
 
+  const chipStyle = category ? CATEGORY_CHIP[category] : null
+
   return (
     <button
       onClick={onClick}
@@ -28,6 +36,12 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, signup,
       } ${entranceClass} ${pulse ? 'animate-card-pulse' : ''}`}
     >
       {filled && <span className="absolute left-0 top-0 h-full w-1 bg-jade" />}
+
+      {chipStyle && (
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold mb-1 ${chipStyle}`}>
+          {category}
+        </span>
+      )}
 
       {dishName ? (
         <div className="font-semibold text-stone-800 truncate mb-1">{dishName}</div>
