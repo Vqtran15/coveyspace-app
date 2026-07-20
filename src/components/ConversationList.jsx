@@ -45,7 +45,13 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       if (autoOpenGroupChat) {
         const groupConv = convs.find(c => c.type === 'group')
-        if (groupConv) onSelect(groupConv)
+        if (groupConv) {
+          const draftKey = `draft:${groupConv.id}`
+          if (!localStorage.getItem(draftKey)) {
+            localStorage.setItem(draftKey, "Hi all, I'm here! 👋")
+          }
+          onSelect(groupConv)
+        }
       }
 
       const convIds = convs.map(c => c.id)
