@@ -251,12 +251,12 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
               {pageCount > 1 && (
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={onPrevPage}
+                    onClick={e => { e.currentTarget.blur(); onPrevPage(); }}
                     disabled={!canGoPrev}
                     className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
                   >‹</button>
                   <button
-                    onClick={onNextPage}
+                    onClick={e => { e.currentTarget.blur(); onNextPage(); }}
                     disabled={!canGoNext}
                     className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
                   >›</button>
