@@ -69,8 +69,6 @@ export default function WelcomeSplash({
 }) {
   const [closing, close] = useModalClose(onDone)
   const navigate = useNavigate()
-  const navTimerRef = useRef(null)
-  useEffect(() => () => clearTimeout(navTimerRef.current), [])
 
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -178,6 +176,15 @@ export default function WelcomeSplash({
       })
   }, [userId])
 
+  // If groupId wasn't available on mount (async profile load), restore step once it arrives
+  useEffect(() => {
+    if (!isAdmin || !groupId || step !== 'welcome') return
+    try {
+      const s = localStorage.getItem(`cg_onb_step_${groupId}`)
+      if (s === 'features' || s === 'setup') setStep(s)
+    } catch {}
+  }, [groupId])
+
   // Persist admin onboarding drafts to localStorage so closing mid-flow doesn't lose work
   useEffect(() => {
     if (!isAdmin || !groupId) return
@@ -206,8 +213,8 @@ export default function WelcomeSplash({
     : null
 
   function closeAndNavigate(path, state) {
+    if (path) navigate(path, state ? { state } : undefined)
     close()
-    if (path) navTimerRef.current = setTimeout(() => navigate(path, state ? { state } : undefined), 260)
   }
 
   useEffect(() => {
