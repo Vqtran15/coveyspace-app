@@ -9,6 +9,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Prevent iOS Safari double-tap-to-click on hover-styled elements */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
 /* Hide emoji picker category shortcut bar */
 #epr-category-nav-id {
   display: none !important;
