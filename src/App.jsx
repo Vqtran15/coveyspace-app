@@ -439,6 +439,7 @@ export default function App() {
               .eq('user_id', session.user.id)
               .single()
               .then(({ data }) => { if (data) setProfile(data) })
+            supabase.from('birthdays').select('*').then(({ data }) => { if (data) setBirthdays(data) })
           }}
           isAdmin={isAdmin}
           userId={session.user.id}
