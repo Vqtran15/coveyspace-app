@@ -61,7 +61,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
     if (!source) return
     setSlotCount(source.slot_count)
     setDishes(source.slot_dishes?.length ? [...source.slot_dishes] : Array(source.slot_count).fill(''))
-    setDuplicateCategories(source.slot_categories?.length ? [...source.slot_categories] : [])
+    setDuplicateCategories(source.slot_categories ? [...source.slot_categories] : [])
   }
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
         week_date: date,
         slot_count: slotCount,
         slot_dishes: dishes.map(d => d.trim()),
-        slot_categories: duplicateCategories,
+        ...(duplicateCategories.length > 0 && { slot_categories: duplicateCategories }),
       })
     } catch (err) {
       setError(err.message ?? `Could not create ${pageNoun.toLowerCase()}.`)
