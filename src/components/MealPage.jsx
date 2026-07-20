@@ -10,6 +10,7 @@ import EditDishesModal from './EditDishesModal.jsx'
 
 const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
 const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
+const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-500' }
 
 export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false }) {
   const [signups, setSignups]           = useState([])
@@ -285,12 +286,12 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           {orderedGroups.map(cat => (
             <div key={cat} className="mb-4">
               {hasAnyCategory && cat && (
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">
+                <p className={`text-xs font-bold uppercase tracking-widest mb-2 px-1 ${CATEGORY_COLORS[cat] ?? 'text-stone-500'}`}>
                   {CATEGORY_LABELS[cat] ?? cat}
                 </p>
               )}
               {hasAnyCategory && !cat && groups['']?.length > 0 && (
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">Other</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-stone-500 mb-2 px-1">Other</p>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(groups[cat] ?? []).map(n => (

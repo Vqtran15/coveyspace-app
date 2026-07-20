@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 
-const CATEGORY_CHIP = {
-  Main:    'bg-coral/15 text-coral-700',
-  Side:    'bg-lagoon/15 text-lagoon-700',
-  Dessert: 'bg-amber-50 text-amber-600',
-  Other:   'bg-stone-100 text-stone-500',
-}
-
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, category, signup, revealKey, isNew = false, onClick }) {
   const filled = Boolean(signup)
   const [pulse, setPulse] = useState(false)
@@ -24,8 +17,6 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
     return () => clearTimeout(t)
   }, [dishName, signup?.id, signup?.name])
 
-  const chipStyle = category ? CATEGORY_CHIP[category] : null
-
   return (
     <button
       onClick={onClick}
@@ -37,12 +28,6 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
       } ${entranceClass} ${pulse ? 'animate-card-pulse' : ''}`}
     >
       {filled && <span className="absolute left-0 top-0 h-full w-1 bg-jade" />}
-
-      {chipStyle && (
-        <span className={`absolute top-2.5 right-2.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${chipStyle}`}>
-          {category}
-        </span>
-      )}
 
       {dishName ? (
         <div className="font-semibold text-stone-800 truncate mb-1">{dishName}</div>
