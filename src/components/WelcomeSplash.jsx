@@ -1,7 +1,7 @@
 import {
   Confetti, DeviceMobile, BoxArrowUp, DotsThreeVertical,
   ShieldCheck, Users, ArrowLeft, ChatCircleDots, ForkKnife,
-  HandsPraying, Cake, CalendarCheck, Link, ShareNetwork, Bell,
+  HandsPraying, Cake, CalendarCheck, Link, ShareNetwork, Bell, Coins,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -49,6 +49,7 @@ const FEATURE_TOGGLES = [
   { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',           Icon: HandsPraying,   color: 'text-sunrise' },
   { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral' },
   { key: 'guide_enabled',     label: 'Community Guide',   desc: 'PDF, link, or written notes',     Icon: Link,           color: 'text-jade' },
+  { key: 'giving_enabled',   label: 'Giving',            desc: 'Monthly tithing/giving link',     Icon: Coins,          color: 'text-amber-600' },
 ]
 
 function weekOccToPat(occ) {
@@ -114,6 +115,7 @@ export default function WelcomeSplash({
       prayer_enabled:    groupSettings?.prayer_enabled    !== false,
       birthdays_enabled: groupSettings?.birthdays_enabled !== false,
       guide_enabled:     groupSettings?.guide_enabled     !== false,
+      giving_enabled:    groupSettings?.giving_enabled    === true,
     }
   })
   const [savingFeatures, setSavingFeatures] = useState(false)
