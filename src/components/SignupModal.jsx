@@ -128,6 +128,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
               <button
                 key={cat}
                 type="button"
+                onPointerDown={e => e.preventDefault()}
                 onClick={() => setCategory(prev => prev === cat ? '' : cat)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
                   category === cat
