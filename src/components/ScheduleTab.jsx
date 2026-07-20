@@ -56,7 +56,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
               Today
             </button>
             <button
-              onClick={() => rotationRef.current?.openPages()}
+              onClick={() => rotationRef.current?.openManagePages()}
               className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-200 transition-colors"
             >
               <ListBullets size={20} weight="regular" />

@@ -4,7 +4,7 @@ import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 const CATEGORY_CHIP = {
   Main:    'bg-coral/15 text-coral-700',
   Side:    'bg-lagoon/15 text-lagoon-700',
-  Dessert: 'bg-sunrise/15 text-sunrise-700',
+  Dessert: 'bg-violet-50 text-violet-600',
 }
 
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, category, signup, revealKey, isNew = false, onClick }) {

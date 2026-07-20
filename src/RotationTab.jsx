@@ -6,7 +6,6 @@ import { nextScheduledDate } from './utils/schedule.js'
 import { haptic } from './lib/haptic.js'
 import MealPage from './components/MealPage.jsx'
 import AddPageModal from './components/AddPageModal.jsx'
-import PagesModal from './components/PagesModal.jsx'
 import ManagePagesModal from './components/ManagePagesModal.jsx'
 
 const FUTURE_BUFFER = 2  // always keep at least this many pages with dates after today
@@ -78,7 +77,6 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
   const [showAddModal, setShowAddModal]       = useState(false)
-  const [showPages, setShowPages]             = useState(false)
   const [showManagePages, setShowManagePages] = useState(false)
   const [showEditPage, setShowEditPage]       = useState(false)
 
@@ -221,7 +219,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
       setViewIndex(idx === -1 ? pages.length - 1 : idx)
       window.scrollTo({ top: 0, behavior: 'instant' })
     },
-    openPages() { setShowPages(true) },
+    openManagePages() { setShowManagePages(true) },
   }))
 
   if (loading) {
@@ -266,7 +264,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
               Today
             </button>
             <button
-              onClick={() => setShowPages(true)}
+              onClick={() => setShowManagePages(true)}
               className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
             >
               <ListBullets size={20} weight="regular" />
@@ -317,17 +315,6 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           </div>
         )}
       </div>
-
-      {showPages && (
-        <PagesModal
-          editLabel={editLabel}
-          editSubLabel={editSubLabel}
-          pageNounPlural={pageNounPlural}
-          onEditPage={viewedPage ? () => { setShowPages(false); setShowEditPage(true) } : undefined}
-          onManagePages={() => { setShowPages(false); setShowManagePages(true) }}
-          onClose={() => setShowPages(false)}
-        />
-      )}
 
       {showManagePages && (
         <ManagePagesModal

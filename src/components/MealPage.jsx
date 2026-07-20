@@ -52,15 +52,21 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     return () => supabase.removeChannel(channel)
   }, [page?.id])
 
-  async function handleSave(slotNumber, { dish, ...signupData }) {
-    const currentDish = page.slot_dishes?.[slotNumber - 1] ?? ''
-    if (dish !== currentDish) {
+  async function handleSave(slotNumber, { dish, category, ...signupData }) {
+    const currentDish     = page.slot_dishes?.[slotNumber - 1] ?? ''
+    const currentCategory = page.slot_categories?.[slotNumber - 1] ?? ''
+    if (dish !== currentDish || category !== currentCategory) {
       const newDishes = [...(page.slot_dishes ?? [])]
       while (newDishes.length < slotNumber) newDishes.push('')
       newDishes[slotNumber - 1] = dish
+
+      const newCategories = [...(page.slot_categories ?? [])]
+      while (newCategories.length < slotNumber) newCategories.push('')
+      newCategories[slotNumber - 1] = category
+
       const { data: updatedPage, error: dishErr } = await supabase
         .from(tables.pages)
-        .update({ slot_dishes: newDishes })
+        .update({ slot_dishes: newDishes, slot_categories: newCategories })
         .eq('id', page.id)
         .select()
         .single()
@@ -189,7 +195,8 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   }
 
   const slots = Array.from({ length: page.slot_count }, (_, i) => i + 1)
-  const selectedDishName = selectedSlot != null ? (page.slot_dishes?.[selectedSlot - 1] ?? '') : ''
+  const selectedDishName     = selectedSlot != null ? (page.slot_dishes?.[selectedSlot - 1] ?? '')     : ''
+  const selectedCategory     = selectedSlot != null ? (page.slot_categories?.[selectedSlot - 1] ?? '') : ''
 
   // Build category groups — only show headers if at least one slot has a category
   const hasAnyCategory = slots.some(n => page.slot_categories?.[n - 1])
@@ -316,6 +323,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           slot={selectedSlot}
           itemNoun={itemNoun}
           dishName={selectedDishName}
+          category={selectedCategory}
           signup={signups.find(s => s.slot_number === selectedSlot)}
           onClose={() => setSelectedSlot(null)}
           onSave={data => handleSave(selectedSlot, data)}

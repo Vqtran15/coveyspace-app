@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
-export default function SignupModal({ slot, itemNoun, dishName, signup, onClose, onSave, onRemove, onDeleteItem }) {
+const CATEGORIES = ['Main', 'Side', 'Dessert']
+
+const CATEGORY_STYLES = {
+  Main:    'bg-coral/15 text-coral-700 border-coral/30',
+  Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
+  Dessert: 'bg-violet-50 text-violet-600 border-violet-200',
+}
+
+export default function SignupModal({ slot, itemNoun, dishName, category: initialCategory = '', signup, onClose, onSave, onRemove, onDeleteItem }) {
   const [closing, close] = useModalClose(onClose)
-  const [name, setName]   = useState(signup?.name ?? '')
-  const [dish, setDish]   = useState(dishName ?? '')
-  const [notes, setNotes] = useState(signup?.notes ?? '')
+  const [name, setName]     = useState(signup?.name ?? '')
+  const [dish, setDish]     = useState(dishName ?? '')
+  const [category, setCategory] = useState(initialCategory)
+  const [notes, setNotes]   = useState(signup?.notes ?? '')
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState(null)
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -13,12 +22,16 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
   const [confirmDeleteItem, setConfirmDeleteItem] = useState(false)
   const [deletingItem, setDeletingItem]           = useState(false)
 
+  function toggleCategory(cat) {
+    setCategory(prev => prev === cat ? '' : cat)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name: name.trim(), dish: dish.trim(), notes: notes.trim() })
+      await onSave({ name: name.trim(), dish: dish.trim(), category, notes: notes.trim() })
     } catch (err) {
       setError(err.message ?? 'Something went wrong. Please try again.')
       setSaving(false)
@@ -82,6 +95,22 @@ export default function SignupModal({ slot, itemNoun, dishName, signup, onClose,
             autoFocus={!dishName}
             className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
           />
+          <div className="flex gap-2 mt-2">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => toggleCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                  category === cat
+                    ? CATEGORY_STYLES[cat]
+                    : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
