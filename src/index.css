@@ -12,6 +12,13 @@ body {
 /* Prevent iOS Safari double-tap-to-click on hover-styled elements */
 button, a, [role="button"] {
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove focus ring on tap/click — keep it for keyboard navigation */
+:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Hide emoji picker category shortcut bar */
