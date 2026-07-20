@@ -6,7 +6,7 @@ const CATEGORIES = ['Main', 'Side', 'Dessert']
 const CATEGORY_STYLES = {
   Main:    'bg-coral/15 text-coral-700 border-coral/30',
   Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
-  Dessert: 'bg-violet-50 text-violet-600 border-violet-200',
+  Dessert: 'bg-amber-50 text-amber-600 border-amber-200',
 }
 
 export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete }) {
