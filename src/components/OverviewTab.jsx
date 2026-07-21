@@ -22,12 +22,12 @@ function shortName(full) {
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] ?? ''
 }
 
-function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false }) {
+function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '' }) {
   return (
     <button
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
-      className="relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in"
+      className={`relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in ${className}`}
     >
       {confetti && <ConfettiDots />}
       <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
@@ -376,72 +376,74 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               )
             )}
 
-            {mealsEnabled && (
-              <Card
-                onClick={() => navigate('/schedule')}
-                icon={<ForkKnife size={24} weight="fill" className="text-jade" />}
-                iconBg="bg-jade/10"
-                label="Next Meal"
-                primary={nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet')}
-                secondary={nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null}
-                delay={showAnnouncement ? 80 : 0}
-              />
-            )}
-            {servicesEnabled && (
-              <Card
-                onClick={() => navigate('/schedule', { state: { segment: 'services' } })}
-                icon={<HandHeart size={24} weight="fill" className="text-lagoon-700" />}
-                iconBg="bg-lagoon-50"
-                label="Next Service"
-                primary={nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet')}
-                secondary={nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null}
-                delay={showAnnouncement ? 160 : 80}
-              />
-            )}
-            {prayerEnabled && prayerCard && (
-              <Card
-                onClick={() => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } })}
-                icon={<HandsPraying size={24} weight="fill" className="text-lagoon" />}
-                iconBg="bg-lagoon-50"
-                label="Pray for Today"
-                primary={shortName(prayerCard.profile?.display_name) || 'Someone'}
-                secondary={prayerCard.request}
-                delay={showAnnouncement ? 240 : 160}
-              />
-            )}
-            {birthdaysEnabled && (
-              <Card
-                onClick={onOpenBirthdays}
-                icon={<Cake size={24} weight="fill" className="text-coral" />}
-                iconBg="bg-coral/10"
-                label="Upcoming Birthdays"
-                primary={birthdayPrimary}
-                delay={showAnnouncement ? 320 : 240}
-                confetti={!!nextBirthday && nextBirthday.days <= 30}
-              />
-            )}
-            {guideEnabled && (
-              <Card
-                onClick={onOpenGuide}
-                icon={<BookOpen size={24} weight="fill" className="text-sunrise" />}
-                iconBg="bg-sunrise/10"
-                label="Guide"
-                primary="Community Guide"
-                secondary={isAdmin && !guideType && !guideUrl ? 'Tap to set up' : 'Tap to open'}
-                delay={showAnnouncement ? 400 : 320}
-              />
-            )}
-            {givingEnabled && (
-              <Card
-                onClick={onOpenGiving}
-                icon={<Coins size={24} weight="fill" className="text-sage-700" />}
-                iconBg="bg-sage-50"
-                label="Giving"
-                primary="Monthly Giving"
-                secondary={isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open'}
-                delay={showAnnouncement ? 480 : 400}
-              />
-            )}
+            {(() => {
+              const baseDelay = showAnnouncement ? 80 : 0
+              const cards = [
+                mealsEnabled && {
+                  key: 'meals',
+                  onClick: () => navigate('/schedule'),
+                  icon: <ForkKnife size={24} weight="fill" className="text-jade" />,
+                  iconBg: 'bg-jade/10',
+                  label: 'Next Meal',
+                  primary: nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet'),
+                  secondary: nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null,
+                },
+                servicesEnabled && {
+                  key: 'services',
+                  onClick: () => navigate('/schedule', { state: { segment: 'services' } }),
+                  icon: <HandHeart size={24} weight="fill" className="text-lagoon-700" />,
+                  iconBg: 'bg-lagoon-50',
+                  label: 'Next Service',
+                  primary: nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet'),
+                  secondary: nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null,
+                },
+                prayerEnabled && prayerCard && {
+                  key: 'prayer',
+                  onClick: () => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } }),
+                  icon: <HandsPraying size={24} weight="fill" className="text-lagoon" />,
+                  iconBg: 'bg-lagoon-50',
+                  label: 'Pray for Today',
+                  primary: shortName(prayerCard.profile?.display_name) || 'Someone',
+                  secondary: prayerCard.request,
+                },
+                birthdaysEnabled && {
+                  key: 'birthdays',
+                  onClick: onOpenBirthdays,
+                  icon: <Cake size={24} weight="fill" className="text-coral" />,
+                  iconBg: 'bg-coral/10',
+                  label: 'Upcoming Birthdays',
+                  primary: birthdayPrimary,
+                  confetti: !!nextBirthday && nextBirthday.days <= 30,
+                },
+                guideEnabled && {
+                  key: 'guide',
+                  onClick: onOpenGuide,
+                  icon: <BookOpen size={24} weight="fill" className="text-sunrise" />,
+                  iconBg: 'bg-sunrise/10',
+                  label: 'Guide',
+                  primary: 'Community Guide',
+                  secondary: isAdmin && !guideType && !guideUrl ? 'Tap to set up' : 'Tap to open',
+                },
+                givingEnabled && {
+                  key: 'giving',
+                  onClick: onOpenGiving,
+                  icon: <Coins size={24} weight="fill" className="text-sage-700" />,
+                  iconBg: 'bg-sage-50',
+                  label: 'Giving',
+                  primary: 'Monthly Giving',
+                  secondary: isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open',
+                },
+              ].filter(Boolean)
+
+              return cards.map((props, i) => (
+                <Card
+                  key={props.key}
+                  {...props}
+                  delay={baseDelay + i * 80}
+                  className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'lg:col-span-2' : ''}
+                />
+              ))
+            })()}
           </>
         )}
       </div>
