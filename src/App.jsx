@@ -177,6 +177,15 @@ export default function App() {
   }, [session?.user?.id])
 
   useEffect(() => {
+    if (!session?.user?.id) return
+    const isStandalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      ('standalone' in window.navigator && window.navigator.standalone === true)
+    if (!isStandalone) return
+    supabase.from('profiles').update({ is_pwa: true }).eq('user_id', session.user.id).then()
+  }, [session?.user?.id])
+
+  useEffect(() => {
     if (!session) return
     supabase
       .from('announcements')
