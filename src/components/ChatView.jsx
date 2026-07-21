@@ -124,6 +124,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [selectedMsgId, setSelectedMsgId]       = useState(null)
   const [confirmDeleteId, setConfirmDeleteId]   = useState(null)
   const toast = useToast()
+  const [convName, setConvName]             = useState(conversation.name)
   const [renameValue, setRenameValue]       = useState('')
   const [renameSaving, setRenameSaving]     = useState(false)
   const [memberReadTimes, setMemberReadTimes] = useState({})
@@ -173,15 +174,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
       return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
     }
-    // If this conversation has all group members, use the stored name (Main Group Chat)
-    if ((conversation.conversation_members?.length ?? 0) >= members.length) return conversation.name || 'Group Chat'
+    // Custom name always wins for group chats (set by admin rename)
+    if (convName) return convName
     const otherIds = conversation.conversation_members
       ?.filter(m => m.user_id !== myId)
       ?.map(m => m.user_id) ?? []
     const names = otherIds
       .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
       .filter(Boolean)
-    if (!names.length) return conversation.name || 'Group Chat'
+    if (!names.length) return 'Group Chat'
     if (names.length <= 3) return names.join(', ')
     return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
   }
@@ -919,7 +920,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     e.preventDefault()
     if (!renameValue.trim()) return
     setRenameSaving(true)
-    await supabase.rpc('rename_group', { new_name: renameValue.trim() })
+    const { error } = await supabase
+      .from('conversations')
+      .update({ name: renameValue.trim() })
+      .eq('id', convId)
+    if (error) {
+      toast.show('Failed to save name', 'error')
+    } else {
+      setConvName(renameValue.trim())
+    }
     setRenameSaving(false)
     setRenamingGroup(false)
   }
