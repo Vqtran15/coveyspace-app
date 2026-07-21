@@ -1,8 +1,6 @@
 import { clientsClaim } from 'workbox-core'
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
 
-// Activate the new SW immediately instead of waiting for all tabs to close
-self.addEventListener('install', () => self.skipWaiting())
 clientsClaim()
 
 cleanupOutdatedCaches()
