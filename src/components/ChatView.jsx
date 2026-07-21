@@ -199,6 +199,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setFetchingFresh(false)
     setFirstUnreadId(null)
     setOpenUnreadCount(0)
+    setConvName(conversation.name)
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
@@ -333,10 +334,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
+    const convMetaCh = supabase
+      .channel(`conv-meta:${convId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'conversations',
+        filter: `id=eq.${convId}`,
+      }, ({ new: conv }) => {
+        setConvName(conv.name ?? null)
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
+      supabase.removeChannel(convMetaCh)
       const closeTime = new Date().toISOString()
       localStorage.setItem(READ_AT_KEY(convId), closeTime)
       supabase.from('conversation_members')

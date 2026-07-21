@@ -114,6 +114,12 @@ export default function ConversationList({ session, groupId, members, enterClass
             .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
         )
       })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'conversations',
+        filter: `community_group_id=eq.${groupId}`,
+      }, ({ new: conv }) => {
+        setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, name: conv.name } : c))
+      })
       .subscribe()
 
     return () => supabase.removeChannel(ch)
