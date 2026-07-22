@@ -1,0 +1,16 @@
+-- Migration 51: Chat reaction push notifications
+-- Run in Supabase SQL editor (no schema changes needed — reactions table already exists).
+--
+-- After running this migration (which is a no-op SQL-wise), do the following:
+--
+--   1. Deploy the edge function:
+--        supabase functions deploy send-chat-reaction-push
+--
+--   2. In Supabase dashboard → Database → Webhooks, create a webhook:
+--        Name:   on_chat_reaction_insert
+--        Table:  reactions
+--        Events: INSERT
+--        URL:    https://<project-ref>.supabase.co/functions/v1/send-chat-reaction-push
+--
+-- The function looks up the message owner and reactor display name, then sends
+-- a push notification to the message owner (skipping self-reactions).
