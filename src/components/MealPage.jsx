@@ -344,6 +344,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           signups={signups}
           onClose={onEditClose}
           onSave={handleSaveDishes}
+          supportsCategories={supportsCategories}
           onDelete={async () => {
             const { error } = await supabase.from(tables.pages).delete().eq('id', page.id)
             if (error) throw new Error(error.message)

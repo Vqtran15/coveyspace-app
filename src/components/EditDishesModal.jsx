@@ -10,7 +10,7 @@ const CATEGORY_STYLES = {
   Other:   'bg-stone-100 text-stone-600 border-stone-300',
 }
 
-export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete }) {
+export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete, supportsCategories = false }) {
   const [closing, close] = useModalClose(onClose)
   const [title, setTitle]   = useState(page.title)
   const [date, setDate]     = useState(page.week_date)
@@ -171,22 +171,24 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                         Signed up: {signup.name}
                       </p>
                     )}
-                    <div className="flex gap-1 mt-1.5">
-                      {CATEGORIES.map(cat => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => updateCategory(entry.key, cat)}
-                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
-                            entry.category === cat
-                              ? CATEGORY_STYLES[cat]
-                              : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
+                    {supportsCategories && (
+                      <div className="flex gap-1 mt-1.5">
+                        {CATEGORIES.map(cat => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => updateCategory(entry.key, cat)}
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
+                              entry.category === cat
+                                ? CATEGORY_STYLES[cat]
+                                : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
