@@ -16,25 +16,28 @@ Deno.serve(async (req) => {
     }
 
     // Get email from auth
-    const { data: { user } } = await supabase.auth.admin.getUserById(record.user_id)
-    const email = user?.email
+    const { data: authData, error: authErr } = await supabase.auth.admin.getUserById(record.user_id)
+    if (authErr) console.error('getUserById error:', authErr)
+    const email = authData?.user?.email
     if (!email) return new Response('No email found', { status: 200 })
 
     // Get group name
-    const { data: group } = await supabase
+    const { data: group, error: groupErr } = await supabase
       .from('community_groups')
       .select('name')
       .eq('id', record.community_group_id)
       .single()
+    if (groupErr) console.error('community_groups lookup error:', groupErr)
 
     // Split display_name into first / last
     const parts     = (record.display_name ?? '').trim().split(/\s+/)
     const firstname = parts[0] ?? ''
     const lastname  = parts.slice(1).join(' ')
 
-    const joinedDate = record.created_at
-      ? new Date(record.created_at).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]
+    // HubSpot Date properties require a Unix millisecond timestamp at midnight UTC
+    const d = new Date(record.created_at ?? Date.now())
+    d.setUTCHours(0, 0, 0, 0)
+    const joinedMs = d.getTime()
 
     // Upsert contact — creates if new, updates if email already exists
     const res = await fetch('https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert', {
@@ -52,7 +55,7 @@ Deno.serve(async (req) => {
             firstname,
             lastname,
             coveyspace_group:     group?.name ?? '',
-            coveyspace_joined_at: joinedDate,
+            coveyspace_joined_at: joinedMs,
           },
         }],
       }),
@@ -63,7 +66,7 @@ Deno.serve(async (req) => {
       throw new Error(`HubSpot error ${res.status}: ${body}`)
     }
 
-    return new Response(JSON.stringify({ ok: true, email }), {
+    return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (err: any) {

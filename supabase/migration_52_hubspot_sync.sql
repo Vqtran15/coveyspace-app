@@ -4,8 +4,10 @@
 -- 1. In HubSpot → Settings → Properties → Contact properties, create two custom properties:
 --      Internal name: coveyspace_group      Label: Covey Space Group   Type: Single-line text
 --      Internal name: coveyspace_joined_at  Label: Covey Space Joined  Type: Date
+--      NOTE: HubSpot Date properties require Unix millisecond timestamps (not ISO strings).
+--            The edge function sends new Date(created_at).setUTCHours(0,0,0,0) — midnight UTC ms.
 --
--- 2. In HubSpot → Settings → Private Apps, create a private app named "Covey Space"
+-- 2. In HubSpot → Settings → Service Keys, create a Service Key named "Covey Space"
 --    with scope: crm.objects.contacts.write
 --    Copy the generated token.
 --
