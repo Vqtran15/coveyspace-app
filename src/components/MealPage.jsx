@@ -12,7 +12,7 @@ const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
 const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
 const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-500' }
 
-export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false }) {
+export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -67,7 +67,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
       const { data: updatedPage, error: dishErr } = await supabase
         .from(tables.pages)
-        .update({ slot_dishes: newDishes, slot_categories: newCategories })
+        .update({ slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
         .eq('id', page.id)
         .select()
         .single()
@@ -128,7 +128,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     const newCategories = (page.slot_categories ?? []).filter((_, i) => i !== slotNumber - 1)
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ slot_count: page.slot_count - 1, slot_dishes: newDishes, slot_categories: newCategories })
+      .update({ slot_count: page.slot_count - 1, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
       .eq('id', page.id)
       .select()
       .single()
@@ -149,7 +149,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     const newCategories = [...(page.slot_categories ?? []), '']
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ slot_count: newSlotNumber, slot_dishes: newDishes, slot_categories: newCategories })
+      .update({ slot_count: newSlotNumber, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
       .eq('id', page.id)
       .select()
       .single()
@@ -179,7 +179,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ title: newTitle, week_date: newDate, slot_count: newDishes.length, slot_dishes: newDishes, slot_categories: newCategories })
+      .update({ title: newTitle, week_date: newDate, slot_count: newDishes.length, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
       .eq('id', page.id)
       .select()
       .single()

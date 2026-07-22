@@ -69,7 +69,7 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
 }
 
 const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupName = '', displayName = '', onOpenSettings, isAdmin = false, compact = false, cutoffDate }, ref) {
-  const { label, Icon, editLabel, editSubLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, autoFill = false, intervalDays = 7, targetDow = null, weekOccurrences = null } = config
+  const { label, Icon, editLabel, editSubLabel, noun, itemNoun, pageNoun, pageNounPlural, tables, defaultTitle, supportsCategories = false, autoFill = false, intervalDays = 7, targetDow = null, weekOccurrences = null } = config
   const effectiveCutoff = cutoffDate ?? toDateString(new Date())
 
   const [pages, setPages]       = useState([])
@@ -294,6 +294,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             onEditClose={() => setShowEditPage(false)}
             onEditOpen={() => setShowEditPage(true)}
             isAdmin={isAdmin}
+            supportsCategories={supportsCategories}
           />
         ) : (
           <div className="max-w-3xl mx-auto px-4 py-20 text-center">

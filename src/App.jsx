@@ -38,6 +38,7 @@ const MEALS_CONFIG = {
   pageNoun: 'Meal',
   pageNounPlural: 'Meals',
   tables: { pages: 'meal_pages', signups: 'signups', pauseRpc: 'toggle_meal_pause' },
+  supportsCategories: true,
   autoFill: true,
   defaultTitle: () => 'Meal',
 }
