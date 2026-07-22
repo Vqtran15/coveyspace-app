@@ -1,0 +1,25 @@
+-- Migration 52: HubSpot contact sync
+-- No schema changes. Setup steps:
+--
+-- 1. In HubSpot → Settings → Properties → Contact properties, create two custom properties:
+--      Internal name: coveyspace_group      Label: Covey Space Group   Type: Single-line text
+--      Internal name: coveyspace_joined_at  Label: Covey Space Joined  Type: Date
+--
+-- 2. In HubSpot → Settings → Private Apps, create a private app named "Covey Space"
+--    with scope: crm.objects.contacts.write
+--    Copy the generated token.
+--
+-- 3. In Supabase dashboard → Edge Functions → sync-hubspot-contact → Secrets, add:
+--      HUBSPOT_PRIVATE_TOKEN = <your token>
+--
+-- 4. Deploy the edge function:
+--      supabase functions deploy sync-hubspot-contact
+--
+-- 5. In Supabase dashboard → Database → Webhooks, create a webhook:
+--      Name:   on_profile_insert_hubspot
+--      Table:  profiles
+--      Events: INSERT
+--      URL:    https://ktmlyzwpgvhrwfgyoeiq.supabase.co/functions/v1/sync-hubspot-contact
+--
+-- Every new signup will now appear as a HubSpot contact automatically.
+-- Existing users can be imported via CSV export from the admin dashboard.
