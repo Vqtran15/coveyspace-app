@@ -332,6 +332,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           onSave={data => handleSave(selectedSlot, data)}
           onRemove={() => handleRemove(selectedSlot)}
           onDeleteItem={() => handleDeleteItem(selectedSlot)}
+          supportsCategories={supportsCategories}
         />
       )}
 
