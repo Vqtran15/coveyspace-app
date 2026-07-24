@@ -1842,7 +1842,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full">
+      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full relative">
         {/* Reply preview */}
         {replyingTo && (
           <div className="flex items-center gap-2 bg-jade/5 border border-jade/20 rounded-xl px-3 py-2 mb-2">
@@ -1873,8 +1873,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             ))}
           </div>
         )}
-        {pollCreating && (
-          <div className="mb-2 border border-stone-200 rounded-2xl bg-white p-3 animate-stack-in">
+        {pollCreating && !pollSubmitting && (
+          <div className="fixed inset-0 z-[7]" onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} />
+        )}
+        <AnimatePresence>
+          {pollCreating && (
+            <motion.div
+              key="poll-create"
+              initial={{ opacity: 0, y: 8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              className="mb-2 border border-stone-200 rounded-2xl bg-white p-3 relative z-[8]"
+            >
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold text-stone-800">Create Poll</p>
               <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className="text-stone-400 hover:text-stone-600">
@@ -1932,8 +1943,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 {pollSubmitting ? 'Creating…' : 'Create Poll'}
               </button>
             </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {showEmojiPicker && (
           <div className="fixed inset-0 z-[9]" onClick={closeEmojiPicker} />
         )}
@@ -1945,7 +1957,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              className="mb-2 relative z-10"
+              className="absolute bottom-full left-0 right-0 px-4 pb-2 z-10"
             >
               <Suspense fallback={null}>
                 <EmojiPicker
