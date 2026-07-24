@@ -1793,10 +1793,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 return
               }
               if (showEmojiPicker) closeEmojiPicker()
-              // flushSync forces a synchronous render before focus() so the input exists,
-              // and we're still inside the tap gesture so iOS opens the keyboard.
-              flushSync(() => setPollCreating(true))
-              pollQuestionRef.current?.focus()
+              // Only keep the keyboard up if it was already open (user was typing).
+              // If no keyboard is present, just show the form and let the user tap a field.
+              const keyboardWasUp = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)
+              if (keyboardWasUp) {
+                flushSync(() => setPollCreating(true))
+                pollQuestionRef.current?.focus()
+              } else {
+                setPollCreating(true)
+              }
             }}
             className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors shrink-0 ${pollCreating ? 'text-jade bg-jade/10' : 'text-stone-400 hover:text-jade hover:bg-stone-100'}`}
           >
