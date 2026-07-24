@@ -385,7 +385,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
     const { data } = await supabase
       .from('conversations')
       .select('id, type, name, conversation_members(user_id, profiles(display_name))')
-      .eq('community_group_id', groupId)
+      .order('updated_at', { ascending: false })
     setPickerConvs(data ?? [])
     setPickerLoading(false)
   }
