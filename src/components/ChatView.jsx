@@ -371,15 +371,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(true)
   }, [loading, messages])
 
-  // Wait for the bottom-most images to decode before revealing so the initial
-  // scroll-to-bottom lands without a layout jump. Only decode the last 5 images
-  // (those visible after scroll) — decoding all 50 messages' images blocks reveal
-  // for several seconds when photos haven't been cached yet.
+  // Wait for all images to decode before revealing so scroll-to-bottom lands
+  // without a layout jump. The ResizeObserver re-pins after the reveal, but there
+  // can be a visible flash between an image loading and the re-pin firing, which
+  // is disorienting. Decoding all images prevents that. The 800ms fallback (down
+  // from 3000ms) caps the wait on slow connections — the ResizeObserver handles
+  // any remaining late-loading images after reveal.
   useEffect(() => {
     if (!contentReady) return
     if (!messagesContainerRef.current) { setVisible(true); return }
-    const allImgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
-    const imgs = allImgs.slice(-5)
+    const imgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
 
     let cancelled = false
     const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 800)
