@@ -1278,6 +1278,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const dmOtherMember = conversation.type === 'direct'
     ? members.find(m => m.user_id !== myId)
     : null
+  const isMainGroupChat = conversation.type === 'group'
+    && (conversation.conversation_members?.length ?? 0) >= members.length
+  const canEditGroupInfo = conversation.type === 'group' && (isMainGroupChat ? isAdmin : true)
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -2383,7 +2386,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     </div>
                   )}
                 </div>
-                {isAdmin && conversation.type === 'group' && (
+                {canEditGroupInfo && (
                   <button
                     onClick={() => groupIconFileRef.current?.click()}
                     className="absolute bottom-0 right-0 w-7 h-7 bg-jade rounded-full flex items-center justify-center shadow-md border-2 border-white"
@@ -2417,7 +2420,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               ) : (
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-bold text-stone-800 text-center">{title}</h3>
-                  {isAdmin && conversation.type === 'group' && (
+                  {canEditGroupInfo && (
                     <button
                       onClick={() => { setRenameValue(title); setRenamingGroup(true) }}
                       className="text-stone-400 hover:text-stone-600 transition-colors"
