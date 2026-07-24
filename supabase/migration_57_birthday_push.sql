@@ -1,0 +1,37 @@
+-- Migration 57: Birthday push notifications (daily cron)
+-- No schema changes needed — uses existing birthdays and push_subscriptions tables.
+--
+-- SETUP STEPS:
+--
+--   1. Deploy the edge function (without JWT verification since it's cron-triggered):
+--        supabase functions deploy send-birthday-push --no-verify-jwt
+--
+--   2. Set up a daily cron job via Supabase Dashboard → Database → Cron jobs:
+--        Name:     send-birthday-push-daily
+--        Schedule: 0 8 * * *   (8 AM UTC every day)
+--        Command:
+--          SELECT net.http_post(
+--            url    := 'https://ktmlyzwpgvhrwfgyoeiq.supabase.co/functions/v1/send-birthday-push',
+--            headers := '{"Content-Type": "application/json"}'::jsonb,
+--            body   := '{}'::jsonb
+--          );
+--
+--   OR via SQL editor (pg_net + pg_cron must be enabled — both are on in Supabase by default):
+--
+--   SELECT cron.schedule(
+--     'send-birthday-push-daily',
+--     '0 8 * * *',
+--     $$ SELECT net.http_post(
+--          url    := 'https://ktmlyzwpgvhrwfgyoeiq.supabase.co/functions/v1/send-birthday-push',
+--          headers := '{"Content-Type": "application/json"}'::jsonb,
+--          body   := '{}'::jsonb
+--        ) $$
+--   );
+--
+-- HOW IT WORKS:
+--   - Fetches all rows from birthdays where birthday month+day matches today (UTC)
+--   - For each birthday person, queries push_subscriptions for all other members
+--     in the same community_group_id
+--   - Sends: title "🎂 Happy Birthday!" body "It's [FirstName]'s birthday today!
+--     Wish [FirstName] a happy birthday!"
+--   - Cleans up stale push subscriptions (410/404 responses) automatically

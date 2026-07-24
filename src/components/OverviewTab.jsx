@@ -388,7 +388,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                   primary: nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet'),
                   secondary: nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null,
                 },
-                servicesEnabled && {
+                servicesEnabled && nextService !== null && {
                   key: 'services',
                   onClick: () => navigate('/schedule', { state: { segment: 'services' } }),
                   icon: <HandHeart size={24} weight="fill" className="text-lagoon-700" />,

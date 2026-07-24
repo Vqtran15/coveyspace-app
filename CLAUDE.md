@@ -20,6 +20,7 @@ supabase functions deploy <function-name>
 
 ### Active functions
 - `send-chat-reaction-push` — fires on `reactions` INSERT (webhook: `on_chat_reaction_insert`). Sends push notification to message owner when someone reacts; skips self-reactions.
+- `send-birthday-push` — fires daily at 8 AM UTC via pg_cron. Sends birthday push to all group members except the birthday person. Deploy with `--no-verify-jwt`. See migration_57.
 - `sync-hubspot-contact` — fires on `profiles` INSERT (webhook: `on_profile_insert_hubspot`). Upserts new user into HubSpot CRM.
 
 ## HubSpot Integration
