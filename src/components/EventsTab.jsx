@@ -584,20 +584,22 @@ export default function EventsTab({ groupId, userId, isAdmin, onOpenSettings }) 
             onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingEvent(null) } }}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="bg-white rounded-t-3xl p-5 max-h-[90dvh] overflow-y-auto overflow-x-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-stone-800 text-base">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
-                <button onClick={() => { setShowForm(false); setEditingEvent(null) }} className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
-                  <XIcon size={18} />
-                </button>
+            <div className="bg-white rounded-t-3xl overflow-hidden max-h-[90dvh]">
+              <div className="overflow-y-auto max-h-[90dvh] p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-bold text-stone-800 text-base">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
+                  <button onClick={() => { setShowForm(false); setEditingEvent(null) }} className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
+                    <XIcon size={18} />
+                  </button>
+                </div>
+                <EventForm
+                  event={editingEvent}
+                  groupId={groupId}
+                  userId={userId}
+                  onSave={() => { setShowForm(false); setEditingEvent(null); load() }}
+                  onClose={() => { setShowForm(false); setEditingEvent(null) }}
+                />
               </div>
-              <EventForm
-                event={editingEvent}
-                groupId={groupId}
-                userId={userId}
-                onSave={() => { setShowForm(false); setEditingEvent(null); load() }}
-                onClose={() => { setShowForm(false); setEditingEvent(null) }}
-              />
             </div>
           </motion.div>
         )}
