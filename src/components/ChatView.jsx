@@ -5,7 +5,7 @@ import {
   PaperPlaneTilt, Image as ImageIcon, X,
   MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
   Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
-  ChartBar, Plus as PlusIcon,
+  ChartBar, Plus as PlusIcon, DotsThreeVertical,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -142,6 +142,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [pollQuestion, setPollQuestion]       = useState('')
   const [pollOptions, setPollOptions]         = useState(['', ''])
   const [pollSubmitting, setPollSubmitting]   = useState(false)
+  const [pollMenuOpenId, setPollMenuOpenId]   = useState(null)
+  const [editingPollId, setEditingPollId]     = useState(null)
+  const [editPollQuestion, setEditPollQuestion] = useState('')
+  const [editPollOptions, setEditPollOptions]   = useState([])
+  const [savingPoll, setSavingPoll]           = useState(false)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -274,6 +279,46 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     })
     const { error } = await supabase.from('poll_votes').upsert({ poll_id: pollId, user_id: myId, option_index: optionIndex })
     if (error) console.error('castVote error:', error)
+  }
+
+  function startEditPoll(pollId) {
+    const poll = polls[pollId]
+    if (!poll) return
+    setEditPollQuestion(poll.question)
+    setEditPollOptions(poll.options.map(o => o.text))
+    setEditingPollId(pollId)
+    setPollMenuOpenId(null)
+  }
+
+  async function savePoll(pollId) {
+    const question = editPollQuestion.trim()
+    const opts = editPollOptions.map(o => o.trim()).filter(Boolean)
+    if (!question || opts.length < 2 || savingPoll) return
+    setSavingPoll(true)
+    try {
+      const { error } = await supabase.from('polls')
+        .update({ question, options: opts.map(text => ({ text })) })
+        .eq('id', pollId)
+      if (error) throw error
+      await supabase.from('poll_votes').delete().eq('poll_id', pollId)
+      setPolls(prev => ({
+        ...prev,
+        [pollId]: { ...prev[pollId], question, options: opts.map(text => ({ text })), votes: [] },
+      }))
+      setEditingPollId(null)
+    } catch (e) {
+      console.error('savePoll error:', e)
+    } finally {
+      setSavingPoll(false)
+    }
+  }
+
+  async function deletePoll(pollId, messageId) {
+    setPollMenuOpenId(null)
+    setMessages(prev => prev.filter(m => m.id !== messageId))
+    setPolls(prev => { const next = { ...prev }; delete next[pollId]; return next })
+    await supabase.from('messages').delete().eq('id', messageId)
+    await supabase.from('polls').delete().eq('id', pollId)
   }
 
   // ── Messages + reactions + realtime ──────────────────────────────────────
@@ -1343,6 +1388,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
                   </div>
                 )
+                const isEditing = editingPollId === msg.poll_id
                 const myVote = poll.votes.find(v => v.user_id === myId)?.option_index ?? null
                 const totalVotes = poll.votes.length
                 return (
@@ -1352,43 +1398,144 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     className={`mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''}`}
                   >
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-                      <div className="px-4 pt-3 pb-2 border-b border-stone-100">
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
-                          <ChartBar size={11} weight="bold" />
-                          Poll · {senderName(msg.user_id, msg.display_name)}
+
+                      {/* Header */}
+                      <div className="px-4 pt-3 pb-2 border-b border-stone-100 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
+                            <ChartBar size={11} weight="bold" />
+                            {isEditing ? 'Edit Poll' : `Poll · ${senderName(msg.user_id, msg.display_name)}`}
+                          </div>
+                          {!isEditing && <p className="text-sm font-bold text-stone-800 leading-snug">{poll.question}</p>}
                         </div>
-                        <p className="text-sm font-bold text-stone-800 leading-snug">{poll.question}</p>
-                      </div>
-                      <div className="px-4 py-3 flex flex-col gap-2">
-                        {poll.options.map((opt, oi) => {
-                          const voteCount = poll.votes.filter(v => v.option_index === oi).length
-                          const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0
-                          const voted = myVote === oi
-                          return (
+
+                        {/* Dots menu — creator only */}
+                        {isOwn && !isEditing && (
+                          <div className="relative shrink-0">
                             <button
-                              key={oi}
-                              onClick={() => castVote(msg.poll_id, oi)}
-                              className={`relative w-full text-left px-3 py-2.5 rounded-xl border-2 overflow-hidden transition-colors ${voted ? 'border-jade' : 'border-stone-200 hover:border-stone-300'}`}
+                              onClick={() => setPollMenuOpenId(prev => prev === msg.poll_id ? null : msg.poll_id)}
+                              className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
                             >
-                              <div
-                                className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-jade/10' : 'bg-stone-50'}`}
-                                style={{ width: `${Math.max(pct, 4)}%` }}
-                              />
-                              <div className="relative flex items-center justify-between">
-                                <span className={`text-sm font-medium ${voted ? 'text-jade' : 'text-stone-700'}`}>{opt.text}</span>
-                                <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
-                              </div>
+                              <DotsThreeVertical size={16} weight="bold" />
                             </button>
-                          )
-                        })}
-                        <p className="text-[10px] text-stone-400 mt-0.5">
-                          {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
-                          {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
-                        </p>
+                            {pollMenuOpenId === msg.poll_id && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setPollMenuOpenId(null)} />
+                                <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 min-w-[130px]">
+                                  <button
+                                    onClick={() => startEditPoll(msg.poll_id)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50"
+                                  >
+                                    <PencilSimple size={14} weight="bold" />
+                                    Edit poll
+                                  </button>
+                                  <button
+                                    onClick={() => deletePoll(msg.poll_id, msg.id)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                                  >
+                                    <Trash size={14} weight="bold" />
+                                    Delete poll
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="px-4 pb-2.5 text-right">
-                        <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
-                      </div>
+
+                      {isEditing ? (
+                        /* ── Edit form ── */
+                        <div className="px-4 py-3 flex flex-col gap-2">
+                          <input
+                            type="text"
+                            value={editPollQuestion}
+                            onChange={e => setEditPollQuestion(e.target.value)}
+                            placeholder="Question"
+                            className="w-full text-sm font-medium text-stone-800 border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade/30"
+                          />
+                          {editPollOptions.map((opt, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={opt}
+                                onChange={e => {
+                                  const next = [...editPollOptions]
+                                  next[i] = e.target.value
+                                  setEditPollOptions(next)
+                                }}
+                                placeholder={`Option ${i + 1}`}
+                                className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade/30"
+                              />
+                              {editPollOptions.length > 2 && (
+                                <button
+                                  onClick={() => setEditPollOptions(prev => prev.filter((_, j) => j !== i))}
+                                  className="text-stone-400 hover:text-red-400 transition-colors"
+                                >
+                                  <X size={14} weight="bold" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          {editPollOptions.length < 10 && (
+                            <button
+                              onClick={() => setEditPollOptions(prev => [...prev, ''])}
+                              className="self-start flex items-center gap-1 text-xs text-jade font-semibold"
+                            >
+                              <PlusIcon size={12} weight="bold" /> Add option
+                            </button>
+                          )}
+                          <p className="text-[10px] text-stone-400">Saving will reset all votes.</p>
+                          <div className="flex gap-2 mt-0.5">
+                            <button
+                              onClick={() => setEditingPollId(null)}
+                              className="flex-1 py-2 text-sm font-semibold text-stone-500 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => savePoll(msg.poll_id)}
+                              disabled={!editPollQuestion.trim() || editPollOptions.filter(o => o.trim()).length < 2 || savingPoll}
+                              className="flex-1 py-2 text-sm font-semibold text-white bg-jade rounded-xl disabled:opacity-40 transition-colors"
+                            >
+                              {savingPoll ? 'Saving…' : 'Save'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* ── Voting view ── */
+                        <>
+                          <div className="px-4 py-3 flex flex-col gap-2">
+                            {poll.options.map((opt, oi) => {
+                              const voteCount = poll.votes.filter(v => v.option_index === oi).length
+                              const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0
+                              const voted = myVote === oi
+                              return (
+                                <button
+                                  key={oi}
+                                  onClick={() => castVote(msg.poll_id, oi)}
+                                  className={`relative w-full text-left px-3 py-2.5 rounded-xl border-2 overflow-hidden transition-colors ${voted ? 'border-jade' : 'border-stone-200 hover:border-stone-300'}`}
+                                >
+                                  <div
+                                    className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-jade/10' : 'bg-stone-50'}`}
+                                    style={{ width: `${Math.max(pct, 4)}%` }}
+                                  />
+                                  <div className="relative flex items-center justify-between">
+                                    <span className={`text-sm font-medium ${voted ? 'text-jade' : 'text-stone-700'}`}>{opt.text}</span>
+                                    <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
+                                  </div>
+                                </button>
+                              )
+                            })}
+                            <p className="text-[10px] text-stone-400 mt-0.5">
+                              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
+                              {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
+                            </p>
+                          </div>
+                          <div className="px-4 pb-2.5 text-right">
+                            <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )
