@@ -651,18 +651,14 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
       <AnimatePresence>
         {showConvPicker && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) setShowConvPicker(false) }}
           >
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            <div
               className="bg-white rounded-t-3xl"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
@@ -708,7 +704,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
