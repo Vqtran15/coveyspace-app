@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { CalendarStar, Plus, CaretDown, CaretUp, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, GearSix } from '@phosphor-icons/react'
+import { CalendarStar, Plus, CaretDown, CaretUp, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, GearSix, ChatCircleDots } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -195,10 +195,47 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
 
 // ── Event detail sheet ────────────────────────────────────────────────────────
 
-function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, onClose }) {
-  const [menuOpen, setMenuOpen] = useState(false)
+function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRsvp, onEdit, onDelete, onClose }) {
+  const toast = useToast()
+  const [menuOpen, setMenuOpen]   = useState(false)
+  const [sharing, setSharing]     = useState(false)
   const menuRef = useRef(null)
   const myRsvp = (rsvps ?? []).find(r => r.user_id === userId)
+
+  async function handleShareToChat() {
+    haptic()
+    setSharing(true)
+    const { data: conv } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('community_group_id', groupId)
+      .eq('type', 'group')
+      .limit(1)
+      .maybeSingle()
+
+    if (!conv) { toast('Group chat not found', 'error'); setSharing(false); return }
+
+    const lines = [
+      `📅 ${event.title}`,
+      formatDateFull(event.event_date, event.event_time),
+      event.location ? `📍 ${event.location}` : null,
+      event.description ? `\n${event.description}` : null,
+      '\nRSVP in the Events tab!',
+    ].filter(Boolean).join('\n')
+
+    const { error } = await supabase.from('messages').insert({
+      community_group_id: groupId,
+      conversation_id:    conv.id,
+      user_id:            userId,
+      display_name:       displayName || 'Member',
+      body:               lines,
+    })
+
+    setSharing(false)
+    if (error) { toast('Failed to share event', 'error'); return }
+    toast('Shared to group chat!', 'success')
+    onClose()
+  }
 
   useEffect(() => {
     if (!menuOpen) return
@@ -312,6 +349,16 @@ function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, 
             </div>
           </div>
 
+          {/* Share to Chat */}
+          <button
+            onClick={handleShareToChat}
+            disabled={sharing}
+            className="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-2xl border border-stone-200 text-sm font-semibold text-stone-600 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-50"
+          >
+            <ChatCircleDots size={18} />
+            {sharing ? 'Sharing…' : 'Share to Chat'}
+          </button>
+
           {/* RSVP breakdown by category */}
           {(rsvps ?? []).length > 0 && (() => {
             const going    = (rsvps ?? []).filter(r => r.status === 'going')
@@ -353,7 +400,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, 
 
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
-export default function EventsTab({ groupId, userId, isAdmin, onOpenSettings }) {
+export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpenSettings }) {
   const toast = useToast()
   const [events,       setEvents]       = useState([])
   const [rsvps,        setRsvps]        = useState({})
@@ -586,6 +633,8 @@ export default function EventsTab({ groupId, userId, isAdmin, onOpenSettings }) 
             key={selectedEvent.id}
             event={selectedEvent}
             rsvps={rsvps[selectedEvent.id]}
+            groupId={groupId}
+            displayName={displayName}
             userId={userId}
             isAdmin={isAdmin}
             onRsvp={handleRsvp}
