@@ -1498,6 +1498,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               const prevItem = items[i - 1]
               const isLastInGroup  = nextItem?.type !== 'msg' || nextItem.msg.user_id !== msg.user_id || new Date(nextItem.msg.created_at) - new Date(msg.created_at) > GROUP_TIME_GAP
               const isFirstInGroup = prevItem?.type !== 'msg' || prevItem.msg.user_id !== msg.user_id || new Date(msg.created_at) - new Date(prevItem.msg.created_at) > GROUP_TIME_GAP
+              const prevIsImage = prevItem?.type === 'msg' && !!prevItem.msg.image_url
               const msgReactions = reactions[msg.id]
               const hasReactions = msgReactions && Object.keys(msgReactions).length > 0
 
@@ -1759,7 +1760,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <div
                   id={`msg-${msg.id}`}
                   key={msg.id}
-                  className={`flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && isFirstInGroup ? '!mt-3' : ''} ${msg.image_url ? 'mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
+                  className={`flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? 'mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
                   onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
                   onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
                   onTouchStart={e => { if (msg._pending || msg._failed) return; handleLongPressStart(e, msg.id, isOwn) }}
