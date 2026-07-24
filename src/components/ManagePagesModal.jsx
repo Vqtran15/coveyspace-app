@@ -119,8 +119,11 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
         className={`bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[80vh] flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 pb-4 shrink-0">
-          <h2 className="text-lg font-bold text-stone-800">Manage {pageNounPlural}</h2>
+        <div className="flex items-start justify-between p-5 pb-4 shrink-0">
+          <div>
+            <h2 className="text-lg font-bold text-stone-800">Manage {pageNounPlural}</h2>
+            <p className="text-xs text-stone-400 mt-0.5">Drag to reorder below.</p>
+          </div>
           <div className="flex items-center gap-1">
             <button
               onClick={onAddPage}
@@ -136,6 +139,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
             </button>
           </div>
         </div>
+
 
         {list.length === 0 ? (
           <div className="px-5 pb-8 text-center">

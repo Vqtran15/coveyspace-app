@@ -4,6 +4,7 @@ import {
   PaperPlaneTilt, Image as ImageIcon, X,
   MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
   Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
+  ChartBar, Plus as PlusIcon,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -135,6 +136,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
+  const [polls, setPolls]                     = useState({})
+  const [pollCreating, setPollCreating]       = useState(false)
+  const [pollQuestion, setPollQuestion]       = useState('')
+  const [pollOptions, setPollOptions]         = useState(['', ''])
+  const [pollSubmitting, setPollSubmitting]   = useState(false)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -187,6 +193,69 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
   }
 
+  // ── Poll helpers ─────────────────────────────────────────────────────────
+  async function fetchPollsForMessages(msgs) {
+    const ids = [...new Set(msgs.filter(m => m.poll_id).map(m => m.poll_id))]
+    if (!ids.length) return
+    const [{ data: ps }, { data: vs }] = await Promise.all([
+      supabase.from('polls').select('id, question, options').in('id', ids),
+      supabase.from('poll_votes').select('poll_id, user_id, option_index').in('poll_id', ids),
+    ])
+    const map = {}
+    for (const p of ps ?? []) map[p.id] = { question: p.question, options: p.options, votes: [] }
+    for (const v of vs ?? []) { if (map[v.poll_id]) map[v.poll_id].votes.push(v) }
+    if (Object.keys(map).length) setPolls(prev => ({ ...prev, ...map }))
+  }
+
+  async function createPoll() {
+    const question = pollQuestion.trim()
+    const opts = pollOptions.map(o => o.trim()).filter(Boolean)
+    if (!question || opts.length < 2 || pollSubmitting) return
+    setPollSubmitting(true)
+    try {
+      const { data: poll, error } = await supabase.from('polls').insert({
+        community_group_id: groupId,
+        conversation_id: convId,
+        question,
+        options: opts.map(text => ({ text })),
+        created_by: myId,
+      }).select('id').single()
+      if (error || !poll) throw error ?? new Error('no poll')
+      setPolls(prev => ({
+        ...prev,
+        [poll.id]: { question, options: opts.map(text => ({ text })), votes: [] },
+      }))
+      const replyId = replyingTo?.id ?? null
+      await supabase.from('messages').insert({
+        community_group_id: groupId,
+        conversation_id: convId,
+        user_id: myId,
+        display_name: displayName || 'Member',
+        body: null,
+        poll_id: poll.id,
+        reply_to_id: replyId,
+      })
+      setPollCreating(false)
+      setPollQuestion('')
+      setPollOptions(['', ''])
+      setReplyingTo(null)
+    } catch (e) {
+      console.error('createPoll error:', e)
+    } finally {
+      setPollSubmitting(false)
+    }
+  }
+
+  async function castVote(pollId, optionIndex) {
+    setPolls(prev => {
+      if (!prev[pollId]) return prev
+      const p = prev[pollId]
+      return { ...prev, [pollId]: { ...p, votes: [...p.votes.filter(v => v.user_id !== myId), { poll_id: pollId, user_id: myId, option_index: optionIndex }] } }
+    })
+    const { error } = await supabase.from('poll_votes').upsert({ poll_id: pollId, user_id: myId, option_index: optionIndex })
+    if (error) console.error('castVote error:', error)
+  }
+
   // ── Messages + reactions + realtime ──────────────────────────────────────
   useEffect(() => {
     onRead?.()
@@ -210,6 +279,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setHasMore(cached.length >= CACHE_LIMIT)
       setLoading(false)
       setFetchingFresh(true)
+      fetchPollsForMessages(cached)
     } else {
       setLoading(true)
     }
@@ -239,6 +309,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           map[r.message_id][r.emoji].push(r)
         }
         setReactions(map)
+        fetchPollsForMessages(msgs)
       })
 
     const msgCh = supabase
@@ -253,6 +324,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           saveCache(convId, updated)
           return updated
         })
+        if (msg.poll_id) fetchPollsForMessages([msg])
         if (msg.user_id !== myId) {
           if (isAtBottomRef.current) {
             const now = new Date().toISOString()
@@ -342,11 +414,31 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
+    const pollVotesCh = supabase
+      .channel(`poll-votes:${convId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'poll_votes' }, ({ new: v, old: o, eventType }) => {
+        const vote = eventType === 'DELETE' ? o : v
+        if (!vote?.poll_id) return
+        setPolls(prev => {
+          if (!prev[vote.poll_id]) return prev
+          const p = prev[vote.poll_id]
+          let votes
+          if (eventType === 'DELETE') {
+            votes = p.votes.filter(x => !(x.poll_id === vote.poll_id && x.user_id === vote.user_id))
+          } else {
+            votes = [...p.votes.filter(x => x.user_id !== vote.user_id), vote]
+          }
+          return { ...prev, [vote.poll_id]: { ...p, votes } }
+        })
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
       supabase.removeChannel(convMetaCh)
+      supabase.removeChannel(pollVotesCh)
       const closeTime = new Date().toISOString()
       localStorage.setItem(READ_AT_KEY(convId), closeTime)
       supabase.from('conversation_members')
@@ -536,6 +628,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (older.length) {
       preserveScrollRef.current = scrollRef.current?.scrollHeight ?? 0
       setMessages(prev => [...older, ...prev])
+      fetchPollsForMessages(older)
       supabase
         .from('reactions')
         .select('id, message_id, emoji, user_id')
@@ -1214,6 +1307,61 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               const msgReactions = reactions[msg.id]
               const hasReactions = msgReactions && Object.keys(msgReactions).length > 0
 
+              // ── Poll card ──────────────────────────────────────────────────
+              if (msg.poll_id) {
+                const poll = polls[msg.poll_id]
+                if (!poll) return null
+                const myVote = poll.votes.find(v => v.user_id === myId)?.option_index ?? null
+                const totalVotes = poll.votes.length
+                return (
+                  <div
+                    id={`msg-${msg.id}`}
+                    key={msg.id}
+                    className={`mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''}`}
+                  >
+                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                      <div className="px-4 pt-3 pb-2 border-b border-stone-100">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
+                          <ChartBar size={11} weight="bold" />
+                          Poll · {senderName(msg.user_id, msg.display_name)}
+                        </div>
+                        <p className="text-sm font-bold text-stone-800 leading-snug">{poll.question}</p>
+                      </div>
+                      <div className="px-4 py-3 flex flex-col gap-2">
+                        {poll.options.map((opt, oi) => {
+                          const voteCount = poll.votes.filter(v => v.option_index === oi).length
+                          const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0
+                          const voted = myVote === oi
+                          return (
+                            <button
+                              key={oi}
+                              onClick={() => castVote(msg.poll_id, oi)}
+                              className={`relative w-full text-left px-3 py-2.5 rounded-xl border-2 overflow-hidden transition-colors ${voted ? 'border-jade' : 'border-stone-200 hover:border-stone-300'}`}
+                            >
+                              <div
+                                className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-jade/10' : 'bg-stone-50'}`}
+                                style={{ width: `${Math.max(pct, 4)}%` }}
+                              />
+                              <div className="relative flex items-center justify-between">
+                                <span className={`text-sm font-medium ${voted ? 'text-jade' : 'text-stone-700'}`}>{opt.text}</span>
+                                <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
+                              </div>
+                            </button>
+                          )
+                        })}
+                        <p className="text-[10px] text-stone-400 mt-0.5">
+                          {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
+                          {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
+                        </p>
+                      </div>
+                      <div className="px-4 pb-2.5 text-right">
+                        <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <div
                   id={`msg-${msg.id}`}
@@ -1521,6 +1669,65 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             ))}
           </div>
         )}
+        {pollCreating && (
+          <div className="mb-2 border border-stone-200 rounded-2xl bg-white p-3 animate-stack-in">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold text-stone-800">Create Poll</p>
+              <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className="text-stone-400 hover:text-stone-600">
+                <X size={16} weight="bold" />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={pollQuestion}
+              onChange={e => setPollQuestion(e.target.value)}
+              placeholder="Ask a question…"
+              className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            />
+            <div className="flex flex-col gap-1.5 mb-2.5">
+              {pollOptions.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={e => {
+                      const next = [...pollOptions]
+                      next[i] = e.target.value
+                      setPollOptions(next)
+                    }}
+                    placeholder={`Option ${i + 1}`}
+                    className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                  />
+                  {pollOptions.length > 2 && (
+                    <button
+                      onClick={() => setPollOptions(prev => prev.filter((_, j) => j !== i))}
+                      className="text-stone-300 hover:text-red-400 shrink-0"
+                    >
+                      <X size={14} weight="bold" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between">
+              {pollOptions.length < 10 ? (
+                <button
+                  onClick={() => setPollOptions(prev => [...prev, ''])}
+                  className="flex items-center gap-1 text-xs text-jade font-semibold hover:text-jade-700 transition-colors"
+                >
+                  <PlusIcon size={12} weight="bold" /> Add option
+                </button>
+              ) : <span />}
+              <button
+                onClick={createPoll}
+                disabled={!pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2 || pollSubmitting}
+                className="text-sm font-semibold bg-jade text-white px-4 py-1.5 rounded-xl disabled:opacity-40 hover:bg-jade-700 transition-colors"
+              >
+                {pollSubmitting ? 'Creating…' : 'Create Poll'}
+              </button>
+            </div>
+          </div>
+        )}
         {(showEmojiPicker || emojiPickerClosing) && (
           <div className={`mb-2 ${emojiPickerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
             <Suspense fallback={null}>
@@ -1544,6 +1751,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             <ImageIcon size={22} />
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+          <button
+            type="button"
+            onClick={() => { setPollCreating(prev => !prev); if (showEmojiPicker) closeEmojiPicker() }}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors shrink-0 ${pollCreating ? 'text-jade bg-jade/10' : 'text-stone-400 hover:text-jade hover:bg-stone-100'}`}
+          >
+            <ChartBar size={22} />
+          </button>
           <textarea
             ref={textareaRef}
             value={text}
@@ -1556,7 +1770,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           />
           <button
             type="button"
-            onClick={() => showEmojiPicker ? closeEmojiPicker() : setShowEmojiPicker(true)}
+            onClick={() => {
+              if (showEmojiPicker) { closeEmojiPicker() } else { setShowEmojiPicker(true); setPollCreating(false) }
+            }}
             className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors shrink-0 ${showEmojiPicker ? 'text-jade bg-jade/10' : 'text-stone-400 hover:text-jade hover:bg-stone-100'}`}
           >
             <Smiley size={22} />

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { motion, LayoutGroup } from 'framer-motion'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
@@ -509,29 +510,45 @@ export default function App() {
         </div>
       </aside>
 
-      <nav
-        className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        {visibleTabs.map(t => {
-          const active = location.pathname === t.path
-          return (
-            <button
-              key={t.path}
-              onClick={() => handleTabChange(t.path)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors touch-manipulation ${active ? '' : 'text-stone-400'}`}
-            >
-              <span className={`relative px-3 py-1 rounded-2xl transition-colors ${active ? 'bg-jade text-white' : ''}`}>
-                <t.Icon size={26} weight={active ? 'fill' : 'regular'} />
-                {t.path === '/chat' && unreadChatCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white" />
-                )}
-              </span>
-              <span className={`text-[10px] font-medium tracking-wide ${active ? 'text-jade' : ''}`}>{t.shortLabel}</span>
-            </button>
-          )
-        })}
-      </nav>
+      <LayoutGroup id="bottom-nav">
+        <nav
+          className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          {visibleTabs.map(t => {
+            const active = location.pathname === t.path
+            return (
+              <button
+                key={t.path}
+                onClick={() => handleTabChange(t.path)}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 touch-manipulation ${active ? '' : 'text-stone-400'}`}
+              >
+                <span className={`relative px-3 py-1 ${active ? 'text-white' : ''}`}>
+                  {active && (
+                    <motion.span
+                      layoutId="tab-pill"
+                      className="absolute inset-0 bg-jade rounded-2xl"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <motion.span
+                    className="relative z-10 block"
+                    initial={false}
+                    animate={active ? { scale: [1, 1.28, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <t.Icon size={26} weight={active ? 'fill' : 'regular'} />
+                  </motion.span>
+                  {t.path === '/chat' && unreadChatCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
+                  )}
+                </span>
+                <span className={`text-[10px] font-medium tracking-wide ${active ? 'text-jade' : ''}`}>{t.shortLabel}</span>
+              </button>
+            )
+          })}
+        </nav>
+      </LayoutGroup>
 
       {settingsOpen && !showWelcome && (
         <SettingsModal
