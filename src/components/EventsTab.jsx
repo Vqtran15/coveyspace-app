@@ -136,7 +136,7 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          className="w-full max-w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
         />
       </div>
       <div>
@@ -145,7 +145,7 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
           type="time"
           value={time}
           onChange={e => setTime(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          className="w-full max-w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
         />
       </div>
       <div>
@@ -584,7 +584,7 @@ export default function EventsTab({ groupId, userId, isAdmin, onOpenSettings }) 
             onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingEvent(null) } }}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="bg-white rounded-t-3xl p-5 max-h-[90dvh] overflow-y-auto">
+            <div className="bg-white rounded-t-3xl p-5 max-h-[90dvh] overflow-y-auto overflow-x-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold text-stone-800 text-base">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
                 <button onClick={() => { setShowForm(false); setEditingEvent(null) }} className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
