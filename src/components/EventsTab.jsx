@@ -196,15 +196,9 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
 // ── Event detail sheet ────────────────────────────────────────────────────────
 
 function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, onClose }) {
-  const [exiting, setExiting] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const myRsvp = (rsvps ?? []).find(r => r.user_id === userId)
-
-  function close() {
-    setExiting(true)
-    setTimeout(onClose, 210)
-  }
 
   useEffect(() => {
     if (!menuOpen) return
@@ -218,13 +212,16 @@ function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, 
   const { month, day } = formatDateBadge(event.event_date)
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex flex-col bg-white transition-transform duration-200 ease-out ${exiting ? 'translate-y-full' : 'translate-y-0'}`}
+    <motion.div
+      initial={{ y: '100%' }}
+      animate={{ y: 0, transition: { type: 'tween', duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] } }}
+      exit={{ y: '100%', transition: { type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] } }}
+      className="fixed inset-0 z-50 flex flex-col bg-white"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-        <button onClick={close} className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
+        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
           <ArrowLeft size={20} />
         </button>
         <span className="font-semibold text-stone-800 text-base">Event Details</span>
@@ -350,7 +347,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, 
           })()}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -454,9 +451,11 @@ export default function EventsTab({ groupId, userId, isAdmin, onOpenSettings }) 
     const { month, day } = formatDateBadge(event.event_date)
     const eventRsvps = rsvps[event.id] ?? []
     return (
-      <button
+      <motion.button
         onClick={() => { haptic(); setSelectedEvent(event) }}
-        className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left hover:border-amber-200 hover:bg-amber-50/30 transition-colors"
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left"
       >
         <div className="flex flex-col items-center justify-center bg-amber-50 border border-amber-100 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
           <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">{month}</span>
@@ -476,7 +475,7 @@ export default function EventsTab({ groupId, userId, isAdmin, onOpenSettings }) 
           </div>
         </div>
         <GoingAvatars rsvps={eventRsvps} />
-      </button>
+      </motion.button>
     )
   }
 
