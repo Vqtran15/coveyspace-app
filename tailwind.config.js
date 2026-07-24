@@ -213,6 +213,10 @@ export default {
           '65%':  { transform: 'scale(1) rotate(0deg)',   opacity: '1' },
           '100%': { transform: 'scale(1) rotate(0deg)',   opacity: '0' },
         },
+        'poll-delete-out': {
+          '0%':   { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(0.94) translateY(-6px)' },
+        },
       },
       animation: {
         'modal-in':         'modal-in 0.25s cubic-bezier(0.32,0.72,0,1) backwards',
@@ -249,6 +253,7 @@ export default {
         'skeleton-shimmer':    'skeleton-shimmer 1.6s ease-in-out infinite',
         'dot-bounce':          'dot-bounce 1.1s ease-in-out infinite',
         'celebration':         'celebration 1.5s ease-out forwards',
+        'poll-delete-out':    'poll-delete-out 0.24s ease-in forwards',
       },
     },
   },

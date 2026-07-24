@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect, useMemo, lazy, Suspense } from 'react'
 import { flushSync } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
@@ -143,6 +144,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [pollOptions, setPollOptions]         = useState(['', ''])
   const [pollSubmitting, setPollSubmitting]   = useState(false)
   const [pollMenuOpenId, setPollMenuOpenId]   = useState(null)
+  const [deletingPollId, setDeletingPollId]   = useState(null)
   const [editingPollId, setEditingPollId]     = useState(null)
   const [editPollQuestion, setEditPollQuestion] = useState('')
   const [editPollOptions, setEditPollOptions]   = useState([])
@@ -314,8 +316,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   async function deletePoll(pollId, messageId) {
     setPollMenuOpenId(null)
+    setDeletingPollId(pollId)
+    await new Promise(r => setTimeout(r, 260))
     setMessages(prev => prev.filter(m => m.id !== messageId))
     setPolls(prev => { const next = { ...prev }; delete next[pollId]; return next })
+    setDeletingPollId(null)
     await supabase.from('messages').delete().eq('id', messageId)
     await supabase.from('polls').delete().eq('id', pollId)
   }
@@ -1394,7 +1399,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   <div
                     id={`msg-${msg.id}`}
                     key={msg.id}
-                    className={`mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''}`}
+                    className={`mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
                   >
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
 
@@ -1418,9 +1423,18 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                               <DotsThreeVertical size={16} weight="bold" />
                             </button>
                             {pollMenuOpenId === msg.poll_id && (
-                              <>
-                                <div className="fixed inset-0 z-40" onClick={() => setPollMenuOpenId(null)} />
-                                <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 min-w-[130px]">
+                              <div className="fixed inset-0 z-40" onClick={() => setPollMenuOpenId(null)} />
+                            )}
+                            <AnimatePresence>
+                              {pollMenuOpenId === msg.poll_id && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.88, y: -6 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.88, y: -6 }}
+                                  transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+                                  style={{ transformOrigin: 'top right' }}
+                                  className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 min-w-[130px]"
+                                >
                                   <button
                                     onClick={() => startEditPoll(msg.poll_id, poll)}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50"
@@ -1435,106 +1449,120 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                                     <Trash size={14} weight="bold" />
                                     Delete poll
                                   </button>
-                                </div>
-                              </>
-                            )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         )}
                       </div>
 
-                      {isEditing ? (
-                        /* ── Edit form ── */
-                        <div className="px-4 py-3 flex flex-col gap-2">
-                          <input
-                            type="text"
-                            value={editPollQuestion}
-                            onChange={e => setEditPollQuestion(e.target.value)}
-                            placeholder="Question"
-                            className="w-full text-sm font-medium text-stone-800 border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade/30"
-                          />
-                          {editPollOptions.map((opt, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={opt}
-                                onChange={e => {
-                                  const next = [...editPollOptions]
-                                  next[i] = e.target.value
-                                  setEditPollOptions(next)
-                                }}
-                                placeholder={`Option ${i + 1}`}
-                                className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade/30"
-                              />
-                              {editPollOptions.length > 2 && (
-                                <button
-                                  onClick={() => setEditPollOptions(prev => prev.filter((_, j) => j !== i))}
-                                  className="text-stone-400 hover:text-red-400 transition-colors"
-                                >
-                                  <X size={14} weight="bold" />
-                                </button>
-                              )}
+                      {/* Content — AnimatePresence swaps edit form ↔ voting view */}
+                      <AnimatePresence mode="wait" initial={false}>
+                        {isEditing ? (
+                          <motion.div
+                            key="edit"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                            className="px-4 py-3 flex flex-col gap-2"
+                          >
+                            <input
+                              type="text"
+                              value={editPollQuestion}
+                              onChange={e => setEditPollQuestion(e.target.value)}
+                              placeholder="Question"
+                              className="w-full text-sm font-medium text-stone-800 border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade/30"
+                            />
+                            {editPollOptions.map((opt, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={opt}
+                                  onChange={e => {
+                                    const next = [...editPollOptions]
+                                    next[i] = e.target.value
+                                    setEditPollOptions(next)
+                                  }}
+                                  placeholder={`Option ${i + 1}`}
+                                  className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jade/30"
+                                />
+                                {editPollOptions.length > 2 && (
+                                  <button
+                                    onClick={() => setEditPollOptions(prev => prev.filter((_, j) => j !== i))}
+                                    className="text-stone-400 hover:text-red-400 transition-colors"
+                                  >
+                                    <X size={14} weight="bold" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {editPollOptions.length < 10 && (
+                              <button
+                                onClick={() => setEditPollOptions(prev => [...prev, ''])}
+                                className="self-start flex items-center gap-1 text-xs text-jade font-semibold"
+                              >
+                                <PlusIcon size={12} weight="bold" /> Add option
+                              </button>
+                            )}
+                            <p className="text-[10px] text-stone-400">Saving will reset all votes.</p>
+                            <div className="flex gap-2 mt-0.5">
+                              <button
+                                onClick={() => setEditingPollId(null)}
+                                className="flex-1 py-2 text-sm font-semibold text-stone-500 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => savePoll(msg.poll_id)}
+                                disabled={!editPollQuestion.trim() || editPollOptions.filter(o => o.trim()).length < 2 || savingPoll}
+                                className="flex-1 py-2 text-sm font-semibold text-white bg-jade rounded-xl disabled:opacity-40 transition-colors"
+                              >
+                                {savingPoll ? 'Saving…' : 'Save'}
+                              </button>
                             </div>
-                          ))}
-                          {editPollOptions.length < 10 && (
-                            <button
-                              onClick={() => setEditPollOptions(prev => [...prev, ''])}
-                              className="self-start flex items-center gap-1 text-xs text-jade font-semibold"
-                            >
-                              <PlusIcon size={12} weight="bold" /> Add option
-                            </button>
-                          )}
-                          <p className="text-[10px] text-stone-400">Saving will reset all votes.</p>
-                          <div className="flex gap-2 mt-0.5">
-                            <button
-                              onClick={() => setEditingPollId(null)}
-                              className="flex-1 py-2 text-sm font-semibold text-stone-500 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => savePoll(msg.poll_id)}
-                              disabled={!editPollQuestion.trim() || editPollOptions.filter(o => o.trim()).length < 2 || savingPoll}
-                              className="flex-1 py-2 text-sm font-semibold text-white bg-jade rounded-xl disabled:opacity-40 transition-colors"
-                            >
-                              {savingPoll ? 'Saving…' : 'Save'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        /* ── Voting view ── */
-                        <>
-                          <div className="px-4 py-3 flex flex-col gap-2">
-                            {poll.options.map((opt, oi) => {
-                              const voteCount = poll.votes.filter(v => v.option_index === oi).length
-                              const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0
-                              const voted = myVote === oi
-                              return (
-                                <button
-                                  key={oi}
-                                  onClick={() => castVote(msg.poll_id, oi)}
-                                  className={`relative w-full text-left px-3 py-2.5 rounded-xl border-2 overflow-hidden transition-colors ${voted ? 'border-jade' : 'border-stone-200 hover:border-stone-300'}`}
-                                >
-                                  <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-jade/10' : 'bg-stone-50'}`}
-                                    style={{ width: `${Math.max(pct, 4)}%` }}
-                                  />
-                                  <div className="relative flex items-center justify-between">
-                                    <span className={`text-sm font-medium ${voted ? 'text-jade' : 'text-stone-700'}`}>{opt.text}</span>
-                                    <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
-                                  </div>
-                                </button>
-                              )
-                            })}
-                            <p className="text-[10px] text-stone-400 mt-0.5">
-                              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
-                              {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
-                            </p>
-                          </div>
-                          <div className="px-4 pb-2.5 text-right">
-                            <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
-                          </div>
-                        </>
-                      )}
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="vote"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                          >
+                            <div className="px-4 py-3 flex flex-col gap-2">
+                              {poll.options.map((opt, oi) => {
+                                const voteCount = poll.votes.filter(v => v.option_index === oi).length
+                                const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0
+                                const voted = myVote === oi
+                                return (
+                                  <button
+                                    key={oi}
+                                    onClick={() => castVote(msg.poll_id, oi)}
+                                    className={`relative w-full text-left px-3 py-2.5 rounded-xl border-2 overflow-hidden transition-colors ${voted ? 'border-jade' : 'border-stone-200 hover:border-stone-300'}`}
+                                  >
+                                    <div
+                                      className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-jade/10' : 'bg-stone-50'}`}
+                                      style={{ width: `${Math.max(pct, 4)}%` }}
+                                    />
+                                    <div className="relative flex items-center justify-between">
+                                      <span className={`text-sm font-medium ${voted ? 'text-jade' : 'text-stone-700'}`}>{opt.text}</span>
+                                      <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                              <p className="text-[10px] text-stone-400 mt-0.5">
+                                {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
+                                {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
+                              </p>
+                            </div>
+                            <div className="px-4 pb-2.5 text-right">
+                              <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                 )
