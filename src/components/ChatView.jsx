@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect, useMemo, lazy, Suspense } from 'react'
+import { flushSync } from 'react-dom'
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
 import {
   PaperPlaneTilt, Image as ImageIcon, X,
@@ -163,6 +164,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
   const justAddedOptionRef    = useRef(false)
+  const pollQuestionRef       = useRef(null)
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -215,23 +217,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (!question || opts.length < 2 || pollSubmitting) return
     setPollSubmitting(true)
     try {
-      const { data: poll, error } = await supabase.from('polls').insert({
+      const { data: poll, error: pollErr } = await supabase.from('polls').insert({
         community_group_id: groupId,
         conversation_id: convId,
         question,
         options: opts.map(text => ({ text })),
         created_by: myId,
       }).select('id').single()
-      if (error || !poll) throw error ?? new Error('no poll')
-
-      // Set poll data in state BEFORE inserting the message so it's ready when the card renders
-      setPolls(prev => ({
-        ...prev,
-        [poll.id]: { question, options: opts.map(text => ({ text })), votes: [] },
-      }))
+      if (pollErr || !poll) throw pollErr ?? new Error('poll insert failed')
 
       const replyId = replyingTo?.id ?? null
-      const { data: newMsg } = await supabase.from('messages').insert({
+      const { data: newMsg, error: msgErr } = await supabase.from('messages').insert({
         community_group_id: groupId,
         conversation_id: convId,
         user_id: myId,
@@ -240,12 +236,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         poll_id: poll.id,
         reply_to_id: replyId,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
+      if (msgErr) console.error('message insert error:', msgErr)
 
-      // Optimistically add to messages so the card shows immediately without waiting for realtime
+      // Build poll data object once — used for both state AND embedded in the message
+      const pollData = { question, options: opts.map(text => ({ text })), votes: [] }
+
+      // Update polls + messages in the same synchronous block so they land in one React render.
+      // Also embed _poll on the message itself as a fallback in case the polls state update
+      // races with the realtime INSERT handler.
+      setPolls(prev => ({ ...prev, [poll.id]: pollData }))
       if (newMsg) {
-        setIsAtBottom(true)
         isAtBottomRef.current = true
-        setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, _isNew: true }])
+        setIsAtBottom(true)
+        setMessages(prev =>
+          prev.some(m => m.id === newMsg.id)
+            ? prev
+            : [...prev, { ...newMsg, poll_id: poll.id, _poll: pollData, _isNew: true }]
+        )
       }
 
       setPollCreating(false)
@@ -1330,7 +1337,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
               // ── Poll card ──────────────────────────────────────────────────
               if (msg.poll_id) {
-                const poll = polls[msg.poll_id]
+                const poll = polls[msg.poll_id] ?? msg._poll
                 if (!poll) return (
                   <div key={msg.id} id={`msg-${msg.id}`} className="mb-3">
                     <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
@@ -1703,6 +1710,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               </button>
             </div>
             <input
+              ref={pollQuestionRef}
               type="text"
               value={pollQuestion}
               onChange={e => setPollQuestion(e.target.value)}
@@ -1779,7 +1787,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
           <button
             type="button"
-            onClick={() => { setPollCreating(prev => !prev); if (showEmojiPicker) closeEmojiPicker() }}
+            onClick={() => {
+              if (pollCreating) {
+                setPollCreating(false); setPollQuestion(''); setPollOptions(['', ''])
+                return
+              }
+              if (showEmojiPicker) closeEmojiPicker()
+              // flushSync forces a synchronous render before focus() so the input exists,
+              // and we're still inside the tap gesture so iOS opens the keyboard.
+              flushSync(() => setPollCreating(true))
+              pollQuestionRef.current?.focus()
+            }}
             className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors shrink-0 ${pollCreating ? 'text-jade bg-jade/10' : 'text-stone-400 hover:text-jade hover:bg-stone-100'}`}
           >
             <ChartBar size={22} />
