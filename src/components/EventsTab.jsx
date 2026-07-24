@@ -315,20 +315,39 @@ function EventDetail({ event, rsvps, userId, isAdmin, onRsvp, onEdit, onDelete, 
             </div>
           </div>
 
-          {/* Who's going */}
-          {(rsvps ?? []).some(r => r.status === 'going') && (
-            <div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Who's going</p>
-              <div className="flex flex-wrap gap-2">
-                {(rsvps ?? []).filter(r => r.status === 'going').map(r => (
-                  <div key={r.user_id} className="flex items-center gap-2 bg-stone-50 rounded-xl px-3 py-2">
-                    <AvatarCircle size="6" icon={r.profile?.avatar_icon} colorKey={r.profile?.avatar_color} userId={r.user_id} name={r.profile?.display_name} imageUrl={r.profile?.avatar_image_url} />
-                    <span className="text-xs font-medium text-stone-700">{r.profile?.display_name ?? 'Member'}</span>
+          {/* RSVP breakdown by category */}
+          {(rsvps ?? []).length > 0 && (() => {
+            const going    = (rsvps ?? []).filter(r => r.status === 'going')
+            const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe')
+            const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going')
+            const sections = [
+              { key: 'going',     label: 'Going',     people: going,    pill: 'bg-jade/10 text-jade-700' },
+              { key: 'maybe',     label: 'Maybe',     people: maybe,    pill: 'bg-amber-50 text-amber-700' },
+              { key: 'not_going', label: "Can't go",  people: notGoing, pill: 'bg-stone-100 text-stone-500' },
+            ].filter(s => s.people.length > 0)
+
+            if (!sections.length) return null
+            return (
+              <div className="space-y-4">
+                {sections.map(({ key, label, people, pill }) => (
+                  <div key={key}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">{label}</p>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pill}`}>{people.length}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {people.map(r => (
+                        <div key={r.user_id} className="flex items-center gap-2 bg-stone-50 rounded-xl px-3 py-2">
+                          <AvatarCircle size="6" icon={r.profile?.avatar_icon} colorKey={r.profile?.avatar_color} userId={r.user_id} name={r.profile?.display_name} imageUrl={r.profile?.avatar_image_url} />
+                          <span className="text-xs font-medium text-stone-700">{r.profile?.display_name ?? 'Member'}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
       </div>
     </div>

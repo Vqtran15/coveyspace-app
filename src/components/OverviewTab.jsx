@@ -386,6 +386,15 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {(() => {
               const baseDelay = showAnnouncement ? 80 : 0
               const cards = [
+                eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
+                  key: 'events',
+                  onClick: () => navigate('/events'),
+                  icon: <CalendarStar size={24} weight="fill" className="text-amber-500" />,
+                  iconBg: 'bg-amber-50',
+                  label: 'Next Event',
+                  primary: nextEvent?.title ?? 'No upcoming events',
+                  secondary: nextEvent?.event_date ? shortDate(nextEvent.event_date) : null,
+                },
                 mealsEnabled && {
                   key: 'meals',
                   onClick: () => navigate('/schedule'),
@@ -403,15 +412,6 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                   label: 'Next Service',
                   primary: nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet'),
                   secondary: nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null,
-                },
-                eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
-                  key: 'events',
-                  onClick: () => navigate('/events'),
-                  icon: <CalendarStar size={24} weight="fill" className="text-amber-500" />,
-                  iconBg: 'bg-amber-50',
-                  label: 'Next Event',
-                  primary: nextEvent?.title ?? 'No upcoming events',
-                  secondary: nextEvent?.event_date ? shortDate(nextEvent.event_date) : null,
                 },
                 prayerEnabled && prayerCard && {
                   key: 'prayer',
