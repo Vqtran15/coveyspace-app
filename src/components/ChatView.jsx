@@ -236,7 +236,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         poll_id: poll.id,
         reply_to_id: replyId,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-      if (msgErr) console.error('message insert error:', msgErr)
+      if (msgErr) throw msgErr
 
       // Build poll data object once — used for both state AND embedded in the message
       const pollData = { question, options: opts.map(text => ({ text })), votes: [] }
