@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart } from '@phosphor-icons/react'
@@ -247,126 +248,156 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             )}
 
             {/* Change display name */}
-            {nameOpen ? (
-              <form onSubmit={handleChangeName} className="mb-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 space-y-3">
-                <p className="text-xs font-semibold text-stone-500">Display Name</p>
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="Your name"
-                  value={nameValue}
-                  onChange={e => setNameValue(e.target.value)}
-                  maxLength={40}
-                  required
-                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                />
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setNameOpen(false)}
-                    className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={nameSaving || !nameValue.trim()}
-                    className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                  >
-                    {nameSaving ? 'Saving…' : 'Save'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                onClick={() => { setNameValue(displayName); setNameOpen(true) }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
-              >
-                <PencilSimple size={15} weight="bold" className="text-stone-400" />
-                Change display name
-              </button>
-            )}
+            <AnimatePresence initial={false}>
+              {nameOpen ? (
+                <motion.form
+                  key="name-form"
+                  onSubmit={handleChangeName}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                  className="mb-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 space-y-3"
+                >
+                  <p className="text-xs font-semibold text-stone-500">Display Name</p>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Your name"
+                    value={nameValue}
+                    onChange={e => setNameValue(e.target.value)}
+                    maxLength={40}
+                    required
+                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setNameOpen(false)}
+                      className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={nameSaving || !nameValue.trim()}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                    >
+                      {nameSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </motion.form>
+              ) : (
+                <motion.button
+                  key="name-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => { setNameValue(displayName); setNameOpen(true) }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+                >
+                  <PencilSimple size={15} weight="bold" className="text-stone-400" />
+                  Change display name
+                </motion.button>
+              )}
+            </AnimatePresence>
 
             {/* Change password */}
-            {pwOpen ? (
-              <form onSubmit={handleChangePassword} className="mb-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 space-y-3">
-                <p className="text-xs font-semibold text-stone-500">Change Password</p>
+            <AnimatePresence initial={false}>
+              {pwOpen ? (
+                <motion.form
+                  key="pw-form"
+                  onSubmit={handleChangePassword}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                  className="mb-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 space-y-3"
+                >
+                  <p className="text-xs font-semibold text-stone-500">Change Password</p>
 
-                <div className="relative">
+                  <div className="relative">
+                    <input
+                      type={showCurrentPw ? 'text' : 'password'}
+                      placeholder="Current password"
+                      value={currentPw}
+                      onChange={e => setCurrentPw(e.target.value)}
+                      required
+                      className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPw(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    >
+                      {showCurrentPw ? <EyeSlash size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type={showNewPw ? 'text' : 'password'}
+                      placeholder="New password"
+                      value={newPw}
+                      onChange={e => setNewPw(e.target.value)}
+                      required
+                      className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPw(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    >
+                      {showNewPw ? <EyeSlash size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+
                   <input
-                    type={showCurrentPw ? 'text' : 'password'}
-                    placeholder="Current password"
-                    value={currentPw}
-                    onChange={e => setCurrentPw(e.target.value)}
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPw}
+                    onChange={e => setConfirmPw(e.target.value)}
                     required
-                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-                  >
-                    {showCurrentPw ? <EyeSlash size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
 
-                <div className="relative">
-                  <input
-                    type={showNewPw ? 'text' : 'password'}
-                    placeholder="New password"
-                    value={newPw}
-                    onChange={e => setNewPw(e.target.value)}
-                    required
-                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-                  >
-                    {showNewPw ? <EyeSlash size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
+                  {pwError && (
+                    <p className="text-xs text-red-500 px-1">{pwError}</p>
+                  )}
 
-                <input
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmPw}
-                  onChange={e => setConfirmPw(e.target.value)}
-                  required
-                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
-                />
-
-                {pwError && (
-                  <p className="text-xs text-red-500 px-1">{pwError}</p>
-                )}
-
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => { setPwOpen(false); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setPwError(null) }}
-                    className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={pwSaving || !currentPw || !newPw || !confirmPw}
-                    className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
-                  >
-                    {pwSaving ? 'Saving…' : 'Update'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                onClick={() => setPwOpen(true)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
-              >
-                <Lock size={15} weight="bold" className="text-stone-400" />
-                Change password
-              </button>
-            )}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setPwOpen(false); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setPwError(null) }}
+                      className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={pwSaving || !currentPw || !newPw || !confirmPw}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                    >
+                      {pwSaving ? 'Saving…' : 'Update'}
+                    </button>
+                  </div>
+                </motion.form>
+              ) : (
+                <motion.button
+                  key="pw-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => setPwOpen(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+                >
+                  <Lock size={15} weight="bold" className="text-stone-400" />
+                  Change password
+                </motion.button>
+              )}
+            </AnimatePresence>
 
             {onRevisitGuide && (
               <button
@@ -413,75 +444,103 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             </div>
 
             {/* Leave group */}
-            {leaveConfirm ? (
-              <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-3 mb-1">
-                <p className="text-sm font-semibold text-stone-700">Leave this group?</p>
-                <p className="text-xs text-stone-500">
-                  You'll lose access to all group content. Your account stays active — you'd need a new invite to rejoin.
-                </p>
-                {leaveError && (
-                  <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{leaveError}</p>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setLeaveConfirm(false); setLeaveError(null) }}
-                    className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleLeaveGroup}
-                    disabled={leaving}
-                    className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-lg transition-colors disabled:opacity-40"
-                  >
-                    {leaving ? 'Leaving…' : 'Leave'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setLeaveConfirm(true)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-xl transition-colors mb-1"
-              >
-                <UserMinus size={15} weight="bold" />
-                Leave group
-              </button>
-            )}
+            <AnimatePresence initial={false}>
+              {leaveConfirm ? (
+                <motion.div
+                  key="leave-confirm"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                  className="p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-3 mb-1"
+                >
+                  <p className="text-sm font-semibold text-stone-700">Leave this group?</p>
+                  <p className="text-xs text-stone-500">
+                    You'll lose access to all group content. Your account stays active — you'd need a new invite to rejoin.
+                  </p>
+                  {leaveError && (
+                    <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{leaveError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setLeaveConfirm(false); setLeaveError(null) }}
+                      className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleLeaveGroup}
+                      disabled={leaving}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-lg transition-colors disabled:opacity-40"
+                    >
+                      {leaving ? 'Leaving…' : 'Leave'}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="leave-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => setLeaveConfirm(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+                >
+                  <UserMinus size={15} weight="bold" />
+                  Leave group
+                </motion.button>
+              )}
+            </AnimatePresence>
 
-            {showDeleteConfirm ? (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3">
-                <p className="text-sm font-semibold text-red-700">Delete your account?</p>
-                <p className="text-xs text-red-600">
-                  This permanently deletes your account and all your data. This cannot be undone.
-                </p>
-                {deleteError && (
-                  <p className="text-xs text-red-700 bg-red-100 rounded-lg px-3 py-2">{deleteError}</p>
-                )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setShowDeleteConfirm(false); setDeleteError(null) }}
-                    className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleting}
-                    className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-40"
-                  >
-                    {deleting ? 'Deleting…' : 'Delete Forever'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-              >
-                <Trash size={15} weight="bold" />
-                Delete my account
-              </button>
-            )}
+            <AnimatePresence initial={false}>
+              {showDeleteConfirm ? (
+                <motion.div
+                  key="delete-confirm"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                  className="p-4 bg-red-50 border border-red-200 rounded-xl space-y-3"
+                >
+                  <p className="text-sm font-semibold text-red-700">Delete your account?</p>
+                  <p className="text-xs text-red-600">
+                    This permanently deletes your account and all your data. This cannot be undone.
+                  </p>
+                  {deleteError && (
+                    <p className="text-xs text-red-700 bg-red-100 rounded-lg px-3 py-2">{deleteError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setShowDeleteConfirm(false); setDeleteError(null) }}
+                      className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleting}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-40"
+                    >
+                      {deleting ? 'Deleting…' : 'Delete Forever'}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="delete-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                >
+                  <Trash size={15} weight="bold" />
+                  Delete my account
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

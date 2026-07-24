@@ -111,7 +111,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [showMoreEmojis, setShowMoreEmojis] = useState(false)
   const [reactionPickerClosing, setReactionPickerClosing] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [emojiPickerClosing, setEmojiPickerClosing] = useState(false)
   const [notesOpen, setNotesOpen]           = useState(false)
   const [replyingTo, setReplyingTo]         = useState(null)
   const [infoOpen, setInfoOpen]             = useState(false)
@@ -943,8 +942,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   function closeEmojiPicker() {
-    setEmojiPickerClosing(true)
-    setTimeout(() => { setShowEmojiPicker(false); setEmojiPickerClosing(false) }, 200)
+    setShowEmojiPicker(false)
   }
 
   function insertEmoji(emoji) {
@@ -1936,20 +1934,28 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </div>
           </div>
         )}
-        {(showEmojiPicker || emojiPickerClosing) && (
-          <div className={`mb-2 ${emojiPickerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
-            <Suspense fallback={null}>
-              <EmojiPicker
-                onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                width="100%"
-                height={350}
-                searchPlaceholder="Search emojis…"
-                previewConfig={{ showPreview: false }}
-                autoFocusSearch={false}
-              />
-            </Suspense>
-          </div>
-        )}
+        <AnimatePresence>
+          {showEmojiPicker && (
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+              className="mb-2"
+            >
+              <Suspense fallback={null}>
+                <EmojiPicker
+                  onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
+                  width="100%"
+                  height={350}
+                  searchPlaceholder="Search emojis…"
+                  previewConfig={{ showPreview: false }}
+                  autoFocusSearch={false}
+                />
+              </Suspense>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div className="flex items-end gap-2">
           <button
             type="button"

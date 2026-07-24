@@ -50,7 +50,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
     const info = dragInfo.current
     if (!info) return
     const deltaY = e.clientY - info.startClientY
-    if (info.node) info.node.style.transform = `translateY(${deltaY}px)`
+    if (info.node) info.node.style.transform = `translateY(${deltaY}px) scale(1.03)`
 
     const rawSteps = Math.round(deltaY / info.spacing)
     const steps = Math.min(Math.max(rawSteps, -info.startIndex), info.length - 1 - info.startIndex)
@@ -174,7 +174,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
                     ref={el => (rowRefs.current[i] = el)}
                     style={{ height: ROW_HEIGHT, ...(dragging ? { position: 'relative', zIndex: 10 } : null) }}
                     className={`flex items-center gap-2 px-3 rounded-xl border-2 bg-white ${
-                      dragging ? 'border-jade shadow-lg' : 'border-stone-200 transition-transform'
+                      dragging ? 'border-jade shadow-xl' : 'border-stone-200 transition-transform duration-150'
                     }`}
                   >
                     <button
