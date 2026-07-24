@@ -216,94 +216,102 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       initial={{ y: '100%' }}
       animate={{ y: 0, transition: { type: 'tween', duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] } }}
       exit={{ y: '100%', transition: { type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] } }}
-      className="fixed inset-0 z-50 flex flex-col bg-white"
+      className="fixed inset-0 z-50 flex flex-col bg-stone-50"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
-          <ArrowLeft size={20} />
-        </button>
-        <span className="font-semibold text-stone-800 text-base">Event Details</span>
-        {isAdmin ? (
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setMenuOpen(o => !o)}
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors"
-            >
-              <DotsThreeVertical size={20} />
-            </button>
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                  transition={{ duration: 0.12 }}
-                  className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden z-10"
-                >
-                  <button
-                    onClick={() => { setMenuOpen(false); onEdit(event) }}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+      {/* Amber hero — nav + event identity */}
+      <div className="bg-gradient-to-b from-amber-50 to-amber-50/0 shrink-0">
+        {/* Nav row */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-amber-700/70 hover:bg-amber-100/60 transition-colors">
+            <ArrowLeft size={20} />
+          </button>
+          <span className="font-semibold text-stone-700 text-base">Event Details</span>
+          {isAdmin ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-amber-700/70 hover:bg-amber-100/60 transition-colors"
+              >
+                <DotsThreeVertical size={20} />
+              </button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden z-10"
                   >
-                    <PencilSimple size={16} /> Edit
-                  </button>
-                  <button
-                    onClick={() => { setMenuOpen(false); onDelete(event) }}
-                    className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash size={16} /> Delete
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    <button
+                      onClick={() => { setMenuOpen(false); onEdit(event) }}
+                      className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                    >
+                      <PencilSimple size={16} /> Edit
+                    </button>
+                    <button
+                      onClick={() => { setMenuOpen(false); onDelete(event) }}
+                      className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash size={16} /> Delete
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="w-9" />
+          )}
+        </div>
+
+        {/* Date badge + title */}
+        <div className="flex items-start gap-4 px-5 pt-2 pb-8">
+          <div className="flex flex-col items-center justify-center bg-white shadow-sm border border-amber-100 rounded-2xl px-4 py-3 min-w-[60px] shrink-0">
+            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-wide">{month}</span>
+            <span className="text-2xl font-bold text-amber-600 leading-none">{day}</span>
           </div>
-        ) : (
-          <div className="w-9" />
-        )}
+          <div className="pt-1 min-w-0">
+            <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
+            <p className="text-sm text-stone-500 mt-1.5">{formatDateFull(event.event_date, event.event_time)}</p>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-xl mx-auto px-4 pt-6 pb-10">
-          {/* Date badge + title */}
-          <div className="flex items-start gap-4 mb-6">
-            <div className="flex flex-col items-center justify-center bg-amber-50 border border-amber-100 rounded-2xl px-4 py-2 min-w-[60px] shrink-0">
-              <span className="text-[11px] font-bold text-amber-500 uppercase tracking-wide">{month}</span>
-              <span className="text-2xl font-bold text-amber-700 leading-none">{day}</span>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
-              <p className="text-sm text-stone-500 mt-1">{formatDateFull(event.event_date, event.event_time)}</p>
-            </div>
-          </div>
+        <div className="max-w-xl mx-auto px-4 pt-5 pb-10 space-y-5">
 
           {/* Location */}
           {event.location && (
-            <div className="flex items-start gap-2 mb-5">
-              <MapPin size={16} className="text-stone-400 mt-0.5 shrink-0" />
-              <span className="text-sm text-stone-600">{event.location}</span>
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-100 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                <MapPin size={16} className="text-amber-500" weight="fill" />
+              </div>
+              <span className="text-sm font-medium text-stone-700">{event.location}</span>
             </div>
           )}
 
           {/* Description */}
           {event.description && (
-            <p className="text-sm text-stone-600 leading-relaxed mb-6 whitespace-pre-wrap">{event.description}</p>
+            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-100 shadow-sm border-l-4 border-l-amber-300">
+              <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
+            </div>
           )}
 
           {/* RSVP */}
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">RSVP</p>
+          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow-sm">
+            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
-                { status: 'going',    label: 'Going',     Icon: CheckCircle, active: 'bg-jade text-white',  inactive: 'bg-stone-100 text-stone-600' },
-                { status: 'maybe',    label: 'Maybe',     Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-600' },
-                { status: 'not_going',label: "Can't go",  Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-600' },
+                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, active, inactive }) => (
                 <button
                   key={status}
                   onClick={() => onRsvp(event.id, status, myRsvp?.status)}
-                  className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
+                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
                 >
                   <Icon size={18} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
                   {label}
@@ -315,7 +323,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           {/* Share to Chat */}
           <button
             onClick={onShareToChat}
-            className="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-2xl border border-stone-200 text-sm font-semibold text-stone-600 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-jade/8 border border-jade/20 text-sm font-semibold text-jade hover:bg-jade/12 active:bg-jade/15 transition-colors"
           >
             <ChatCircleDots size={18} />
             Share to Chat
@@ -327,23 +335,23 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe')
             const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going')
             const sections = [
-              { key: 'going',     label: 'Going',     people: going,    pill: 'bg-jade/10 text-jade-700' },
-              { key: 'maybe',     label: 'Maybe',     people: maybe,    pill: 'bg-amber-50 text-amber-700' },
-              { key: 'not_going', label: "Can't go",  people: notGoing, pill: 'bg-stone-100 text-stone-500' },
+              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-jade/10 text-jade',        border: 'border-l-jade/40' },
+              { key: 'maybe',     label: 'Maybe',    people: maybe,    pill: 'bg-amber-100 text-amber-700', border: 'border-l-amber-300' },
+              { key: 'not_going', label: "Can't go", people: notGoing, pill: 'bg-stone-100 text-stone-500', border: 'border-l-stone-300' },
             ].filter(s => s.people.length > 0)
 
             if (!sections.length) return null
             return (
-              <div className="space-y-4">
-                {sections.map(({ key, label, people, pill }) => (
+              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow-sm space-y-4">
+                {sections.map(({ key, label, people, pill, border }) => (
                   <div key={key}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">{label}</p>
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{label}</p>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pill}`}>{people.length}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {people.map(r => (
-                        <div key={r.user_id} className="flex items-center gap-2 bg-stone-50 rounded-xl px-3 py-2">
+                        <div key={r.user_id} className={`flex items-center gap-2 bg-stone-50 rounded-xl px-3 py-2 border-l-2 ${border}`}>
                           <AvatarCircle size="6" icon={r.profile?.avatar_icon} colorKey={r.profile?.avatar_color} userId={r.user_id} name={r.profile?.display_name} imageUrl={r.profile?.avatar_image_url} />
                           <span className="text-xs font-medium text-stone-700">{r.profile?.display_name ?? 'Member'}</span>
                         </div>
