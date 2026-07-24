@@ -534,28 +534,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   // Reveal messages after scroll-to-bottom to prevent layout-jump disorientation.
   //
-  // Images with stored dimensions (image_width/image_height) have HTML width+height
-  // attributes, so the browser reserves their exact space before they load —
-  // no layout shift is possible and we can reveal immediately.
-  //
-  // Images without stored dimensions (messages sent before migration 53) can still
-  // cause a layout shift when they load. For those, we fall back to img.decode()
-  // with an 800ms cap. Over time, as older messages scroll out of the initial page,
-  // this path becomes unreachable.
+  // Wait for all visible images to decode before revealing so that scrollHeight
+  // is accurate when scrollToBottom() fires. The HTML width/height attribute
+  // space-reservation hint is not reliable on iOS Safari when style overrides
+  // width/height to 'auto', so we can't skip sized images here.
+  // An 800ms fallback caps the wait for slow or large images.
   useEffect(() => {
     if (!contentReady) return
     if (!messagesContainerRef.current) { setVisible(true); return }
 
-    const allImgs  = Array.from(messagesContainerRef.current.querySelectorAll('img'))
-    // Images with both width and height attributes have reserved space — no decode needed.
-    const unsized  = allImgs.filter(img => !img.hasAttribute('width') || !img.hasAttribute('height'))
+    const allImgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
 
-    if (!unsized.length) { setVisible(true); return }
+    if (!allImgs.length) { setVisible(true); return }
 
     let cancelled = false
     const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 800)
 
-    Promise.all(unsized.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+    Promise.all(allImgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
       .then(() => { if (!cancelled) { clearTimeout(fallback); setVisible(true) } })
 
     return () => { cancelled = true; clearTimeout(fallback) }
