@@ -1506,7 +1506,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               if (msg.poll_id) {
                 const poll = polls[msg.poll_id] ?? msg._poll
                 if (!poll) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 mb-3">
+                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 mb-5">
                     <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
                   </div>
                 )
@@ -1517,7 +1517,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   <div
                     id={`msg-${msg.id}`}
                     key={msg.id}
-                    className={`!mt-3 mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
+                    className={`!mt-3 mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
                   >
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
 
@@ -1689,7 +1689,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               if (msg.event_id) {
                 const ev = chatEvents[msg.event_id]
                 if (!ev) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 mb-3">
+                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 mb-5">
                     <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
                   </div>
                 )
@@ -1698,7 +1698,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 const maybeCount    = ev.rsvps.filter(r => r.status === 'maybe').length
                 const notGoingCount = ev.rsvps.filter(r => r.status === 'not_going').length
                 return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
+                  <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100">
@@ -1810,7 +1810,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
                   <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
                     {!isOwn && isFirstInGroup && (
-                      <p className="text-xs font-semibold text-stone-500 mb-1 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
+                      <p className="text-xs font-semibold text-stone-500 mb-2 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
                     )}
                     <div className="relative">
                     <div className={`overflow-hidden select-none transition-colors duration-200
