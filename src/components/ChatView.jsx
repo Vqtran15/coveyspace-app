@@ -1649,8 +1649,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   </div>
                 )
                 const myEvRsvp = ev.rsvps.find(r => r.user_id === myId)
-                const goingCount = ev.rsvps.filter(r => r.status === 'going').length
-                const maybeCount = ev.rsvps.filter(r => r.status === 'maybe').length
+                const goingCount    = ev.rsvps.filter(r => r.status === 'going').length
+                const maybeCount    = ev.rsvps.filter(r => r.status === 'maybe').length
+                const notGoingCount = ev.rsvps.filter(r => r.status === 'not_going').length
                 return (
                   <div key={msg.id} id={`msg-${msg.id}`} className={`mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
@@ -1701,7 +1702,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           </div>
                         ))}
                         <span className="text-xs text-stone-400">
-                          {[goingCount && `${goingCount} going`, maybeCount && `${maybeCount} maybe`].filter(Boolean).join(' · ') || 'No RSVPs yet'}
+                          {[goingCount && `${goingCount} going`, maybeCount && `${maybeCount} maybe`, notGoingCount && `${notGoingCount} can't go`].filter(Boolean).join(' · ') || 'No RSVPs yet'}
                         </span>
                         <span className="ml-auto text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
                       </div>
