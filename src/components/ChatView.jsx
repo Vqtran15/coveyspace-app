@@ -1937,6 +1937,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         <AnimatePresence>
           {showEmojiPicker && (
             <motion.div
+              key="emoji-picker"
               initial={{ opacity: 0, y: 14, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.97 }}
