@@ -169,6 +169,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialScrollDoneRef       = useRef(false)
   const pendingScrollRef           = useRef(null)
 
+  const freshLoadRef          = useRef(false)
   const wasAtBottomRef        = useRef(true)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
@@ -220,7 +221,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const map = {}
     for (const p of ps ?? []) map[p.id] = { question: p.question, options: p.options, votes: [] }
     for (const v of vs ?? []) { if (map[v.poll_id]) map[v.poll_id].votes.push(v) }
-    if (Object.keys(map).length) setPolls(prev => ({ ...prev, ...map }))
+    if (Object.keys(map).length) {
+      setPolls(prev => ({ ...prev, ...map }))
+      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => scrollToBottom()))
+    }
   }
 
   // ── Event helpers ─────────────────────────────────────────────────────────
@@ -251,7 +255,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     for (const r of rs ?? []) {
       if (map[r.event_id]) map[r.event_id].rsvps.push({ user_id: r.user_id, status: r.status, profile: r.profiles })
     }
-    if (Object.keys(map).length) setChatEvents(prev => ({ ...prev, ...map }))
+    if (Object.keys(map).length) {
+      setChatEvents(prev => ({ ...prev, ...map }))
+      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => scrollToBottom()))
+    }
   }
 
   async function rsvpInChat(eventId, status) {
@@ -396,6 +403,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setConvName(conversation.name)
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
+    freshLoadRef.current = true
+    setTimeout(() => { freshLoadRef.current = false }, 5000)
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
 
     const cached = loadCache(convId)
@@ -1506,7 +1515,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               if (msg.poll_id) {
                 const poll = polls[msg.poll_id] ?? msg._poll
                 if (!poll) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 mb-5">
+                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
                     <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
                   </div>
                 )
@@ -1517,7 +1526,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   <div
                     id={`msg-${msg.id}`}
                     key={msg.id}
-                    className={`!mt-3 mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
+                    className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
                   >
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
 
@@ -1689,7 +1698,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               if (msg.event_id) {
                 const ev = chatEvents[msg.event_id]
                 if (!ev) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 mb-5">
+                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
                     <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
                   </div>
                 )
@@ -1698,7 +1707,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 const maybeCount    = ev.rsvps.filter(r => r.status === 'maybe').length
                 const notGoingCount = ev.rsvps.filter(r => r.status === 'not_going').length
                 return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
+                  <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100">
@@ -1760,7 +1769,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 <div
                   id={`msg-${msg.id}`}
                   key={msg.id}
-                  className={`flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? 'mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
+                  className={`flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? '!mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
                   onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
                   onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
                   onTouchStart={e => { if (msg._pending || msg._failed) return; handleLongPressStart(e, msg.id, isOwn) }}
