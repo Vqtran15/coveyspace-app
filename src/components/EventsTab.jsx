@@ -195,47 +195,10 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
 
 // ── Event detail sheet ────────────────────────────────────────────────────────
 
-function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRsvp, onEdit, onDelete, onClose }) {
-  const toast = useToast()
+function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRsvp, onEdit, onDelete, onClose, onShareToChat }) {
   const [menuOpen, setMenuOpen]   = useState(false)
-  const [sharing, setSharing]     = useState(false)
   const menuRef = useRef(null)
   const myRsvp = (rsvps ?? []).find(r => r.user_id === userId)
-
-  async function handleShareToChat() {
-    haptic()
-    setSharing(true)
-    const { data: conv } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('community_group_id', groupId)
-      .eq('type', 'group')
-      .limit(1)
-      .maybeSingle()
-
-    if (!conv) { toast('Group chat not found', 'error'); setSharing(false); return }
-
-    const lines = [
-      `📅 ${event.title}`,
-      formatDateFull(event.event_date, event.event_time),
-      event.location ? `📍 ${event.location}` : null,
-      event.description ? `\n${event.description}` : null,
-      '\nRSVP in the Events tab!',
-    ].filter(Boolean).join('\n')
-
-    const { error } = await supabase.from('messages').insert({
-      community_group_id: groupId,
-      conversation_id:    conv.id,
-      user_id:            userId,
-      display_name:       displayName || 'Member',
-      body:               lines,
-    })
-
-    setSharing(false)
-    if (error) { toast('Failed to share event', 'error'); return }
-    toast('Shared to group chat!', 'success')
-    onClose()
-  }
 
   useEffect(() => {
     if (!menuOpen) return
@@ -351,12 +314,11 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
           {/* Share to Chat */}
           <button
-            onClick={handleShareToChat}
-            disabled={sharing}
-            className="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-2xl border border-stone-200 text-sm font-semibold text-stone-600 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-50"
+            onClick={onShareToChat}
+            className="w-full flex items-center justify-center gap-2 py-3 mb-6 rounded-2xl border border-stone-200 text-sm font-semibold text-stone-600 hover:bg-stone-50 active:bg-stone-100 transition-colors"
           >
             <ChatCircleDots size={18} />
-            {sharing ? 'Sharing…' : 'Share to Chat'}
+            Share to Chat
           </button>
 
           {/* RSVP breakdown by category */}
@@ -411,6 +373,45 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
   const [pastExpanded, setPastExpanded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting,     setDeleting]     = useState(false)
+  const [showConvPicker, setShowConvPicker] = useState(false)
+  const [pickerConvs,    setPickerConvs]    = useState([])
+  const [pickerLoading,  setPickerLoading]  = useState(false)
+  const [sendingToConv,  setSendingToConv]  = useState(null)
+
+  async function openConvPicker() {
+    haptic()
+    setShowConvPicker(true)
+    setPickerLoading(true)
+    const { data } = await supabase
+      .from('conversations')
+      .select('id, type, name, conversation_members(user_id, profiles(display_name))')
+      .eq('community_group_id', groupId)
+    setPickerConvs(data ?? [])
+    setPickerLoading(false)
+  }
+
+  async function handleSendToConv(convId) {
+    if (sendingToConv) return
+    setSendingToConv(convId)
+    const { error } = await supabase.from('messages').insert({
+      community_group_id: groupId,
+      conversation_id:    convId,
+      user_id:            userId,
+      display_name:       displayName || 'Member',
+      body:               null,
+      event_id:           selectedEvent?.id,
+    })
+    setSendingToConv(null)
+    if (error) { toast('Failed to share event', 'error'); return }
+    setShowConvPicker(false)
+    toast('Event shared to chat!', 'success')
+  }
+
+  function convPickerLabel(conv) {
+    if (conv.type === 'group') return conv.name || 'Group Chat'
+    const other = conv.conversation_members?.find(m => m.user_id !== userId)
+    return other?.profiles?.display_name ?? 'Direct Message'
+  }
 
   async function load() {
     setLoading(true)
@@ -641,7 +642,74 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             onEdit={openEdit}
             onDelete={e => setDeleteTarget(e)}
             onClose={() => setSelectedEvent(null)}
+            onShareToChat={openConvPicker}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Conversation picker sheet */}
+      <AnimatePresence>
+        {showConvPicker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/30"
+            onClick={e => { if (e.target === e.currentTarget) setShowConvPicker(false) }}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              className="bg-white rounded-t-3xl"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+                <h3 className="font-bold text-stone-800">Share to Chat</h3>
+                <button
+                  onClick={() => setShowConvPicker(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100"
+                >
+                  <XIcon size={18} />
+                </button>
+              </div>
+              <div className="px-4 py-3 max-h-80 overflow-y-auto">
+                {pickerLoading ? (
+                  <div className="space-y-2">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="h-[60px] bg-stone-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+                    ))}
+                  </div>
+                ) : pickerConvs.length === 0 ? (
+                  <p className="text-sm text-stone-400 text-center py-6">No conversations found</p>
+                ) : (
+                  <div className="space-y-1">
+                    {pickerConvs.map(conv => (
+                      <button
+                        key={conv.id}
+                        onClick={() => handleSendToConv(conv.id)}
+                        disabled={!!sendingToConv}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-50"
+                      >
+                        <div className="w-10 h-10 rounded-2xl bg-jade/10 flex items-center justify-center shrink-0">
+                          <ChatCircleDots size={20} className="text-jade" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-stone-800 text-sm truncate">{convPickerLabel(conv)}</p>
+                          <p className="text-xs text-stone-400">{conv.type === 'group' ? 'Group chat' : 'Direct message'}</p>
+                        </div>
+                        {sendingToConv === conv.id && (
+                          <div className="w-4 h-4 rounded-full border-2 border-jade border-t-transparent animate-spin shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 

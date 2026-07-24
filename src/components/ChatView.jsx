@@ -7,6 +7,7 @@ import {
   MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
   Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
   ChartBar, Plus as PlusIcon, DotsThreeVertical,
+  CalendarStar, CheckCircle, Minus, MapPin,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -138,6 +139,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
   const [polls, setPolls]                     = useState({})
+  const [chatEvents, setChatEvents]           = useState({})
   const [pollCreating, setPollCreating]       = useState(false)
   const [pollQuestion, setPollQuestion]       = useState('')
   const [pollOptions, setPollOptions]         = useState(['', ''])
@@ -216,6 +218,57 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     for (const p of ps ?? []) map[p.id] = { question: p.question, options: p.options, votes: [] }
     for (const v of vs ?? []) { if (map[v.poll_id]) map[v.poll_id].votes.push(v) }
     if (Object.keys(map).length) setPolls(prev => ({ ...prev, ...map }))
+  }
+
+  // ── Event helpers ─────────────────────────────────────────────────────────
+  function formatEventDate(dateStr, timeStr) {
+    const d = new Date(dateStr + 'T00:00:00')
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    const mon = months[d.getMonth()]
+    const day = d.getDate()
+    if (!timeStr) return `${mon} ${day}`
+    const [h, m] = timeStr.split(':').map(Number)
+    const suffix = h >= 12 ? 'PM' : 'AM'
+    const hour12 = h % 12 || 12
+    const mins = m === 0 ? '' : `:${String(m).padStart(2, '0')}`
+    return `${mon} ${day} · ${hour12}${mins} ${suffix}`
+  }
+
+  async function fetchEventsForMessages(msgs) {
+    const ids = [...new Set(msgs.filter(m => m.event_id).map(m => m.event_id))]
+    if (!ids.length) return
+    const [{ data: evs }, { data: rs }] = await Promise.all([
+      supabase.from('events').select('id, title, event_date, event_time, location').in('id', ids),
+      supabase.from('event_rsvps')
+        .select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)')
+        .in('event_id', ids),
+    ])
+    const map = {}
+    for (const e of evs ?? []) map[e.id] = { ...e, rsvps: [] }
+    for (const r of rs ?? []) {
+      if (map[r.event_id]) map[r.event_id].rsvps.push({ user_id: r.user_id, status: r.status, profile: r.profiles })
+    }
+    if (Object.keys(map).length) setChatEvents(prev => ({ ...prev, ...map }))
+  }
+
+  async function rsvpInChat(eventId, status) {
+    const ev = chatEvents[eventId]
+    if (!ev) return
+    const myRsvp = ev.rsvps.find(r => r.user_id === myId)
+    const isToggle = myRsvp?.status === status
+    const myMember = members.find(m => m.user_id === myId)
+    setChatEvents(prev => {
+      const e = prev[eventId]
+      if (!e) return prev
+      const filtered = e.rsvps.filter(r => r.user_id !== myId)
+      const rsvps = isToggle ? filtered : [...filtered, { user_id: myId, status, profile: myMember ?? { display_name: displayName } }]
+      return { ...prev, [eventId]: { ...e, rsvps } }
+    })
+    if (isToggle) {
+      await supabase.from('event_rsvps').delete().eq('event_id', eventId).eq('user_id', myId)
+    } else {
+      await supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: myId, status }, { onConflict: 'event_id,user_id' })
+    }
   }
 
   async function createPoll() {
@@ -349,6 +402,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setLoading(false)
       setFetchingFresh(true)
       fetchPollsForMessages(cached)
+      fetchEventsForMessages(cached)
     } else {
       setLoading(true)
     }
@@ -379,6 +433,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         }
         setReactions(map)
         fetchPollsForMessages(msgs)
+        fetchEventsForMessages(msgs)
       })
 
     const msgCh = supabase
@@ -394,6 +449,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           return updated
         })
         if (msg.poll_id) fetchPollsForMessages([msg])
+        if (msg.event_id) fetchEventsForMessages([msg])
         if (msg.user_id !== myId) {
           if (isAtBottomRef.current) {
             const now = new Date().toISOString()
@@ -502,12 +558,35 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
+    const eventRsvpsCh = supabase
+      .channel(`event-rsvps:${convId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, ({ new: r, old: o, eventType }) => {
+        const rsvp = eventType === 'DELETE' ? o : r
+        if (!rsvp?.event_id) return
+        setChatEvents(prev => {
+          if (!prev[rsvp.event_id]) return prev
+          const ev = prev[rsvp.event_id]
+          let rsvps
+          if (eventType === 'DELETE') {
+            rsvps = ev.rsvps.filter(x => x.user_id !== rsvp.user_id)
+          } else {
+            const existing = ev.rsvps.find(x => x.user_id === rsvp.user_id)
+            rsvps = existing
+              ? ev.rsvps.map(x => x.user_id === rsvp.user_id ? { ...x, status: rsvp.status } : x)
+              : [...ev.rsvps, { user_id: rsvp.user_id, status: rsvp.status, profile: null }]
+          }
+          return { ...prev, [rsvp.event_id]: { ...ev, rsvps } }
+        })
+      })
+      .subscribe()
+
     return () => {
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
       supabase.removeChannel(convMetaCh)
       supabase.removeChannel(pollVotesCh)
+      supabase.removeChannel(eventRsvpsCh)
       const closeTime = new Date().toISOString()
       localStorage.setItem(READ_AT_KEY(convId), closeTime)
       supabase.from('conversation_members')
@@ -1557,6 +1636,75 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  </div>
+                )
+              }
+
+              if (msg.event_id) {
+                const ev = chatEvents[msg.event_id]
+                if (!ev) return (
+                  <div key={msg.id} id={`msg-${msg.id}`} className="mb-3">
+                    <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
+                  </div>
+                )
+                const myEvRsvp = ev.rsvps.find(r => r.user_id === myId)
+                const goingCount = ev.rsvps.filter(r => r.status === 'going').length
+                const maybeCount = ev.rsvps.filter(r => r.status === 'maybe').length
+                return (
+                  <div key={msg.id} id={`msg-${msg.id}`} className={`mb-3 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
+                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                      {/* Header */}
+                      <div className="px-4 pt-3 pb-2 border-b border-stone-100">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
+                          <CalendarStar size={11} weight="bold" />
+                          {`Event · ${senderName(msg.user_id, msg.display_name)}`}
+                        </div>
+                        <p className="text-sm font-bold text-stone-800 leading-snug">{ev.title}</p>
+                        <p className="text-xs text-stone-500 mt-0.5">{formatEventDate(ev.event_date, ev.event_time)}</p>
+                        {ev.location && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <MapPin size={11} className="text-stone-400 shrink-0" />
+                            <p className="text-xs text-stone-500 truncate">{ev.location}</p>
+                          </div>
+                        )}
+                      </div>
+                      {/* RSVP buttons */}
+                      <div className="px-4 py-3 flex gap-2">
+                        {[
+                          { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-600' },
+                          { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-600' },
+                          { status: 'not_going', label: "Can't go", Icon: X,           active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-600' },
+                        ].map(({ status, label, Icon, active, inactive }) => (
+                          <button
+                            key={status}
+                            onClick={() => rsvpInChat(msg.event_id, status)}
+                            className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition-colors ${myEvRsvp?.status === status ? active : inactive}`}
+                          >
+                            <Icon size={16} weight={myEvRsvp?.status === status ? 'fill' : 'regular'} />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Count + timestamp */}
+                      <div className="px-4 pb-3 flex items-center gap-2">
+                        {ev.rsvps.filter(r => r.status === 'going').slice(0, 4).map((r, i) => (
+                          <div
+                            key={r.user_id}
+                            className={`w-5 h-5 rounded-full border-2 border-white shrink-0 overflow-hidden ${r.profile?.avatar_image_url ? 'bg-stone-200' : `${avatarColor(r.user_id, r.profile?.avatar_color)} flex items-center justify-center`}`}
+                            style={{ marginLeft: i === 0 ? 0 : -6, zIndex: 4 - i }}
+                          >
+                            {r.profile?.avatar_image_url
+                              ? <img src={r.profile.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                              : <span className="text-white text-[7px] font-bold">{(r.profile?.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                            }
+                          </div>
+                        ))}
+                        <span className="text-xs text-stone-400">
+                          {[goingCount && `${goingCount} going`, maybeCount && `${maybeCount} maybe`].filter(Boolean).join(' · ') || 'No RSVPs yet'}
+                        </span>
+                        <span className="ml-auto text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                      </div>
                     </div>
                   </div>
                 )
