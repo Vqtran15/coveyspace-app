@@ -1648,7 +1648,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       {msg.image_url && (
                         msg._pending || msg._failed ? (
                           <div className="relative">
-                            <img src={msg.image_url} alt="shared" className="block max-w-full" style={{ maxHeight: 280 }} width="400" height="280" loading="lazy" />
+                            <img src={msg.image_url} alt="shared" className="block" style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto' }} loading="lazy" />
                             {msg._pending && (
                               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -1672,8 +1672,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             {...(msg.image_width && msg.image_height
                               ? { width: msg.image_width, height: msg.image_height }
                               : {})}
-                            className="block max-w-full cursor-pointer"
-                            style={{ maxHeight: 280, height: 'auto', WebkitTouchCallout: 'none' }}
+                            className="block cursor-pointer"
+                            style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto', WebkitTouchCallout: 'none' }}
                             onContextMenu={e => e.preventDefault()}
                             onClick={e => {
                               e.stopPropagation()
@@ -1934,6 +1934,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </div>
           </div>
         )}
+        {showEmojiPicker && (
+          <div className="fixed inset-0 z-[9]" onClick={closeEmojiPicker} />
+        )}
         <AnimatePresence>
           {showEmojiPicker && (
             <motion.div
@@ -1942,7 +1945,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 14, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              className="mb-2"
+              className="mb-2 relative z-10"
             >
               <Suspense fallback={null}>
                 <EmojiPicker
@@ -1957,7 +1960,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 relative z-10">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
