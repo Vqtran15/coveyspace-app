@@ -132,21 +132,27 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
       </div>
       <div>
         <label className="block text-xs font-semibold text-stone-500 mb-1">Date <span className="text-coral">*</span></label>
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className="w-full max-w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-        />
+        <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-jade">
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            style={{ width: '100%', boxSizing: 'border-box', display: 'block' }}
+            className="px-3 py-2.5 text-sm text-stone-800 focus:outline-none bg-white"
+          />
+        </div>
       </div>
       <div>
         <label className="block text-xs font-semibold text-stone-500 mb-1">Time <span className="text-stone-400 font-normal">(optional)</span></label>
-        <input
-          type="time"
-          value={time}
-          onChange={e => setTime(e.target.value)}
-          className="w-full max-w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-        />
+        <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-jade">
+          <input
+            type="time"
+            value={time}
+            onChange={e => setTime(e.target.value)}
+            style={{ width: '100%', boxSizing: 'border-box', display: 'block' }}
+            className="px-3 py-2.5 text-sm text-stone-800 focus:outline-none bg-white"
+          />
+        </div>
       </div>
       <div>
         <label className="block text-xs font-semibold text-stone-500 mb-1">Location <span className="text-stone-400 font-normal">(optional)</span></label>
