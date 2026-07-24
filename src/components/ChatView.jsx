@@ -371,21 +371,30 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(true)
   }, [loading, messages])
 
-  // Wait for all images to decode before revealing so scroll-to-bottom lands
-  // without a layout jump. The ResizeObserver re-pins after the reveal, but there
-  // can be a visible flash between an image loading and the re-pin firing, which
-  // is disorienting. Decoding all images prevents that. The 800ms fallback (down
-  // from 3000ms) caps the wait on slow connections — the ResizeObserver handles
-  // any remaining late-loading images after reveal.
+  // Reveal messages after scroll-to-bottom to prevent layout-jump disorientation.
+  //
+  // Images with stored dimensions (image_width/image_height) have HTML width+height
+  // attributes, so the browser reserves their exact space before they load —
+  // no layout shift is possible and we can reveal immediately.
+  //
+  // Images without stored dimensions (messages sent before migration 53) can still
+  // cause a layout shift when they load. For those, we fall back to img.decode()
+  // with an 800ms cap. Over time, as older messages scroll out of the initial page,
+  // this path becomes unreachable.
   useEffect(() => {
     if (!contentReady) return
     if (!messagesContainerRef.current) { setVisible(true); return }
-    const imgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
+
+    const allImgs  = Array.from(messagesContainerRef.current.querySelectorAll('img'))
+    // Images with both width and height attributes have reserved space — no decode needed.
+    const unsized  = allImgs.filter(img => !img.hasAttribute('width') || !img.hasAttribute('height'))
+
+    if (!unsized.length) { setVisible(true); return }
 
     let cancelled = false
     const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 800)
 
-    Promise.all(imgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+    Promise.all(unsized.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
       .then(() => { if (!cancelled) { clearTimeout(fallback); setVisible(true) } })
 
     return () => { cancelled = true; clearTimeout(fallback) }
@@ -671,8 +680,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }
 
+  // Returns { file, width, height } — dimensions are the final stored pixel size.
   function compressImage(file) {
-    if (!file.type.startsWith('image/') || file.type === 'image/gif') return Promise.resolve(file)
+    if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+      return new Promise(resolve => {
+        const url = URL.createObjectURL(file)
+        const img = new Image()
+        img.onload  = () => { URL.revokeObjectURL(url); resolve({ file, width: img.naturalWidth, height: img.naturalHeight }) }
+        img.onerror = () => { URL.revokeObjectURL(url); resolve({ file, width: null, height: null }) }
+        img.src = url
+      })
+    }
     return new Promise(resolve => {
       const url = URL.createObjectURL(file)
       const img = new Image()
@@ -688,12 +706,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         canvas.getContext('2d').drawImage(img, 0, 0, w, h)
         canvas.toBlob(
           blob => resolve(blob
-            ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
-            : file),
+            ? { file: new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h }
+            : { file, width: img.naturalWidth, height: img.naturalHeight }),
           'image/jpeg', 0.82
         )
       }
-      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+      img.onerror = () => { URL.revokeObjectURL(url); resolve({ file, width: null, height: null }) }
       img.src = url
     })
   }
@@ -701,7 +719,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
-      const compressed = await compressImage(file)
+      const { file: compressed, width: imgWidth, height: imgHeight } = await compressImage(file)
       const ext = compressed.name.split('.').pop()
       const path = `${myId}/${convId}_${Date.now()}.${ext}`
       const { data: uploaded, error: upErr } = await supabase.storage
@@ -718,6 +736,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         body: null,
         image_url: publicUrl,
         reply_to_id: replyId,
+        image_width:  imgWidth  ?? null,
+        image_height: imgHeight ?? null,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
@@ -1297,8 +1317,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             src={msg.image_url}
                             alt="shared"
                             draggable={false}
+                            {...(msg.image_width && msg.image_height
+                              ? { width: msg.image_width, height: msg.image_height }
+                              : {})}
                             className="block max-w-full cursor-pointer"
-                            style={{ maxHeight: 280, WebkitTouchCallout: 'none' }}
+                            style={{ maxHeight: 280, height: 'auto', WebkitTouchCallout: 'none' }}
                             onContextMenu={e => e.preventDefault()}
                             onClick={e => {
                               e.stopPropagation()
