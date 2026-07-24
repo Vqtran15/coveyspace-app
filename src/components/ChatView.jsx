@@ -1884,8 +1884,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              className="mb-2 border border-stone-200 rounded-2xl bg-white p-3 relative z-[8]"
+              className="absolute bottom-full left-0 right-0 pb-2 px-4 z-[8]"
             >
+            <div className="border border-stone-200 rounded-2xl bg-white p-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold text-stone-800">Create Poll</p>
               <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className="text-stone-400 hover:text-stone-600">
@@ -1942,6 +1943,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               >
                 {pollSubmitting ? 'Creating…' : 'Create Poll'}
               </button>
+            </div>
             </div>
             </motion.div>
           )}
@@ -2015,6 +2017,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           />
           <button
             type="button"
+            onPointerDown={e => e.preventDefault()}
             onClick={() => {
               if (showEmojiPicker) { closeEmojiPicker() } else { setShowEmojiPicker(true); setPollCreating(false) }
             }}
