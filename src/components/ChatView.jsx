@@ -220,7 +220,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .eq('conversation_id', convId)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE)
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         const msgs = (data ?? []).reverse()
         saveCache(convId, msgs)
         setMessages(msgs)
@@ -228,19 +228,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setLoading(false)
         setFetchingFresh(false)
         if (!msgs.length) return
-        supabase
+        const { data: rxData } = await supabase
           .from('reactions')
           .select('id, message_id, emoji, user_id')
           .in('message_id', msgs.map(m => m.id))
-          .then(({ data: rxData }) => {
-            const map = {}
-            for (const r of rxData ?? []) {
-              if (!map[r.message_id]) map[r.message_id] = {}
-              if (!map[r.message_id][r.emoji]) map[r.message_id][r.emoji] = []
-              map[r.message_id][r.emoji].push(r)
-            }
-            setReactions(map)
-          })
+        const map = {}
+        for (const r of rxData ?? []) {
+          if (!map[r.message_id]) map[r.message_id] = {}
+          if (!map[r.message_id][r.emoji]) map[r.message_id][r.emoji] = []
+          map[r.message_id][r.emoji].push(r)
+        }
+        setReactions(map)
       })
 
     const msgCh = supabase
@@ -373,17 +371,18 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setContentReady(true)
   }, [loading, messages])
 
-  // Wait for all images to be decoded (not just fetched) before revealing.
-  // img.decode() resolves when pixels are ready to paint — covers both uncached
-  // images (waits for network) and cached-but-not-yet-decoded images that would
-  // otherwise cause a layout-shift flicker immediately after reveal.
+  // Wait for the bottom-most images to decode before revealing so the initial
+  // scroll-to-bottom lands without a layout jump. Only decode the last 5 images
+  // (those visible after scroll) — decoding all 50 messages' images blocks reveal
+  // for several seconds when photos haven't been cached yet.
   useEffect(() => {
     if (!contentReady) return
     if (!messagesContainerRef.current) { setVisible(true); return }
-    const imgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
+    const allImgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
+    const imgs = allImgs.slice(-5)
 
     let cancelled = false
-    const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 3000)
+    const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 800)
 
     Promise.all(imgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
       .then(() => { if (!cancelled) { clearTimeout(fallback); setVisible(true) } })
