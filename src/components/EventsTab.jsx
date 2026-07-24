@@ -382,11 +382,31 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
     haptic()
     setShowConvPicker(true)
     setPickerLoading(true)
-    const { data } = await supabase
+    const { data: convs } = await supabase
       .from('conversations')
-      .select('id, type, name, conversation_members(user_id, profiles(display_name))')
+      .select('id, type, name, conversation_members(user_id)')
       .order('updated_at', { ascending: false })
-    setPickerConvs(data ?? [])
+    const list = convs ?? []
+
+    // Resolve DM partner names with a separate profiles fetch (same pattern as ConversationList)
+    const otherIds = [...new Set(
+      list
+        .filter(c => c.type === 'direct')
+        .flatMap(c => (c.conversation_members ?? []).map(m => m.user_id).filter(id => id !== userId))
+    )]
+    if (otherIds.length) {
+      const { data: profiles } = await supabase
+        .from('profiles').select('user_id, display_name').in('user_id', otherIds)
+      const byId = Object.fromEntries((profiles ?? []).map(p => [p.user_id, p.display_name]))
+      setPickerConvs(list.map(c => ({
+        ...c,
+        _partnerName: c.type === 'direct'
+          ? (byId[c.conversation_members?.find(m => m.user_id !== userId)?.user_id] ?? null)
+          : null,
+      })))
+    } else {
+      setPickerConvs(list)
+    }
     setPickerLoading(false)
   }
 
@@ -409,8 +429,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
 
   function convPickerLabel(conv) {
     if (conv.type === 'group') return conv.name || 'Group Chat'
-    const other = conv.conversation_members?.find(m => m.user_id !== userId)
-    return other?.profiles?.display_name ?? 'Direct Message'
+    return conv._partnerName ?? 'Direct Message'
   }
 
   async function load() {
