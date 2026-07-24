@@ -161,6 +161,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const wasAtBottomRef        = useRef(true)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
+  const pollOptionRefs        = useRef([])
+  const justAddedOptionRef    = useRef(false)
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -221,12 +223,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         created_by: myId,
       }).select('id').single()
       if (error || !poll) throw error ?? new Error('no poll')
+
+      // Set poll data in state BEFORE inserting the message so it's ready when the card renders
       setPolls(prev => ({
         ...prev,
         [poll.id]: { question, options: opts.map(text => ({ text })), votes: [] },
       }))
+
       const replyId = replyingTo?.id ?? null
-      await supabase.from('messages').insert({
+      const { data: newMsg } = await supabase.from('messages').insert({
         community_group_id: groupId,
         conversation_id: convId,
         user_id: myId,
@@ -234,7 +239,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         body: null,
         poll_id: poll.id,
         reply_to_id: replyId,
-      })
+      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
+
+      // Optimistically add to messages so the card shows immediately without waiting for realtime
+      if (newMsg) {
+        setIsAtBottom(true)
+        isAtBottomRef.current = true
+        setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, { ...newMsg, _isNew: true }])
+      }
+
       setPollCreating(false)
       setPollQuestion('')
       setPollOptions(['', ''])
@@ -573,6 +586,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [searchOpen])
+
+  // Auto-focus the newly added poll option input so the keyboard stays up
+  useEffect(() => {
+    if (justAddedOptionRef.current) {
+      justAddedOptionRef.current = false
+      pollOptionRefs.current[pollOptions.length - 1]?.focus()
+    }
+  }, [pollOptions.length])
 
 
 
@@ -1310,7 +1331,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               // ── Poll card ──────────────────────────────────────────────────
               if (msg.poll_id) {
                 const poll = polls[msg.poll_id]
-                if (!poll) return null
+                if (!poll) return (
+                  <div key={msg.id} id={`msg-${msg.id}`} className="mb-3">
+                    <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
+                  </div>
+                )
                 const myVote = poll.votes.find(v => v.user_id === myId)?.option_index ?? null
                 const totalVotes = poll.votes.length
                 return (
@@ -1688,6 +1713,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               {pollOptions.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <input
+                    ref={el => pollOptionRefs.current[i] = el}
                     type="text"
                     value={opt}
                     onChange={e => {
@@ -1712,7 +1738,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             <div className="flex items-center justify-between">
               {pollOptions.length < 10 ? (
                 <button
-                  onClick={() => setPollOptions(prev => [...prev, ''])}
+                  onClick={() => { justAddedOptionRef.current = true; setPollOptions(prev => [...prev, '']) }}
                   className="flex items-center gap-1 text-xs text-jade font-semibold hover:text-jade-700 transition-colors"
                 >
                   <PlusIcon size={12} weight="bold" /> Add option
