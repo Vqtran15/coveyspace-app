@@ -171,6 +171,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pollOptionRefs        = useRef([])
   const justAddedOptionRef    = useRef(false)
   const pollQuestionRef       = useRef(null)
+  const savedSelectionRef     = useRef({ start: 0, end: 0 })
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -948,8 +949,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function insertEmoji(emoji) {
     const el = textareaRef.current
     if (!el) return
-    const start = el.selectionStart ?? text.length
-    const end = el.selectionEnd ?? text.length
+    const start = savedSelectionRef.current.start
+    const end = savedSelectionRef.current.end
     const newText = text.slice(0, start) + emoji + text.slice(end)
     setText(newText)
     closeEmojiPicker()
@@ -1955,11 +1956,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           {showEmojiPicker && (
             <motion.div
               key="emoji-picker"
-              initial={{ opacity: 0, y: 14, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              className="absolute bottom-full left-0 right-0 px-4 pb-2 z-10"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-0 bottom-0 z-[11]"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
               <Suspense fallback={null}>
                 <EmojiPicker
@@ -2019,7 +2021,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             type="button"
             onPointerDown={e => e.preventDefault()}
             onClick={() => {
-              if (showEmojiPicker) { closeEmojiPicker() } else { setShowEmojiPicker(true); setPollCreating(false) }
+              if (showEmojiPicker) { closeEmojiPicker(); return }
+              const el = textareaRef.current
+              if (el) {
+                savedSelectionRef.current = { start: el.selectionStart ?? text.length, end: el.selectionEnd ?? text.length }
+                el.blur()
+              }
+              setShowEmojiPicker(true)
+              setPollCreating(false)
             }}
             className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors shrink-0 ${showEmojiPicker ? 'text-jade bg-jade/10' : 'text-stone-400 hover:text-jade hover:bg-stone-100'}`}
           >
