@@ -414,14 +414,16 @@ export default function ConversationList({ session, groupId, members, enterClass
                     className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
                   >
                     <div className="relative shrink-0">
-                      <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : 'bg-jade'}`}>
+                      <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : conv.image_url ? 'bg-stone-200 shadow-md' : 'bg-jade'}`}>
                         {isDm
                           ? otherMember?.avatar_image_url
                             ? <img src={otherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
                             : otherMember?.avatar_icon
                               ? <AvatarIcon name={otherMember.avatar_icon} size={22} />
                               : <span className="text-white text-sm font-bold">{initials(name)}</span>
-                          : <Users size={22} weight="fill" className="text-white" />
+                          : conv.image_url
+                            ? <img src={conv.image_url} alt="" className="w-full h-full object-cover" />
+                            : <Users size={22} weight="fill" className="text-white" />
                         }
                       </div>
                       {unread && (

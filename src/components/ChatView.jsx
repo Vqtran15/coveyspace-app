@@ -7,7 +7,7 @@ import {
   MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
   Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
   ChartBar, Plus as PlusIcon, DotsThreeVertical,
-  CalendarStar, CheckCircle, Minus, MapPin,
+  CalendarStar, CheckCircle, Minus, MapPin, Camera,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -138,6 +138,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
+  const [convImageUrl, setConvImageUrl]       = useState(conversation.image_url ?? null)
+  const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false)
   const [polls, setPolls]                     = useState({})
   const [chatEvents, setChatEvents]           = useState({})
   const [pollCreating, setPollCreating]       = useState(false)
@@ -174,6 +176,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const justAddedOptionRef    = useRef(false)
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
+  const groupIconFileRef      = useRef(null)
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -536,6 +539,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         filter: `id=eq.${convId}`,
       }, ({ new: conv }) => {
         setConvName(conv.name ?? null)
+        setConvImageUrl(conv.image_url ?? null)
       })
       .subscribe()
 
@@ -961,6 +965,27 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
 
+  async function uploadGroupIcon(file) {
+    if (!file || uploadingGroupIcon) return
+    setUploadingGroupIcon(true)
+    try {
+      const { file: compressed } = await compressImage(file)
+      const path = `group-icons/${convId}.jpg`
+      const { data: uploaded, error: upErr } = await supabase.storage
+        .from('chat-images')
+        .upload(path, compressed, { contentType: 'image/jpeg', upsert: true })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
+      const { error } = await supabase.from('conversations').update({ image_url: publicUrl }).eq('id', convId)
+      if (error) throw error
+      setConvImageUrl(publicUrl)
+    } catch {
+      toast('Failed to upload icon', 'error')
+    } finally {
+      setUploadingGroupIcon(false)
+    }
+  }
+
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
       const { file: compressed, width: imgWidth, height: imgHeight } = await compressImage(file)
@@ -1270,8 +1295,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </button>
         <button
           onClick={() => setInfoOpen(true)}
-          className="flex-1 min-w-0 text-left hover:opacity-75 transition-opacity"
+          className="flex-1 min-w-0 flex items-center gap-2.5 text-left active:opacity-75 transition-opacity"
         >
+          <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden flex items-center justify-center ${
+            conversation.type === 'group'
+              ? convImageUrl ? 'bg-stone-200' : 'bg-jade'
+              : dmOtherMember?.avatar_image_url ? 'bg-stone-200 shadow-sm' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)
+          }`}>
+            {conversation.type === 'group'
+              ? convImageUrl
+                ? <img src={convImageUrl} alt="" className="w-full h-full object-cover" />
+                : <Users size={18} weight="fill" className="text-white" />
+              : dmOtherMember?.avatar_image_url
+                ? <img src={dmOtherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                : dmOtherMember?.avatar_icon
+                  ? <AvatarIcon name={dmOtherMember.avatar_icon} size={18} />
+                  : <span className="text-white text-sm font-bold">{initials(title)}</span>
+            }
+          </div>
           <h1 className="text-xl font-bold text-stone-800 truncate">{title}</h1>
         </button>
         {conversation.type === 'group' && (
@@ -2324,16 +2365,40 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
             {/* Avatar + name */}
             <div className="flex flex-col items-center py-5 px-5">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 overflow-hidden ${conversation.type === 'group' ? 'bg-jade' : dmOtherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
-                {conversation.type === 'group'
-                  ? <Users size={40} weight="fill" className="text-white" />
-                  : dmOtherMember?.avatar_image_url
-                    ? <img src={dmOtherMember.avatar_image_url} alt={title} className="w-full h-full object-cover" />
-                    : dmOtherMember?.avatar_icon
-                      ? <AvatarIcon name={dmOtherMember.avatar_icon} size={40} />
-                      : <span className="text-white text-2xl font-bold">{initials(title)}</span>
-                }
+              <div className="relative mb-3">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${conversation.type === 'group' ? (convImageUrl ? 'bg-stone-200 shadow-md' : 'bg-jade') : dmOtherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
+                  {conversation.type === 'group'
+                    ? convImageUrl
+                      ? <img src={convImageUrl} alt="" className="w-full h-full object-cover" />
+                      : <Users size={40} weight="fill" className="text-white" />
+                    : dmOtherMember?.avatar_image_url
+                      ? <img src={dmOtherMember.avatar_image_url} alt={title} className="w-full h-full object-cover" />
+                      : dmOtherMember?.avatar_icon
+                        ? <AvatarIcon name={dmOtherMember.avatar_icon} size={40} />
+                        : <span className="text-white text-2xl font-bold">{initials(title)}</span>
+                  }
+                  {uploadingGroupIcon && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    </div>
+                  )}
+                </div>
+                {isAdmin && conversation.type === 'group' && (
+                  <button
+                    onClick={() => groupIconFileRef.current?.click()}
+                    className="absolute bottom-0 right-0 w-7 h-7 bg-jade rounded-full flex items-center justify-center shadow-md border-2 border-white"
+                  >
+                    <Camera size={14} className="text-white" weight="fill" />
+                  </button>
+                )}
               </div>
+              <input
+                ref={groupIconFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) uploadGroupIcon(f) }}
+              />
               {renamingGroup ? (
                 <form onSubmit={handleRenameGroup} className="flex items-center gap-2 w-full max-w-xs">
                   <input
