@@ -281,8 +281,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (error) console.error('castVote error:', error)
   }
 
-  function startEditPoll(pollId) {
-    const poll = polls[pollId]
+  function startEditPoll(pollId, poll) {
     if (!poll) return
     setEditPollQuestion(poll.question)
     setEditPollOptions(poll.options.map(o => o.text))
@@ -1423,7 +1422,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                                 <div className="fixed inset-0 z-40" onClick={() => setPollMenuOpenId(null)} />
                                 <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 min-w-[130px]">
                                   <button
-                                    onClick={() => startEditPoll(msg.poll_id)}
+                                    onClick={() => startEditPoll(msg.poll_id, poll)}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50"
                                   >
                                     <PencilSimple size={14} weight="bold" />

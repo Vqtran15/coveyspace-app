@@ -40,3 +40,6 @@ SQL migration docs live in `supabase/migration_XX_*.sql`. These are documentatio
 
 ## Self-Correction Rule
 If Claude discovers that something in this file is wrong or outdated (e.g., a feature already exists, a file has moved, a constraint no longer applies), update this file immediately before continuing. Do not silently work around stale information.
+
+## Double Check Rule
+ALWAYS double check your work before reporting it as done. Re-read changed files, verify logic, and confirm nothing was missed or broken.
