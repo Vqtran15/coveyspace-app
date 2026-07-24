@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarStar } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -139,11 +139,12 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
+  const [nextEvent, setNextEvent]           = useState(undefined)
   const [announcement, setAnnouncement]     = useState(undefined)
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
@@ -154,12 +155,16 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     setLoaded(false)
     const today = toDateString(new Date())
 
-    const [mealRes, serviceRes] = await Promise.all([
+    const [mealRes, serviceRes, eventRes] = await Promise.all([
       supabase.from('meal_pages').select('id, title, week_date, is_paused').gte('week_date', mealCutoffDate()).order('week_date').limit(1).maybeSingle(),
       supabase.from('serving_pages').select('title, week_date, is_paused').gte('week_date', today).order('week_date').limit(1).maybeSingle(),
+      eventsEnabled && groupId
+        ? supabase.from('events').select('id, title, event_date, event_time').eq('community_group_id', groupId).gte('event_date', today).order('event_date').limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
     ])
     setNextMeal(mealRes.data ?? null)
     setNextService(serviceRes.data ?? null)
+    setNextEvent(eventRes.data ?? null)
 
     if (groupId) {
       const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
@@ -210,7 +215,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
-  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin])
+  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin, eventsEnabled])
 
   useEffect(() => {
     if (!groupId) return
@@ -218,6 +223,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
       .channel(`overview-pages:${groupId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'meal_pages' }, load)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'serving_pages' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `community_group_id=eq.${groupId}` }, load)
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [groupId])
@@ -296,10 +302,11 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
             {mealsEnabled     && <CardSkeleton delay={isAdmin ? 80  : 0}   />}
             {servicesEnabled  && <CardSkeleton delay={isAdmin ? 160 : 80}  />}
-            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
-            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 320 : 240} />}
-            {guideEnabled     && <CardSkeleton delay={isAdmin ? 400 : 320} />}
-            {givingEnabled    && <CardSkeleton delay={isAdmin ? 480 : 400} />}
+            {eventsEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
+            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 320 : 240} />}
+            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 400 : 320} />}
+            {guideEnabled     && <CardSkeleton delay={isAdmin ? 480 : 400} />}
+            {givingEnabled    && <CardSkeleton delay={isAdmin ? 560 : 480} />}
           </>
         ) : (
           <>
@@ -396,6 +403,15 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                   label: 'Next Service',
                   primary: nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet'),
                   secondary: nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null,
+                },
+                eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
+                  key: 'events',
+                  onClick: () => navigate('/events'),
+                  icon: <CalendarStar size={24} weight="fill" className="text-amber-500" />,
+                  iconBg: 'bg-amber-50',
+                  label: 'Next Event',
+                  primary: nextEvent?.title ?? 'No upcoming events',
+                  secondary: nextEvent?.event_date ? shortDate(nextEvent.event_date) : null,
                 },
                 prayerEnabled && prayerCard && {
                   key: 'prayer',

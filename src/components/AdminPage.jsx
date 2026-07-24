@@ -417,9 +417,12 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Prayer tab' },
               { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen card and birthday banner' },
               { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Home screen card' },
+              { key: 'events_enabled',    label: 'Events',            desc: 'Events tab with RSVP' },
               { key: 'giving_enabled',    label: 'Giving / Tithing',  desc: 'Home screen card' },
             ].map(({ key, label, desc }) => {
-              const enabled = groupSettings?.[key] !== false
+              const enabled = key === 'events_enabled' || key === 'giving_enabled'
+                ? groupSettings?.[key] === true
+                : groupSettings?.[key] !== false
               return (
                 <div key={key} className="flex items-center gap-4 px-4 py-3.5">
                   <div className="flex-1">
