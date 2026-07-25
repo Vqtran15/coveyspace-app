@@ -948,27 +948,36 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         img.src = url
       })
     }
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file)
       const img = new Image()
       img.onload = () => {
         URL.revokeObjectURL(url)
-        const MAX = 1200
-        const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight))
-        const w = Math.round(img.naturalWidth * scale)
-        const h = Math.round(img.naturalHeight * scale)
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-        canvas.toBlob(
-          blob => resolve(blob
-            ? { file: new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h }
-            : { file, width: img.naturalWidth, height: img.naturalHeight }),
-          'image/jpeg', 0.82
-        )
+
+        function tryEncode(maxDim, quality) {
+          const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight))
+          const w = Math.round(img.naturalWidth * scale)
+          const h = Math.round(img.naturalHeight * scale)
+          const canvas = document.createElement('canvas')
+          canvas.width = w
+          canvas.height = h
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+          canvas.toBlob(blob => {
+            if (blob) {
+              resolve({ file: new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h })
+            } else if (maxDim > 600) {
+              // toBlob returned null (memory pressure); retry at half the dimension
+              tryEncode(Math.round(maxDim / 2), quality)
+            } else {
+              // Exhausted retries — reject so the caller can surface an error
+              reject(new Error('Image compression failed'))
+            }
+          }, 'image/jpeg', quality)
+        }
+
+        tryEncode(1200, 0.82)
       }
-      img.onerror = () => { URL.revokeObjectURL(url); resolve({ file, width: null, height: null }) }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
       img.src = url
     })
   }
