@@ -451,10 +451,10 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 },
               ].filter(Boolean)
 
-              return cards.map((props, i) => (
+              return cards.map(({ key, ...rest }, i) => (
                 <Card
-                  key={props.key}
-                  {...props}
+                  key={key}
+                  {...rest}
                   delay={baseDelay + i * 80}
                   className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'lg:col-span-2' : ''}
                 />
