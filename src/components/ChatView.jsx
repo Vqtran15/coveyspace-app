@@ -2069,14 +2069,27 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         {imagePreviews.length > 0 && (
           <div className="flex gap-2 mb-2 overflow-x-auto pt-2 pb-0.5">
             {imagePreviews.map((preview, i) => (
-              <div key={preview.previewUrl} className="relative shrink-0">
+              <div key={preview.previewUrl} className="relative shrink-0 group">
                 <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
-                <button
-                  onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
-                >
-                  <X size={10} weight="bold" />
-                </button>
+                <div className="absolute inset-0 rounded-xl bg-black/40 flex items-end justify-center gap-2 pb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreviews(prev => prev.filter((_, j) => j !== i))
+                      if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click() }
+                    }}
+                    className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center"
+                  >
+                    <Camera size={13} weight="fill" className="text-stone-700" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
+                    className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center"
+                  >
+                    <Trash size={13} weight="fill" className="text-red-500" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -2186,7 +2199,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         <div className="flex items-end gap-2 relative z-10">
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => { if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click() } }}
             className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors shrink-0"
           >
             <ImageIcon size={22} />
