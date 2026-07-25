@@ -523,14 +523,17 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
     setSelectedEvent(null)
   }
 
-  function EventCard({ event, isFeatured }) {
+  function EventCard({ event, isFeatured, delay = 0 }) {
     const { month, day } = formatDateBadge(event.event_date)
     const eventRsvps = rsvps[event.id] ?? []
     const myRsvp = eventRsvps.find(r => r.user_id === userId)
 
     if (isFeatured) {
       return (
-        <div className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden">
+        <div
+          className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden animate-stack-in"
+          style={{ animationDelay: `${delay}ms` }}
+        >
           {/* Top section */}
           <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
             <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
@@ -600,7 +603,8 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
         onClick={() => { haptic(); setSelectedEvent(event) }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-        className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left"
+        className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left animate-stack-in"
+        style={{ animationDelay: `${delay}ms` }}
       >
         <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
           <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
@@ -675,7 +679,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
           {/* Upcoming */}
           {upcoming.length > 0 ? (
             <div className="space-y-3 mb-6">
-              {upcoming.map((event, i) => <EventCard key={event.id} event={event} isFeatured={i === 0} />)}
+              {upcoming.map((event, i) => <EventCard key={event.id} event={event} isFeatured={i === 0} delay={i * 80} />)}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
