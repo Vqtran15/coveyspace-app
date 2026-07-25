@@ -995,8 +995,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       } catch {}
       // Always use a fresh timestamped path — the chat-images bucket has no UPDATE policy,
       // so upsert on an existing path is blocked by RLS. A new path is always an INSERT.
+      // Prefix with myId so the owner-delete RLS policy allows cleanup later.
       const ext = compressed.name?.split('.').pop() || 'jpg'
-      const path = `group-icons/${convId}-${Date.now()}.${ext}`
+      const path = `${myId}/group-icons/${convId}-${Date.now()}.${ext}`
       const { data: uploaded, error: upErr } = await supabase.storage
         .from('chat-images')
         .upload(path, compressed, { contentType: compressed.type || 'image/jpeg' })
@@ -1010,6 +1011,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       toast('Failed to upload icon', 'error')
     } finally {
       setUploadingGroupIcon(false)
+    }
+  }
+
+  async function removeGroupIcon() {
+    const oldUrl = convImageUrl
+    setConvImageUrl(null)
+    const { error } = await supabase.from('conversations').update({ image_url: null }).eq('id', convId)
+    if (error) {
+      console.error('removeGroupIcon failed:', error)
+      setConvImageUrl(oldUrl)
+      toast('Failed to remove icon', 'error')
+      return
+    }
+    if (oldUrl) {
+      const match = oldUrl.match(/\/chat-images\/(.+)$/)
+      if (match) await supabase.storage.from('chat-images').remove([match[1]])
     }
   }
 
@@ -2433,6 +2450,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     className="absolute bottom-0 right-0 w-7 h-7 bg-jade rounded-full flex items-center justify-center shadow-md border-2 border-white"
                   >
                     <Camera size={14} className="text-white" weight="fill" />
+                  </button>
+                )}
+                {canEditGroupInfo && convImageUrl && (
+                  <button
+                    onClick={removeGroupIcon}
+                    className="absolute bottom-0 left-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-white"
+                  >
+                    <Trash size={14} className="text-red-500" weight="fill" />
                   </button>
                 )}
               </div>
