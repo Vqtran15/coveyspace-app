@@ -41,7 +41,7 @@ export default defineConfig({
         storageState: '.playwright-auth.json',
       },
       dependencies: ['setup'],
-      testMatch: /staging-events\.spec\.js/,
+      testMatch: /staging-(events|compress)\.spec\.js/,
     },
   ],
 })
