@@ -371,6 +371,110 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
+function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOpenDetail, onRsvp }) {
+  const { month, day } = formatDateBadge(event.event_date)
+  const myRsvp = eventRsvps.find(r => r.user_id === userId)
+
+  if (isFeatured) {
+    return (
+      <div
+        className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden animate-stack-in"
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        {/* Top section */}
+        <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
+          <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
+            <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
+            <span className="text-2xl font-bold text-jade leading-none">{day}</span>
+          </div>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <p className="font-bold text-stone-800 text-base leading-snug">{event.title}</p>
+            {(event.location || event.event_time) && (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                {event.location && (
+                  <>
+                    <MapPin size={11} className="text-jade shrink-0" weight="fill" />
+                    <span className="text-xs text-stone-500 truncate">{event.location}</span>
+                  </>
+                )}
+                {event.location && event.event_time && <span className="text-stone-300 text-xs">·</span>}
+                {event.event_time && (
+                  <span className="text-xs text-stone-400">{formatDateShort(event.event_date, event.event_time)}</span>
+                )}
+              </div>
+            )}
+            {event.description && (
+              <p className="text-xs text-stone-400 mt-1.5 line-clamp-2 leading-relaxed">{event.description}</p>
+            )}
+          </div>
+          <button
+            onClick={() => { haptic(); onOpenDetail() }}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 active:bg-stone-200 transition-colors shrink-0 -mr-1 mt-0.5"
+          >
+            <DotsThreeVertical size={20} weight="bold" />
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="mx-4 border-t border-stone-100" />
+
+        {/* RSVP + counts */}
+        <div className="px-4 pt-3 pb-3.5">
+          <div className="flex gap-2 mb-2.5">
+            {[
+              { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-500' },
+              { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-500' },
+              { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
+            ].map(({ status, label, Icon, active, inactive }) => (
+              <button
+                key={status}
+                onClick={() => { haptic(); onRsvp(event.id, status, myRsvp?.status) }}
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
+              >
+                <Icon size={16} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <GoingAvatars rsvps={eventRsvps} />
+            <RsvpCounts rsvps={eventRsvps} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <motion.button
+      onClick={() => { haptic(); onOpenDetail() }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left animate-stack-in"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
+        <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
+        <span className="text-xl font-bold text-jade leading-none">{day}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-stone-800 text-sm truncate">{event.title}</p>
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          {event.location && (
+            <>
+              <MapPin size={11} className="text-stone-400 shrink-0" />
+              <span className="text-xs text-stone-400 truncate">{event.location}</span>
+              <span className="text-stone-300 text-xs">·</span>
+            </>
+          )}
+          <RsvpCounts rsvps={eventRsvps} />
+        </div>
+      </div>
+      <GoingAvatars rsvps={eventRsvps} />
+    </motion.button>
+  )
+}
+
 export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpenSettings }) {
   const toast = useToast()
   const [events,       setEvents]       = useState([])
@@ -523,110 +627,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
     setSelectedEvent(null)
   }
 
-  function EventCard({ event, isFeatured, delay = 0 }) {
-    const { month, day } = formatDateBadge(event.event_date)
-    const eventRsvps = rsvps[event.id] ?? []
-    const myRsvp = eventRsvps.find(r => r.user_id === userId)
 
-    if (isFeatured) {
-      return (
-        <div
-          className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden animate-stack-in"
-          style={{ animationDelay: `${delay}ms` }}
-        >
-          {/* Top section */}
-          <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
-            <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
-              <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
-              <span className="text-2xl font-bold text-jade leading-none">{day}</span>
-            </div>
-            <div className="flex-1 min-w-0 pt-0.5">
-              <p className="font-bold text-stone-800 text-base leading-snug">{event.title}</p>
-              {(event.location || event.event_time) && (
-                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  {event.location && (
-                    <>
-                      <MapPin size={11} className="text-jade shrink-0" weight="fill" />
-                      <span className="text-xs text-stone-500 truncate">{event.location}</span>
-                    </>
-                  )}
-                  {event.location && event.event_time && <span className="text-stone-300 text-xs">·</span>}
-                  {event.event_time && (
-                    <span className="text-xs text-stone-400">{formatDateShort(event.event_date, event.event_time)}</span>
-                  )}
-                </div>
-              )}
-              {event.description && (
-                <p className="text-xs text-stone-400 mt-1.5 line-clamp-2 leading-relaxed">{event.description}</p>
-              )}
-            </div>
-            <button
-              onClick={() => { haptic(); setSelectedEvent(event) }}
-              className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 active:bg-stone-200 transition-colors shrink-0 -mr-1 mt-0.5"
-            >
-              <DotsThreeVertical size={20} weight="bold" />
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="mx-4 border-t border-stone-100" />
-
-          {/* RSVP + counts */}
-          <div className="px-4 pt-3 pb-3.5">
-            <div className="flex gap-2 mb-2.5">
-              {[
-                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
-              ].map(({ status, label, Icon, active, inactive }) => (
-                <button
-                  key={status}
-                  onClick={() => { haptic(); handleRsvp(event.id, status, myRsvp?.status) }}
-                  className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
-                >
-                  <Icon size={16} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <GoingAvatars rsvps={eventRsvps} />
-              <RsvpCounts rsvps={eventRsvps} />
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <motion.button
-        onClick={() => { haptic(); setSelectedEvent(event) }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-        className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left animate-stack-in"
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
-          <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
-          <span className="text-xl font-bold text-jade leading-none">{day}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-stone-800 text-sm truncate">{event.title}</p>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {event.location && (
-              <>
-                <MapPin size={11} className="text-stone-400 shrink-0" />
-                <span className="text-xs text-stone-400 truncate">{event.location}</span>
-                <span className="text-stone-300 text-xs">·</span>
-              </>
-            )}
-            <RsvpCounts rsvps={eventRsvps} />
-          </div>
-        </div>
-        <GoingAvatars rsvps={eventRsvps} />
-      </motion.button>
-    )
-  }
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
@@ -679,7 +680,18 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
           {/* Upcoming */}
           {upcoming.length > 0 ? (
             <div className="space-y-3 mb-6">
-              {upcoming.map((event, i) => <EventCard key={event.id} event={event} isFeatured={i === 0} delay={i * 80} />)}
+              {upcoming.map((event, i) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isFeatured={i === 0}
+                  delay={i * 80}
+                  eventRsvps={rsvps[event.id] ?? []}
+                  userId={userId}
+                  onOpenDetail={() => setSelectedEvent(event)}
+                  onRsvp={handleRsvp}
+                />
+              ))}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -718,7 +730,16 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                     className="overflow-hidden"
                   >
                     <div className="space-y-3 pb-2 opacity-60">
-                      {past.map(event => <EventCard key={event.id} event={event} />)}
+                      {past.map(event => (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          eventRsvps={rsvps[event.id] ?? []}
+                          userId={userId}
+                          onOpenDetail={() => setSelectedEvent(event)}
+                          onRsvp={handleRsvp}
+                        />
+                      ))}
                     </div>
                   </motion.div>
                 )}
