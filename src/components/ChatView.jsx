@@ -987,17 +987,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (!file || uploadingGroupIcon) return
     setUploadingGroupIcon(true)
     try {
-      const { file: compressed } = await compressImage(file)
-      const path = `group-icons/${convId}.jpg`
+      // Compress if possible; fall back to original if compression fails (e.g. null toBlob on iOS)
+      let compressed = file
+      try {
+        const result = await compressImage(file)
+        compressed = result.file
+      } catch {}
+      // Always use a fresh timestamped path — the chat-images bucket has no UPDATE policy,
+      // so upsert on an existing path is blocked by RLS. A new path is always an INSERT.
+      const ext = compressed.name?.split('.').pop() || 'jpg'
+      const path = `group-icons/${convId}-${Date.now()}.${ext}`
       const { data: uploaded, error: upErr } = await supabase.storage
         .from('chat-images')
-        .upload(path, compressed, { contentType: 'image/jpeg', upsert: true })
+        .upload(path, compressed, { contentType: compressed.type || 'image/jpeg' })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
       const { error } = await supabase.from('conversations').update({ image_url: publicUrl }).eq('id', convId)
       if (error) throw error
       setConvImageUrl(publicUrl)
-    } catch {
+    } catch (err) {
+      console.error('uploadGroupIcon failed:', err)
       toast('Failed to upload icon', 'error')
     } finally {
       setUploadingGroupIcon(false)
