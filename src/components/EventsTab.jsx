@@ -221,19 +221,18 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       className="fixed inset-0 z-50 flex flex-col bg-stone-50"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Amber hero — nav + event identity */}
-      <div className="bg-gradient-to-b from-amber-50 to-amber-50/0 shrink-0">
-        {/* Nav row */}
+      {/* Nav bar */}
+      <div className="bg-white border-b border-stone-100 shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-amber-700/70 hover:bg-amber-100/60 transition-colors">
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
             <ArrowLeft size={20} />
           </button>
-          <span className="font-semibold text-stone-700 text-base">Event Details</span>
+          <span className="font-semibold text-stone-800 text-base">Event Details</span>
           {isAdmin ? (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(o => !o)}
-                className="w-9 h-9 flex items-center justify-center rounded-xl text-amber-700/70 hover:bg-amber-100/60 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
               >
                 <DotsThreeVertical size={20} />
               </button>
@@ -268,10 +267,10 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
         </div>
 
         {/* Date badge + title */}
-        <div className="flex items-start gap-4 px-5 pt-2 pb-8">
-          <div className="flex flex-col items-center justify-center bg-white shadow-sm border border-amber-100 rounded-2xl px-4 py-3 min-w-[60px] shrink-0">
-            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-wide">{month}</span>
-            <span className="text-2xl font-bold text-amber-600 leading-none">{day}</span>
+        <div className="flex items-start gap-4 px-5 pt-1 pb-5">
+          <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0">
+            <span className="text-[11px] font-bold text-jade uppercase tracking-wide">{month}</span>
+            <span className="text-2xl font-bold text-jade leading-none">{day}</span>
           </div>
           <div className="pt-1 min-w-0">
             <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
@@ -282,13 +281,13 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-xl mx-auto px-4 pt-5 pb-10 space-y-5">
+        <div className="max-w-xl mx-auto px-4 pt-5 pb-10 space-y-4">
 
           {/* Location */}
           {event.location && (
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-100 shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                <MapPin size={16} className="text-amber-500" weight="fill" />
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-200 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-jade/10 flex items-center justify-center shrink-0">
+                <MapPin size={16} className="text-jade" weight="fill" />
               </div>
               <span className="text-sm font-medium text-stone-700">{event.location}</span>
             </div>
@@ -296,19 +295,19 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
           {/* Description */}
           {event.description && (
-            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-100 shadow-sm border-l-4 border-l-amber-300">
+            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-200 shadow-sm">
               <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
             </div>
           )}
 
           {/* RSVP */}
-          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow-sm">
+          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow-sm">
             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
-                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',        inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white',  inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white',   inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, active, inactive }) => (
                 <button
                   key={status}
@@ -337,14 +336,14 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe')
             const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going')
             const sections = [
-              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-jade/10 text-jade',        border: 'border-l-jade/40' },
-              { key: 'maybe',     label: 'Maybe',    people: maybe,    pill: 'bg-amber-100 text-amber-700', border: 'border-l-amber-300' },
-              { key: 'not_going', label: "Can't go", people: notGoing, pill: 'bg-stone-100 text-stone-500', border: 'border-l-stone-300' },
+              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-jade/10 text-jade',             border: 'border-l-jade/40' },
+              { key: 'maybe',     label: 'Maybe',    people: maybe,    pill: 'bg-lagoon/20 text-lagoon-700',     border: 'border-l-lagoon-600' },
+              { key: 'not_going', label: "Can't go", people: notGoing, pill: 'bg-stone-100 text-stone-500',      border: 'border-l-stone-300' },
             ].filter(s => s.people.length > 0)
 
             if (!sections.length) return null
             return (
-              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow-sm space-y-4">
+              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow-sm space-y-4">
                 {sections.map(({ key, label, people, pill, border }) => (
                   <div key={key}>
                     <div className="flex items-center gap-2 mb-2.5">
@@ -534,9 +533,9 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
         <div className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden">
           {/* Top section */}
           <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
-            <div className="flex flex-col items-center justify-center bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
-              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">{month}</span>
-              <span className="text-2xl font-bold text-amber-700 leading-none">{day}</span>
+            <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
+              <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
+              <span className="text-2xl font-bold text-jade leading-none">{day}</span>
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
               <p className="font-bold text-stone-800 text-base leading-snug">{event.title}</p>
@@ -544,7 +543,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   {event.location && (
                     <>
-                      <MapPin size={11} className="text-amber-400 shrink-0" weight="fill" />
+                      <MapPin size={11} className="text-jade shrink-0" weight="fill" />
                       <span className="text-xs text-stone-500 truncate">{event.location}</span>
                     </>
                   )}
@@ -574,7 +573,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             <div className="flex gap-2 mb-2.5">
               {[
                 { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, active, inactive }) => (
                 <button
@@ -603,9 +602,9 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left"
       >
-        <div className="flex flex-col items-center justify-center bg-amber-50 border border-amber-100 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
-          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">{month}</span>
-          <span className="text-xl font-bold text-amber-700 leading-none">{day}</span>
+        <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
+          <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
+          <span className="text-xl font-bold text-jade leading-none">{day}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-stone-800 text-sm truncate">{event.title}</p>
@@ -680,8 +679,8 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
-                <CalendarStar size={32} className="text-amber-400" weight="duotone" />
+              <div className="w-16 h-16 rounded-2xl bg-jade/10 flex items-center justify-center mb-4">
+                <CalendarStar size={32} className="text-jade" weight="duotone" />
               </div>
               <p className="font-semibold text-stone-700 mb-1">No upcoming events</p>
               {isAdmin && (
