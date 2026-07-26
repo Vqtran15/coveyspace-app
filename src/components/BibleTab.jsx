@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, Check, X, GearSix, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib,
@@ -345,44 +345,6 @@ function AddEditSheet({ initial, onSave, onClose }) {
   )
 }
 
-// ─── DraggableCard ─────────────────────────────────────────────────────────
-
-function DraggableCard({ passage, onEdit, onDelete }) {
-  const controls = useDragControls()
-  return (
-    <Reorder.Item
-      value={passage}
-      dragListener={false}
-      dragControls={controls}
-      className="bg-white border border-stone-200 rounded-2xl list-none"
-    >
-      <div className="flex items-center gap-3 px-3 py-3">
-        <div
-          onPointerDown={e => { e.preventDefault(); controls.start(e) }}
-          className="touch-none cursor-grab active:cursor-grabbing p-0.5 text-stone-300 hover:text-stone-500 transition-colors"
-        >
-          <DotsSixVertical size={22} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-stone-700 truncate">{passage.label}</p>
-        </div>
-        <button
-          onClick={onEdit}
-          className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-        >
-          <PencilSimple size={16} />
-        </button>
-        <button
-          onClick={onDelete}
-          className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-        >
-          <Trash size={16} />
-        </button>
-      </div>
-    </Reorder.Item>
-  )
-}
-
 // ─── BibleBrowser ─────────────────────────────────────────────────────────
 
 function BookButton({ book, onSelect }) {
@@ -416,7 +378,7 @@ function BibleBrowser({ onSelectChapter, onClose }) {
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 360, damping: 34 }}
         className="bg-white rounded-t-3xl flex flex-col"
-        style={{ maxHeight: '88vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ height: '88vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Handle */}
@@ -455,7 +417,7 @@ function BibleBrowser({ onSelectChapter, onClose }) {
         </div>
 
         {/* Sliding panels */}
-        <div className="flex-1 relative" style={{ overflow: 'hidden' }}>
+        <div className="flex-1 min-h-0 relative" style={{ overflow: 'hidden' }}>
 
           {/* Books panel */}
           <motion.div
@@ -540,9 +502,14 @@ export default function BibleTab({ userId, onOpenSettings }) {
   const [editMode, setEditMode] = useState(false)
   const [addEditSheet, setAddEditSheet] = useState(null)
 
+  const [draggingIdx, setDraggingIdx] = useState(null)
+  const [dropTargetIdx, setDropTargetIdx] = useState(null)
+
   const searchTimerRef = useRef(null)
   const saveTimerRef = useRef(null)
   const openIdRef = useRef(0)
+  const cardRefs = useRef([])
+  const gridRef = useRef(null)
   const highlightRef = useRef(null)
 
   const dailyPassage = getDailyPassage()
@@ -597,11 +564,6 @@ export default function BibleTab({ userId, onOpenSettings }) {
     saveTimerRef.current = setTimeout(() => {
       supabase.from('profiles').update({ bible_passages: passages }).eq('user_id', userId)
     }, 600)
-  }
-
-  function handleReorder(newOrder) {
-    setUserPassages(newOrder)
-    persistPassages(newOrder)
   }
 
   function handleSavePassage(passage) {
@@ -856,45 +818,83 @@ export default function BibleTab({ userId, onOpenSettings }) {
             </motion.div>
           )}
 
-          {/* Reorder mode: drag list */}
-          {userPassages !== null && userPassages.length > 0 && editMode && (
-            <Reorder.Group
-              axis="y"
-              values={userPassages}
-              onReorder={handleReorder}
-              className="space-y-2"
-            >
-              {userPassages.map((p, index) => (
-                <DraggableCard
+          {/* Unified 2-col grid — draggable in reorder mode, tappable in normal mode */}
+          {userPassages !== null && userPassages.length > 0 && (
+            <div ref={gridRef} className="grid grid-cols-2 gap-2">
+              {userPassages.map((p, i) => (
+                <motion.div
                   key={p.id}
-                  passage={p}
-                  onEdit={() => setAddEditSheet({ mode: 'edit', index, passage: p })}
-                  onDelete={() => handleDeletePassage(index)}
-                />
-              ))}
-            </Reorder.Group>
-          )}
+                  ref={el => { cardRefs.current[i] = el }}
+                  drag={editMode}
+                  dragElastic={0.12}
+                  dragMomentum={false}
+                  dragConstraints={gridRef}
+                  animate={{
+                    scale: draggingIdx === i ? 1.06 : dropTargetIdx === i ? 0.93 : 1,
+                    opacity: draggingIdx === i ? 0.85 : 1,
+                  }}
+                  onDragStart={() => { setDraggingIdx(i); haptic() }}
+                  onDrag={(_evt, info) => {
+                    const { x, y } = info.point
+                    let nearest = null, nearestDist = Infinity
+                    cardRefs.current.forEach((card, j) => {
+                      if (j === i || !card) return
+                      const r = card.getBoundingClientRect()
+                      const dist = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2))
+                      if (dist < nearestDist) { nearestDist = dist; nearest = j }
+                    })
+                    setDropTargetIdx(prev => prev === nearest ? prev : nearest)
+                  }}
+                  onDragEnd={() => {
+                    if (dropTargetIdx !== null && dropTargetIdx !== i) {
+                      const next = [...userPassages]
+                      const [item] = next.splice(i, 1)
+                      next.splice(dropTargetIdx, 0, item)
+                      setUserPassages(next)
+                      persistPassages(next)
+                    }
+                    setDraggingIdx(null)
+                    setDropTargetIdx(null)
+                  }}
+                  className={[
+                    'relative group bg-white border rounded-2xl',
+                    dropTargetIdx === i && draggingIdx !== i ? 'border-jade/60 border-2' : 'border-stone-200',
+                  ].join(' ')}
+                  style={{ zIndex: draggingIdx === i ? 10 : 'auto', touchAction: editMode ? 'none' : 'auto' }}
+                >
+                  {/* Drag-handle affordance */}
+                  {editMode && (
+                    <DotsSixVertical size={14} className="absolute top-2 left-2 text-stone-300 pointer-events-none" />
+                  )}
 
-          {/* Normal mode: 2-col grid with pencil icon on each card */}
-          {userPassages !== null && userPassages.length > 0 && !editMode && (
-            <div className="grid grid-cols-2 gap-2">
-              {userPassages.map((p, index) => (
-                <div key={p.id} className="relative group">
+                  {/* Tap area */}
                   <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openPassage(p)}
-                    className="w-full text-left px-3.5 py-3.5 bg-white border border-stone-200 rounded-2xl hover:border-jade/40 hover:bg-stone-50 transition-colors"
+                    whileTap={!editMode ? { scale: 0.96 } : undefined}
+                    onClick={() => !editMode && openPassage(p)}
+                    className={['w-full text-left rounded-2xl px-3.5 py-3.5', editMode ? 'pl-7 cursor-default' : ''].join(' ')}
                   >
                     <BookOpen size={18} className="text-jade mb-1.5" />
-                    <p className="text-sm font-medium text-stone-700 leading-snug pr-5">{p.label}</p>
+                    <p className={['text-sm font-medium text-stone-700 leading-snug', editMode ? 'pr-14' : 'pr-5'].join(' ')}>{p.label}</p>
                   </motion.button>
-                  <button
-                    onClick={() => setAddEditSheet({ mode: 'edit', index, passage: p })}
-                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <PencilSimple size={12} />
-                  </button>
-                </div>
+
+                  {/* Action icons */}
+                  <div className={['absolute top-2 right-2 flex gap-0.5', editMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'].join(' ')}>
+                    <button
+                      onClick={e => { e.stopPropagation(); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
+                      className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                    >
+                      <PencilSimple size={12} />
+                    </button>
+                    {editMode && (
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDeletePassage(i) }}
+                        className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash size={12} />
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
               ))}
             </div>
           )}
