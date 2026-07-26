@@ -4,7 +4,7 @@ import { haptic } from '../lib/haptic.js'
 import { useToast } from '../lib/toast.jsx'
 
 const BIBLE_API = 'https://bible.helloao.org/api'
-const TRANSLATIONS = ['WEB', 'KJV', 'BSB']
+const TRANSLATION = 'BSB'
 
 // Canonical map: lowercased name/abbreviation → USFM book ID
 const BOOKS = {
@@ -89,15 +89,41 @@ const QUICK_PASSAGES = [
   { label: 'Prov 3:5-6',       ref: { bookId: 'PRO', chapter: 3,  startVerse: 5,    endVerse: 6   } },
 ]
 
+// Joins mixed string/object content items from helloao.org into plain text.
+// Items can be: plain strings, { text, poem }, { noteId }, { lineBreak: true }
+// Uses reduce so a standalone closing mark (e.g. lone `"` after a noteId) appends
+// directly without a space, while normal prose/poetry segments get a space separator.
+function extractText(content) {
+  const parts = []
+  for (const c of content) {
+    if (typeof c === 'string') parts.push(c)
+    else if (c?.text) parts.push(c.text)
+  }
+  return parts.reduce((acc, part) => {
+    if (!acc) return part
+    // Suppress space only when the part is pure punctuation (lone closing quote or comma etc.)
+    if (/^[\u0022\u0027\u201C\u201D\u2018\u2019,.;:!?)\]\}\s]+$/.test(part)) return acc + part
+    return acc + String.fromCharCode(32) + part
+  }, [].join(String.fromCharCode())).trim()
+}
+
+// Converts raw API chapter response into a flat { number, text }[] array
+function parseVerses(data) {
+  return (data?.chapter?.content ?? [])
+    .filter(item => item.type === 'verse')
+    .map(item => ({ number: item.number, text: extractText(item.content) }))
+}
+
 // Returns { bookId, chapter, startVerse, endVerse } or null
 function parseRef(input) {
   const s = input.trim()
-  const m = s.match(/^(\d\s+)?([a-zA-Z\s]+?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?$/)
+  const m = s.match(/^(\d\s*)?([a-zA-Z][a-zA-Z\s]*?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?$/)
   if (!m) return null
   const prefix = m[1] ? m[1].trim() : ''
   const rawBook = m[2].trim().toLowerCase()
   const key = prefix ? `${prefix} ${rawBook}` : rawBook
-  const bookId = BOOKS[key] ?? BOOKS[rawBook] ?? null
+  // Also try without the space (e.g. "1 cor" → "1cor") for abbreviated numbered books
+  const bookId = BOOKS[key] ?? BOOKS[key.replace(/\s/g, '')] ?? BOOKS[rawBook] ?? null
   if (!bookId) return null
   return {
     bookId,
@@ -107,8 +133,8 @@ function parseRef(input) {
   }
 }
 
-async function fetchChapter(translation, bookId, chapter) {
-  const res = await fetch(`${BIBLE_API}/${translation}/${bookId}/${chapter}.json`)
+async function fetchChapter(bookId, chapter) {
+  const res = await fetch(`${BIBLE_API}/${TRANSLATION}/${bookId}/${chapter}.json`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -120,20 +146,15 @@ function getDailyPassage() {
   return QUICK_PASSAGES[dayOfYear % QUICK_PASSAGES.length]
 }
 
-function verseNum(v) {
-  return v.number ?? v.verse
-}
-
 export default function BibleTab({ onOpenSettings }) {
   const toast = useToast()
-  const [translation, setTranslation] = useState('WEB')
   const [query, setQuery] = useState('')
   const [searchError, setSearchError] = useState(null)
-  // chapter state: { bookId, chapter, startVerse, endVerse, data } | null
+  // openChapter: { bookName, chapterNum, startVerse, endVerse, verses: [{number, text}] } | null
   const [openChapter, setOpenChapter] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [dailyData, setDailyData] = useState(null)
-  const [dailyLoading, setDailyLoading] = useState(true)
+  // dailyVerses: [{ number, text }] | null (null = loading, [] = failed)
+  const [dailyVerses, setDailyVerses] = useState(null)
   const [copied, setCopied] = useState(false)
   const searchTimerRef = useRef(null)
   const openIdRef = useRef(0)
@@ -141,21 +162,27 @@ export default function BibleTab({ onOpenSettings }) {
 
   const dailyPassage = getDailyPassage()
 
-  // Load daily passage on mount and when translation changes
+  // Load daily passage on mount
   useEffect(() => {
     let cancelled = false
-    setDailyLoading(true)
-    fetchChapter(translation, dailyPassage.ref.bookId, dailyPassage.ref.chapter)
-      .then(data => { if (!cancelled) setDailyData(data) })
-      .catch(() => { if (!cancelled) setDailyData(null) })
-      .finally(() => { if (!cancelled) setDailyLoading(false) })
+    fetchChapter(dailyPassage.ref.bookId, dailyPassage.ref.chapter)
+      .then(data => {
+        if (cancelled) return
+        const all = parseVerses(data)
+        const { startVerse, endVerse } = dailyPassage.ref
+        const filtered = startVerse == null
+          ? all
+          : all.filter(v => endVerse != null ? v.number >= startVerse && v.number <= endVerse : v.number === startVerse)
+        setDailyVerses(filtered)
+      })
+      .catch(() => { if (!cancelled) setDailyVerses([]) })
     return () => { cancelled = true }
-  }, [translation])
+  }, [])
 
   // Cleanup debounce on unmount
   useEffect(() => () => clearTimeout(searchTimerRef.current), [])
 
-  // Scroll to first highlighted verse when chapter opens
+  // Scroll to first highlighted verse whenever a chapter opens
   useEffect(() => {
     if (openChapter && highlightRef.current) {
       highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -183,9 +210,22 @@ export default function BibleTab({ onOpenSettings }) {
     setOpenChapter(null)
     setSearchError(null)
     try {
-      const data = await fetchChapter(translation, ref.bookId, ref.chapter)
+      const data = await fetchChapter(ref.bookId, ref.chapter)
       if (id !== openIdRef.current) return
-      setOpenChapter({ ...ref, data })
+      const all = parseVerses(data)
+      const verses = ref.startVerse == null
+        ? all
+        : all.filter(v => ref.endVerse != null
+            ? v.number >= ref.startVerse && v.number <= ref.endVerse
+            : v.number === ref.startVerse)
+      setOpenChapter({
+        bookName: data.book?.name ?? '',
+        chapterNum: ref.chapter,
+        startVerse: ref.startVerse,
+        endVerse: ref.endVerse,
+        verses,
+        allVerses: all,
+      })
     } catch {
       if (id !== openIdRef.current) return
       setSearchError('Could not load that passage. Check your connection and try again.')
@@ -200,12 +240,10 @@ export default function BibleTab({ onOpenSettings }) {
     setSearchError(null)
   }
 
-  function handleCopyChapter() {
-    const verses = getDisplayVerses()
-    const bookName = openChapter?.data?.book?.name ?? ''
-    const chNum = openChapter?.chapter ?? ''
-    const verseLines = verses.map(v => `${verseNum(v)}. ${v.text}`).join('\n')
-    const text = `${bookName} ${chNum}\n\n${verseLines}\n\n(${translation})`
+  function handleCopyAll() {
+    if (!openChapter) return
+    const lines = openChapter.verses.map(v => `${v.number}. ${v.text}`).join('\n')
+    const text = `${openChapter.bookName} ${openChapter.chapterNum}\n\n${lines}\n\n(${TRANSLATION})`
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
@@ -214,54 +252,24 @@ export default function BibleTab({ onOpenSettings }) {
   }
 
   function handleCopyVerse(v) {
-    const bookName = openChapter?.data?.book?.name ?? ''
-    const chNum = openChapter?.chapter ?? ''
-    const text = `${bookName} ${chNum}:${verseNum(v)} — ${v.text} (${translation})`
-    navigator.clipboard.writeText(text).then(() => toast('Verse copied!', 'success'))
+    if (!openChapter) return
+    const ref = `${openChapter.bookName} ${openChapter.chapterNum}:${v.number}`
+    navigator.clipboard.writeText(`${ref} — ${v.text} (${TRANSLATION})`)
+      .then(() => toast('Verse copied!', 'success'))
   }
 
-  function getDisplayVerses() {
-    const verses = openChapter?.data?.chapter?.verses ?? []
-    if (openChapter?.startVerse == null) return verses
-    return verses.filter(v => {
-      const n = verseNum(v)
-      if (openChapter.endVerse != null) return n >= openChapter.startVerse && n <= openChapter.endVerse
-      return n === openChapter.startVerse
-    })
-  }
-
-  function getHighlightSet() {
-    if (!openChapter?.startVerse) return new Set()
-    const s = new Set()
-    const end = openChapter.endVerse ?? openChapter.startVerse
-    for (let i = openChapter.startVerse; i <= end; i++) s.add(i)
-    return s
-  }
-
-  function getDailyVerses() {
-    const verses = dailyData?.chapter?.verses ?? []
-    const { startVerse, endVerse } = dailyPassage.ref
-    if (startVerse == null) return verses
-    return verses.filter(v => {
-      const n = verseNum(v)
-      if (endVerse != null) return n >= startVerse && n <= endVerse
-      return n === startVerse
-    })
-  }
-
-  function switchTranslation(t) {
-    haptic()
-    setTranslation(t)
-    setOpenChapter(null)
-    setQuery('')
-    setSearchError(null)
-  }
-
-  const displayVerses = openChapter ? getDisplayVerses() : []
-  const highlightSet = getHighlightSet()
+  const highlightSet = openChapter?.startVerse != null
+    ? new Set(
+        Array.from(
+          { length: (openChapter.endVerse ?? openChapter.startVerse) - openChapter.startVerse + 1 },
+          (_, i) => openChapter.startVerse + i
+        )
+      )
+    : new Set()
   const firstHighlight = highlightSet.size > 0 ? Math.min(...highlightSet) : null
+
   const chapterTitle = openChapter
-    ? `${openChapter.data?.book?.name ?? ''} ${openChapter.chapter}`
+    ? `${openChapter.bookName} ${openChapter.chapterNum}`
     : null
 
   return (
@@ -281,29 +289,15 @@ export default function BibleTab({ onOpenSettings }) {
             {chapterTitle ?? 'Bible'}
           </h1>
         </div>
-        <button
-          onClick={onOpenSettings}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-        >
-          <GearSix size={20} />
-        </button>
-      </div>
-
-      {/* Translation pills */}
-      <div className="flex gap-2 mb-4">
-        {TRANSLATIONS.map(t => (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-stone-400 bg-stone-100 px-2.5 py-1 rounded-full">BSB</span>
           <button
-            key={t}
-            onClick={() => switchTranslation(t)}
-            className={`px-3.5 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-              translation === t
-                ? 'bg-jade text-white'
-                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-            }`}
+            onClick={onOpenSettings}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
           >
-            {t}
+            <GearSix size={20} />
           </button>
-        ))}
+        </div>
       </div>
 
       {/* Search */}
@@ -344,26 +338,25 @@ export default function BibleTab({ onOpenSettings }) {
       {openChapter && !loading && (
         <div className="mt-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-stone-400 font-medium">{translation}</p>
+            <p className="text-xs text-stone-400 font-medium">
+              {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
+            </p>
             <button
-              onClick={handleCopyChapter}
+              onClick={handleCopyAll}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-stone-600 hover:bg-stone-50 transition-colors"
             >
-              {copied
-                ? <Check size={13} className="text-jade" />
-                : <Copy size={13} />}
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? <Check size={13} className="text-jade" /> : <Copy size={13} />}
+              {copied ? 'Copied!' : 'Copy all'}
             </button>
           </div>
 
           <div className="space-y-0.5">
-            {displayVerses.map(v => {
-              const n = verseNum(v)
-              const isHighlighted = highlightSet.has(n)
-              const isFirst = n === firstHighlight
+            {openChapter.verses.map(v => {
+              const isHighlighted = highlightSet.has(v.number)
+              const isFirst = v.number === firstHighlight
               return (
                 <div
-                  key={n}
+                  key={v.number}
                   ref={isFirst ? highlightRef : null}
                   onClick={() => handleCopyVerse(v)}
                   className={`group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
@@ -373,7 +366,7 @@ export default function BibleTab({ onOpenSettings }) {
                   }`}
                 >
                   <span className="font-bold text-jade text-xs pt-0.5 w-5 shrink-0 text-right select-none">
-                    {n}
+                    {v.number}
                   </span>
                   <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
                   <Copy
@@ -394,16 +387,16 @@ export default function BibleTab({ onOpenSettings }) {
           <div className="bg-jade rounded-2xl p-5 shadow-sm">
             <p className="text-xs font-semibold text-white/60 uppercase tracking-wide mb-1">Today's Passage</p>
             <p className="text-sm font-semibold text-white mb-3">{dailyPassage.label}</p>
-            {dailyLoading ? (
+            {dailyVerses === null ? (
               <div className="space-y-2">
                 {[0, 1, 2].map(i => (
                   <div key={i} className="h-3.5 bg-white/20 rounded-lg animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
                 ))}
               </div>
-            ) : getDailyVerses().length > 0 ? (
+            ) : dailyVerses.length > 0 ? (
               <>
                 <p className="text-white/90 text-sm leading-relaxed line-clamp-4">
-                  {getDailyVerses().map(v => v.text).join(' ')}
+                  {dailyVerses.map(v => v.text).join(' ')}
                 </p>
                 <button
                   onClick={() => openPassage(dailyPassage.ref)}
@@ -413,7 +406,7 @@ export default function BibleTab({ onOpenSettings }) {
                 </button>
               </>
             ) : (
-              <p className="text-white/60 text-sm">Couldn't load verse. Check your connection.</p>
+              <p className="text-white/60 text-sm">Couldn't load passage. Check your connection.</p>
             )}
           </div>
 
