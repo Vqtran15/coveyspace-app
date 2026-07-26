@@ -55,3 +55,11 @@ If Claude discovers that something in this file is wrong or outdated (e.g., a fe
 
 ## Double Check Rule
 ALWAYS double check your work before reporting it as done. Re-read changed files, verify logic, and confirm nothing was missed or broken.
+
+## QA Rule
+After every code change, QA the affected functionality before reporting done. Use one of:
+- **Playwright static tests** (`npx playwright test e2e/<spec>.spec.js --project=chromium`) — source-level correctness checks, no server needed
+- **Playwright browser tests** (`npx playwright test --config playwright.staging.config.js`) — full runtime tests against localhost:5173
+- **QA agent** — spawn a subagent to review the changed code for bugs and regressions
+
+If tests find issues, fix them and re-run. Repeat until clean.

@@ -225,7 +225,18 @@ function AddEditSheet({ initial, onSave, onClose }) {
   const [label, setLabel] = useState(initial ? initial.label : '')
   const [labelEdited, setLabelEdited] = useState(false)
   const [validity, setValidity] = useState(initial ? 'valid' : null)
+  const [kbOffset, setKbOffset] = useState(0)
   const validityTimer = useRef(null)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function onVVResize() {
+      setKbOffset(Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0)))
+    }
+    vv.addEventListener('resize', onVVResize)
+    return () => vv.removeEventListener('resize', onVVResize)
+  }, [])
 
   function handleRefChange(val) {
     setRefStr(val)
@@ -260,7 +271,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
     >
       <motion.div
         initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ y: -kbOffset, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         className="bg-white rounded-t-3xl"
@@ -502,8 +513,9 @@ export default function BibleTab({ userId, onOpenSettings }) {
   const [editMode, setEditMode] = useState(false)
   const [addEditSheet, setAddEditSheet] = useState(null)
 
-  const [draggingIdx, setDraggingIdx] = useState(null)
-  const [dropTargetIdx, setDropTargetIdx] = useState(null)
+  const [dndState, setDndState] = useState(null)
+  const dndPosRef = useRef(null)
+  const ghostRef = useRef(null)
 
   const searchTimerRef = useRef(null)
   const saveTimerRef = useRef(null)
@@ -556,6 +568,74 @@ export default function BibleTab({ userId, onOpenSettings }) {
       }, 120)
     }
   }, [openChapter, chapterLoading, viewMode])
+
+  // ── Grid drag-and-drop (pointer events + fixed ghost card) ──────────────────
+  function handleDndStart(idx, e) {
+    if (!editMode) return
+    e.preventDefault()
+    const card = cardRefs.current[idx]
+    if (!card) return
+    const rect = card.getBoundingClientRect()
+    haptic()
+    dndPosRef.current = {
+      fromIdx: idx, toIdx: idx,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      initX: rect.left, initY: rect.top,
+      cardW: rect.width, cardH: rect.height,
+    }
+    setDndState({ fromIdx: idx, toIdx: idx })
+  }
+
+  const isDragging = dndState !== null
+
+  useEffect(() => {
+    if (!isDragging) return
+    function onMove(e) {
+      const p = dndPosRef.current
+      if (!p) return
+      const x = e.clientX, y = e.clientY
+      if (ghostRef.current) {
+        ghostRef.current.style.transform = `translate(${x - p.offsetX}px, ${y - p.offsetY}px)`
+      }
+      let toIdx = p.fromIdx, nearestDist = Infinity
+      cardRefs.current.forEach((card, j) => {
+        if (!card) return
+        const r = card.getBoundingClientRect()
+        const dist = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2))
+        if (dist < nearestDist) { nearestDist = dist; toIdx = j }
+      })
+      if (toIdx !== p.toIdx) {
+        dndPosRef.current = { ...p, toIdx }
+        setDndState({ fromIdx: p.fromIdx, toIdx })
+      }
+    }
+    function onUp() {
+      const p = dndPosRef.current
+      dndPosRef.current = null
+      setDndState(null)
+      if (p && p.fromIdx !== p.toIdx) {
+        setUserPassages(prev => {
+          const next = [...prev]
+          const [item] = next.splice(p.fromIdx, 1)
+          next.splice(p.toIdx, 0, item)
+          clearTimeout(saveTimerRef.current)
+          saveTimerRef.current = setTimeout(() => {
+            if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
+          }, 600)
+          return next
+        })
+      }
+    }
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onUp)
+    return () => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onUp)
+    }
+  }, [isDragging])
 
   // ── Passage CRUD ───────────────────────────────────────────────────────
   function persistPassages(passages) {
@@ -818,84 +898,61 @@ export default function BibleTab({ userId, onOpenSettings }) {
             </motion.div>
           )}
 
-          {/* Unified 2-col grid — draggable in reorder mode, tappable in normal mode */}
+          {/* Unified 2-col grid */}
           {userPassages !== null && userPassages.length > 0 && (
             <div ref={gridRef} className="grid grid-cols-2 gap-2">
-              {userPassages.map((p, i) => (
-                <motion.div
-                  key={p.id}
-                  ref={el => { cardRefs.current[i] = el }}
-                  drag={editMode}
-                  dragElastic={0.12}
-                  dragMomentum={false}
-                  dragConstraints={gridRef}
-                  animate={{
-                    scale: draggingIdx === i ? 1.06 : dropTargetIdx === i ? 0.93 : 1,
-                    opacity: draggingIdx === i ? 0.85 : 1,
-                  }}
-                  onDragStart={() => { setDraggingIdx(i); haptic() }}
-                  onDrag={(_evt, info) => {
-                    const { x, y } = info.point
-                    let nearest = null, nearestDist = Infinity
-                    cardRefs.current.forEach((card, j) => {
-                      if (j === i || !card) return
-                      const r = card.getBoundingClientRect()
-                      const dist = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2))
-                      if (dist < nearestDist) { nearestDist = dist; nearest = j }
-                    })
-                    setDropTargetIdx(prev => prev === nearest ? prev : nearest)
-                  }}
-                  onDragEnd={() => {
-                    if (dropTargetIdx !== null && dropTargetIdx !== i) {
-                      const next = [...userPassages]
-                      const [item] = next.splice(i, 1)
-                      next.splice(dropTargetIdx, 0, item)
-                      setUserPassages(next)
-                      persistPassages(next)
-                    }
-                    setDraggingIdx(null)
-                    setDropTargetIdx(null)
-                  }}
-                  className={[
-                    'relative group bg-white border rounded-2xl',
-                    dropTargetIdx === i && draggingIdx !== i ? 'border-jade/60 border-2' : 'border-stone-200',
-                  ].join(' ')}
-                  style={{ zIndex: draggingIdx === i ? 10 : 'auto', touchAction: editMode ? 'none' : 'auto' }}
-                >
-                  {/* Drag-handle affordance */}
-                  {editMode && (
-                    <DotsSixVertical size={14} className="absolute top-2 left-2 text-stone-300 pointer-events-none" />
-                  )}
-
-                  {/* Tap area */}
-                  <motion.button
-                    whileTap={!editMode ? { scale: 0.96 } : undefined}
-                    onClick={() => !editMode && openPassage(p)}
-                    className={['w-full text-left rounded-2xl px-3.5 py-3.5', editMode ? 'pl-7 cursor-default' : ''].join(' ')}
+              {userPassages.map((p, i) => {
+                const isSource = dndState?.fromIdx === i
+                const isTarget = dndState?.toIdx === i && dndState.fromIdx !== i
+                return (
+                  <div
+                    key={p.id}
+                    ref={el => { cardRefs.current[i] = el }}
+                    onPointerDown={e => editMode && handleDndStart(i, e)}
+                    className={[
+                      'relative group bg-white border rounded-2xl select-none',
+                      isSource ? 'opacity-30 border-dashed border-stone-400'
+                        : isTarget ? 'border-jade border-2'
+                        : 'border-stone-200',
+                      editMode ? 'cursor-grab active:cursor-grabbing' : '',
+                    ].join(' ')}
+                    style={{ touchAction: editMode ? 'none' : 'auto' }}
                   >
-                    <BookOpen size={18} className="text-jade mb-1.5" />
-                    <p className={['text-sm font-medium text-stone-700 leading-snug', editMode ? 'pr-14' : 'pr-5'].join(' ')}>{p.label}</p>
-                  </motion.button>
-
-                  {/* Action icons */}
-                  <div className={['absolute top-2 right-2 flex gap-0.5', editMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'].join(' ')}>
-                    <button
-                      onClick={e => { e.stopPropagation(); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
-                      className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-                    >
-                      <PencilSimple size={12} />
-                    </button>
+                    {/* Drag-handle affordance */}
                     {editMode && (
-                      <button
-                        onClick={e => { e.stopPropagation(); handleDeletePassage(i) }}
-                        className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                      >
-                        <Trash size={12} />
-                      </button>
+                      <DotsSixVertical size={14} className="absolute top-2 left-2 text-stone-300 pointer-events-none" />
                     )}
+
+                    {/* Tap area */}
+                    <motion.button
+                      whileTap={!editMode ? { scale: 0.96 } : undefined}
+                      onClick={() => !editMode && openPassage(p)}
+                      className={['w-full text-left rounded-2xl px-3.5 py-3.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
+                    >
+                      <BookOpen size={18} className="text-jade mb-1.5" />
+                      <p className={['text-sm font-medium text-stone-700 leading-snug', editMode ? 'pr-14' : 'pr-5'].join(' ')}>{p.label}</p>
+                    </motion.button>
+
+                    {/* Action icons */}
+                    <div className={['absolute top-2 right-2 flex gap-0.5', editMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'].join(' ')}>
+                      <button
+                        onClick={e => { e.stopPropagation(); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
+                        className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                      >
+                        <PencilSimple size={12} />
+                      </button>
+                      {editMode && (
+                        <button
+                          onClick={e => { e.stopPropagation(); handleDeletePassage(i) }}
+                          className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash size={12} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </motion.div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -1042,6 +1099,30 @@ export default function BibleTab({ userId, onOpenSettings }) {
           />
         )}
       </AnimatePresence>
+
+      {/* ── Drag ghost card (pointer-events DnD) ─────────────────────────── */}
+      {isDragging && dndState && userPassages?.[dndState.fromIdx] && (
+        <div
+          ref={el => {
+            ghostRef.current = el
+            if (el && dndPosRef.current) {
+              el.style.transform = `translate(${dndPosRef.current.initX}px, ${dndPosRef.current.initY}px)`
+            }
+          }}
+          style={{
+            position: 'fixed', top: 0, left: 0,
+            width: dndPosRef.current?.cardW ?? 0,
+            height: dndPosRef.current?.cardH ?? 0,
+            pointerEvents: 'none', zIndex: 9999, willChange: 'transform',
+          }}
+          className="bg-white border-2 border-jade rounded-2xl shadow-2xl px-3.5 py-3.5 opacity-92"
+        >
+          <BookOpen size={18} className="text-jade mb-1.5" />
+          <p className="text-sm font-medium text-stone-700 leading-snug">
+            {userPassages[dndState.fromIdx]?.label}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
