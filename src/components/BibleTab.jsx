@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion'
 import {
-  BookOpen, MagnifyingGlass, Copy, Check, X, GearSix, ArrowLeft,
+  BookOpen, Books, MagnifyingGlass, Copy, Check, X, GearSix, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -12,7 +12,6 @@ const BIBLE_API = 'https://bible.helloao.org/api'
 const TRANSLATION = 'BSB'
 
 const BOOKS = {
-  // Old Testament
   'genesis': 'GEN', 'gen': 'GEN',
   'exodus': 'EXO', 'exo': 'EXO', 'ex': 'EXO',
   'leviticus': 'LEV', 'lev': 'LEV',
@@ -52,7 +51,6 @@ const BOOKS = {
   'haggai': 'HAG', 'hag': 'HAG',
   'zechariah': 'ZEC', 'zech': 'ZEC', 'zec': 'ZEC',
   'malachi': 'MAL', 'mal': 'MAL',
-  // New Testament
   'matthew': 'MAT', 'matt': 'MAT', 'mat': 'MAT', 'mt': 'MAT',
   'mark': 'MRK', 'mrk': 'MRK', 'mk': 'MRK',
   'luke': 'LUK', 'luk': 'LUK', 'lk': 'LUK',
@@ -82,7 +80,80 @@ const BOOKS = {
   'revelation': 'REV', 'rev': 'REV', 'apoc': 'REV',
 }
 
-// Default passages shown before the user customizes
+const OT_BOOKS = [
+  { id: 'GEN', name: 'Genesis', chapters: 50 },
+  { id: 'EXO', name: 'Exodus', chapters: 40 },
+  { id: 'LEV', name: 'Leviticus', chapters: 27 },
+  { id: 'NUM', name: 'Numbers', chapters: 36 },
+  { id: 'DEU', name: 'Deuteronomy', chapters: 34 },
+  { id: 'JOS', name: 'Joshua', chapters: 24 },
+  { id: 'JDG', name: 'Judges', chapters: 21 },
+  { id: 'RUT', name: 'Ruth', chapters: 4 },
+  { id: '1SA', name: '1 Samuel', chapters: 31 },
+  { id: '2SA', name: '2 Samuel', chapters: 24 },
+  { id: '1KI', name: '1 Kings', chapters: 22 },
+  { id: '2KI', name: '2 Kings', chapters: 25 },
+  { id: '1CH', name: '1 Chronicles', chapters: 29 },
+  { id: '2CH', name: '2 Chronicles', chapters: 36 },
+  { id: 'EZR', name: 'Ezra', chapters: 10 },
+  { id: 'NEH', name: 'Nehemiah', chapters: 13 },
+  { id: 'EST', name: 'Esther', chapters: 10 },
+  { id: 'JOB', name: 'Job', chapters: 42 },
+  { id: 'PSA', name: 'Psalms', chapters: 150 },
+  { id: 'PRO', name: 'Proverbs', chapters: 31 },
+  { id: 'ECC', name: 'Ecclesiastes', chapters: 12 },
+  { id: 'SNG', name: 'Song of Solomon', chapters: 8 },
+  { id: 'ISA', name: 'Isaiah', chapters: 66 },
+  { id: 'JER', name: 'Jeremiah', chapters: 52 },
+  { id: 'LAM', name: 'Lamentations', chapters: 5 },
+  { id: 'EZK', name: 'Ezekiel', chapters: 48 },
+  { id: 'DAN', name: 'Daniel', chapters: 12 },
+  { id: 'HOS', name: 'Hosea', chapters: 14 },
+  { id: 'JOL', name: 'Joel', chapters: 3 },
+  { id: 'AMO', name: 'Amos', chapters: 9 },
+  { id: 'OBA', name: 'Obadiah', chapters: 1 },
+  { id: 'JON', name: 'Jonah', chapters: 4 },
+  { id: 'MIC', name: 'Micah', chapters: 7 },
+  { id: 'NAH', name: 'Nahum', chapters: 3 },
+  { id: 'HAB', name: 'Habakkuk', chapters: 3 },
+  { id: 'ZEP', name: 'Zephaniah', chapters: 3 },
+  { id: 'HAG', name: 'Haggai', chapters: 2 },
+  { id: 'ZEC', name: 'Zechariah', chapters: 14 },
+  { id: 'MAL', name: 'Malachi', chapters: 4 },
+]
+
+const NT_BOOKS = [
+  { id: 'MAT', name: 'Matthew', chapters: 28 },
+  { id: 'MRK', name: 'Mark', chapters: 16 },
+  { id: 'LUK', name: 'Luke', chapters: 24 },
+  { id: 'JHN', name: 'John', chapters: 21 },
+  { id: 'ACT', name: 'Acts', chapters: 28 },
+  { id: 'ROM', name: 'Romans', chapters: 16 },
+  { id: '1CO', name: '1 Corinthians', chapters: 16 },
+  { id: '2CO', name: '2 Corinthians', chapters: 13 },
+  { id: 'GAL', name: 'Galatians', chapters: 6 },
+  { id: 'EPH', name: 'Ephesians', chapters: 6 },
+  { id: 'PHP', name: 'Philippians', chapters: 4 },
+  { id: 'COL', name: 'Colossians', chapters: 4 },
+  { id: '1TH', name: '1 Thessalonians', chapters: 5 },
+  { id: '2TH', name: '2 Thessalonians', chapters: 3 },
+  { id: '1TI', name: '1 Timothy', chapters: 6 },
+  { id: '2TI', name: '2 Timothy', chapters: 4 },
+  { id: 'TIT', name: 'Titus', chapters: 3 },
+  { id: 'PHM', name: 'Philemon', chapters: 1 },
+  { id: 'HEB', name: 'Hebrews', chapters: 13 },
+  { id: 'JAS', name: 'James', chapters: 5 },
+  { id: '1PE', name: '1 Peter', chapters: 5 },
+  { id: '2PE', name: '2 Peter', chapters: 3 },
+  { id: '1JN', name: '1 John', chapters: 5 },
+  { id: '2JN', name: '2 John', chapters: 1 },
+  { id: '3JN', name: '3 John', chapters: 1 },
+  { id: 'JUD', name: 'Jude', chapters: 1 },
+  { id: 'REV', name: 'Revelation', chapters: 22 },
+]
+
+const ALL_BOOKS = [...OT_BOOKS, ...NT_BOOKS]
+
 const DEFAULT_PASSAGES = [
   { id: 'dft-1', label: 'Psalm 23',        bookId: 'PSA', chapter: 23, startVerse: null, endVerse: null },
   { id: 'dft-2', label: 'Romans 8:28-39',  bookId: 'ROM', chapter: 8,  startVerse: 28,   endVerse: 39   },
@@ -106,7 +177,6 @@ function extractText(content) {
   }
   return parts.reduce((acc, part) => {
     if (!acc) return part
-    // Suppress space only when the part is pure punctuation (lone closing quote or comma etc.)
     if (/^["'“”‘’,.;:!?)\]\}\s]+$/.test(part)) return acc + part
     return acc + String.fromCharCode(32) + part
   }, [].join(String.fromCharCode())).trim()
@@ -148,7 +218,7 @@ function getDailyPassage() {
   return DEFAULT_PASSAGES[dayOfYear % DEFAULT_PASSAGES.length]
 }
 
-// ─── AddEditSheet ────────────────────────────────────────────────────────────
+// ─── AddEditSheet ──────────────────────────────────────────────────────────
 
 function AddEditSheet({ initial, onSave, onClose }) {
   const [refStr, setRefStr] = useState(initial ? initial.label : '')
@@ -175,18 +245,9 @@ function AddEditSheet({ initial, onSave, onClose }) {
 
   function handleSave() {
     const parsed = parseRef(refStr.trim())
-    if (!parsed) {
-      setValidity('invalid')
-      return
-    }
-    onSave({
-      id: initial?.id ?? newId(),
-      label: label.trim() || refStr.trim(),
-      ...parsed,
-    })
+    if (!parsed) { setValidity('invalid'); return }
+    onSave({ id: initial?.id ?? newId(), label: label.trim() || refStr.trim(), ...parsed })
   }
-
-  const isEditing = !!initial
 
   return (
     <motion.div
@@ -194,7 +255,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
+      className="fixed inset-0 z-[70] flex flex-col justify-end bg-black/30"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
@@ -206,14 +267,12 @@ function AddEditSheet({ initial, onSave, onClose }) {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-9 h-1 rounded-full bg-stone-200" />
         </div>
-
         <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
           <h3 className="font-bold text-stone-800 text-base">
-            {isEditing ? 'Edit Passage' : 'Add Passage'}
+            {initial ? 'Edit Passage' : 'Add Passage'}
           </h3>
           <button
             onClick={onClose}
@@ -222,7 +281,6 @@ function AddEditSheet({ initial, onSave, onClose }) {
             <X size={18} />
           </button>
         </div>
-
         <div className="px-5 pt-4 pb-5 space-y-4">
           <div>
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
@@ -238,10 +296,8 @@ function AddEditSheet({ initial, onSave, onClose }) {
                 className={[
                   'w-full px-4 py-2.5 pr-10 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  validity === 'invalid'
-                    ? 'border-red-300 focus:ring-red-200'
-                    : validity === 'valid'
-                    ? 'border-jade/50 focus:ring-jade/20'
+                  validity === 'invalid' ? 'border-red-300 focus:ring-red-200'
+                    : validity === 'valid' ? 'border-jade/50 focus:ring-jade/20'
                     : 'border-stone-200 focus:ring-jade/20',
                 ].join(' ')}
               />
@@ -253,12 +309,9 @@ function AddEditSheet({ initial, onSave, onClose }) {
               )}
             </div>
             {validity === 'invalid' && (
-              <p className="text-xs text-red-500 mt-1">
-                Try a reference like John 3:16 or Psalm 23
-              </p>
+              <p className="text-xs text-red-500 mt-1">Try a reference like John 3:16 or Psalm 23</p>
             )}
           </div>
-
           <div>
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
               Label <span className="font-normal normal-case text-stone-400">(optional)</span>
@@ -271,7 +324,6 @@ function AddEditSheet({ initial, onSave, onClose }) {
               className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade/20 transition"
             />
           </div>
-
           <div className="flex gap-3 pt-1">
             <button
               onClick={onClose}
@@ -293,7 +345,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
   )
 }
 
-// ─── DraggableCard (edit-mode list item) ────────────────────────────────────
+// ─── DraggableCard ─────────────────────────────────────────────────────────
 
 function DraggableCard({ passage, onEdit, onDelete }) {
   const controls = useDragControls()
@@ -302,7 +354,7 @@ function DraggableCard({ passage, onEdit, onDelete }) {
       value={passage}
       dragListener={false}
       dragControls={controls}
-      className="bg-white border border-stone-200 rounded-2xl"
+      className="bg-white border border-stone-200 rounded-2xl list-none"
     >
       <div className="flex items-center gap-3 px-3 py-3">
         <div
@@ -331,25 +383,162 @@ function DraggableCard({ passage, onEdit, onDelete }) {
   )
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
+// ─── BibleBrowser ─────────────────────────────────────────────────────────
+
+function BookButton({ book, onSelect }) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.96 }}
+      onClick={() => onSelect(book)}
+      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-jade/8 hover:border-jade/30 border border-transparent transition-colors text-left w-full"
+    >
+      <span className="text-sm font-medium text-stone-700 truncate pr-2">{book.name}</span>
+      <span className="text-xs text-stone-400 shrink-0">{book.chapters}</span>
+    </motion.button>
+  )
+}
+
+function BibleBrowser({ onSelectChapter, onClose }) {
+  const [selectedBook, setSelectedBook] = useState(null)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/40"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 360, damping: 34 }}
+        className="bg-white rounded-t-3xl flex flex-col"
+        style={{ maxHeight: '88vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-9 h-1 rounded-full bg-stone-200" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100 shrink-0">
+          <div className="flex items-center gap-1">
+            <AnimatePresence>
+              {selectedBook && (
+                <motion.button
+                  key="back"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.14 }}
+                  onClick={() => setSelectedBook(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors mr-0.5"
+                >
+                  <ArrowLeft size={18} weight="bold" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+            <h3 className="font-bold text-stone-800 text-base">
+              {selectedBook ? selectedBook.name : 'Browse Bible'}
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Sliding panels */}
+        <div className="flex-1 relative" style={{ overflow: 'hidden' }}>
+
+          {/* Books panel */}
+          <motion.div
+            initial={false}
+            animate={{ x: selectedBook ? '-100%' : '0%' }}
+            transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+            className="absolute inset-0 overflow-y-auto"
+          >
+            <div className="px-4 py-3 pb-6">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                Old Testament
+              </p>
+              <div className="grid grid-cols-2 gap-1.5 mb-5">
+                {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+              </div>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                New Testament
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Chapters panel */}
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: selectedBook ? '0%' : '100%' }}
+            transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+            className="absolute inset-0 overflow-y-auto"
+          >
+            {selectedBook && (
+              <div className="px-4 py-4 pb-6">
+                <div className="grid grid-cols-5 gap-2">
+                  {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map(ch => (
+                    <motion.button
+                      key={ch}
+                      whileTap={{ scale: 0.88 }}
+                      onClick={() => onSelectChapter(selectedBook.id, ch)}
+                      className="aspect-square rounded-xl bg-stone-50 border border-stone-200 text-sm font-semibold text-stone-700 hover:bg-jade hover:border-jade hover:text-white transition-colors flex items-center justify-center"
+                    >
+                      {ch}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ─── Main BibleTab ────────────────────────────────────────────────────────
 
 export default function BibleTab({ userId, onOpenSettings }) {
   const toast = useToast()
 
-  // search / chapter state
+  // navigation: 'home' | 'chapter'
+  const [viewMode, setViewMode] = useState('home')
+  const [openChapter, setOpenChapter] = useState(null)   // null = loading
+  const [chapterLoading, setChapterLoading] = useState(false)
+  const [chapterError, setChapterError] = useState(null)
+
+  // browser
+  const [showBrowser, setShowBrowser] = useState(false)
+
+  // search
   const [query, setQuery] = useState('')
   const [searchError, setSearchError] = useState(null)
-  const [openChapter, setOpenChapter] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
 
-  // daily verse state
+  // daily verse
   const [dailyVerses, setDailyVerses] = useState(null)
 
-  // user-customizable passages: null = loading, array = loaded
+  // copy
+  const [copied, setCopied] = useState(false)
+
+  // user passages
   const [userPassages, setUserPassages] = useState(null)
   const [editMode, setEditMode] = useState(false)
-  const [addEditSheet, setAddEditSheet] = useState(null) // null | { mode, index?, passage? }
+  const [addEditSheet, setAddEditSheet] = useState(null)
 
   const searchTimerRef = useRef(null)
   const saveTimerRef = useRef(null)
@@ -358,7 +547,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
 
   const dailyPassage = getDailyPassage()
 
-  // ── Load user passages ───────────────────────────────────────────────────
+  // ── Load user passages ─────────────────────────────────────────────────
   useEffect(() => {
     if (!userId) return
     supabase
@@ -366,23 +555,19 @@ export default function BibleTab({ userId, onOpenSettings }) {
       .select('bible_passages')
       .eq('user_id', userId)
       .single()
-      .then(({ data }) => {
-        setUserPassages(data?.bible_passages ?? [...DEFAULT_PASSAGES])
-      })
+      .then(({ data }) => setUserPassages(data?.bible_passages ?? [...DEFAULT_PASSAGES]))
       .catch(() => setUserPassages([...DEFAULT_PASSAGES]))
   }, [userId])
 
-  // ── Load daily passage on mount ──────────────────────────────────────────
+  // ── Load daily verse ───────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
     fetchChapter(dailyPassage.bookId, dailyPassage.chapter)
       .then(data => {
         if (cancelled) return
         const all = parseVerses(data)
-        const sv = dailyPassage.startVerse
-        const ev = dailyPassage.endVerse
-        const filtered = sv == null
-          ? all
+        const { startVerse: sv, endVerse: ev } = dailyPassage
+        const filtered = sv == null ? all
           : all.filter(v => ev != null ? v.number >= sv && v.number <= ev : v.number === sv)
         setDailyVerses(filtered)
       })
@@ -390,29 +575,27 @@ export default function BibleTab({ userId, onOpenSettings }) {
     return () => { cancelled = true }
   }, [])
 
-  // ── Cleanup timers on unmount ────────────────────────────────────────────
+  // ── Cleanup timers ─────────────────────────────────────────────────────
   useEffect(() => () => {
     clearTimeout(searchTimerRef.current)
     clearTimeout(saveTimerRef.current)
   }, [])
 
-  // ── Scroll to highlighted verse ──────────────────────────────────────────
+  // ── Scroll to highlighted verse ────────────────────────────────────────
   useEffect(() => {
-    if (openChapter && highlightRef.current) {
-      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (viewMode === 'chapter' && !chapterLoading && openChapter && highlightRef.current) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 120)
     }
-  }, [openChapter])
+  }, [openChapter, chapterLoading, viewMode])
 
-  // ── Passage save helpers ─────────────────────────────────────────────────
+  // ── Passage CRUD ───────────────────────────────────────────────────────
   function persistPassages(passages) {
     if (!userId) return
     clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => {
-      supabase
-        .from('profiles')
-        .update({ bible_passages: passages })
-        .eq('user_id', userId)
-        .then(({ error }) => { if (error) console.warn('bible_passages save failed', error) })
+      supabase.from('profiles').update({ bible_passages: passages }).eq('user_id', userId)
     }, 600)
   }
 
@@ -422,12 +605,9 @@ export default function BibleTab({ userId, onOpenSettings }) {
   }
 
   function handleSavePassage(passage) {
-    let next
-    if (addEditSheet?.mode === 'edit' && addEditSheet.index != null) {
-      next = userPassages.map((p, i) => i === addEditSheet.index ? passage : p)
-    } else {
-      next = [...(userPassages ?? []), passage]
-    }
+    const next = addEditSheet?.mode === 'edit' && addEditSheet.index != null
+      ? userPassages.map((p, i) => i === addEditSheet.index ? passage : p)
+      : [...(userPassages ?? []), passage]
     setUserPassages(next)
     persistPassages(next)
     setAddEditSheet(null)
@@ -439,7 +619,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
     persistPassages(next)
   }
 
-  // ── Search / navigation ──────────────────────────────────────────────────
+  // ── Search ─────────────────────────────────────────────────────────────
   function handleSearch(value) {
     setQuery(value)
     setSearchError(null)
@@ -447,20 +627,19 @@ export default function BibleTab({ userId, onOpenSettings }) {
     if (!value.trim()) return
     searchTimerRef.current = setTimeout(() => {
       const ref = parseRef(value)
-      if (!ref) {
-        setSearchError('Try a reference like John 3:16 or Psalm 23')
-        return
-      }
+      if (!ref) { setSearchError('Try a reference like John 3:16 or Psalm 23'); return }
       openPassage(ref)
     }, 600)
   }
 
+  // ── Navigation ─────────────────────────────────────────────────────────
   async function openPassage(ref) {
     const id = ++openIdRef.current
-    setLoading(true)
-    setOpenChapter(null)
-    setSearchError(null)
     haptic()
+    setViewMode('chapter')
+    setOpenChapter(null)
+    setChapterLoading(true)
+    setChapterError(null)
     try {
       const data = await fetchChapter(ref.bookId, ref.chapter)
       if (id !== openIdRef.current) return
@@ -471,7 +650,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
             ? v.number >= ref.startVerse && v.number <= ref.endVerse
             : v.number === ref.startVerse)
       setOpenChapter({
-        bookName: data.book?.name ?? '',
+        bookName: data.book?.name ?? ALL_BOOKS.find(b => b.id === ref.bookId)?.name ?? '',
         chapterNum: ref.chapter,
         startVerse: ref.startVerse,
         endVerse: ref.endVerse,
@@ -480,19 +659,19 @@ export default function BibleTab({ userId, onOpenSettings }) {
       })
     } catch {
       if (id !== openIdRef.current) return
-      setSearchError('Could not load that passage. Check your connection and try again.')
+      setChapterError('Could not load that passage. Check your connection.')
     } finally {
-      if (id === openIdRef.current) setLoading(false)
+      if (id === openIdRef.current) setChapterLoading(false)
     }
   }
 
   function handleBack() {
-    setOpenChapter(null)
+    setViewMode('home')
     setQuery('')
     setSearchError(null)
   }
 
-  // ── Copy helpers ─────────────────────────────────────────────────────────
+  // ── Copy ───────────────────────────────────────────────────────────────
   function handleCopyAll() {
     if (!openChapter) return
     const lines = openChapter.verses.map(v => `${v.number}. ${v.text}`).join('\n')
@@ -511,7 +690,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
       .then(() => toast('Verse copied!', 'success'))
   }
 
-  // ── Derived values ───────────────────────────────────────────────────────
+  // ── Highlight set ──────────────────────────────────────────────────────
   const highlightSet = openChapter?.startVerse != null
     ? new Set(
         Array.from(
@@ -521,38 +700,24 @@ export default function BibleTab({ userId, onOpenSettings }) {
       )
     : new Set()
   const firstHighlight = highlightSet.size > 0 ? Math.min(...highlightSet) : null
-  const chapterTitle = openChapter ? `${openChapter.bookName} ${openChapter.chapterNum}` : null
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="px-4 pt-4 pb-4">
+
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
+        <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
         <div className="flex items-center gap-2">
-          <AnimatePresence>
-            {openChapter && (
-              <motion.button
-                key="back"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.15 }}
-                onClick={handleBack}
-                className="w-8 h-8 flex items-center justify-center -ml-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-              >
-                <ArrowLeft size={20} weight="bold" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-          <motion.h1
-            layout
-            className="text-3xl font-bold text-stone-800"
+          <motion.button
+            whileTap={{ scale: 0.93 }}
+            onClick={() => setShowBrowser(true)}
+            title="Browse books"
+            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-stone-100 text-stone-500 hover:bg-jade/10 hover:text-jade transition-colors"
           >
-            {chapterTitle ?? 'Bible'}
-          </motion.h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-stone-400 bg-stone-100 px-2.5 py-1 rounded-full">BSB</span>
+            <Books size={14} />
+            <span className="text-xs font-semibold">BSB</span>
+          </motion.button>
           <button
             onClick={onOpenSettings}
             className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
@@ -578,7 +743,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
         />
         {query && (
           <button
-            onClick={() => { setQuery(''); setOpenChapter(null); setSearchError(null) }}
+            onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
           >
             <X size={16} />
@@ -589,272 +754,294 @@ export default function BibleTab({ userId, onOpenSettings }) {
         <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
       )}
 
-      {/* Loading spinner */}
-      {loading && (
-        <div className="flex justify-center py-16">
-          <div className="w-6 h-6 border-2 border-jade border-t-transparent rounded-full animate-spin" />
+      {/* Home content */}
+      <div className="mt-4 space-y-5">
+
+        {/* Today's Passage */}
+        <div className="bg-jade rounded-2xl p-5 shadow-sm">
+          <p className="text-xs font-semibold text-white/60 uppercase tracking-wide mb-1">
+            Today's Passage
+          </p>
+          <p className="text-sm font-semibold text-white mb-3">{dailyPassage.label}</p>
+
+          {dailyVerses === null ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className="h-3.5 bg-white/20 rounded-lg animate-pulse"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                />
+              ))}
+            </div>
+          ) : dailyVerses.length > 0 ? (
+            <>
+              <p className="text-white/90 text-sm leading-relaxed line-clamp-4">
+                {dailyVerses.map(v => v.text).join(' ')}
+              </p>
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => openPassage(dailyPassage)}
+                className="mt-3 text-xs font-semibold text-white/70 hover:text-white transition-colors"
+              >
+                Read full passage →
+              </motion.button>
+            </>
+          ) : (
+            <p className="text-white/60 text-sm">
+              Could not load passage. Check your connection.
+            </p>
+          )}
         </div>
-      )}
 
-      {/* ── Animated content area ─────────────────────────────────────────── */}
-      <AnimatePresence mode="wait" initial={false}>
-        {!loading && openChapter && (
-          <motion.div
-            key="chapter"
-            initial={{ x: 32, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 32, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <ChapterView
-              openChapter={openChapter}
-              highlightSet={highlightSet}
-              firstHighlight={firstHighlight}
-              copied={copied}
-              highlightRef={highlightRef}
-              onCopyAll={handleCopyAll}
-              onCopyVerse={handleCopyVerse}
-            />
-          </motion.div>
-        )}
+        {/* Quick Access */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Quick Access</p>
+            <div className="flex items-center gap-1">
+              {userPassages !== null && userPassages.length > 0 && (
+                <button
+                  onClick={() => setEditMode(m => !m)}
+                  className={[
+                    'px-3 py-1 rounded-lg text-xs font-semibold transition-colors',
+                    editMode
+                      ? 'bg-jade text-white'
+                      : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100',
+                  ].join(' ')}
+                >
+                  {editMode ? 'Done' : 'Reorder'}
+                </button>
+              )}
+              <button
+                onClick={() => setAddEditSheet({ mode: 'add' })}
+                className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
+              >
+                <Plus size={18} weight="bold" />
+              </button>
+            </div>
+          </div>
 
-        {!loading && !openChapter && (
-          <motion.div
-            key="home"
-            initial={{ x: -12, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -12, opacity: 0 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-          >
-            <HomeView
-              dailyPassage={dailyPassage}
-              dailyVerses={dailyVerses}
-              userPassages={userPassages}
-              editMode={editMode}
-              onOpenPassage={openPassage}
-              onToggleEditMode={() => setEditMode(m => !m)}
-              onAddPassage={() => setAddEditSheet({ mode: 'add' })}
-              onEditPassage={(index, passage) => setAddEditSheet({ mode: 'edit', index, passage })}
-              onDeletePassage={handleDeletePassage}
+          {/* Loading skeleton */}
+          {userPassages === null && (
+            <div className="grid grid-cols-2 gap-2">
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="h-20 bg-stone-100 rounded-2xl animate-pulse"
+                  style={{ animationDelay: `${i * 60}ms` }} />
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {userPassages !== null && userPassages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-3 py-8 text-center"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center">
+                <PenNib size={22} className="text-stone-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-stone-600">No passages yet</p>
+                <p className="text-xs text-stone-400 mt-0.5">Tap + to add your favourite verses</p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setAddEditSheet({ mode: 'add' })}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-jade text-white text-sm font-semibold"
+              >
+                <Plus size={16} weight="bold" />
+                Add passage
+              </motion.button>
+            </motion.div>
+          )}
+
+          {/* Reorder mode: drag list */}
+          {userPassages !== null && userPassages.length > 0 && editMode && (
+            <Reorder.Group
+              axis="y"
+              values={userPassages}
               onReorder={handleReorder}
-            />
+              className="space-y-2"
+            >
+              {userPassages.map((p, index) => (
+                <DraggableCard
+                  key={p.id}
+                  passage={p}
+                  onEdit={() => setAddEditSheet({ mode: 'edit', index, passage: p })}
+                  onDelete={() => handleDeletePassage(index)}
+                />
+              ))}
+            </Reorder.Group>
+          )}
+
+          {/* Normal mode: 2-col grid with pencil icon on each card */}
+          {userPassages !== null && userPassages.length > 0 && !editMode && (
+            <div className="grid grid-cols-2 gap-2">
+              {userPassages.map((p, index) => (
+                <div key={p.id} className="relative group">
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => openPassage(p)}
+                    className="w-full text-left px-3.5 py-3.5 bg-white border border-stone-200 rounded-2xl hover:border-jade/40 hover:bg-stone-50 transition-colors"
+                  >
+                    <BookOpen size={18} className="text-jade mb-1.5" />
+                    <p className="text-sm font-medium text-stone-700 leading-snug pr-5">{p.label}</p>
+                  </motion.button>
+                  <button
+                    onClick={() => setAddEditSheet({ mode: 'edit', index, passage: p })}
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-lg text-stone-300 hover:text-stone-600 hover:bg-stone-100 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <PencilSimple size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Chapter overlay (slides in from right, fixed full-screen) ─────── */}
+      <AnimatePresence>
+        {viewMode === 'chapter' && (
+          <motion.div
+            key="chapter-overlay"
+            initial={{ x: '100%' }}
+            animate={{ x: '0%' }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
+            className="fixed inset-0 z-[60] bg-white overflow-y-auto"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <div className="px-4 pt-4 pb-8">
+              {/* Chapter header */}
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    onClick={handleBack}
+                    className="w-8 h-8 flex items-center justify-center -ml-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                  >
+                    <ArrowLeft size={20} weight="bold" />
+                  </motion.button>
+                  <h1 className="text-2xl font-bold text-stone-800 leading-tight">
+                    {chapterLoading
+                      ? 'Loading…'
+                      : openChapter
+                      ? `${openChapter.bookName} ${openChapter.chapterNum}`
+                      : chapterError ? 'Error' : ''}
+                  </h1>
+                </div>
+                {!chapterLoading && openChapter && !chapterError && (
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleCopyAll}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 text-xs font-medium text-stone-600 hover:bg-stone-200 transition-colors"
+                  >
+                    {copied ? <Check size={13} className="text-jade" /> : <Copy size={13} />}
+                    {copied ? 'Copied!' : 'Copy all'}
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Loading spinner */}
+              {chapterLoading && (
+                <div className="flex justify-center py-20">
+                  <div className="w-7 h-7 border-2 border-jade border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
+              {/* Error */}
+              {chapterError && (
+                <div className="flex flex-col items-center gap-3 py-20 text-center">
+                  <p className="text-sm text-stone-500">{chapterError}</p>
+                  <button
+                    onClick={handleBack}
+                    className="text-sm font-semibold text-jade"
+                  >
+                    Go back
+                  </button>
+                </div>
+              )}
+
+              {/* Verse count */}
+              {!chapterLoading && openChapter && !chapterError && (
+                <>
+                  <p className="text-xs text-stone-400 font-medium mb-3">
+                    {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
+                    {openChapter.startVerse != null && (
+                      <span>
+                        {' '}(ch. {openChapter.chapterNum}
+                        {openChapter.startVerse != null
+                          ? ` · v${openChapter.startVerse}${openChapter.endVerse != null && openChapter.endVerse !== openChapter.startVerse ? `–${openChapter.endVerse}` : ''}`
+                          : ''}
+                        )
+                      </span>
+                    )}
+                  </p>
+
+                  {/* Verse list */}
+                  <div className="space-y-0.5">
+                    {openChapter.verses.map((v, idx) => {
+                      const isHighlighted = highlightSet.has(v.number)
+                      const isFirst = v.number === firstHighlight
+                      return (
+                        <motion.div
+                          key={v.number}
+                          ref={isFirst ? highlightRef : null}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
+                          whileTap={{ scale: 0.99 }}
+                          onClick={() => handleCopyVerse(v)}
+                          className={[
+                            'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
+                            isHighlighted ? 'bg-jade/10 hover:bg-jade/15' : 'hover:bg-stone-50',
+                          ].join(' ')}
+                        >
+                          <span className="font-bold text-jade text-xs pt-0.5 w-5 shrink-0 text-right select-none">
+                            {v.number}
+                          </span>
+                          <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
+                          <Copy
+                            size={13}
+                            className="shrink-0 mt-0.5 text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity self-start"
+                          />
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Add / Edit sheet ──────────────────────────────────────────────── */}
+      {/* ── Bible Browser sheet ────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showBrowser && (
+          <BibleBrowser
+            onSelectChapter={(bookId, ch) => {
+              setShowBrowser(false)
+              openPassage({ bookId, chapter: ch, startVerse: null, endVerse: null })
+            }}
+            onClose={() => setShowBrowser(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Add / Edit sheet ───────────────────────────────────────────────── */}
       <AnimatePresence>
         {addEditSheet && (
           <AddEditSheet
-            key={addEditSheet.mode + (addEditSheet.index ?? '')}
+            key={addEditSheet.mode + (addEditSheet.index ?? 'new')}
             initial={addEditSheet.passage}
             onSave={handleSavePassage}
             onClose={() => setAddEditSheet(null)}
           />
         )}
       </AnimatePresence>
-    </div>
-  )
-}
-
-// ─── ChapterView ─────────────────────────────────────────────────────────────
-
-function ChapterView({ openChapter, highlightSet, firstHighlight, copied, highlightRef, onCopyAll, onCopyVerse }) {
-  return (
-    <div className="mt-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-stone-400 font-medium">
-          {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
-        </p>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={onCopyAll}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-stone-600 hover:bg-stone-50 transition-colors"
-        >
-          {copied ? <Check size={13} className="text-jade" /> : <Copy size={13} />}
-          {copied ? 'Copied!' : 'Copy all'}
-        </motion.button>
-      </div>
-
-      <div className="space-y-0.5">
-        {openChapter.verses.map(v => {
-          const isHighlighted = highlightSet.has(v.number)
-          const isFirst = v.number === firstHighlight
-          return (
-            <motion.div
-              key={v.number}
-              ref={isFirst ? highlightRef : null}
-              whileTap={{ scale: 0.99, backgroundColor: isHighlighted ? 'rgba(196,98,45,0.12)' : 'rgba(0,0,0,0.03)' }}
-              onClick={() => onCopyVerse(v)}
-              className={[
-                'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
-                isHighlighted ? 'bg-jade/10 hover:bg-jade/15' : 'hover:bg-stone-50',
-              ].join(' ')}
-            >
-              <span className="font-bold text-jade text-xs pt-0.5 w-5 shrink-0 text-right select-none">
-                {v.number}
-              </span>
-              <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
-              <Copy
-                size={13}
-                className="shrink-0 mt-0.5 text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity self-start"
-              />
-            </motion.div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ─── HomeView ────────────────────────────────────────────────────────────────
-
-function HomeView({
-  dailyPassage, dailyVerses,
-  userPassages, editMode,
-  onOpenPassage, onToggleEditMode, onAddPassage,
-  onEditPassage, onDeletePassage, onReorder,
-}) {
-  const dp = dailyPassage
-
-  return (
-    <div className="mt-4 space-y-5">
-      {/* Today's Passage card */}
-      <div className="bg-jade rounded-2xl p-5 shadow-sm">
-        <p className="text-xs font-semibold text-white/60 uppercase tracking-wide mb-1">
-          {"Today’s Passage"}
-        </p>
-        <p className="text-sm font-semibold text-white mb-3">{dailyPassage.label}</p>
-
-        {dailyVerses === null ? (
-          <div className="space-y-2">
-            {[0, 1, 2].map(i => (
-              <div
-                key={i}
-                className="h-3.5 bg-white/20 rounded-lg animate-pulse"
-                style={{ animationDelay: `${i * 80}ms` }}
-              />
-            ))}
-          </div>
-        ) : dailyVerses.length > 0 ? (
-          <>
-            <p className="text-white/90 text-sm leading-relaxed line-clamp-4">
-              {dailyVerses.map(v => v.text).join(' ')}
-            </p>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onOpenPassage(dp)}
-              className="mt-3 text-xs font-semibold text-white/70 hover:text-white transition-colors"
-            >
-              {"Read full passage →"}
-            </motion.button>
-          </>
-        ) : (
-          <p className="text-white/60 text-sm">{"Couldn’t load passage. Check your connection."}</p>
-        )}
-      </div>
-
-      {/* Quick Access section */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Quick Access</p>
-          <div className="flex items-center gap-1">
-            {userPassages !== null && userPassages.length > 0 && (
-              <button
-                onClick={onToggleEditMode}
-                className={[
-                  'px-3 py-1 rounded-lg text-xs font-semibold transition-colors',
-                  editMode
-                    ? 'bg-jade text-white'
-                    : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100',
-                ].join(' ')}
-              >
-                {editMode ? 'Done' : 'Edit'}
-              </button>
-            )}
-            <button
-              onClick={onAddPassage}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
-            >
-              <Plus size={18} weight="bold" />
-            </button>
-          </div>
-        </div>
-
-        {/* Loading skeleton */}
-        {userPassages === null && (
-          <div className="grid grid-cols-2 gap-2">
-            {[0, 1, 2, 3].map(i => (
-              <div
-                key={i}
-                className="h-20 bg-stone-100 rounded-2xl animate-pulse"
-                style={{ animationDelay: `${i * 60}ms` }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {userPassages !== null && userPassages.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-3 py-8 text-center"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center">
-              <PenNib size={22} className="text-stone-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-stone-600">No passages yet</p>
-              <p className="text-xs text-stone-400 mt-0.5">Tap + to add your favourite verses</p>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={onAddPassage}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-jade text-white text-sm font-semibold"
-            >
-              <Plus size={16} weight="bold" />
-              Add passage
-            </motion.button>
-          </motion.div>
-        )}
-
-        {/* Edit mode: drag list */}
-        {userPassages !== null && userPassages.length > 0 && editMode && (
-          <Reorder.Group
-            axis="y"
-            values={userPassages}
-            onReorder={onReorder}
-            className="space-y-2"
-          >
-            {userPassages.map((p, index) => (
-              <DraggableCard
-                key={p.id}
-                passage={p}
-                onEdit={() => onEditPassage(index, p)}
-                onDelete={() => onDeletePassage(index)}
-              />
-            ))}
-          </Reorder.Group>
-        )}
-
-        {/* Normal mode: 2-column grid */}
-        {userPassages !== null && userPassages.length > 0 && !editMode && (
-          <div className="grid grid-cols-2 gap-2">
-            {userPassages.map(p => (
-              <motion.button
-                key={p.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => onOpenPassage(p)}
-                className="text-left px-3.5 py-3.5 bg-white border border-stone-200 rounded-2xl hover:border-jade/40 hover:bg-stone-50 transition-colors"
-              >
-                <BookOpen size={18} className="text-jade mb-1.5" />
-                <p className="text-sm font-medium text-stone-700 leading-snug">{p.label}</p>
-              </motion.button>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   )
 }
