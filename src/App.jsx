@@ -450,7 +450,7 @@ export default function App() {
           <Route path="/events"    element={<EventsTab groupId={groupId} userId={session.user.id} isAdmin={isAdmin} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} birthdayBannerDismissed={birthdayBannerDismissed} birthdayBannerClosing={birthdayBannerClosing} onDismissBirthdayBanner={dismissBirthdayBanner} onOpenBirthdays={() => setBirthdayOpen(true)} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} />} />
-          <Route path="/bible"     element={<BibleTab onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/bible"     element={<BibleTab userId={session.user.id} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
           <Route path="*"          element={<Navigate to="/home" replace />} />
         </Routes>
