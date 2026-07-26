@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion, LayoutGroup } from 'framer-motion'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarStar } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarStar, BookOpen } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
@@ -23,6 +23,7 @@ const GuideTab            = lazy(() => import('./components/GuideTab.jsx'))
 const GivingTab           = lazy(() => import('./components/GivingTab.jsx'))
 const OverviewTab         = lazy(() => import('./components/OverviewTab.jsx'))
 const EventsTab           = lazy(() => import('./components/EventsTab.jsx'))
+const BibleTab            = lazy(() => import('./components/BibleTab.jsx'))
 const AuthPage            = lazy(() => import('./components/AuthPage.jsx'))
 const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.jsx'))
 const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
@@ -64,6 +65,7 @@ const TABS = [
   { path: '/events',   shortLabel: 'Events',   Icon: CalendarStar },
   { path: '/chat',     shortLabel: 'Chat',     Icon: ChatCircleDots },
   { path: '/prayer',   shortLabel: 'Prayer',   Icon: HandsPraying },
+  { path: '/bible',    shortLabel: 'Bible',    Icon: BookOpen },
 ]
 
 const PATHS = TABS.map(t => t.path)
@@ -242,12 +244,14 @@ export default function App() {
   const guideEnabled     = groupSettings?.guide_enabled !== false
   const givingEnabled    = groupSettings?.giving_enabled === true
   const eventsEnabled    = groupSettings?.events_enabled === true
+  const bibleEnabled     = groupSettings?.bible_enabled === true
   const showScheduleTab  = mealsEnabled || servicesEnabled
   const visibleTabs      = TABS.filter(t => {
     if (t.path === '/schedule') return showScheduleTab
     if (t.path === '/events')   return eventsEnabled
     if (t.path === '/chat')     return chatEnabled
     if (t.path === '/prayer')   return prayerEnabled
+    if (t.path === '/bible')    return bibleEnabled
     return true
   })
 
@@ -446,6 +450,7 @@ export default function App() {
           <Route path="/events"    element={<EventsTab groupId={groupId} userId={session.user.id} isAdmin={isAdmin} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} birthdayBannerDismissed={birthdayBannerDismissed} birthdayBannerClosing={birthdayBannerClosing} onDismissBirthdayBanner={dismissBirthdayBanner} onOpenBirthdays={() => setBirthdayOpen(true)} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
           <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} />} />
+          <Route path="/bible"     element={<BibleTab onOpenSettings={() => setSettingsOpen(true)} />} />
           <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
           <Route path="*"          element={<Navigate to="/home" replace />} />
         </Routes>

@@ -419,8 +419,9 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               { key: 'guide_enabled',     label: 'Community Guide',   desc: 'Home screen card' },
               { key: 'events_enabled',    label: 'Events',            desc: 'Events tab with RSVP' },
               { key: 'giving_enabled',    label: 'Giving / Tithing',  desc: 'Home screen card' },
+              { key: 'bible_enabled',     label: 'Bible',             desc: 'Bible reader tab with verse search' },
             ].map(({ key, label, desc }) => {
-              const enabled = key === 'events_enabled' || key === 'giving_enabled'
+              const enabled = key === 'events_enabled' || key === 'giving_enabled' || key === 'bible_enabled'
                 ? groupSettings?.[key] === true
                 : groupSettings?.[key] !== false
               return (
