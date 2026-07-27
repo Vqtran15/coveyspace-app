@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BookOpen, Books, MagnifyingGlass, Copy, Check, X, ArrowLeft,
+  BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
   CaretLeft, CaretRight, Bookmark,
 } from '@phosphor-icons/react'
@@ -215,12 +215,32 @@ async function fetchChapter(bookId, chapter) {
 // ─── AddEditSheet ──────────────────────────────────────────────────────────
 
 function AddEditSheet({ initial, onSave, onClose }) {
-  const [refStr, setRefStr] = useState(initial ? initial.label : '')
-  const [label, setLabel] = useState(initial ? initial.label : '')
-  const [labelEdited, setLabelEdited] = useState(false)
-  const [validity, setValidity] = useState(initial ? 'valid' : null)
+  const [bookId, setBookId] = useState(initial?.bookId ?? '')
+  const [chapterStr, setChapterStr] = useState(initial?.chapter ? String(initial.chapter) : '')
+  const [verseStr, setVerseStr] = useState(() => {
+    if (!initial?.startVerse) return ''
+    if (initial.endVerse && initial.endVerse !== initial.startVerse) return `${initial.startVerse}–${initial.endVerse}`
+    return String(initial.startVerse)
+  })
+  const [label, setLabel] = useState(initial?.label ?? '')
+  const [labelEdited, setLabelEdited] = useState(!!initial?.id)
+  const [errors, setErrors] = useState({})
   const [kbOffset, setKbOffset] = useState(0)
-  const validityTimer = useRef(null)
+
+  const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
+
+  function buildAutoLabel(bid, ch, vs) {
+    const book = ALL_BOOKS.find(b => b.id === bid)
+    if (!book || !ch) return ''
+    const chNum = parseInt(ch, 10)
+    if (isNaN(chNum)) return ''
+    const base = `${book.name} ${chNum}`
+    const vsTrimmed = vs.trim()
+    if (!vsTrimmed) return base
+    const m = vsTrimmed.match(/^(\d+)(?:[-–](\d+))?$/)
+    if (!m) return base
+    return m[2] ? `${base}:${m[1]}–${m[2]}` : `${base}:${m[1]}`
+  }
 
   useEffect(() => {
     const vv = window.visualViewport
@@ -232,15 +252,26 @@ function AddEditSheet({ initial, onSave, onClose }) {
     return () => vv.removeEventListener('resize', onVVResize)
   }, [])
 
-  function handleRefChange(val) {
-    setRefStr(val)
-    if (!labelEdited) setLabel(val)
-    setValidity(null)
-    clearTimeout(validityTimer.current)
-    if (!val.trim()) return
-    validityTimer.current = setTimeout(() => {
-      setValidity(parseRef(val.trim()) ? 'valid' : 'invalid')
-    }, 350)
+  function handleBookChange(bid) {
+    setBookId(bid)
+    setErrors(e => ({ ...e, book: false }))
+    const book = ALL_BOOKS.find(b => b.id === bid)
+    const ch = parseInt(chapterStr, 10)
+    const shouldResetChapter = book && !isNaN(ch) && ch > book.chapters
+    if (shouldResetChapter) setChapterStr('')
+    if (!labelEdited) setLabel(buildAutoLabel(bid, shouldResetChapter ? '' : chapterStr, verseStr))
+  }
+
+  function handleChapterChange(val) {
+    setChapterStr(val)
+    setErrors(e => ({ ...e, chapter: false }))
+    if (!labelEdited) setLabel(buildAutoLabel(bookId, val, verseStr))
+  }
+
+  function handleVerseChange(val) {
+    setVerseStr(val)
+    setErrors(e => ({ ...e, verse: false }))
+    if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, val))
   }
 
   function handleLabelChange(val) {
@@ -249,9 +280,25 @@ function AddEditSheet({ initial, onSave, onClose }) {
   }
 
   function handleSave() {
-    const parsed = parseRef(refStr.trim())
-    if (!parsed) { setValidity('invalid'); return }
-    onSave({ id: initial?.id ?? newId(), label: label.trim() || refStr.trim(), ...parsed })
+    const newErrors = {}
+    const book = ALL_BOOKS.find(b => b.id === bookId)
+    if (!book) newErrors.book = true
+    const ch = parseInt(chapterStr, 10)
+    if (!book || isNaN(ch) || ch < 1 || ch > (book?.chapters ?? 0)) newErrors.chapter = true
+    let startVerse = null, endVerse = null
+    if (verseStr.trim()) {
+      const m = verseStr.trim().match(/^(\d+)(?:[-–](\d+))?$/)
+      if (!m) {
+        newErrors.verse = true
+      } else {
+        startVerse = parseInt(m[1], 10)
+        endVerse = m[2] ? parseInt(m[2], 10) : null
+        if (endVerse !== null && endVerse < startVerse) newErrors.verse = true
+      }
+    }
+    if (Object.values(newErrors).some(Boolean)) { setErrors(newErrors); return }
+    const finalLabel = label.trim() || buildAutoLabel(bookId, chapterStr, verseStr)
+    onSave({ id: initial?.id ?? newId(), label: finalLabel, bookId, chapter: ch, startVerse, endVerse })
   }
 
   return (
@@ -287,36 +334,79 @@ function AddEditSheet({ initial, onSave, onClose }) {
           </button>
         </div>
         <div className="px-5 pt-4 pb-5 space-y-4">
+          {/* Book */}
           <div>
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-              Reference
+              Book
             </label>
-            <div className="relative">
+            <select
+              value={bookId}
+              onChange={e => handleBookChange(e.target.value)}
+              className={[
+                'w-full px-4 py-2.5 rounded-xl border text-sm bg-white appearance-none',
+                'focus:outline-none focus:ring-2 transition',
+                errors.book ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                !bookId ? 'text-stone-400' : 'text-stone-800',
+              ].join(' ')}
+            >
+              <option value="" disabled>Select a book…</option>
+              <optgroup label="Old Testament">
+                {OT_BOOKS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </optgroup>
+              <optgroup label="New Testament">
+                {NT_BOOKS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </optgroup>
+            </select>
+            {errors.book && <p className="text-xs text-red-500 mt-1">Please select a book</p>}
+          </div>
+
+          {/* Chapter + Verse side by side */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
+                Chapter
+              </label>
               <input
-                autoFocus
-                value={refStr}
-                onChange={e => handleRefChange(e.target.value)}
+                type="number"
+                min={1}
+                max={selectedBook?.chapters ?? 999}
+                value={chapterStr}
+                onChange={e => handleChapterChange(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSave()}
-                placeholder="John 3:16, Psalm 23, Romans 8:28-39"
+                placeholder="1"
                 className={[
-                  'w-full px-4 py-2.5 pr-10 rounded-xl border text-sm text-stone-800',
+                  'w-full px-4 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  validity === 'invalid' ? 'border-red-300 focus:ring-red-200'
-                    : validity === 'valid' ? 'border-jade/50 focus:ring-jade/20'
-                    : 'border-stone-200 focus:ring-jade/20',
+                  errors.chapter ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
                 ].join(' ')}
               />
-              {validity === 'valid' && (
-                <Check size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-jade" />
-              )}
-              {validity === 'invalid' && (
-                <X size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400" />
+              {errors.chapter && (
+                <p className="text-xs text-red-500 mt-1">
+                  {selectedBook ? `1–${selectedBook.chapters}` : 'Required'}
+                </p>
               )}
             </div>
-            {validity === 'invalid' && (
-              <p className="text-xs text-red-500 mt-1">Try a reference like John 3:16 or Psalm 23</p>
-            )}
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
+                Verse(s) <span className="font-normal normal-case text-stone-400">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={verseStr}
+                onChange={e => handleVerseChange(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSave()}
+                placeholder="16 or 28–39"
+                className={[
+                  'w-full px-4 py-2.5 rounded-xl border text-sm text-stone-800',
+                  'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
+                  errors.verse ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                ].join(' ')}
+              />
+              {errors.verse && <p className="text-xs text-red-500 mt-1">Try 16 or 28–39</p>}
+            </div>
           </div>
+
+          {/* Label */}
           <div>
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
               Label <span className="font-normal normal-case text-stone-400">(optional)</span>
@@ -329,6 +419,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
               className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade/20 transition"
             />
           </div>
+
           <div className="flex gap-3 pt-1">
             <button
               onClick={onClose}
@@ -338,8 +429,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
             </button>
             <button
               onClick={handleSave}
-              disabled={validity === 'invalid'}
-              className="flex-1 py-2.5 rounded-xl bg-jade text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="flex-1 py-2.5 rounded-xl bg-jade text-white text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Save
             </button>
@@ -1008,6 +1098,10 @@ export default function BibleTab({ userId }) {
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={chapterLoading || isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
+                        bookId: openChapter.bookId,
+                        chapter: openChapter.chapterNum,
+                        startVerse: openChapter.startVerse,
+                        endVerse: openChapter.endVerse,
                         label: openChapter.startVerse != null
                           ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
                           : `${openChapter.bookName} ${openChapter.chapterNum}`,
