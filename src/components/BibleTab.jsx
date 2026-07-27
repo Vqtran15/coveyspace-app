@@ -277,7 +277,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
         </div>
         <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
           <h3 className="font-bold text-stone-800 text-base">
-            {initial?.id ? 'Edit Passage' : 'Add Passage'}
+            {initial?.id ? 'Edit Passage' : 'Add to Quick Access'}
           </h3>
           <button
             onClick={onClose}
@@ -510,6 +510,19 @@ function BibleBrowser({ onSelectChapter, onClose }) {
   )
 }
 
+// ─── Page-turn animation variants ────────────────────────────────────────
+const pageVariants = {
+  enter: (dir) => ({
+    x: dir === 'forward' ? '100%' : dir === 'backward' ? '-100%' : 0,
+    opacity: dir ? 1 : 0,
+  }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir) => ({
+    x: dir === 'forward' ? '-25%' : dir === 'backward' ? '25%' : 0,
+    opacity: 0,
+  }),
+}
+
 // ─── Main BibleTab ────────────────────────────────────────────────────────
 
 export default function BibleTab({ userId }) {
@@ -517,7 +530,7 @@ export default function BibleTab({ userId }) {
 
   // navigation: 'home' | 'chapter'
   const [viewMode, setViewMode] = useState('home')
-  const [openChapter, setOpenChapter] = useState(null)   // null = loading
+  const [openChapter, setOpenChapter] = useState(null)   // null = not yet loaded or error
   const [chapterLoading, setChapterLoading] = useState(false)
   const [chapterError, setChapterError] = useState(null)
 
@@ -538,6 +551,7 @@ export default function BibleTab({ userId }) {
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
   const [cardMenuIdx, setCardMenuIdx] = useState(null)
   const [previews, setPreviews] = useState({})
+  const [navDirection, setNavDirection] = useState(null)
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -698,11 +712,11 @@ export default function BibleTab({ userId }) {
   }
 
   // ── Navigation ─────────────────────────────────────────────────────────
-  async function openPassage(ref) {
+  async function openPassage(ref, direction = null) {
     const id = ++openIdRef.current
     haptic()
+    setNavDirection(direction)
     setViewMode('chapter')
-    setOpenChapter(null)
     setChapterLoading(true)
     setChapterError(null)
     try {
@@ -726,6 +740,7 @@ export default function BibleTab({ userId }) {
     } catch {
       if (id !== openIdRef.current) return
       setChapterError('Could not load that passage. Check your connection.')
+      setOpenChapter(null)
     } finally {
       if (id === openIdRef.current) setChapterLoading(false)
     }
@@ -867,7 +882,7 @@ export default function BibleTab({ userId }) {
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-jade text-white text-sm font-semibold"
               >
                 <Plus size={16} weight="bold" />
-                Add passage
+                Add to Quick Access
               </motion.button>
             </motion.div>
           )}
@@ -992,27 +1007,27 @@ export default function BibleTab({ userId }) {
                   <div className="flex items-center gap-0.5 shrink-0">
                     <motion.button
                       whileTap={{ scale: 0.9 }}
-                      onClick={isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
+                      onClick={chapterLoading || isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
                         label: openChapter.startVerse != null
                           ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
                           : `${openChapter.bookName} ${openChapter.chapterNum}`,
                       }})}
-                      className={['w-8 h-8 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
+                      className={['w-8 h-8 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
                     >
                       <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null })}
-                      disabled={openChapter.chapterNum <= 1}
+                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
+                      disabled={chapterLoading || openChapter.chapterNum <= 1}
                       className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
                     >
                       <CaretLeft size={18} weight="bold" />
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null })}
-                      disabled={openChapter.chapterNum >= maxChapters}
+                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
+                      disabled={chapterLoading || openChapter.chapterNum >= maxChapters}
                       className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
                     >
                       <CaretRight size={18} weight="bold" />
@@ -1021,77 +1036,100 @@ export default function BibleTab({ userId }) {
                 )}
             </div>
 
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
-              {/* Loading spinner */}
-              {chapterLoading && (
-                <div className="flex justify-center py-20">
-                  <div className="w-7 h-7 border-2 border-jade border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-
-              {/* Error */}
-              {chapterError && (
-                <div className="flex flex-col items-center gap-3 py-20 text-center">
-                  <p className="text-sm text-stone-500">{chapterError}</p>
-                  <button
-                    onClick={handleBack}
-                    className="text-sm font-semibold text-jade"
+            {/* Scrollable content with page-turn animation */}
+            <div className="flex-1 min-h-0 relative overflow-hidden">
+              {/* Loading overlay — appears above current page, no key change */}
+              <AnimatePresence>
+                {chapterLoading && (
+                  <motion.div
+                    key="loading-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute inset-0 z-10 flex items-center justify-center bg-sunrise-50/80 pointer-events-none"
                   >
-                    Go back
-                  </button>
-                </div>
-              )}
+                    <div className="w-7 h-7 border-2 border-jade border-t-transparent rounded-full animate-spin" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* Verse count */}
-              {!chapterLoading && openChapter && !chapterError && (
-                <>
-                  <p className="text-xs text-stone-400 font-medium mb-3">
-                    {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
-                    {openChapter.startVerse != null && (
-                      <span>
-                        {' '}(ch. {openChapter.chapterNum}
-                        {openChapter.startVerse != null
-                          ? ` · v${openChapter.startVerse}${openChapter.endVerse != null && openChapter.endVerse !== openChapter.startVerse ? `–${openChapter.endVerse}` : ''}`
-                          : ''}
-                        )
-                      </span>
-                    )}
-                  </p>
+              {/* Animated page — key changes per chapter, drives page-turn */}
+              <AnimatePresence custom={navDirection}>
+                <motion.div
+                  key={openChapter ? `${openChapter.bookId}-${openChapter.chapterNum}` : (chapterError ? 'error' : 'empty')}
+                  custom={navDirection}
+                  variants={pageVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ type: 'spring', stiffness: 350, damping: 36, mass: 0.8 }}
+                  className="absolute inset-0 overflow-y-auto px-4 pt-4 pb-8"
+                >
+                  {/* Error */}
+                  {chapterError && (
+                    <div className="flex flex-col items-center gap-3 py-20 text-center">
+                      <p className="text-sm text-stone-500">{chapterError}</p>
+                      <button
+                        onClick={handleBack}
+                        className="text-sm font-semibold text-jade"
+                      >
+                        Go back
+                      </button>
+                    </div>
+                  )}
 
-                  {/* Verse list */}
-                  <div className="space-y-1.5">
-                    {openChapter.verses.map((v, idx) => {
-                      const isHighlighted = highlightSet.has(v.number)
-                      const isFirst = v.number === firstHighlight
-                      return (
-                        <motion.div
-                          key={v.number}
-                          ref={isFirst ? highlightRef : null}
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
-                          whileTap={{ scale: 0.99 }}
-                          onClick={() => handleCopyVerse(v)}
-                          className={[
-                            'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
-                            isHighlighted ? 'bg-jade/10 hover:bg-jade/15' : 'hover:bg-stone-50',
-                          ].join(' ')}
-                        >
-                          <span className="font-bold text-jade text-xs pt-0.5 w-5 shrink-0 text-right select-none">
-                            {v.number}
+                  {/* Verse count + list */}
+                  {openChapter && !chapterError && (
+                    <>
+                      <p className="text-xs text-stone-400 font-medium mb-3">
+                        {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
+                        {openChapter.startVerse != null && (
+                          <span>
+                            {' '}(ch. {openChapter.chapterNum}
+                            {openChapter.startVerse != null
+                              ? ` · v${openChapter.startVerse}${openChapter.endVerse != null && openChapter.endVerse !== openChapter.startVerse ? `–${openChapter.endVerse}` : ''}`
+                              : ''}
+                            )
                           </span>
-                          <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
-                          <Copy
-                            size={13}
-                            className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start"
-                          />
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
+                        )}
+                      </p>
+
+                      {/* Verse list */}
+                      <div className="space-y-1.5">
+                        {openChapter.verses.map((v, idx) => {
+                          const isHighlighted = highlightSet.has(v.number)
+                          const isFirst = v.number === firstHighlight
+                          return (
+                            <motion.div
+                              key={v.number}
+                              ref={isFirst ? highlightRef : null}
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
+                              whileTap={{ scale: 0.99 }}
+                              onClick={() => handleCopyVerse(v)}
+                              className={[
+                                'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
+                                isHighlighted ? 'bg-jade/10 hover:bg-jade/15' : 'hover:bg-stone-50',
+                              ].join(' ')}
+                            >
+                              <span className="font-bold text-jade text-xs pt-0.5 w-5 shrink-0 text-right select-none">
+                                {v.number}
+                              </span>
+                              <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
+                              <Copy
+                                size={13}
+                                className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start"
+                              />
+                            </motion.div>
+                          )
+                        })}
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </motion.div>
         )}

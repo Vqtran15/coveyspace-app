@@ -50,6 +50,9 @@ Next.js 16 admin dashboard at `admin.coveyspace.com`. Reads from the same Supaba
 ## Unrelated Projects — Do Not Reference
 - `~/Desktop/claude/mens-group-pwa` (and its memory file `project_mensgrouppwa.md`) is a **completely separate project** with a different codebase, stack, and Supabase instance. Never pull context, file paths, architecture decisions, or features from it when working on this repo. If a memory file about it appears in context, ignore it entirely.
 
+## Editing Code
+Always use the Edit tool directly to make code changes. Do not write Python scripts to apply string replacements — it is slower, more error-prone, and harder to review. The only exception is if the Edit tool is actively mangling the file (e.g., converting ASCII quotes to smart quotes), in which case flag the issue explicitly rather than silently defaulting to Python.
+
 ## Self-Correction Rule
 If Claude discovers that something in this file is wrong or outdated (e.g., a feature already exists, a file has moved, a constraint no longer applies), update this file immediately before continuing. Do not silently work around stale information.
 
@@ -62,4 +65,4 @@ After every code change, QA the affected functionality before reporting done. Us
 - **Playwright browser tests** (`npx playwright test --config playwright.staging.config.js`) — full runtime tests against localhost:5173
 - **QA agent** — spawn a subagent to review the changed code for bugs and regressions
 
-If tests find issues, fix them and re-run. Repeat until clean.
+**This is a loop**: if QA finds issues, fix them and re-run QA. Keep iterating — fix, QA, fix, QA — until all checks are clean and no new issues are found. Do not report work as done until the loop is clean.
