@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, Check, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
+  CaretLeft, CaretRight, Bookmark,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { haptic } from '../lib/haptic.js'
@@ -276,7 +277,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
         </div>
         <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
           <h3 className="font-bold text-stone-800 text-base">
-            {initial ? 'Edit Passage' : 'Add Passage'}
+            {initial?.id ? 'Edit Passage' : 'Add Passage'}
           </h3>
           <button
             onClick={onClose}
@@ -366,6 +367,7 @@ function BookButton({ book, onSelect }) {
 function BibleBrowser({ onSelectChapter, onClose }) {
   const [selectedBook, setSelectedBook] = useState(null)
   const [booksReady, setBooksReady] = useState(false)
+  const [bookSearch, setBookSearch] = useState('')
 
   return (
     <motion.div
@@ -407,30 +409,62 @@ function BibleBrowser({ onSelectChapter, onClose }) {
             <div className="px-4 py-3 pb-6">
               {booksReady ? (
                 <>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
-                      Old Testament
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5 mb-5">
-                      {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
-                    </div>
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.18, delay: 0.07 }}
-                  >
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
-                      New Testament
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
-                    </div>
-                  </motion.div>
+                  {/* Book search */}
+                  <div className="relative mb-3">
+                    <MagnifyingGlass size={15} weight="bold" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={bookSearch}
+                      onChange={e => setBookSearch(e.target.value)}
+                      placeholder="Search books…"
+                      className="w-full pl-8 pr-8 py-2 rounded-xl bg-stone-100 border border-transparent text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade/30 transition"
+                    />
+                    {bookSearch && (
+                      <button onClick={() => setBookSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  {bookSearch.trim() ? (
+                    (() => {
+                      const q = bookSearch.trim().toLowerCase()
+                      const matches = [...OT_BOOKS, ...NT_BOOKS].filter(b => b.name.toLowerCase().includes(q))
+                      return matches.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {matches.map(book => <BookButton key={book.id} book={book} onSelect={b => { setSelectedBook(b); setBookSearch('') }} />)}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-stone-400 text-center py-8">No books match "{bookSearch}"</p>
+                      )
+                    })()
+                  ) : (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                          Old Testament
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5 mb-5">
+                          {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+                        </div>
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.18, delay: 0.07 }}
+                      >
+                        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                          New Testament
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
                 </>
               ) : (
                 <div className="space-y-2 pt-1">
@@ -503,6 +537,7 @@ export default function BibleTab({ userId }) {
   const [dropTick, setDropTick] = useState(0)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
   const [cardMenuIdx, setCardMenuIdx] = useState(null)
+  const [previews, setPreviews] = useState({})
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -512,6 +547,7 @@ export default function BibleTab({ userId }) {
   const cardRefs = useRef([])
   const gridRef = useRef(null)
   const highlightRef = useRef(null)
+  const fetchedPreviewsRef = useRef(new Set())
 
   // ── Load user passages ─────────────────────────────────────────────────
   useEffect(() => {
@@ -531,6 +567,22 @@ export default function BibleTab({ userId }) {
     clearTimeout(searchTimerRef.current)
     clearTimeout(saveTimerRef.current)
   }, [])
+
+  // ── Fetch first-verse previews for quick access cards ──────────────────
+  useEffect(() => {
+    if (!userPassages?.length) return
+    userPassages.forEach(p => {
+      if (fetchedPreviewsRef.current.has(p.id)) return
+      fetchedPreviewsRef.current.add(p.id)
+      fetchChapter(p.bookId, p.chapter)
+        .then(data => {
+          const all = parseVerses(data)
+          const v = p.startVerse != null ? all.find(v => v.number === p.startVerse) : all[0]
+          setPreviews(prev => ({ ...prev, [p.id]: v?.text ?? '' }))
+        })
+        .catch(() => { fetchedPreviewsRef.current.delete(p.id) })
+    })
+  }, [userPassages])
 
   // ── Scroll to highlighted verse ────────────────────────────────────────
   useEffect(() => {
@@ -663,6 +715,7 @@ export default function BibleTab({ userId }) {
             ? v.number >= ref.startVerse && v.number <= ref.endVerse
             : v.number === ref.startVerse)
       setOpenChapter({
+        bookId: ref.bookId,
         bookName: data.book?.name ?? ALL_BOOKS.find(b => b.id === ref.bookId)?.name ?? '',
         chapterNum: ref.chapter,
         startVerse: ref.startVerse,
@@ -701,6 +754,13 @@ export default function BibleTab({ userId }) {
       )
     : new Set()
   const firstHighlight = highlightSet.size > 0 ? Math.min(...highlightSet) : null
+  const maxChapters = openChapter ? (ALL_BOOKS.find(b => b.id === openChapter.bookId)?.chapters ?? 1) : 1
+  const isAlreadySaved = openChapter != null && (userPassages ?? []).some(p =>
+    p.bookId === openChapter.bookId &&
+    p.chapter === openChapter.chapterNum &&
+    p.startVerse === openChapter.startVerse &&
+    p.endVerse === openChapter.endVerse
+  )
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
@@ -849,6 +909,9 @@ export default function BibleTab({ userId }) {
                     >
                       <BookOpen size={18} weight="bold" className="text-jade mb-1.5" />
                       <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-9' : 'pr-5'].join(' ')}>{p.label}</p>
+                      {!editMode && previews[p.id] && (
+                        <p className="text-xs text-stone-400 leading-snug line-clamp-2 mt-1">{previews[p.id]}</p>
+                      )}
                     </motion.button>
 
                     {/* Three-dots menu */}
@@ -908,16 +971,16 @@ export default function BibleTab({ userId }) {
             style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Sticky header */}
-            <div className="px-4 pt-4 pb-3 flex items-center justify-between shrink-0 border-b border-stone-200/60">
-                <div className="flex items-center gap-2">
+            <div className="px-4 pt-4 pb-3 flex items-center gap-2 shrink-0 border-b border-stone-200/60">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   <motion.button
                     whileTap={{ scale: 0.92 }}
                     onClick={handleBack}
-                    className="w-8 h-8 flex items-center justify-center -ml-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center -ml-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
                   >
                     <ArrowLeft size={20} weight="bold" />
                   </motion.button>
-                  <h1 className="text-2xl font-bold text-stone-800 leading-tight">
+                  <h1 className="text-2xl font-bold text-stone-800 leading-tight truncate">
                     {chapterLoading
                       ? 'Loading…'
                       : openChapter
@@ -925,6 +988,37 @@ export default function BibleTab({ userId }) {
                       : chapterError ? 'Error' : ''}
                   </h1>
                 </div>
+                {openChapter && !chapterError && (
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
+                        label: openChapter.startVerse != null
+                          ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
+                          : `${openChapter.bookName} ${openChapter.chapterNum}`,
+                      }})}
+                      className={['w-8 h-8 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
+                    >
+                      <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null })}
+                      disabled={openChapter.chapterNum <= 1}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                    >
+                      <CaretLeft size={18} weight="bold" />
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null })}
+                      disabled={openChapter.chapterNum >= maxChapters}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                    >
+                      <CaretRight size={18} weight="bold" />
+                    </motion.button>
+                  </div>
+                )}
             </div>
 
             {/* Scrollable content */}
@@ -966,7 +1060,7 @@ export default function BibleTab({ userId }) {
                   </p>
 
                   {/* Verse list */}
-                  <div className="space-y-0.5">
+                  <div className="space-y-1.5">
                     {openChapter.verses.map((v, idx) => {
                       const isHighlighted = highlightSet.has(v.number)
                       const isFirst = v.number === firstHighlight
@@ -990,7 +1084,7 @@ export default function BibleTab({ userId }) {
                           <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
                           <Copy
                             size={13}
-                            className="shrink-0 mt-0.5 text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity self-start"
+                            className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start"
                           />
                         </motion.div>
                       )
