@@ -211,13 +211,6 @@ async function fetchChapter(bookId, chapter) {
   return res.json()
 }
 
-function getDailyPassage() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 1)
-  const dayOfYear = Math.floor((now - start) / 86400000)
-  return DEFAULT_PASSAGES[dayOfYear % DEFAULT_PASSAGES.length]
-}
-
 // ─── AddEditSheet ──────────────────────────────────────────────────────────
 
 function AddEditSheet({ initial, onSave, onClose }) {
@@ -372,6 +365,12 @@ function BookButton({ book, onSelect }) {
 
 function BibleBrowser({ onSelectChapter, onClose }) {
   const [selectedBook, setSelectedBook] = useState(null)
+  const [booksReady, setBooksReady] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setBooksReady(true), 150)
+    return () => clearTimeout(t)
+  }, [])
 
   return (
     <motion.div
@@ -437,18 +436,44 @@ function BibleBrowser({ onSelectChapter, onClose }) {
             className="absolute inset-0 overflow-y-auto"
           >
             <div className="px-4 py-3 pb-6">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
-                Old Testament
-              </p>
-              <div className="grid grid-cols-2 gap-1.5 mb-5">
-                {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
-              </div>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
-                New Testament
-              </p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
-              </div>
+              {booksReady ? (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                      Old Testament
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 mb-5">
+                      {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+                    </div>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, delay: 0.09 }}
+                  >
+                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                      New Testament
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+                    </div>
+                  </motion.div>
+                </>
+              ) : (
+                <div className="space-y-2 pt-1">
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-10 bg-stone-100 rounded-xl animate-pulse"
+                      style={{ animationDelay: `${i * 30}ms` }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -501,9 +526,6 @@ export default function BibleTab({ userId }) {
   const [query, setQuery] = useState('')
   const [searchError, setSearchError] = useState(null)
 
-  // daily verse
-  const [dailyVerses, setDailyVerses] = useState(null)
-
   // copy
   const [copied, setCopied] = useState(false)
 
@@ -525,8 +547,6 @@ export default function BibleTab({ userId }) {
   const gridRef = useRef(null)
   const highlightRef = useRef(null)
 
-  const dailyPassage = getDailyPassage()
-
   // ── Load user passages ─────────────────────────────────────────────────
   useEffect(() => {
     if (!userId) return
@@ -539,21 +559,6 @@ export default function BibleTab({ userId }) {
       .catch(() => setUserPassages([...DEFAULT_PASSAGES]))
   }, [userId])
 
-  // ── Load daily verse ───────────────────────────────────────────────────
-  useEffect(() => {
-    let cancelled = false
-    fetchChapter(dailyPassage.bookId, dailyPassage.chapter)
-      .then(data => {
-        if (cancelled) return
-        const all = parseVerses(data)
-        const { startVerse: sv, endVerse: ev } = dailyPassage
-        const filtered = sv == null ? all
-          : all.filter(v => ev != null ? v.number >= sv && v.number <= ev : v.number === sv)
-        setDailyVerses(filtered)
-      })
-      .catch(() => { if (!cancelled) setDailyVerses([]) })
-    return () => { cancelled = true }
-  }, [])
 
   // ── Cleanup timers ─────────────────────────────────────────────────────
   useEffect(() => () => {
@@ -789,44 +794,7 @@ export default function BibleTab({ userId }) {
       )}
 
       {/* Home content */}
-      <div className="mt-4 space-y-5">
-
-        {/* Today's Passage */}
-        <div className="bg-jade rounded-2xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-white/60 uppercase tracking-wide mb-1">
-            Today's Passage
-          </p>
-          <p className="text-sm font-semibold text-white mb-3">{dailyPassage.label}</p>
-
-          {dailyVerses === null ? (
-            <div className="space-y-2">
-              {[0, 1, 2].map(i => (
-                <div
-                  key={i}
-                  className="h-3.5 bg-white/20 rounded-lg animate-pulse"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                />
-              ))}
-            </div>
-          ) : dailyVerses.length > 0 ? (
-            <>
-              <p className="text-white/90 text-sm leading-relaxed line-clamp-4">
-                {dailyVerses.map(v => v.text).join(' ')}
-              </p>
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={() => openPassage(dailyPassage)}
-                className="mt-3 text-xs font-semibold text-white/70 hover:text-white transition-colors"
-              >
-                Read full passage →
-              </motion.button>
-            </>
-          ) : (
-            <p className="text-white/60 text-sm">
-              Could not load passage. Check your connection.
-            </p>
-          )}
-        </div>
+      <div className="mt-4">
 
         {/* Quick Access */}
         <div>

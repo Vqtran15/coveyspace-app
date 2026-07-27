@@ -380,11 +380,6 @@ test.describe('B — Browser runtime', () => {
     await expect(biblePage.getByRole('heading', { name: 'Bible' })).toBeVisible()
   })
 
-  test("Today's Passage card is visible", async () => {
-    if (!biblePage) test.skip(true, 'bible_enabled not set')
-    await expect(biblePage.getByText("Today's Passage")).toBeVisible()
-  })
-
   test('Quick Access section is visible', async () => {
     if (!biblePage) test.skip(true, 'bible_enabled not set')
     await expect(biblePage.getByText('Quick Access')).toBeVisible()
@@ -419,7 +414,7 @@ test.describe('B — Browser runtime', () => {
     if (!biblePage) test.skip(true, 'bible_enabled not set')
     const backBtn = biblePage.locator('button').filter({ has: biblePage.locator('svg') }).first()
     await backBtn.click()
-    await expect(biblePage.getByText("Today's Passage")).toBeVisible({ timeout: 5000 })
+    await expect(biblePage.getByText('Quick Access')).toBeVisible({ timeout: 5000 })
   })
 
   test('BSB browser opens and shows book list', async () => {
