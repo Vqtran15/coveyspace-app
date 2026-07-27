@@ -363,28 +363,25 @@ function BookButton({ book, onSelect }) {
   )
 }
 
-function BibleBrowser({ onSelectChapter, onClose }) {
+function BibleBrowser({ show, onSelectChapter, onClose }) {
   const [selectedBook, setSelectedBook] = useState(null)
-  const [booksReady, setBooksReady] = useState(false)
 
   useEffect(() => {
-    const t = setTimeout(() => setBooksReady(true), 150)
-    return () => clearTimeout(t)
-  }, [])
+    if (!show) setSelectedBook(null)
+  }, [show])
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={false}
+      animate={{ opacity: show ? 1 : 0 }}
       transition={{ duration: 0.18 }}
       className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/40"
+      style={{ pointerEvents: show ? 'auto' : 'none' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+        initial={false}
+        animate={{ y: show ? 0 : '100%' }}
         transition={{ type: 'spring', stiffness: 360, damping: 34 }}
         className="bg-white rounded-t-3xl flex flex-col"
         style={{ height: '88vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
@@ -436,44 +433,18 @@ function BibleBrowser({ onSelectChapter, onClose }) {
             className="absolute inset-0 overflow-y-auto"
           >
             <div className="px-4 py-3 pb-6">
-              {booksReady ? (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.22 }}
-                  >
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
-                      Old Testament
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5 mb-5">
-                      {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
-                    </div>
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.22, delay: 0.09 }}
-                  >
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
-                      New Testament
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
-                    </div>
-                  </motion.div>
-                </>
-              ) : (
-                <div className="space-y-2 pt-1">
-                  {[...Array(8)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-10 bg-stone-100 rounded-xl animate-pulse"
-                      style={{ animationDelay: `${i * 30}ms` }}
-                    />
-                  ))}
-                </div>
-              )}
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                Old Testament
+              </p>
+              <div className="grid grid-cols-2 gap-1.5 mb-5">
+                {OT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+              </div>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                New Testament
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {NT_BOOKS.map(book => <BookButton key={book.id} book={book} onSelect={setSelectedBook} />)}
+              </div>
             </div>
           </motion.div>
 
@@ -1038,17 +1009,14 @@ export default function BibleTab({ userId }) {
         )}
       </AnimatePresence>
 
-      {/* ── Bible Browser sheet ────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {showBrowser && (
-          <BibleBrowser
-            onSelectChapter={(bookId, ch) => {
-              openPassage({ bookId, chapter: ch, startVerse: null, endVerse: null })
-            }}
-            onClose={() => setShowBrowser(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* ── Bible Browser sheet (always mounted — zero open cost) ─────────── */}
+      <BibleBrowser
+        show={showBrowser}
+        onSelectChapter={(bookId, ch) => {
+          openPassage({ bookId, chapter: ch, startVerse: null, endVerse: null })
+        }}
+        onClose={() => setShowBrowser(false)}
+      />
 
       {/* ── Add / Edit sheet ───────────────────────────────────────────────── */}
       <AnimatePresence>
