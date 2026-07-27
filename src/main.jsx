@@ -11,7 +11,11 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 // preventDefault is the universal fallback. Skips elements inside
 // explicit overflow:auto/scroll containers so inner scrollable areas
 // (chapter reader, browser list, form sheets) still work normally.
+// Tracks touch direction so we only block the bounce direction —
+// never block scrolling INTO content (e.g. scrolling down from top).
 ;(function preventElasticScroll() {
+  let lastTouchY = 0
+
   function isInsideScrollable(el) {
     while (el && el !== document.body) {
       const oy = window.getComputedStyle(el).overflowY
@@ -20,12 +24,21 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
     }
     return false
   }
+
+  document.addEventListener('touchstart', function (e) {
+    lastTouchY = e.touches[0].clientY
+  }, { passive: true })
+
   document.addEventListener('touchmove', function (e) {
     if (isInsideScrollable(e.target)) return
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - lastTouchY
+    lastTouchY = currentY
     const root = document.scrollingElement || document.documentElement
-    if (root.scrollTop <= 0 || root.scrollTop + root.clientHeight >= root.scrollHeight) {
-      e.preventDefault()
-    }
+    // deltaY > 0 = finger moving down = content scrolling up = would bounce at top
+    if (deltaY > 0 && root.scrollTop <= 0) { e.preventDefault(); return }
+    // deltaY < 0 = finger moving up = content scrolling down = would bounce at bottom
+    if (deltaY < 0 && root.scrollTop + root.clientHeight >= root.scrollHeight) { e.preventDefault() }
   }, { passive: false })
 }())
 

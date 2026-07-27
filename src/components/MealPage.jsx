@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin } from '@phosphor-icons/react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
@@ -18,6 +19,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [justAddedSlot, setJustAddedSlot] = useState(null)
   const [pausing, setPausing]           = useState(false)
+  const [menuOpen, setMenuOpen]         = useState(false)
   const { className: headerEntranceClass } = useEntranceAnimation(`${revealKey}-${page?.id}`, 0, { direction: 'left' })
 
   useEffect(() => {
@@ -245,24 +247,50 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
             {(isAdmin || pageCount > 1) && (
               <div className="shrink-0 flex flex-col items-end gap-2">
                 {isAdmin && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="relative">
                     <button
-                      onClick={onEditOpen}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border border-stone-200 text-stone-500 hover:border-jade hover:text-jade hover:bg-jade/5"
+                      onClick={() => setMenuOpen(m => !m)}
+                      className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                     >
-                      <PencilSimple size={13} weight="bold" /> Edit
+                      <DotsThreeVertical size={18} weight="bold" />
                     </button>
-                    <button
-                      onClick={handleTogglePause}
-                      disabled={pausing}
-                      title={page.is_paused ? 'Resume signup' : 'Pause signup'}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
-                    >
-                      {page.is_paused
-                        ? <><PlayCircle size={14} weight="fill" /> Resume</>
-                        : <><PauseCircle size={14} weight="fill" /> Pause</>
-                      }
-                    </button>
+                    <AnimatePresence>
+                      {menuOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-[49]"
+                            onClick={() => setMenuOpen(false)}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: -4 }}
+                            transition={{ duration: 0.12 }}
+                            style={{ transformOrigin: 'top right' }}
+                            className="absolute right-0 top-9 z-[50] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-36"
+                          >
+                            <button
+                              onClick={() => { setMenuOpen(false); onEditOpen() }}
+                              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                            >
+                              <PencilSimple size={14} className="text-stone-500" />
+                              Edit
+                            </button>
+                            <div className="h-px bg-stone-100" />
+                            <button
+                              onClick={() => { setMenuOpen(false); handleTogglePause() }}
+                              disabled={pausing}
+                              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm transition-colors disabled:opacity-40 hover:bg-stone-50"
+                            >
+                              {page.is_paused
+                                ? <><PlayCircle size={14} weight="fill" className="text-jade" /><span className="text-jade">Resume</span></>
+                                : <><PauseCircle size={14} weight="fill" className="text-amber-500" /><span className="text-amber-600">Pause</span></>
+                              }
+                            </button>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
                 {pageCount > 1 && (
