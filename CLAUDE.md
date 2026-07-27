@@ -59,6 +59,57 @@ If Claude discovers that something in this file is wrong or outdated (e.g., a fe
 ## Double Check Rule
 ALWAYS double check your work before reporting it as done. Re-read changed files, verify logic, and confirm nothing was missed or broken.
 
+## Design System
+
+### Colors
+- **Page background**: `bg-sunrise-50` (`#FBF8F4`) — warm off-white
+- **Primary accent**: `jade` (`#C4622D`) — CTAs, focus rings, active states
+- **Supporting palette**: `coral` (`#B85A3A`), `lagoon` (`#E8A838`), `sage` (`#A1CCA6`)
+- **Color in cards lives in icon/badge boxes only** — never use a brand color as the full card background. Tints by context: `bg-amber-50` (meals/dates), `bg-jade/10` (jade items), `bg-lagoon-50` (lagoon items), `bg-coral/10` (coral items), `bg-sage-50` (prayer/sage items)
+
+### Cards
+- Standard card: `bg-white rounded-2xl border border-stone-100 shadow-sm`
+- Elevated/interactive card: bump shadow to `shadow`
+- Never use `rounded-xl` for cards — that's for buttons, inputs, and icon boxes
+
+### Buttons
+- Primary: `bg-jade text-white rounded-xl` (hover: `hover:bg-jade-700`)
+- Secondary: `border border-stone-200 text-stone-500 rounded-lg hover:border-jade hover:text-jade hover:bg-jade/5`
+- Destructive: `border border-red-200 text-red-500 rounded-xl hover:bg-red-50`
+- Small inline: `px-3 py-1.5 rounded-lg text-xs font-medium`
+
+### Rounded corners
+- `rounded-2xl` — cards, modals, full-screen sheets
+- `rounded-xl` — buttons (primary), inputs, icon boxes, segment pill containers
+- `rounded-lg` — small secondary buttons
+- `rounded-full` — avatar circles, pill badges, nav dots
+
+### Shadows
+- `shadow-sm` — standard card
+- `shadow` — slightly elevated card
+- `shadow-xl` — modals and bottom sheets
+
+### Segment controls
+Container: `bg-stone-100 rounded-xl p-1`
+Active tab: `bg-jade text-white rounded-lg shadow-sm`
+Inactive tab: `text-stone-500 hover:text-stone-700`
+
+### Typography
+- Page title: `text-3xl font-bold text-stone-800`
+- Card/section header: `text-xl font-bold text-stone-800`
+- Card primary text: `text-base font-semibold text-stone-800`
+- Secondary/subtitle: `text-sm text-stone-500`
+- Muted metadata: `text-xs text-stone-400`
+- Section labels: `text-xs font-semibold uppercase tracking-wide text-stone-500`
+
+### Modals & sheets
+- Backdrop: `fixed inset-0 bg-black/50`
+- Sheet: `bg-white rounded-2xl shadow-xl`
+- Use `animate-modal-in` / `animate-modal-out` and `animate-overlay-in` / `animate-overlay-out` for transitions
+
+### Inputs
+`border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent`
+
 ## QA Rule
 After every code change, QA the affected functionality before reporting done. Use one of:
 - **Playwright static tests** (`npx playwright test e2e/<spec>.spec.js --project=chromium`) — source-level correctness checks, no server needed

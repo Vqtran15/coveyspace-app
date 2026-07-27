@@ -225,7 +225,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           </div>
           <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-stone-800 leading-snug">{page.title}</h1>
+              <h1 className="text-xl font-bold text-stone-800 leading-snug truncate">{page.title}</h1>
               <p className="text-stone-500 text-sm mt-0.5">{formatDate(page.week_date)}</p>
               {page.is_paused && (
                 <p className="text-xs text-amber-500 font-medium mt-0.5">No meal signup this week</p>
