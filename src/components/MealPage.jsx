@@ -212,8 +212,9 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     ? [...CATEGORY_ORDER.filter(c => groups[c]), ...(groups[''] ? [''] : [])]
     : ['']
 
-  const [, headerMonth, headerDay] = (page.week_date ?? '').split('-').map(Number)
+  const [headerYear, headerMonth, headerDay] = (page.week_date ?? '').split('-').map(Number)
   const headerMonthAbbr = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][headerMonth - 1] ?? ''
+  const headerWeekday = new Date(headerYear, headerMonth - 1, headerDay).toLocaleDateString('en-US', { weekday: 'short' })
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
@@ -226,7 +227,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-stone-800 leading-snug truncate">{page.title}</h1>
-              <p className="text-stone-500 text-sm mt-0.5">{formatDate(page.week_date)}</p>
+              <p className="text-stone-500 text-sm mt-0.5">{headerWeekday}, {headerMonthAbbr[0]}{headerMonthAbbr.slice(1).toLowerCase()} {headerDay}</p>
               {page.is_paused && (
                 <p className="text-xs text-amber-500 font-medium mt-0.5">No meal signup this week</p>
               )}
