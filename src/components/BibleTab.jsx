@@ -225,6 +225,8 @@ function AddEditSheet({ initial, onSave, onClose }) {
   const [label, setLabel] = useState(initial?.label ?? '')
   const [labelEdited, setLabelEdited] = useState(!!initial?.id)
   const [errors, setErrors] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [verseExistsError, setVerseExistsError] = useState(null)
   const [kbOffset, setKbOffset] = useState(0)
 
   const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
@@ -255,6 +257,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
   function handleBookChange(bid) {
     setBookId(bid)
     setErrors(e => ({ ...e, book: false }))
+    setVerseExistsError(null)
     const book = ALL_BOOKS.find(b => b.id === bid)
     const ch = parseInt(chapterStr, 10)
     const shouldResetChapter = book && !isNaN(ch) && ch > book.chapters
@@ -265,21 +268,25 @@ function AddEditSheet({ initial, onSave, onClose }) {
   function handleChapterChange(val) {
     setChapterStr(val)
     setErrors(e => ({ ...e, chapter: false }))
+    setVerseExistsError(null)
     if (!labelEdited) setLabel(buildAutoLabel(bookId, val, verseStr))
   }
 
   function handleVerseChange(val) {
     setVerseStr(val)
     setErrors(e => ({ ...e, verse: false }))
+    setVerseExistsError(null)
     if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, val))
   }
 
   function handleLabelChange(val) {
     setLabel(val)
     setLabelEdited(true)
+    setVerseExistsError(null)
   }
 
-  function handleSave() {
+  async function handleSave() {
+    setVerseExistsError(null)
     const newErrors = {}
     const book = ALL_BOOKS.find(b => b.id === bookId)
     if (!book) newErrors.book = true
@@ -297,6 +304,29 @@ function AddEditSheet({ initial, onSave, onClose }) {
       }
     }
     if (Object.values(newErrors).some(Boolean)) { setErrors(newErrors); return }
+
+    if (startVerse !== null) {
+      setSaving(true)
+      try {
+        const data = await fetchChapter(bookId, ch)
+        const all = parseVerses(data)
+        const lastVerseNum = all.length > 0 ? all[all.length - 1].number : 0
+        if (!all.find(v => v.number === startVerse)) {
+          setVerseExistsError(`Verse ${startVerse} doesn't exist in ${book.name} ${ch}`)
+          return
+        }
+        if (endVerse !== null && endVerse > lastVerseNum) {
+          setVerseExistsError(`Verse ${endVerse} doesn't exist in ${book.name} ${ch}`)
+          return
+        }
+      } catch {
+        setVerseExistsError('Could not verify the verse — check your connection')
+        return
+      } finally {
+        setSaving(false)
+      }
+    }
+
     const finalLabel = label.trim() || buildAutoLabel(bookId, chapterStr, verseStr)
     onSave({ id: initial?.id ?? newId(), label: finalLabel, bookId, chapter: ch, startVerse, endVerse })
   }
@@ -399,10 +429,12 @@ function AddEditSheet({ initial, onSave, onClose }) {
                 className={[
                   'w-full px-4 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.verse ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                  errors.verse || verseExistsError ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
                 ].join(' ')}
               />
-              {errors.verse && <p className="text-xs text-red-500 mt-1">Try 16 or 28–39</p>}
+              {(errors.verse || verseExistsError) && (
+                <p className="text-xs text-red-500 mt-1">{verseExistsError ?? 'Try 16 or 28–39'}</p>
+              )}
             </div>
           </div>
 
@@ -429,9 +461,10 @@ function AddEditSheet({ initial, onSave, onClose }) {
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 py-2.5 rounded-xl bg-jade text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl bg-jade text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
             >
-              Save
+              {saving ? 'Checking…' : 'Save'}
             </button>
           </div>
         </div>
