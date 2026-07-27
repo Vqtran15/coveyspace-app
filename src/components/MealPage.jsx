@@ -214,13 +214,13 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
-      <div className={`mb-6 bg-jade rounded-xl shadow ${headerEntranceClass}`}>
+      <div className={`mb-6 bg-jade/10 rounded-xl shadow border border-jade/20 ${headerEntranceClass}`}>
         <div className="p-4 flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-white">{page.title}</h1>
-            <p className="text-white/70 mt-1">{formatDate(page.week_date)}</p>
+            <h1 className="text-2xl font-bold text-stone-800">{page.title}</h1>
+            <p className="text-stone-500 mt-1">{formatDate(page.week_date)}</p>
             {page.is_paused && (
-              <p className="text-sm text-amber-200 font-medium mt-0.5">No meal signup this week</p>
+              <p className="text-sm text-amber-500 font-medium mt-0.5">No meal signup this week</p>
             )}
           </div>
           {(isAdmin || pageCount > 1) && (
@@ -229,7 +229,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={onEditOpen}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border border-white/30 text-white/80 hover:border-white hover:text-white hover:bg-white/15"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border border-stone-200 text-stone-500 hover:border-jade hover:text-jade hover:bg-jade/5"
                   >
                     <PencilSimple size={13} weight="bold" /> Edit
                   </button>
@@ -237,7 +237,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                     onClick={handleTogglePause}
                     disabled={pausing}
                     title={page.is_paused ? 'Resume signup' : 'Pause signup'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-white/30 text-white/80 hover:border-white hover:text-white hover:bg-white/15"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
                   >
                     {page.is_paused
                       ? <><PlayCircle size={14} weight="fill" /> Resume</>
@@ -251,12 +251,12 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                   <button
                     onClick={e => { e.currentTarget.blur(); onPrevPage(); }}
                     disabled={!canGoPrev}
-                    className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-white/40 text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                    className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
                   >‹</button>
                   <button
                     onClick={e => { e.currentTarget.blur(); onNextPage(); }}
                     disabled={!canGoNext}
-                    className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-white/40 text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                    className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
                   >›</button>
                 </div>
               )}
