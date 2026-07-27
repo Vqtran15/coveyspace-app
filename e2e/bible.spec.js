@@ -390,9 +390,9 @@ test.describe('B — Browser runtime', () => {
     await expect(biblePage.getByText('Quick Access')).toBeVisible()
   })
 
-  test('BSB browser button is visible in header', async () => {
+  test('Browse icon button is visible in search bar', async () => {
     if (!biblePage) test.skip(true, 'bible_enabled not set')
-    await expect(biblePage.getByText('BSB')).toBeVisible()
+    await expect(biblePage.getByTitle('Browse books')).toBeVisible()
   })
 
   test('quick access cards render (at least 2)', async () => {
@@ -424,7 +424,7 @@ test.describe('B — Browser runtime', () => {
 
   test('BSB browser opens and shows book list', async () => {
     if (!biblePage) test.skip(true, 'bible_enabled not set')
-    await biblePage.getByText('BSB').click()
+    await biblePage.getByTitle('Browse books').click()
     await expect(biblePage.getByText('Browse Bible')).toBeVisible({ timeout: 5000 })
     await expect(biblePage.getByText('Old Testament')).toBeVisible()
     await expect(biblePage.getByText('New Testament')).toBeVisible()

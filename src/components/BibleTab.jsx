@@ -165,6 +165,8 @@ const DEFAULT_PASSAGES = [
   { id: 'dft-8', label: 'Prov 3:5-6',      bookId: 'PRO', chapter: 3,  startVerse: 5,    endVerse: 6    },
 ]
 
+const CARD_TINTS = ['bg-amber-50', 'bg-emerald-50', 'bg-rose-50', 'bg-sky-50', 'bg-violet-50']
+
 function newId() {
   return Math.random().toString(36).slice(2, 9)
 }
@@ -360,14 +362,13 @@ function AddEditSheet({ initial, onSave, onClose }) {
 
 function BookButton({ book, onSelect }) {
   return (
-    <motion.button
-      whileTap={{ scale: 0.96 }}
+    <button
       onClick={() => onSelect(book)}
-      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-jade/8 hover:border-jade/30 border border-transparent transition-colors text-left w-full"
+      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-jade/8 hover:border-jade/30 border border-transparent transition-colors active:scale-95 text-left w-full"
     >
       <span className="text-sm font-medium text-stone-700 truncate pr-2">{book.name}</span>
       <span className="text-xs text-stone-400 shrink-0">{book.chapters}</span>
-    </motion.button>
+    </button>
   )
 }
 
@@ -748,20 +749,8 @@ export default function BibleTab({ userId }) {
     <div className="px-4 pt-4 pb-4">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5">
         <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
-        <div className="flex items-center gap-2">
-          <motion.button
-            whileTap={{ scale: 0.93 }}
-            onClick={() => setShowBrowser(true)}
-            title="Browse books"
-            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-jade/10 text-jade hover:bg-jade/20 transition-colors"
-          >
-            <Books size={14} />
-            <span className="text-xs font-semibold">Browse</span>
-          </motion.button>
-
-        </div>
       </div>
 
       {/* Search */}
@@ -778,12 +767,20 @@ export default function BibleTab({ userId }) {
           placeholder="John 3:16, Romans 8:28-39, Psalm 23…"
           className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
         />
-        {query && (
+        {query ? (
           <button
             onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
           >
             <X size={16} />
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowBrowser(true)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-jade hover:opacity-70 transition-opacity"
+            title="Browse books"
+          >
+            <Books size={16} />
           </button>
         )}
       </div>
@@ -899,6 +896,7 @@ export default function BibleTab({ userId }) {
               {userPassages.map((p, i) => {
                 const isSource = dndState?.fromIdx === i
                 const isTarget = dndState?.toIdx === i && dndState.fromIdx !== i
+                const tint = CARD_TINTS[i % CARD_TINTS.length]
                 return (
                   <motion.div
                     key={p.id + '-' + dropTick}
@@ -908,7 +906,8 @@ export default function BibleTab({ userId }) {
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
                     className={[
-                      'relative group bg-white border rounded-2xl select-none',
+                      'relative group border rounded-2xl select-none shadow-sm',
+                      tint,
                       isSource ? 'opacity-30 border-dashed border-stone-400'
                         : isTarget ? 'border-jade border-2'
                         : 'border-stone-200',
@@ -1112,7 +1111,7 @@ export default function BibleTab({ userId }) {
             height: dndPosRef.current?.cardH ?? 0,
             pointerEvents: 'none', zIndex: 9999, willChange: 'transform',
           }}
-          className="bg-white border-2 border-jade rounded-2xl shadow-2xl px-3.5 py-3.5 opacity-92"
+          className={['border-2 border-jade rounded-2xl shadow-2xl px-3.5 py-3.5 opacity-92', CARD_TINTS[dndState.fromIdx % CARD_TINTS.length]].join(' ')}
         >
           <BookOpen size={18} className="text-jade mb-1.5" />
           <p className="text-sm font-medium text-stone-700 leading-snug">
