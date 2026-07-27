@@ -165,7 +165,7 @@ const DEFAULT_PASSAGES = [
   { id: 'dft-8', label: 'Prov 3:5-6',      bookId: 'PRO', chapter: 3,  startVerse: 5,    endVerse: 6    },
 ]
 
-const CARD_TINTS = ['bg-amber-50', 'bg-emerald-50', 'bg-rose-50', 'bg-sky-50', 'bg-violet-50']
+const CARD_TINTS = ['bg-coral-100', 'bg-lagoon-100', 'bg-sage-50', 'bg-jade-50']
 
 function newId() {
   return Math.random().toString(36).slice(2, 9)
@@ -753,36 +753,37 @@ export default function BibleTab({ userId }) {
         <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-1">
-        <MagnifyingGlass
-          size={16}
-          weight="bold"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
-        />
-        <input
-          type="text"
-          value={query}
-          onChange={e => handleSearch(e.target.value)}
-          placeholder="John 3:16, Romans 8:28-39, Psalm 23…"
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
-        />
-        {query ? (
-          <button
-            onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-          >
-            <X size={16} />
-          </button>
-        ) : (
-          <button
-            onClick={() => setShowBrowser(true)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-jade hover:opacity-70 transition-opacity"
-            title="Browse books"
-          >
-            <Books size={16} />
-          </button>
-        )}
+      {/* Search + Browse row */}
+      <div className="flex items-center gap-2 mb-1">
+        <div className="relative flex-1">
+          <MagnifyingGlass
+            size={16}
+            weight="bold"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={e => handleSearch(e.target.value)}
+            placeholder="John 3:16, Psalm 23…"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
+          />
+          {query && (
+            <button
+              onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        <button
+          onClick={() => setShowBrowser(true)}
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-jade/10 border border-jade/20 text-jade hover:bg-jade/20 transition-colors shrink-0"
+        >
+          <Books size={15} />
+          <span className="text-xs font-semibold">Browse</span>
+        </button>
       </div>
       {searchError && (
         <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
