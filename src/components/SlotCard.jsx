@@ -21,14 +21,12 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`group relative overflow-hidden text-left w-full p-4 rounded-xl border-2 shadow-sm transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
+      className={`group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
         filled
           ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
           : 'bg-sunrise-50 border-stone-200 hover:border-jade'
       } ${entranceClass} ${pulse ? 'animate-card-pulse' : ''}`}
     >
-      {filled && <span className="absolute left-0 top-0 h-full w-1 bg-jade" />}
-
       {dishName ? (
         <div className="font-semibold text-stone-800 truncate mb-1">{dishName}</div>
       ) : (

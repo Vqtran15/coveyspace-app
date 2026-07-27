@@ -214,9 +214,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
-      <div className={`mb-6 relative overflow-hidden bg-white rounded-xl shadow-sm border border-stone-100 ${headerEntranceClass}`}>
-        <span className="absolute top-0 left-0 right-0 h-1 bg-coral" />
-
+      <div className={`mb-6 bg-white rounded-xl shadow border border-stone-100 ${headerEntranceClass}`}>
         <div className="p-4 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-stone-800">{page.title}</h1>
