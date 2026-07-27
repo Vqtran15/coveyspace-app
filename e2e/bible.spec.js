@@ -258,6 +258,11 @@ test.describe('A7 — Grid drag-and-drop (pointer events)', () => {
   test('drop target card shows jade border', () => {
     expect(src).toContain('border-jade')
   })
+
+  test('handleDeletePassage cancels pending debounced save before writing', () => {
+    const deleteFn = src.match(/function handleDeletePassage[\s\S]*?\n  \}/)?.[0] ?? ''
+    expect(deleteFn).toContain('clearTimeout(saveTimerRef.current)')
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -290,6 +295,12 @@ test.describe('A8 — BibleBrowser component', () => {
   test('OT and NT section labels present', () => {
     expect(src).toContain('Old Testament')
     expect(src).toContain('New Testament')
+  })
+
+  test('onSelectChapter calls setShowBrowser(false) to dismiss browser on chapter tap', () => {
+    expect(src).toContain('setShowBrowser(false)')
+    const selectBlock = src.match(/onSelectChapter[^}]*\{[^}]*\}/s)?.[0] ?? ''
+    expect(selectBlock).toContain('setShowBrowser(false)')
   })
 })
 

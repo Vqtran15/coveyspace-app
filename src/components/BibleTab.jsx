@@ -227,7 +227,11 @@ function AddEditSheet({ initial, onSave, onClose }) {
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [verseExistsError, setVerseExistsError] = useState(null)
-  const [kbOffset, setKbOffset] = useState(0)
+  const [kbOffset, setKbOffset] = useState(() => {
+    const vv = window.visualViewport
+    if (!vv) return 0
+    return Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
+  })
 
   const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
 
@@ -816,6 +820,7 @@ export default function BibleTab({ userId }) {
   function handleDeletePassage(index) {
     const next = userPassages.filter((_, i) => i !== index)
     setUserPassages(next)
+    clearTimeout(saveTimerRef.current)
     if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
   }
 
@@ -1269,6 +1274,7 @@ export default function BibleTab({ userId }) {
         {showBrowser && (
           <BibleBrowser
             onSelectChapter={(bookId, ch) => {
+              setShowBrowser(false)
               openPassage({ bookId, chapter: ch, startVerse: null, endVerse: null })
             }}
             onClose={() => setShowBrowser(false)}
