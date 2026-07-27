@@ -165,8 +165,6 @@ const DEFAULT_PASSAGES = [
   { id: 'dft-8', label: 'Prov 3:5-6',      bookId: 'PRO', chapter: 3,  startVerse: 5,    endVerse: 6    },
 ]
 
-const CARD_TINTS = ['bg-coral-100', 'bg-lagoon-100', 'bg-sage-50', 'bg-jade-50']
-
 function newId() {
   return Math.random().toString(36).slice(2, 9)
 }
@@ -516,6 +514,7 @@ export default function BibleTab({ userId }) {
 
   const [dndState, setDndState] = useState(null)
   const [dropTick, setDropTick] = useState(0)
+  const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -779,7 +778,7 @@ export default function BibleTab({ userId }) {
         </div>
         <button
           onClick={() => setShowBrowser(true)}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-jade/10 border border-jade/20 text-jade hover:bg-jade/20 transition-colors shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-jade text-white hover:opacity-90 transition-opacity shrink-0"
         >
           <Books size={15} />
           <span className="text-xs font-semibold">Browse</span>
@@ -844,7 +843,7 @@ export default function BibleTab({ userId }) {
                       : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100',
                   ].join(' ')}
                 >
-                  {editMode ? 'Done' : 'Reorder'}
+                  {editMode ? 'Done' : 'Edit'}
                 </button>
               )}
               <button
@@ -897,7 +896,6 @@ export default function BibleTab({ userId }) {
               {userPassages.map((p, i) => {
                 const isSource = dndState?.fromIdx === i
                 const isTarget = dndState?.toIdx === i && dndState.fromIdx !== i
-                const tint = CARD_TINTS[i % CARD_TINTS.length]
                 return (
                   <motion.div
                     key={p.id + '-' + dropTick}
@@ -907,8 +905,7 @@ export default function BibleTab({ userId }) {
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
                     className={[
-                      'relative group border rounded-2xl select-none shadow-sm',
-                      tint,
+                      'relative group bg-white border rounded-2xl select-none shadow-sm',
                       isSource ? 'opacity-30 border-dashed border-stone-400'
                         : isTarget ? 'border-jade border-2'
                         : 'border-stone-200',
@@ -927,8 +924,8 @@ export default function BibleTab({ userId }) {
                       onClick={() => !editMode && openPassage(p)}
                       className={['w-full text-left rounded-2xl px-3.5 py-3.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
                     >
-                      <BookOpen size={18} className="text-jade mb-1.5" />
-                      <p className={['text-sm font-medium text-stone-700 leading-snug', editMode ? 'pr-14' : 'pr-5'].join(' ')}>{p.label}</p>
+                      <BookOpen size={18} weight="bold" className="text-jade mb-1.5" />
+                      <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-14' : 'pr-5'].join(' ')}>{p.label}</p>
                     </motion.button>
 
                     {/* Action icons */}
@@ -941,7 +938,7 @@ export default function BibleTab({ userId }) {
                       </button>
                       {editMode && (
                         <button
-                          onClick={e => { e.stopPropagation(); handleDeletePassage(i) }}
+                          onClick={e => { e.stopPropagation(); setDeleteConfirmIdx(i) }}
                           className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <Trash size={12} />
@@ -1097,6 +1094,55 @@ export default function BibleTab({ userId }) {
         )}
       </AnimatePresence>
 
+
+      {/* ── Delete confirmation sheet ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {deleteConfirmIdx !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/30"
+            onClick={() => setDeleteConfirmIdx(null)}
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              className="bg-white rounded-t-3xl"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-9 h-1 rounded-full bg-stone-200" />
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-base font-bold text-stone-800 mb-1">Remove passage?</p>
+                <p className="text-sm text-stone-500 mb-5">
+                  {userPassages?.[deleteConfirmIdx]?.label} will be removed from your quick access.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeleteConfirmIdx(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => { handleDeletePassage(deleteConfirmIdx); setDeleteConfirmIdx(null) }}
+                    className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Drag ghost card (pointer-events DnD) ─────────────────────────── */}
       {isDragging && dndState && userPassages?.[dndState.fromIdx] && (
         <div
@@ -1112,10 +1158,10 @@ export default function BibleTab({ userId }) {
             height: dndPosRef.current?.cardH ?? 0,
             pointerEvents: 'none', zIndex: 9999, willChange: 'transform',
           }}
-          className={['border-2 border-jade rounded-2xl shadow-2xl px-3.5 py-3.5 opacity-92', CARD_TINTS[dndState.fromIdx % CARD_TINTS.length]].join(' ')}
+          className="bg-white border-2 border-jade rounded-2xl shadow-2xl px-3.5 py-3.5 opacity-92"
         >
-          <BookOpen size={18} className="text-jade mb-1.5" />
-          <p className="text-sm font-medium text-stone-700 leading-snug">
+          <BookOpen size={18} weight="bold" className="text-jade mb-1.5" />
+          <p className="text-sm font-semibold text-stone-800 leading-snug">
             {userPassages[dndState.fromIdx]?.label}
           </p>
         </div>

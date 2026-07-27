@@ -465,14 +465,14 @@ test.describe('B — Browser runtime', () => {
     await searchBox.fill('')
   })
 
-  test('Reorder button is visible when passages exist', async () => {
+  test('Edit button is visible when passages exist', async () => {
     if (!biblePage) test.skip(true, 'bible_enabled not set')
-    await expect(biblePage.getByText('Reorder')).toBeVisible()
+    await expect(biblePage.getByText('Edit')).toBeVisible()
   })
 
-  test('tapping Reorder shows drag handles on cards', async () => {
+  test('tapping Edit shows drag handles on cards', async () => {
     if (!biblePage) test.skip(true, 'bible_enabled not set')
-    await biblePage.getByText('Reorder').click()
+    await biblePage.getByText('Edit').click()
     // Done button should appear
     await expect(biblePage.getByText('Done')).toBeVisible()
     // DotsSixVertical icons appear (checking via aria or svg presence)
