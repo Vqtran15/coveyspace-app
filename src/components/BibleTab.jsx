@@ -494,9 +494,6 @@ export default function BibleTab({ userId }) {
   const [query, setQuery] = useState('')
   const [searchError, setSearchError] = useState(null)
 
-  // copy
-  const [copied, setCopied] = useState(false)
-
   // user passages
   const [userPassages, setUserPassages] = useState(null)
   const [editMode, setEditMode] = useState(false)
@@ -685,18 +682,6 @@ export default function BibleTab({ userId }) {
     setViewMode('home')
     setQuery('')
     setSearchError(null)
-  }
-
-  // ── Copy ───────────────────────────────────────────────────────────────
-  function handleCopyAll() {
-    if (!openChapter) return
-    const lines = openChapter.verses.map(v => `${v.number}. ${v.text}`).join('\n')
-    const text = `${openChapter.bookName} ${openChapter.chapterNum}\n\n${lines}\n\n(${TRANSLATION})`
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-      toast('Copied!', 'success')
-    })
   }
 
   function handleCopyVerse(v) {
@@ -940,16 +925,6 @@ export default function BibleTab({ userId }) {
                       : chapterError ? 'Error' : ''}
                   </h1>
                 </div>
-                {!chapterLoading && openChapter && !chapterError && (
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleCopyAll}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 text-xs font-medium text-stone-600 hover:bg-stone-200 transition-colors"
-                  >
-                    {copied ? <Check size={13} className="text-jade" /> : <Copy size={13} />}
-                    {copied ? 'Copied!' : 'Copy all'}
-                  </motion.button>
-                )}
             </div>
 
             {/* Scrollable content */}
