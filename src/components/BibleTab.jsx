@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BookOpen, Books, MagnifyingGlass, Copy, Check, X, GearSix, ArrowLeft,
+  BookOpen, Books, MagnifyingGlass, Copy, Check, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -486,7 +486,7 @@ function BibleBrowser({ onSelectChapter, onClose }) {
 
 // ─── Main BibleTab ────────────────────────────────────────────────────────
 
-export default function BibleTab({ userId, onOpenSettings }) {
+export default function BibleTab({ userId }) {
   const toast = useToast()
 
   // navigation: 'home' | 'chapter'
@@ -514,6 +514,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
   const [addEditSheet, setAddEditSheet] = useState(null)
 
   const [dndState, setDndState] = useState(null)
+  const [dropTick, setDropTick] = useState(0)
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -623,6 +624,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
           }, 600)
           return next
         })
+        setDropTick(v => v + 1)
       }
     }
     document.addEventListener('pointermove', onMove)
@@ -758,12 +760,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
             <Books size={14} />
             <span className="text-xs font-semibold">Browse</span>
           </motion.button>
-          <button
-            onClick={onOpenSettings}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-          >
-            <GearSix size={20} />
-          </button>
+
         </div>
       </div>
 
@@ -904,10 +901,10 @@ export default function BibleTab({ userId, onOpenSettings }) {
                 const isTarget = dndState?.toIdx === i && dndState.fromIdx !== i
                 return (
                   <motion.div
-                    key={p.id}
-                    layout
-                    layoutDependency={userPassages}
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    key={p.id + '-' + dropTick}
+                    initial={dropTick > 0 ? { opacity: 0.7 } : false}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.18 }}
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
                     className={[

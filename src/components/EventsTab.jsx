@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { CalendarStar, Plus, CaretDown, CaretUp, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, GearSix, ChatCircleDots } from '@phosphor-icons/react'
+import { CalendarStar, Plus, CaretDown, CaretUp, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -654,12 +654,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
               <Plus size={18} weight="bold" />
             </button>
           )}
-          <button
-            onClick={onOpenSettings}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-          >
-            <GearSix size={20} />
-          </button>
+
         </div>
       </div>
 
