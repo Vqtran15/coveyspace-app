@@ -927,7 +927,7 @@ export default function BibleTab({ userId }) {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
             className="fixed inset-0 z-[70] bg-white overflow-y-auto"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="px-4 pt-4 pb-8">
               {/* Chapter header */}
