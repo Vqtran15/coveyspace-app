@@ -295,6 +295,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             onEditOpen={() => setShowEditPage(true)}
             isAdmin={isAdmin}
             supportsCategories={supportsCategories}
+            Icon={Icon}
           />
         ) : (
           <div className="max-w-3xl mx-auto px-4 py-20 text-center">

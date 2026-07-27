@@ -12,7 +12,7 @@ const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
 const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
 const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-500' }
 
-export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false }) {
+export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false, Icon = null }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -212,22 +212,26 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     ? [...CATEGORY_ORDER.filter(c => groups[c]), ...(groups[''] ? [''] : [])]
     : ['']
 
-  const [headerYear, headerMonth, headerDay] = (page.week_date ?? '').split('-').map(Number)
-  const headerMonthAbbr = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][headerMonth - 1] ?? ''
-  const headerWeekday = new Date(headerYear, headerMonth - 1, headerDay).toLocaleDateString('en-US', { weekday: 'short' })
+  const isMeal = noun === 'Meal'
+  const headerShortDate = (() => {
+    const [y, m, d] = (page.week_date ?? '').split('-').map(Number)
+    const dt = new Date(y, m - 1, d)
+    return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  })()
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
       <div className={`mb-6 bg-white rounded-2xl shadow border border-stone-100 ${headerEntranceClass}`}>
         <div className="p-4 flex items-start gap-4">
-          <div className="shrink-0 w-14 h-14 rounded-xl bg-amber-50 flex flex-col items-center justify-center gap-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">{headerMonthAbbr}</span>
-            <span className="text-2xl font-bold leading-none text-amber-600">{headerDay}</span>
-          </div>
+          {Icon && (
+            <div className={`shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isMeal ? 'bg-amber-50' : 'bg-jade/10'}`}>
+              <Icon size={28} weight="duotone" className={isMeal ? 'text-amber-500' : 'text-jade'} />
+            </div>
+          )}
           <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-stone-800 leading-snug truncate">{page.title}</h1>
-              <p className="text-stone-500 text-sm mt-0.5">{headerWeekday}, {headerMonthAbbr[0]}{headerMonthAbbr.slice(1).toLowerCase()} {headerDay}</p>
+              <p className="text-stone-500 text-sm mt-0.5">{headerShortDate}</p>
               {page.is_paused && (
                 <p className="text-xs text-amber-500 font-medium mt-0.5">No meal signup this week</p>
               )}
