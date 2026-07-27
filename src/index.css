@@ -7,6 +7,7 @@
    turning it into a scroll container that breaks position:fixed on iOS Safari. */
 body {
   overflow-x: hidden;
+  background-color: #FBF8F4;
 }
 
 /* Prevent iOS Safari double-tap-to-click on hover-styled elements */

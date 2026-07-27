@@ -905,8 +905,10 @@ export default function BibleTab({ userId, onOpenSettings }) {
                 const isSource = dndState?.fromIdx === i
                 const isTarget = dndState?.toIdx === i && dndState.fromIdx !== i
                 return (
-                  <div
+                  <motion.div
                     key={p.id}
+                    layout
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
                     className={[
@@ -950,7 +952,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
                         </button>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
@@ -967,7 +969,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
             animate={{ x: '0%' }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
-            className="fixed inset-0 z-[60] bg-white overflow-y-auto"
+            className="fixed inset-0 z-[70] bg-white overflow-y-auto"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="px-4 pt-4 pb-8">
@@ -1080,7 +1082,6 @@ export default function BibleTab({ userId, onOpenSettings }) {
         {showBrowser && (
           <BibleBrowser
             onSelectChapter={(bookId, ch) => {
-              setShowBrowser(false)
               openPassage({ bookId, chapter: ch, startVerse: null, endVerse: null })
             }}
             onClose={() => setShowBrowser(false)}
