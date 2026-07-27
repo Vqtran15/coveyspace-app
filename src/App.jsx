@@ -379,7 +379,7 @@ export default function App() {
 
   useEffect(() => {
     if (location.pathname === '/chat') setUnreadChatCount(0)
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    window.scrollTo(0, 0)
     trackPageView(location.pathname)
   }, [location.pathname])
 

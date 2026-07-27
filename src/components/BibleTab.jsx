@@ -708,24 +708,14 @@ export default function BibleTab({ userId }) {
     clearTimeout(saveTimerRef.current)
   }, [])
 
-  // ── Body scroll lock while Add/Edit sheet is open ──────────────────────
-  // iOS scrolls the body when a keyboard appears inside a position:fixed
-  // element; locking body.position:fixed prevents that, and scrolling to
-  // top on close ensures newly-added cards are visible.
+  // ── Scroll to top when Add/Edit sheet closes ───────────────────────────
+  // iOS scrolls the body when the keyboard appears inside a fixed overlay.
+  // When the sheet closes we undo that drift so newly-added cards are
+  // visible at the top of the page. Using scrollTo(0,0) — the two-arg
+  // form is reliable on all iOS versions including 15.0–15.3.
   useEffect(() => {
     if (!addEditSheet) return
-    const y = window.scrollY
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${y}px`
-    document.body.style.left = '0'
-    document.body.style.right = '0'
-    return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      window.scrollTo({ top: 0, behavior: 'instant' })
-    }
+    return () => window.scrollTo(0, 0)
   }, [addEditSheet])
 
   // ── Fetch first-verse previews for quick access cards ──────────────────
