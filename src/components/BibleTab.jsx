@@ -369,56 +369,29 @@ function BibleBrowser({ onSelectChapter, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/40"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
+      onAnimationComplete={() => setBooksReady(true)}
+      className="fixed inset-0 z-[60] bg-sunrise-50 flex flex-col"
+      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 360, damping: 34 }}
-        onAnimationComplete={() => setBooksReady(true)}
-        className="bg-white rounded-t-3xl flex flex-col"
-        style={{ height: '88vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-9 h-1 rounded-full bg-stone-200" />
-        </div>
-
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100 shrink-0">
-          <div className="flex items-center gap-1">
-            <AnimatePresence>
-              {selectedBook && (
-                <motion.button
-                  key="back"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                  transition={{ duration: 0.14 }}
-                  onClick={() => setSelectedBook(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors mr-0.5"
-                >
-                  <ArrowLeft size={18} weight="bold" />
-                </motion.button>
-              )}
-            </AnimatePresence>
-            <h3 className="font-bold text-stone-800 text-base">
-              {selectedBook ? selectedBook.name : 'Browse Bible — BSB'}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-200 bg-white shrink-0">
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={selectedBook ? () => setSelectedBook(null) : onClose}
+            className="w-9 h-9 flex items-center justify-center -ml-1 rounded-full text-stone-500 hover:bg-stone-100 transition-colors"
           >
-            <X size={18} />
-          </button>
+            <ArrowLeft size={20} weight="bold" />
+          </motion.button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-stone-800 truncate">
+              {selectedBook ? selectedBook.name : 'Browse Bible'}
+            </h1>
+          </div>
+          <span className="text-xs font-medium text-stone-400">BSB</span>
         </div>
 
         {/* Sliding panels */}
@@ -488,7 +461,7 @@ function BibleBrowser({ onSelectChapter, onClose }) {
                       key={ch}
                       whileTap={{ scale: 0.88 }}
                       onClick={() => onSelectChapter(selectedBook.id, ch)}
-                      className="aspect-square rounded-xl bg-stone-50 border border-stone-200 text-sm font-semibold text-stone-700 hover:bg-jade hover:border-jade hover:text-white transition-colors flex items-center justify-center"
+                      className="aspect-square rounded-xl bg-white border border-stone-200 text-sm font-semibold text-stone-700 hover:bg-jade hover:border-jade hover:text-white transition-colors flex items-center justify-center"
                     >
                       {ch}
                     </motion.button>
@@ -499,7 +472,6 @@ function BibleBrowser({ onSelectChapter, onClose }) {
           </motion.div>
 
         </div>
-      </motion.div>
     </motion.div>
   )
 }

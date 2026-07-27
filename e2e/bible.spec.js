@@ -265,9 +265,10 @@ test.describe('A7 — Grid drag-and-drop (pointer events)', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('A8 — BibleBrowser component', () => {
-  test('uses height (not maxHeight) so flex-1 children get measurable height', () => {
-    expect(src).toContain("height: '88vh'")
+  test('renders as full-screen page so flex-1 children get measurable height', () => {
+    expect(src).not.toContain("height: '88vh'")
     expect(src).not.toContain("maxHeight: '88vh'")
+    expect(src).toContain('fixed inset-0 z-[60]')
   })
 
   test('sliding panels container has min-h-0', () => {
