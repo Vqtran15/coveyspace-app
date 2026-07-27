@@ -416,7 +416,7 @@ function BibleBrowser({ onSelectChapter, onClose }) {
               )}
             </AnimatePresence>
             <h3 className="font-bold text-stone-800 text-base">
-              {selectedBook ? selectedBook.name : 'Browse Bible'}
+              {selectedBook ? selectedBook.name : 'Browse Bible — BSB'}
             </h3>
           </div>
           <button
@@ -573,9 +573,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
   function handleDndStart(idx, e) {
     if (!editMode) return
     e.preventDefault()
-    const card = cardRefs.current[idx]
-    if (!card) return
-    const rect = card.getBoundingClientRect()
+    const rect = e.currentTarget.getBoundingClientRect()
     haptic()
     dndPosRef.current = {
       fromIdx: idx, toIdx: idx,
@@ -755,10 +753,10 @@ export default function BibleTab({ userId, onOpenSettings }) {
             whileTap={{ scale: 0.93 }}
             onClick={() => setShowBrowser(true)}
             title="Browse books"
-            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-stone-100 text-stone-500 hover:bg-jade/10 hover:text-jade transition-colors"
+            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-jade/10 text-jade hover:bg-jade/20 transition-colors"
           >
             <Books size={14} />
-            <span className="text-xs font-semibold">BSB</span>
+            <span className="text-xs font-semibold">Browse</span>
           </motion.button>
           <button
             onClick={onOpenSettings}
@@ -908,6 +906,7 @@ export default function BibleTab({ userId, onOpenSettings }) {
                   <motion.div
                     key={p.id}
                     layout
+                    layoutDependency={userPassages}
                     transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
