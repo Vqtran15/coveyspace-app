@@ -7,6 +7,7 @@
    turning it into a scroll container that breaks position:fixed on iOS Safari. */
 body {
   overflow-x: hidden;
+  overscroll-behavior-y: none;
   background-color: #FBF8F4;
 }
 

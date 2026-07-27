@@ -800,21 +800,14 @@ export default function BibleTab({ userId }) {
   }, [isDragging])
 
   // ── Passage CRUD ───────────────────────────────────────────────────────
-  function persistPassages(passages) {
-    if (!userId) return
-    clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => {
-      supabase.from('profiles').update({ bible_passages: passages }).eq('user_id', userId)
-    }, 600)
-  }
-
   function handleSavePassage(passage) {
     const next = addEditSheet?.mode === 'edit' && addEditSheet.index != null
       ? userPassages.map((p, i) => i === addEditSheet.index ? passage : p)
       : [...(userPassages ?? []), passage]
     setUserPassages(next)
-    persistPassages(next)
     setAddEditSheet(null)
+    clearTimeout(saveTimerRef.current)
+    if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
   }
 
   function handleDeletePassage(index) {
