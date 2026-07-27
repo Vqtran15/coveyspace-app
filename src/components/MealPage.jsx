@@ -212,56 +212,65 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     ? [...CATEGORY_ORDER.filter(c => groups[c]), ...(groups[''] ? [''] : [])]
     : ['']
 
+  const [, headerMonth, headerDay] = (page.week_date ?? '').split('-').map(Number)
+  const headerMonthAbbr = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][headerMonth - 1] ?? ''
+
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
-      <div className={`mb-6 bg-stone-800 rounded-xl shadow ${headerEntranceClass}`}>
-        <div className="p-4 flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-white">{page.title}</h1>
-            <p className="text-stone-400 mt-1">{formatDate(page.week_date)}</p>
-            {page.is_paused && (
-              <p className="text-sm text-amber-400 font-medium mt-0.5">No meal signup this week</p>
-            )}
+      <div className={`mb-6 bg-white rounded-2xl shadow border border-stone-100 ${headerEntranceClass}`}>
+        <div className="p-4 flex items-start gap-4">
+          <div className="shrink-0 w-14 h-14 rounded-xl bg-amber-50 flex flex-col items-center justify-center gap-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">{headerMonthAbbr}</span>
+            <span className="text-2xl font-bold leading-none text-amber-600">{headerDay}</span>
           </div>
-          {(isAdmin || pageCount > 1) && (
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              {isAdmin && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={onEditOpen}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border border-stone-600 text-stone-400 hover:border-stone-400 hover:text-white hover:bg-stone-700"
-                  >
-                    <PencilSimple size={13} weight="bold" /> Edit
-                  </button>
-                  <button
-                    onClick={handleTogglePause}
-                    disabled={pausing}
-                    title={page.is_paused ? 'Resume signup' : 'Pause signup'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-600 text-stone-400 hover:border-amber-400 hover:text-amber-400 hover:bg-stone-700"
-                  >
-                    {page.is_paused
-                      ? <><PlayCircle size={14} weight="fill" /> Resume</>
-                      : <><PauseCircle size={14} weight="fill" /> Pause</>
-                    }
-                  </button>
-                </div>
-              )}
-              {pageCount > 1 && (
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={e => { e.currentTarget.blur(); onPrevPage(); }}
-                    disabled={!canGoPrev}
-                    className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-600 text-stone-400 hover:border-stone-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                  >‹</button>
-                  <button
-                    onClick={e => { e.currentTarget.blur(); onNextPage(); }}
-                    disabled={!canGoNext}
-                    className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-600 text-stone-400 hover:border-stone-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                  >›</button>
-                </div>
+          <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-stone-800 leading-snug">{page.title}</h1>
+              <p className="text-stone-500 text-sm mt-0.5">{formatDate(page.week_date)}</p>
+              {page.is_paused && (
+                <p className="text-xs text-amber-500 font-medium mt-0.5">No meal signup this week</p>
               )}
             </div>
-          )}
+            {(isAdmin || pageCount > 1) && (
+              <div className="shrink-0 flex flex-col items-end gap-2">
+                {isAdmin && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={onEditOpen}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border border-stone-200 text-stone-500 hover:border-jade hover:text-jade hover:bg-jade/5"
+                    >
+                      <PencilSimple size={13} weight="bold" /> Edit
+                    </button>
+                    <button
+                      onClick={handleTogglePause}
+                      disabled={pausing}
+                      title={page.is_paused ? 'Resume signup' : 'Pause signup'}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-40 border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-500 hover:bg-amber-50"
+                    >
+                      {page.is_paused
+                        ? <><PlayCircle size={14} weight="fill" /> Resume</>
+                        : <><PauseCircle size={14} weight="fill" /> Pause</>
+                      }
+                    </button>
+                  </div>
+                )}
+                {pageCount > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={e => { e.currentTarget.blur(); onPrevPage(); }}
+                      disabled={!canGoPrev}
+                      className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                    >‹</button>
+                    <button
+                      onClick={e => { e.currentTarget.blur(); onNextPage(); }}
+                      disabled={!canGoNext}
+                      className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                    >›</button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
