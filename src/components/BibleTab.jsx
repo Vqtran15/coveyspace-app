@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, Check, X, ArrowLeft,
-  Plus, PencilSimple, Trash, DotsSixVertical, PenNib,
+  Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { haptic } from '../lib/haptic.js'
@@ -505,6 +505,7 @@ export default function BibleTab({ userId }) {
   const [dndState, setDndState] = useState(null)
   const [dropTick, setDropTick] = useState(0)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
+  const [cardMenuIdx, setCardMenuIdx] = useState(null)
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -771,7 +772,7 @@ export default function BibleTab({ userId }) {
             <div className="flex items-center gap-1">
               {userPassages !== null && userPassages.length > 0 && (
                 <button
-                  onClick={() => setEditMode(m => !m)}
+                  onClick={() => { setEditMode(m => !m); setCardMenuIdx(null) }}
                   className={[
                     'px-3 py-1 rounded-lg text-xs font-semibold transition-colors',
                     editMode
@@ -846,6 +847,7 @@ export default function BibleTab({ userId }) {
                         : isTarget ? 'border-jade border-2'
                         : 'border-stone-200',
                       editMode ? 'cursor-grab active:cursor-grabbing' : '',
+                      cardMenuIdx === i ? 'z-[50]' : '',
                     ].join(' ')}
                     style={{ touchAction: editMode ? 'none' : 'auto' }}
                   >
@@ -861,26 +863,45 @@ export default function BibleTab({ userId }) {
                       className={['w-full text-left rounded-2xl px-3.5 py-3.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
                     >
                       <BookOpen size={18} weight="bold" className="text-jade mb-1.5" />
-                      <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-14' : 'pr-5'].join(' ')}>{p.label}</p>
+                      <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-9' : 'pr-5'].join(' ')}>{p.label}</p>
                     </motion.button>
 
-                    {/* Action icons */}
-                    <div className={['absolute top-2 right-2 flex gap-0.5', editMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'].join(' ')}>
-                      <button
-                        onClick={e => { e.stopPropagation(); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
-                        className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-                      >
-                        <PencilSimple size={12} />
-                      </button>
-                      {editMode && (
+                    {/* Three-dots menu */}
+                    {editMode && (
+                      <div className="absolute top-2 right-2">
                         <button
-                          onClick={e => { e.stopPropagation(); setDeleteConfirmIdx(i) }}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          onClick={e => { e.stopPropagation(); setCardMenuIdx(cardMenuIdx === i ? null : i) }}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                         >
-                          <Trash size={12} />
+                          <DotsThreeVertical size={16} weight="bold" />
                         </button>
-                      )}
-                    </div>
+                        {cardMenuIdx === i && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-[49]"
+                              onClick={e => { e.stopPropagation(); setCardMenuIdx(null) }}
+                            />
+                            <div className="absolute right-0 top-8 z-[50] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-32">
+                              <button
+                                onClick={e => { e.stopPropagation(); setCardMenuIdx(null); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                              >
+                                <PencilSimple size={14} />
+                                Edit
+                              </button>
+                              <div className="h-px bg-stone-100" />
+                              <button
+                                onClick={e => { e.stopPropagation(); setCardMenuIdx(null); setDeleteConfirmIdx(i) }}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash size={14} />
+                                Remove
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )
               })}
