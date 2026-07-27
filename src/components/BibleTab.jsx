@@ -919,12 +919,11 @@ export default function BibleTab({ userId }) {
             animate={{ x: '0%' }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
-            className="fixed inset-0 z-[70] bg-sunrise-50 overflow-y-auto"
+            className="fixed inset-0 z-[70] bg-sunrise-50 flex flex-col"
             style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="px-4 pt-4 pb-8">
-              {/* Chapter header */}
-              <div className="flex items-center justify-between mb-5">
+            {/* Sticky header */}
+            <div className="px-4 pt-4 pb-3 flex items-center justify-between shrink-0 border-b border-stone-200/60">
                 <div className="flex items-center gap-2">
                   <motion.button
                     whileTap={{ scale: 0.92 }}
@@ -951,8 +950,10 @@ export default function BibleTab({ userId }) {
                     {copied ? 'Copied!' : 'Copy all'}
                   </motion.button>
                 )}
-              </div>
+            </div>
 
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
               {/* Loading spinner */}
               {chapterLoading && (
                 <div className="flex justify-center py-20">
