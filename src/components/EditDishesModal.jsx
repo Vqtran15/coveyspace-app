@@ -12,8 +12,9 @@ const CATEGORY_STYLES = {
 
 export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete, supportsCategories = false }) {
   const [closing, close] = useModalClose(onClose)
-  const [title, setTitle]   = useState(page.title)
-  const [date, setDate]     = useState(page.week_date)
+  const [title, setTitle]       = useState(page.title)
+  const [date, setDate]         = useState(page.week_date)
+  const [location, setLocation] = useState(page.location ?? '')
   const [entries, setEntries] = useState(() =>
     Array.from({ length: page.slot_count }, (_, i) => ({
       key: `o${i}`,
@@ -87,7 +88,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
       .sort((a, b) => a.to - b.to)
 
     try {
-      await onSave({ newTitle: title.trim(), newDate: date, newDishes, newCategories, removedOrigSlots, renames })
+      await onSave({ newTitle: title.trim(), newDate: date, newLocation: location.trim() || null, newDishes, newCategories, removedOrigSlots, renames })
     } catch (err) {
       setError(err.message ?? 'Could not save.')
       setSaving(false)
@@ -146,6 +147,18 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 onChange={e => setDate(e.target.value)}
                 className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Location <span className="text-stone-400 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                placeholder="e.g. 123 Main St or John's house"
+                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
               />
             </div>
           </div>

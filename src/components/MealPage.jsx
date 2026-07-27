@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, PauseCircle, PlayCircle, PencilSimple } from '@phosphor-icons/react'
+import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
@@ -158,7 +158,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     onPageUpdate(data)
   }
 
-  async function handleSaveDishes({ newTitle, newDate, newDishes, newCategories, removedOrigSlots, renames }) {
+  async function handleSaveDishes({ newTitle, newDate, newLocation, newDishes, newCategories, removedOrigSlots, renames }) {
     if (removedOrigSlots.length > 0) {
       const { error } = await supabase
         .from(tables.signups)
@@ -179,7 +179,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ title: newTitle, week_date: newDate, slot_count: newDishes.length, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
+      .update({ title: newTitle, week_date: newDate, location: newLocation, slot_count: newDishes.length, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
       .eq('id', page.id)
       .select()
       .single()
@@ -232,6 +232,12 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-stone-800 leading-snug truncate">{page.title}</h1>
               <p className="text-stone-500 text-sm mt-0.5">{headerShortDate}</p>
+              {page.location && (
+                <p className="flex items-center gap-1 text-xs text-stone-400 mt-0.5">
+                  <MapPin size={11} weight="fill" />
+                  {page.location}
+                </p>
+              )}
               {page.is_paused && (
                 <p className="text-xs text-amber-500 font-medium mt-0.5">No meal signup this week</p>
               )}
