@@ -307,8 +307,8 @@ test.describe('A9 — AddEditSheet keyboard avoidance', () => {
     expect(src).toContain("'resize'")
   })
 
-  test('sheet animates y to -kbOffset when keyboard appears', () => {
-    expect(src).toContain('-kbOffset')
+  test('overlay paddingBottom tracks kbOffset to push sheet above keyboard', () => {
+    expect(src).toContain('paddingBottom: kbOffset')
   })
 })
 

@@ -333,8 +333,8 @@ function AddEditSheet({ initial, onSave, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ opacity: 0, paddingBottom: 0 }}
+      animate={{ opacity: 1, paddingBottom: kbOffset }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
       className="fixed inset-0 z-[70] flex flex-col justify-end bg-black/30"
@@ -342,11 +342,11 @@ function AddEditSheet({ initial, onSave, onClose }) {
     >
       <motion.div
         initial={{ y: 80, opacity: 0 }}
-        animate={{ y: -kbOffset, opacity: 1 }}
+        animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-        className="bg-white rounded-t-3xl"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="bg-white rounded-t-3xl overflow-hidden"
+        style={{ maxHeight: `calc(100vh - ${kbOffset}px - env(safe-area-inset-top) - 16px)` }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1">
@@ -363,7 +363,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
             <X size={18} />
           </button>
         </div>
-        <div className="px-5 pt-4 pb-5 space-y-4">
+        <div className="px-5 pt-4 pb-5 space-y-4 overflow-y-auto" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}>
           {/* Book */}
           <div>
             <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
@@ -670,7 +670,6 @@ export default function BibleTab({ userId }) {
   const [addEditSheet, setAddEditSheet] = useState(null)
 
   const [dndState, setDndState] = useState(null)
-  const [dropTick, setDropTick] = useState(0)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
   const [cardMenuIdx, setCardMenuIdx] = useState(null)
   const [previews, setPreviews] = useState({})
@@ -784,7 +783,6 @@ export default function BibleTab({ userId }) {
           }, 600)
           return next
         })
-        setDropTick(v => v + 1)
       }
     }
     document.addEventListener('pointermove', onMove)
@@ -818,7 +816,7 @@ export default function BibleTab({ userId }) {
   function handleDeletePassage(index) {
     const next = userPassages.filter((_, i) => i !== index)
     setUserPassages(next)
-    persistPassages(next)
+    if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
   }
 
   // ── Search ─────────────────────────────────────────────────────────────
@@ -1013,14 +1011,17 @@ export default function BibleTab({ userId }) {
           {/* Unified 2-col grid */}
           {userPassages !== null && userPassages.length > 0 && (
             <div ref={gridRef} className="grid grid-cols-2 gap-2">
+              <AnimatePresence mode="popLayout">
               {userPassages.map((p, i) => {
                 const isSource = dndState?.fromIdx === i
                 const isTarget = dndState?.toIdx === i && dndState.fromIdx !== i
                 return (
                   <motion.div
-                    key={p.id + '-' + dropTick}
-                    initial={dropTick > 0 ? { opacity: 0.7 } : false}
-                    animate={{ opacity: 1 }}
+                    key={p.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.15 } }}
                     transition={{ duration: 0.18 }}
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
@@ -1091,6 +1092,7 @@ export default function BibleTab({ userId }) {
                   </motion.div>
                 )
               })}
+              </AnimatePresence>
             </div>
           )}
         </div>
