@@ -1370,23 +1370,25 @@ export default function BibleTab({ userId }) {
                     <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
                   </motion.button>
                   <div className="flex items-center gap-4">
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => changeVerseSize(-1)}
                       disabled={verseSize === VERSE_SIZES[0]}
                       aria-label="Decrease font size"
                       className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-base font-bold"
-                    >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">−</span></button>
+                    >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">−</span></motion.button>
                     <div className="flex items-center gap-1.5">
                       {VERSE_SIZES.map(s => (
                         <span key={s} className={`block w-1.5 h-1.5 rounded-full transition-colors ${s === verseSize ? 'bg-ember' : 'bg-stone-300'}`} />
                       ))}
                     </div>
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => changeVerseSize(1)}
                       disabled={verseSize === VERSE_SIZES[VERSE_SIZES.length - 1]}
                       aria-label="Increase font size"
                       className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-lg font-bold"
-                    >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">+</span></button>
+                    >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">+</span></motion.button>
                   </div>
                   <div className="flex items-center">
                     <motion.button
