@@ -71,12 +71,18 @@ ALWAYS double check your work before reporting it as done. Re-read changed files
 - Standard card: `bg-white rounded-2xl border border-stone-100 shadow-sm`
 - Elevated/interactive card: bump shadow to `shadow`
 - Never use `rounded-xl` for cards — that's for buttons, inputs, and icon boxes
+- Card borders are always `border` (1px) — never `border-2`
 
 ### Buttons
 - Primary: `bg-ember text-white rounded-xl` (hover: `hover:bg-ember-700`)
 - Secondary: `border border-stone-200 text-stone-500 rounded-lg hover:border-ember hover:text-ember hover:bg-ember/5`
 - Destructive: `border border-red-200 text-red-500 rounded-xl hover:bg-red-50`
 - Small inline: `px-3 py-1.5 rounded-lg text-xs font-medium`
+- **Close buttons**: always `<X size={20} />` Phosphor icon inside `w-11 h-11 rounded-full` — never `&times;` HTML entity
+- **Icon-only buttons**: minimum `w-11 h-11` (44px); `w-10 h-10` (40px) for compact header contexts. Always include `aria-label`.
+- **RSVP buttons**: `rounded-xl` — not `rounded-2xl`
+- **Feature toggles** (on/off switches): include `role="switch" aria-checked={enabled} aria-label={label}`
+- **Toggle/tab buttons inside forms**: include `aria-pressed={isActive}`
 
 ### Rounded corners
 - `rounded-2xl` — cards, modals, full-screen sheets
@@ -95,12 +101,21 @@ Active tab: `bg-ember text-white rounded-lg shadow-sm`
 Inactive tab: `text-stone-500 hover:text-stone-700`
 
 ### Typography
-- Page title: `text-3xl font-bold text-stone-800`
+- Page title: `text-3xl font-bold text-stone-800` — all tab pages use this, including Admin
 - Card/section header: `text-xl font-bold text-stone-800`
 - Card primary text: `text-base font-semibold text-stone-800`
 - Secondary/subtitle: `text-sm text-stone-500`
 - Muted metadata: `text-xs text-stone-400`
 - Section labels: `text-xs font-semibold uppercase tracking-wide text-stone-500`
+- **Nav tab labels**: `text-[13px]` — never go below this
+- **Text size floor**: never use `text-[10px]` or `text-[11px]` for any content users need to read. Reserve those sizes only for truly decorative badges (e.g., month abbreviation on a date chip).
+- **Contrast rule**: `text-stone-400` is for decorative/non-critical metadata only (separators, optional labels, timestamps). Any text carrying information the user needs to act on — counts, empty-state messages, descriptions, dates — uses `text-stone-500` minimum.
+- **On-color text** (text on ember/jade/coral backgrounds): never below `text-white/90`; avoid `text-white/60` or `text-white/70`.
+
+### Page layout
+- All tab pages: outer container starts with `pt-8` — never `pt-4` or `pt-6`
+- Full-screen overlays (PrayerProfile, EventDetail, BibleTab chapter view): slide in from right
+- Bottom sheets (forms, action sheets, add/edit panels): slide in from bottom
 
 ### Modals & sheets
 - Backdrop: `fixed inset-0 bg-black/50`
@@ -109,6 +124,16 @@ Inactive tab: `text-stone-500 hover:text-stone-700`
 
 ### Inputs
 `border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent`
+- Always `border-stone-200` — never `border-stone-300`
+- Always `rounded-xl` — never `rounded-lg` for text inputs (rounded-lg is for small secondary *buttons* only)
+
+### Search fields
+- Include both an in-field `<X>` clear button (absolute right) and a visible **"Cancel"** text button (`text-sm text-ember font-medium`) to the right of the field that appears when query is non-empty. The Cancel button is the primary clear affordance for older/mobile users.
+- Placeholder text should describe the mode (e.g., "Search friends…" vs "Search requests…") when the field serves multiple contexts.
+
+### Empty states
+- Text color: `text-stone-500` — never `text-stone-400` for empty-state messages
+- Icon: `text-stone-300` (decorative, one step lighter than the message)
 
 ## QA Rule
 After every code change, QA the affected functionality before reporting done. Use one of:
