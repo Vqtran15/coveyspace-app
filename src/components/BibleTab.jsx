@@ -1077,42 +1077,39 @@ export default function BibleTab({ userId }) {
     <div className="px-4 pt-4 pb-4">
 
       {/* Header */}
-      <div className="mb-5">
+      <div className="flex items-center justify-between mb-5">
         <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
-      </div>
-
-      {/* Search + Browse row */}
-      <div className="flex items-center gap-2 mb-1">
-        <div className="relative flex-1">
-          <MagnifyingGlass
-            size={16}
-            weight="bold"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            value={query}
-            onChange={e => handleSearch(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
-            placeholder="John 3:16, Psalm 23…"
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
-          />
-          {query && (
-            <button
-              onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
         <button
           onClick={() => setShowBrowser(true)}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-jade text-white hover:opacity-90 transition-opacity shrink-0"
+          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
         >
-          <Books size={15} />
-          <span className="text-xs font-semibold">Browse</span>
+          <Books size={22} />
         </button>
+      </div>
+
+      {/* Search bar */}
+      <div className="relative mb-1">
+        <MagnifyingGlass
+          size={16}
+          weight="bold"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={e => handleSearch(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
+          placeholder="John 3:16, Psalm 23…"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
+        />
+        {query && (
+          <button
+            onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+          >
+            <X size={16} />
+            </button>
+          )}
       </div>
       {bookSuggestions.length > 0 && (
         <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
