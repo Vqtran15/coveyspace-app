@@ -162,8 +162,6 @@ const DEFAULT_PASSAGES = [
   { id: 'dft-4', label: 'Isaiah 40:28-31', bookId: 'ISA', chapter: 40, startVerse: 28,   endVerse: 31   },
   { id: 'dft-5', label: '1 Cor 13:4-7',    bookId: '1CO', chapter: 13, startVerse: 4,    endVerse: 7    },
   { id: 'dft-6', label: 'Phil 4:6-7',      bookId: 'PHP', chapter: 4,  startVerse: 6,    endVerse: 7    },
-  { id: 'dft-7', label: 'John 3:16',       bookId: 'JHN', chapter: 3,  startVerse: 16,   endVerse: null },
-  { id: 'dft-8', label: 'Prov 3:5-6',      bookId: 'PRO', chapter: 3,  startVerse: 5,    endVerse: 6    },
 ]
 
 function newId() {
@@ -692,13 +690,37 @@ export default function BibleTab({ userId }) {
   // ── Load user passages ─────────────────────────────────────────────────
   useEffect(() => {
     if (!userId) return
+    const storageKey = `bible_passages_${userId}`
     supabase
       .from('profiles')
       .select('bible_passages')
       .eq('user_id', userId)
       .single()
-      .then(({ data }) => setUserPassages(data?.bible_passages ?? [...DEFAULT_PASSAGES]))
-      .catch(() => setUserPassages([...DEFAULT_PASSAGES]))
+      .then(({ data, error }) => {
+        if (error) console.error('[BibleTab] load error:', error.message)
+        if (data?.bible_passages != null) {
+          setUserPassages(data.bible_passages)
+          localStorage.setItem(storageKey, JSON.stringify(data.bible_passages))
+        } else {
+          const cached = localStorage.getItem(storageKey)
+          if (cached) {
+            try { setUserPassages(JSON.parse(cached)) }
+            catch { setUserPassages([...DEFAULT_PASSAGES]) }
+          } else {
+            setUserPassages([...DEFAULT_PASSAGES])
+          }
+        }
+      })
+      .catch(err => {
+        console.error('[BibleTab] load failed:', err)
+        const cached = localStorage.getItem(storageKey)
+        if (cached) {
+          try { setUserPassages(JSON.parse(cached)) }
+          catch { setUserPassages([...DEFAULT_PASSAGES]) }
+        } else {
+          setUserPassages([...DEFAULT_PASSAGES])
+        }
+      })
   }, [userId])
 
 
@@ -791,9 +813,11 @@ export default function BibleTab({ userId }) {
           const next = [...prev]
           const [item] = next.splice(p.fromIdx, 1)
           next.splice(p.toIdx, 0, item)
+          if (userId) localStorage.setItem(`bible_passages_${userId}`, JSON.stringify(next))
           clearTimeout(saveTimerRef.current)
           saveTimerRef.current = setTimeout(() => {
             if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
+              .then(({ error }) => { if (error) console.error('[BibleTab] save error:', error.message) })
           }, 600)
           return next
         })
@@ -809,6 +833,14 @@ export default function BibleTab({ userId }) {
     }
   }, [isDragging])
 
+  // ── Persist passages: localStorage first, DB async ────────────────────
+  function persistPassages(next) {
+    if (!userId) return
+    localStorage.setItem(`bible_passages_${userId}`, JSON.stringify(next))
+    supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
+      .then(({ error }) => { if (error) console.error('[BibleTab] save error:', error.message) })
+  }
+
   // ── Passage CRUD ───────────────────────────────────────────────────────
   function handleSavePassage(passage) {
     const next = addEditSheet?.mode === 'edit' && addEditSheet.index != null
@@ -817,14 +849,14 @@ export default function BibleTab({ userId }) {
     setUserPassages(next)
     setAddEditSheet(null)
     clearTimeout(saveTimerRef.current)
-    if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
+    persistPassages(next)
   }
 
   function handleDeletePassage(index) {
     const next = userPassages.filter((_, i) => i !== index)
     setUserPassages(next)
     clearTimeout(saveTimerRef.current)
-    if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
+    persistPassages(next)
   }
 
   // ── Search ─────────────────────────────────────────────────────────────
@@ -985,7 +1017,7 @@ export default function BibleTab({ userId }) {
           {userPassages === null && (
             <div className="grid grid-cols-2 gap-2">
               {[0, 1, 2, 3].map(i => (
-                <div key={i} className="h-20 bg-stone-100 rounded-2xl animate-pulse"
+                <div key={i} className="h-16 bg-stone-100 rounded-2xl animate-pulse"
                   style={{ animationDelay: `${i * 60}ms` }} />
               ))}
             </div>
@@ -1052,12 +1084,12 @@ export default function BibleTab({ userId }) {
                     <motion.button
                       whileTap={!editMode ? { scale: 0.96 } : undefined}
                       onClick={() => !editMode && openPassage(p)}
-                      className={['w-full text-left rounded-2xl px-3.5 py-3.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
+                      className={['w-full text-left rounded-2xl px-3 py-2.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
                     >
-                      <BookOpen size={18} weight="bold" className="text-jade mb-1.5" />
-                      <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-9' : 'pr-5'].join(' ')}>{p.label}</p>
+                      <BookOpen size={16} weight="bold" className="text-jade mb-1" />
+                      <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
                       {!editMode && previews[p.id] && (
-                        <p className="text-xs text-stone-400 leading-snug line-clamp-2 mt-1">{previews[p.id]}</p>
+                        <p className="text-xs text-stone-400 leading-snug line-clamp-2 mt-0.5">{previews[p.id]}</p>
                       )}
                     </motion.button>
 

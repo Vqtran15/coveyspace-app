@@ -199,11 +199,11 @@ test.describe('A5 — extractText function', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('A6 — DEFAULT_PASSAGES', () => {
-  test('has 8 entries', () => {
+  test('has 6 entries', () => {
     const m = src.match(/const DEFAULT_PASSAGES = \[([\s\S]*?)\]/)
     expect(m).not.toBeNull()
     const entries = [...m[1].matchAll(/\{ id:/g)]
-    expect(entries).toHaveLength(8)
+    expect(entries).toHaveLength(6)
   })
 
   test('each entry has id, label, bookId, chapter fields', () => {
