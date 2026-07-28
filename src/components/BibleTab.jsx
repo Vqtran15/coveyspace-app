@@ -1034,6 +1034,7 @@ export default function BibleTab({ userId }) {
         setVerseSelectAnchor(null)
         setVerseSelectEnd(null)
       })
+      .catch(() => toast('Could not copy — check clipboard permissions in Settings', 'error'))
   }
 
   function handleVerseTap(v) {
