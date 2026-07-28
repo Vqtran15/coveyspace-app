@@ -737,7 +737,6 @@ export default function BibleTab({ userId }) {
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
-  const searchTimerRef = useRef(null)
   const saveTimerRef = useRef(null)
   const openIdRef = useRef(0)
   const cardRefs = useRef([])
@@ -800,7 +799,6 @@ export default function BibleTab({ userId }) {
 
   // ── Cleanup timers ─────────────────────────────────────────────────────
   useEffect(() => () => {
-    clearTimeout(searchTimerRef.current)
     clearTimeout(saveTimerRef.current)
   }, [])
 
@@ -948,13 +946,14 @@ export default function BibleTab({ userId }) {
   function handleSearch(value) {
     setQuery(value)
     setSearchError(null)
-    clearTimeout(searchTimerRef.current)
-    if (!value.trim()) return
-    searchTimerRef.current = setTimeout(() => {
-      const ref = parseRef(value)
-      if (!ref) { setSearchError('Try a reference like John 3:16 or Psalm 23'); return }
-      openPassage(ref)
-    }, 600)
+  }
+
+  function handleSearchSubmit() {
+    const q = query.trim()
+    if (!q) return
+    const ref = parseRef(q)
+    if (!ref) { setSearchError('Try a reference like John 3:16 or Psalm 23'); return }
+    openPassage(ref)
   }
 
   // ── Navigation ─────────────────────────────────────────────────────────
@@ -1094,6 +1093,7 @@ export default function BibleTab({ userId }) {
             type="text"
             value={query}
             onChange={e => handleSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
             placeholder="John 3:16, Psalm 23…"
             className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
           />
@@ -1256,8 +1256,8 @@ export default function BibleTab({ userId }) {
                     >
                       <BookOpen size={16} weight="bold" className="text-jade mb-1" />
                       <p className={['text-sm font-semibold text-stone-800 leading-snug', p.label.length > 13 ? 'line-clamp-2' : 'line-clamp-1', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
-                      {!editMode && p.label.length <= 13 && previews[p.id] && (
-                        <p className="text-xs text-stone-400 leading-snug line-clamp-2 mt-0.5">{previews[p.id]}</p>
+                      {!editMode && previews[p.id] && (
+                        <p className={['text-xs text-stone-400 leading-snug mt-0.5', p.label.length > 13 ? 'line-clamp-1' : 'line-clamp-2'].join(' ')}>{previews[p.id]}</p>
                       )}
                     </motion.button>
 

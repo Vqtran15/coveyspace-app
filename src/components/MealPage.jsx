@@ -299,7 +299,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-30"
                               >
                                 <CaretLeft size={14} className="text-stone-500" />
-                                Previous {noun}
+                                Last {pageNoun}
                               </button>
                               <button
                                 onClick={() => { setMenuOpen(false); onNextPage() }}
@@ -307,7 +307,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-30"
                               >
                                 <CaretRight size={14} className="text-stone-500" />
-                                Next {noun}
+                                Next {pageNoun}
                               </button>
                             </>
                           )}
