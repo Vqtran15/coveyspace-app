@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical } from '@phosphor-icons/react'
+import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
@@ -245,68 +245,77 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
               )}
             </div>
             {(isAdmin || pageCount > 1) && (
-              <div className="shrink-0 flex flex-col items-end gap-2">
-                {isAdmin && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setMenuOpen(m => !m)}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-                    >
-                      <DotsThreeVertical size={18} weight="bold" />
-                    </button>
-                    <AnimatePresence>
-                      {menuOpen && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-[49]"
-                            onClick={() => setMenuOpen(false)}
-                          />
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                            transition={{ duration: 0.12 }}
-                            style={{ transformOrigin: 'top right' }}
-                            className="absolute right-0 top-9 z-[50] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-36"
-                          >
-                            <button
-                              onClick={() => { setMenuOpen(false); onEditOpen() }}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-                            >
-                              <PencilSimple size={14} className="text-stone-500" />
-                              Edit
-                            </button>
-                            <div className="h-px bg-stone-100" />
-                            <button
-                              onClick={() => { setMenuOpen(false); handleTogglePause() }}
-                              disabled={pausing}
-                              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm transition-colors disabled:opacity-40 hover:bg-stone-50"
-                            >
-                              {page.is_paused
-                                ? <><PlayCircle size={14} weight="fill" className="text-jade" /><span className="text-jade">Resume</span></>
-                                : <><PauseCircle size={14} weight="fill" className="text-amber-500" /><span className="text-amber-600">Pause</span></>
-                              }
-                            </button>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-                {pageCount > 1 && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={e => { e.currentTarget.blur(); onPrevPage(); }}
-                      disabled={!canGoPrev}
-                      className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                    >‹</button>
-                    <button
-                      onClick={e => { e.currentTarget.blur(); onNextPage(); }}
-                      disabled={!canGoNext}
-                      className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-500 hover:border-jade hover:text-jade disabled:opacity-30 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                    >›</button>
-                  </div>
-                )}
+              <div className="shrink-0">
+                <div className="relative">
+                  <button
+                    onClick={() => setMenuOpen(m => !m)}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                  >
+                    <DotsThreeVertical size={18} weight="bold" />
+                  </button>
+                  <AnimatePresence>
+                    {menuOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-[49]"
+                          onClick={() => setMenuOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9, y: -4 }}
+                          transition={{ duration: 0.12 }}
+                          style={{ transformOrigin: 'top right' }}
+                          className="absolute right-0 top-9 z-[50] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-40"
+                        >
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={() => { setMenuOpen(false); onEditOpen() }}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                              >
+                                <PencilSimple size={14} className="text-stone-500" />
+                                Edit
+                              </button>
+                              <div className="h-px bg-stone-100" />
+                              <button
+                                onClick={() => { setMenuOpen(false); handleTogglePause() }}
+                                disabled={pausing}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm transition-colors disabled:opacity-40 hover:bg-stone-50"
+                              >
+                                {page.is_paused
+                                  ? <><PlayCircle size={14} weight="fill" className="text-jade" /><span className="text-jade">Resume</span></>
+                                  : <><PauseCircle size={14} weight="fill" className="text-amber-500" /><span className="text-amber-600">Pause</span></>
+                                }
+                              </button>
+                            </>
+                          )}
+                          {pageCount > 1 && (
+                            <>
+                              {isAdmin && <div className="h-px bg-stone-100" />}
+                              <button
+                                onClick={() => { setMenuOpen(false); onPrevPage() }}
+                                disabled={!canGoPrev}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-30"
+                              >
+                                <CaretLeft size={14} className="text-stone-500" />
+                                Previous {noun}
+                              </button>
+                              <button
+                                onClick={() => { setMenuOpen(false); onNextPage() }}
+                                disabled={!canGoNext}
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-30"
+                              >
+                                <CaretRight size={14} className="text-stone-500" />
+                                Next {noun}
+                              </button>
+                            </>
+                          )}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
           </div>

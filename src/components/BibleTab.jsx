@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
-  CaretLeft, CaretRight, Bookmark,
+  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { haptic } from '../lib/haptic.js'
@@ -538,8 +538,8 @@ function BookButton({ book, onSelect }) {
   )
 }
 
-function BibleBrowser({ onSelectChapter, onClose }) {
-  const [selectedBook, setSelectedBook] = useState(null)
+function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
+  const [selectedBook, setSelectedBook] = useState(initialBook)
   const [booksReady, setBooksReady] = useState(false)
   const [bookSearch, setBookSearch] = useState('')
 
@@ -725,6 +725,15 @@ export default function BibleTab({ userId }) {
   const [cardMenuIdx, setCardMenuIdx] = useState(null)
   const [previews, setPreviews] = useState({})
   const [navDirection, setNavDirection] = useState(null)
+
+  // recent chapters (browsing history)
+  const [recentChapters, setRecentChapters] = useState([])
+  // typeahead: book pre-selected when opening Browser from a suggestion
+  const [suggestedBook, setSuggestedBook] = useState(null)
+  // verse selection mode
+  const [selectMode, setSelectMode] = useState(false)
+  const [verseSelectAnchor, setVerseSelectAnchor] = useState(null)
+  const [verseSelectEnd, setVerseSelectEnd] = useState(null)
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -772,6 +781,22 @@ export default function BibleTab({ userId }) {
       })
   }, [userId])
 
+
+  // ── Load recent chapters from localStorage ────────────────────────────
+  useEffect(() => {
+    if (!userId) return
+    try {
+      const saved = localStorage.getItem(`bible_recent_${userId}`)
+      if (saved) setRecentChapters(JSON.parse(saved))
+    } catch {}
+  }, [userId])
+
+  // ── Reset verse-select state when chapter changes ─────────────────────
+  useEffect(() => {
+    setSelectMode(false)
+    setVerseSelectAnchor(null)
+    setVerseSelectEnd(null)
+  }, [openChapter?.bookId, openChapter?.chapterNum])
 
   // ── Cleanup timers ─────────────────────────────────────────────────────
   useEffect(() => () => {
@@ -890,6 +915,17 @@ export default function BibleTab({ userId }) {
       .then(({ error }) => { if (error) console.error('[BibleTab] save error:', error.message) })
   }
 
+  // ── Recent chapters ────────────────────────────────────────────────────
+  function updateRecentChapters(bookId, chapterNum, bookName) {
+    const item = { bookId, chapterNum, label: `${bookName} ${chapterNum}` }
+    setRecentChapters(prev => {
+      const filtered = prev.filter(r => !(r.bookId === bookId && r.chapterNum === chapterNum))
+      const next = [item, ...filtered].slice(0, 4)
+      if (userId) localStorage.setItem(`bible_recent_${userId}`, JSON.stringify(next))
+      return next
+    })
+  }
+
   // ── Passage CRUD ───────────────────────────────────────────────────────
   function handleSavePassage(passage) {
     const next = addEditSheet?.mode === 'edit' && addEditSheet.index != null
@@ -938,15 +974,17 @@ export default function BibleTab({ userId }) {
         : all.filter(v => ref.endVerse != null
             ? v.number >= ref.startVerse && v.number <= ref.endVerse
             : v.number === ref.startVerse)
+      const bookName = data.book?.name ?? ALL_BOOKS.find(b => b.id === ref.bookId)?.name ?? ''
       setOpenChapter({
         bookId: ref.bookId,
-        bookName: data.book?.name ?? ALL_BOOKS.find(b => b.id === ref.bookId)?.name ?? '',
+        bookName,
         chapterNum: ref.chapter,
         startVerse: ref.startVerse,
         endVerse: ref.endVerse,
         verses,
         allVerses: all,
       })
+      updateRecentChapters(ref.bookId, ref.chapter, bookName)
     } catch {
       if (id !== openIdRef.current) return
       setChapterError('Could not load that passage. Check your connection.')
@@ -960,6 +998,9 @@ export default function BibleTab({ userId }) {
     setViewMode('home')
     setQuery('')
     setSearchError(null)
+    setSelectMode(false)
+    setVerseSelectAnchor(null)
+    setVerseSelectEnd(null)
   }
 
   function handleCopyVerse(v) {
@@ -967,6 +1008,39 @@ export default function BibleTab({ userId }) {
     const ref = `${openChapter.bookName} ${openChapter.chapterNum}:${v.number}`
     navigator.clipboard.writeText(`${ref} — ${v.text} (${TRANSLATION})`)
       .then(() => toast('Verse copied!', 'success'))
+  }
+
+  function handleVerseTap(v) {
+    if (!selectMode) { handleCopyVerse(v); return }
+    if (verseSelectAnchor === null) {
+      setVerseSelectAnchor(v.number)
+      setVerseSelectEnd(null)
+    } else if (verseSelectEnd === null) {
+      if (v.number === verseSelectAnchor) {
+        setVerseSelectAnchor(null)
+      } else {
+        setVerseSelectEnd(v.number)
+      }
+    } else {
+      setVerseSelectAnchor(v.number)
+      setVerseSelectEnd(null)
+    }
+  }
+
+  function handleSaveSelection() {
+    if (!openChapter || verseSelectAnchor === null) return
+    const lo = verseSelectEnd !== null ? Math.min(verseSelectAnchor, verseSelectEnd) : verseSelectAnchor
+    const hi = verseSelectEnd !== null ? Math.max(verseSelectAnchor, verseSelectEnd) : null
+    const baseLabel = hi !== null && hi !== lo
+      ? `${openChapter.bookName} ${openChapter.chapterNum}:${lo}–${hi}`
+      : `${openChapter.bookName} ${openChapter.chapterNum}:${lo}`
+    setAddEditSheet({
+      mode: 'add',
+      passage: { bookId: openChapter.bookId, chapter: openChapter.chapterNum, startVerse: lo, endVerse: hi, label: baseLabel },
+    })
+    setSelectMode(false)
+    setVerseSelectAnchor(null)
+    setVerseSelectEnd(null)
   }
 
   // ── Highlight set ──────────────────────────────────────────────────────
@@ -986,6 +1060,18 @@ export default function BibleTab({ userId }) {
     p.startVerse === openChapter.startVerse &&
     p.endVerse === openChapter.endVerse
   )
+
+  // Book name suggestions for typeahead — only when query has no digits yet
+  const bookSuggestions = query.trim() && !/\d/.test(query.trim())
+    ? ALL_BOOKS.filter(b => b.name.toLowerCase().startsWith(query.trim().toLowerCase())).slice(0, 5)
+    : []
+
+  // Verse selection range for chapter reader
+  const selectionRange = verseSelectAnchor !== null
+    ? verseSelectEnd !== null
+      ? { start: Math.min(verseSelectAnchor, verseSelectEnd), end: Math.max(verseSelectAnchor, verseSelectEnd) }
+      : { start: verseSelectAnchor, end: verseSelectAnchor }
+    : null
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
@@ -1028,12 +1114,45 @@ export default function BibleTab({ userId }) {
           <span className="text-xs font-semibold">Browse</span>
         </button>
       </div>
+      {bookSuggestions.length > 0 && (
+        <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+          {bookSuggestions.map((book, idx) => (
+            <button
+              key={book.id}
+              onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
+              className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
+            >
+              <span className="font-medium text-stone-700">{book.name}</span>
+              <span className="text-xs text-stone-400">{book.chapters} ch</span>
+            </button>
+          ))}
+        </div>
+      )}
       {searchError && (
         <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
       )}
 
       {/* Home content */}
       <div className="mt-4">
+
+        {/* Recent chapters */}
+        {recentChapters.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Recent</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {recentChapters.map(r => (
+                <button
+                  key={`${r.bookId}-${r.chapterNum}`}
+                  onClick={() => openPassage({ bookId: r.bookId, chapter: r.chapterNum, startVerse: null, endVerse: null })}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-stone-700 shadow-sm hover:border-jade hover:text-jade transition-colors"
+                >
+                  <ClockCounterClockwise size={12} className="text-stone-400" />
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quick Access */}
         <div>
@@ -1136,8 +1255,8 @@ export default function BibleTab({ userId }) {
                       className={['w-full h-full text-left rounded-2xl px-3 py-2.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
                     >
                       <BookOpen size={16} weight="bold" className="text-jade mb-1" />
-                      <p className={['text-sm font-semibold text-stone-800 leading-snug line-clamp-1', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
-                      {!editMode && previews[p.id] && (
+                      <p className={['text-sm font-semibold text-stone-800 leading-snug', p.label.length > 13 ? 'line-clamp-2' : 'line-clamp-1', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
+                      {!editMode && p.label.length <= 13 && previews[p.id] && (
                         <p className="text-xs text-stone-400 leading-snug line-clamp-2 mt-0.5">{previews[p.id]}</p>
                       )}
                     </motion.button>
@@ -1217,41 +1336,51 @@ export default function BibleTab({ userId }) {
                       : chapterError ? 'Error' : ''}
                   </h1>
                 </div>
-                {openChapter && !chapterError && (
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={chapterLoading || isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
-                        bookId: openChapter.bookId,
-                        chapter: openChapter.chapterNum,
-                        startVerse: openChapter.startVerse,
-                        endVerse: openChapter.endVerse,
-                        label: openChapter.startVerse != null
-                          ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
-                          : `${openChapter.bookName} ${openChapter.chapterNum}`,
-                      }})}
-                      className={['w-8 h-8 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {!chapterLoading && (
+                    <button
+                      onClick={() => { setSelectMode(m => !m); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
+                      className={['px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors mr-0.5', selectMode ? 'bg-stone-100 text-stone-700' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'].join(' ')}
                     >
-                      <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
-                      disabled={chapterLoading || openChapter.chapterNum <= 1}
-                      className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
-                    >
-                      <CaretLeft size={18} weight="bold" />
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
-                      disabled={chapterLoading || openChapter.chapterNum >= maxChapters}
-                      className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
-                    >
-                      <CaretRight size={18} weight="bold" />
-                    </motion.button>
-                  </div>
-                )}
+                      {selectMode ? 'Cancel' : 'Select'}
+                    </button>
+                  )}
+                  {openChapter && !chapterError && !selectMode && (
+                    <>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={chapterLoading || isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
+                          bookId: openChapter.bookId,
+                          chapter: openChapter.chapterNum,
+                          startVerse: openChapter.startVerse,
+                          endVerse: openChapter.endVerse,
+                          label: openChapter.startVerse != null
+                            ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
+                            : `${openChapter.bookName} ${openChapter.chapterNum}`,
+                        }})}
+                        className={['w-8 h-8 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
+                      >
+                        <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
+                        disabled={chapterLoading || openChapter.chapterNum <= 1}
+                        className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                      >
+                        <CaretLeft size={18} weight="bold" />
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
+                        disabled={chapterLoading || openChapter.chapterNum >= maxChapters}
+                        className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                      >
+                        <CaretRight size={18} weight="bold" />
+                      </motion.button>
+                    </>
+                  )}
+                </div>
             </div>
 
             {/* Scrollable content with page-turn animation */}
@@ -1316,7 +1445,9 @@ export default function BibleTab({ userId }) {
                       {/* Verse list */}
                       <div className="space-y-1.5">
                         {openChapter.verses.map((v, idx) => {
-                          const isHighlighted = highlightSet.has(v.number)
+                          const isHighlighted = selectMode
+                            ? selectionRange !== null && v.number >= selectionRange.start && v.number <= selectionRange.end
+                            : highlightSet.has(v.number)
                           const isFirst = v.number === firstHighlight
                           return (
                             <motion.div
@@ -1326,7 +1457,7 @@ export default function BibleTab({ userId }) {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
                               whileTap={{ scale: 0.99 }}
-                              onClick={() => handleCopyVerse(v)}
+                              onClick={() => handleVerseTap(v)}
                               className={[
                                 'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
                                 isHighlighted ? 'bg-jade/10 hover:bg-jade/15' : 'hover:bg-stone-50',
@@ -1336,10 +1467,11 @@ export default function BibleTab({ userId }) {
                                 {v.number}
                               </span>
                               <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
-                              <Copy
-                                size={13}
-                                className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start"
-                              />
+                              {selectMode ? (
+                                <div className={['w-3.5 h-3.5 rounded-sm border-2 shrink-0 mt-1 self-start transition-colors', isHighlighted ? 'bg-jade border-jade' : 'border-stone-300'].join(' ')} />
+                              ) : (
+                                <Copy size={13} className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start" />
+                              )}
                             </motion.div>
                           )
                         })}
@@ -1349,6 +1481,27 @@ export default function BibleTab({ userId }) {
                 </motion.div>
               </AnimatePresence>
             </div>
+
+            {/* Selection save bar — appears when user has selected verse(s) in select mode */}
+            <AnimatePresence>
+              {selectMode && selectionRange && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.15 }}
+                  className="px-4 pt-3 pb-4 shrink-0 bg-white border-t border-stone-100"
+                >
+                  <button
+                    onClick={handleSaveSelection}
+                    className="w-full py-3 rounded-xl bg-jade text-white text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Bookmark size={16} weight="fill" />
+                    Save Verses {selectionRange.start}{selectionRange.start !== selectionRange.end ? `–${selectionRange.end}` : ''}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1359,9 +1512,11 @@ export default function BibleTab({ userId }) {
           <BibleBrowser
             onSelectChapter={(bookId, ch) => {
               setShowBrowser(false)
+              setSuggestedBook(null)
               openPassage({ bookId, chapter: ch, startVerse: null, endVerse: null })
             }}
-            onClose={() => setShowBrowser(false)}
+            onClose={() => { setShowBrowser(false); setSuggestedBook(null) }}
+            initialBook={suggestedBook}
           />
         )}
       </AnimatePresence>
