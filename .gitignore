@@ -2,3 +2,6 @@
 node_modules
 dist
 .vercel
+test-results/
+.playwright-auth.json
+playwright-report/
