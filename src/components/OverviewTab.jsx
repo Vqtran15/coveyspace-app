@@ -100,7 +100,8 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
           </div>
           <button
             onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            aria-label="Close announcement"
+            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
             &times;
           </button>
@@ -348,9 +349,9 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                     style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
                   >
                     <div className="flex items-start gap-4">
-                      <Megaphone size={34} weight="fill" className="text-white/70 shrink-0 mt-0.5" />
+                      <Megaphone size={34} weight="fill" className="text-white/90 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-white/60 uppercase tracking-wide mb-1.5">Announcement</p>
+                        <p className="text-[11px] font-semibold text-white/90 uppercase tracking-wide mb-1.5">Announcement</p>
                         <p className="text-base text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
                       </div>
                       {isAdmin && (
@@ -375,7 +376,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                       <Megaphone size={20} weight="fill" className="text-jade/50" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold text-jade/60 uppercase tracking-wide mb-0.5">Announcement</p>
+                      <p className="text-[11px] font-semibold text-jade uppercase tracking-wide mb-0.5">Announcement</p>
                       <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
                     </div>
                   </div>

@@ -224,7 +224,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       {/* Nav bar */}
       <div className="bg-white border-b border-stone-100 shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
+          <button onClick={onClose} aria-label="Back to events" className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <span className="font-semibold text-stone-800 text-base">Event Details</span>
@@ -232,7 +232,8 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(o => !o)}
-                className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
+                aria-label="Event options"
+                className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
               >
                 <DotsThreeVertical size={20} />
               </button>
@@ -409,7 +410,8 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
           </div>
           <button
             onClick={() => { haptic(); onOpenDetail() }}
-            className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 active:bg-stone-200 transition-colors shrink-0 -mr-1 mt-0.5"
+            aria-label="Open event details"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 active:bg-stone-200 transition-colors shrink-0 -mr-1 mt-0.5"
           >
             <DotsThreeVertical size={20} weight="bold" />
           </button>
@@ -429,7 +431,8 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
               <button
                 key={status}
                 onClick={() => { haptic(); onRsvp(event.id, status, myRsvp?.status) }}
-                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-[11px] font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
+                aria-pressed={myRsvp?.status === status}
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
               >
                 <Icon size={16} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
                 {label}
@@ -649,7 +652,8 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
           {isAdmin && (
             <button
               onClick={() => { haptic(); setShowForm(true) }}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-jade text-white hover:bg-jade/90 transition-colors"
+              aria-label="Create event"
+              className="w-11 h-11 flex items-center justify-center rounded-xl bg-jade text-white hover:bg-jade/90 transition-colors"
             >
               <Plus size={18} weight="bold" />
             </button>
@@ -783,7 +787,8 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                 <h3 className="font-bold text-stone-800">Share to Chat</h3>
                 <button
                   onClick={() => setShowConvPicker(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100"
+                  aria-label="Close"
+                  className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100"
                 >
                   <XIcon size={18} />
                 </button>
@@ -842,7 +847,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
               <div className="overflow-y-auto max-h-[90dvh] p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-bold text-stone-800 text-base">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
-                  <button onClick={() => { setShowForm(false); setEditingEvent(null) }} className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
+                  <button onClick={() => { setShowForm(false); setEditingEvent(null) }} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
                     <XIcon size={18} />
                   </button>
                 </div>

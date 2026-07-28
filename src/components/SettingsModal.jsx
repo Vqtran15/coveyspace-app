@@ -144,7 +144,8 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
           </div>
           <button
             onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            aria-label="Close settings"
+            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
             &times;
           </button>
@@ -208,7 +209,8 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 <AvatarCircle icon={avatarIcon} name={displayName} userId={userId} colorKey={avatarColorKey} size="lg" imageUrl={avatarImageUrl} />
                 <button
                   onClick={() => setAvatarPickerOpen(o => !o)}
-                  className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-jade text-white flex items-center justify-center shadow-sm"
+                  aria-label="Edit avatar"
+                  className="absolute -bottom-0.5 -right-0.5 w-8 h-8 rounded-full bg-jade text-white flex items-center justify-center shadow-sm"
                 >
                   <PencilSimple size={11} weight="bold" />
                 </button>

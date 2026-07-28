@@ -158,7 +158,8 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          aria-label="Back"
+          className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
         >
           <ArrowLeft size={20} weight="bold" />
         </button>
@@ -351,7 +352,8 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                           <button
                             onClick={() => setConfirmRemoveId(m.user_id)}
                             disabled={removingId === m.user_id}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+                            aria-label={`Remove ${m.display_name} from group`}
+                            className="w-11 h-11 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
                           >
                             {removingId === m.user_id ? <span className="text-[10px]">…</span> : <X size={15} weight="bold" />}
                           </button>
@@ -431,6 +433,9 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                     <p className="text-xs text-stone-400 mt-0.5">{desc}</p>
                   </div>
                   <button
+                    role="switch"
+                    aria-checked={enabled}
+                    aria-label={label}
                     onClick={() => handleSaveRotation({ [key]: !enabled })}
                     className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${enabled ? 'bg-jade' : 'bg-stone-200'}`}
                   >

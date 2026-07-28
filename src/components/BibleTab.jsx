@@ -387,7 +387,8 @@ function AddEditSheet({ initial, onSave, onClose }) {
           </h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
+            aria-label="Close"
+            className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
           >
             <X size={18} />
           </button>
@@ -558,7 +559,8 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={selectedBook ? () => setSelectedBook(null) : onClose}
-            className="w-9 h-9 flex items-center justify-center -ml-1 rounded-full text-stone-500 hover:bg-stone-100 transition-colors"
+            aria-label={selectedBook ? 'Back to books' : 'Close browser'}
+            className="w-11 h-11 flex items-center justify-center -ml-1 rounded-full text-stone-500 hover:bg-stone-100 transition-colors"
           >
             <ArrowLeft size={20} weight="bold" />
           </motion.button>
@@ -1081,7 +1083,8 @@ export default function BibleTab({ userId }) {
         <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
         <button
           onClick={() => setShowBrowser(true)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
+          aria-label="Browse Bible"
+          className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
         >
           <Books size={22} />
         </button>
@@ -1171,7 +1174,8 @@ export default function BibleTab({ userId }) {
               )}
               <button
                 onClick={() => setAddEditSheet({ mode: 'add' })}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
+                aria-label="Add passage to Quick Access"
+                className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
               >
                 <Plus size={18} weight="bold" />
               </button>
@@ -1263,7 +1267,8 @@ export default function BibleTab({ userId }) {
                       <div className="absolute top-2 right-2">
                         <button
                           onClick={e => { e.stopPropagation(); setCardMenuIdx(cardMenuIdx === i ? null : i) }}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                          aria-label="Passage options"
+                          className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                         >
                           <DotsThreeVertical size={16} weight="bold" />
                         </button>
@@ -1321,7 +1326,8 @@ export default function BibleTab({ userId }) {
                   <motion.button
                     whileTap={{ scale: 0.92 }}
                     onClick={handleBack}
-                    className="w-8 h-8 flex items-center justify-center -ml-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
+                    aria-label="Back"
+                    className="w-11 h-11 flex items-center justify-center -ml-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
                   >
                     <ArrowLeft size={20} weight="bold" />
                   </motion.button>
@@ -1355,7 +1361,8 @@ export default function BibleTab({ userId }) {
                             ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
                             : `${openChapter.bookName} ${openChapter.chapterNum}`,
                         }})}
-                        className={['w-8 h-8 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
+                        aria-label={isAlreadySaved ? 'Already saved' : 'Save passage to Quick Access'}
+                        className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
                       >
                         <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
                       </motion.button>
@@ -1363,7 +1370,8 @@ export default function BibleTab({ userId }) {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
                         disabled={chapterLoading || openChapter.chapterNum <= 1}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                        aria-label="Previous chapter"
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
                       >
                         <CaretLeft size={18} weight="bold" />
                       </motion.button>
@@ -1371,7 +1379,8 @@ export default function BibleTab({ userId }) {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
                         disabled={chapterLoading || openChapter.chapterNum >= maxChapters}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                        aria-label="Next chapter"
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
                       >
                         <CaretRight size={18} weight="bold" />
                       </motion.button>

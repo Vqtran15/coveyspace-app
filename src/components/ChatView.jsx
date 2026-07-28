@@ -1873,7 +1873,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             <p className={`text-[11px] font-semibold truncate ${isOwn ? 'text-white/90' : 'text-jade'}`}>
                               {senderName(msg.reply_message.user_id, msg.reply_message.display_name)}
                             </p>
-                            <p className={`text-[11px] truncate ${isOwn ? 'text-white/70' : 'text-stone-500'}`}>
+                            <p className={`text-[11px] truncate ${isOwn ? 'text-white/90' : 'text-stone-500'}`}>
                               {msg.reply_message.image_url && !msg.reply_message.body ? '📷 Photo' : msg.reply_message.body}
                             </p>
                           </div>
@@ -1949,7 +1949,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             style={{ minWidth: 140 }}
                           />
                           <div className="flex gap-3 mt-1.5">
-                            <button type="button" onClick={exitEdit} className="text-[11px] text-white/60 hover:text-white font-medium transition-colors">
+                            <button type="button" onClick={exitEdit} className="text-[11px] text-white/90 hover:text-white font-medium transition-colors">
                               Cancel
                             </button>
                             <button type="submit" disabled={!editText.trim()} className="text-[11px] text-white font-semibold disabled:opacity-40 transition-opacity">

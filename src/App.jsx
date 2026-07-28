@@ -553,7 +553,7 @@ export default function App() {
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
                   )}
                 </span>
-                <span className={`text-[10px] font-medium tracking-wide ${active ? 'text-jade' : ''}`}>{t.shortLabel}</span>
+                <span className={`text-[13px] font-medium tracking-wide ${active ? 'text-jade' : ''}`}>{t.shortLabel}</span>
               </button>
             )
           })}
