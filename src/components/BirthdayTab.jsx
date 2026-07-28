@@ -230,32 +230,32 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
           </div>
         </div>
       )}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-1 min-w-0">
-          {onClose && (
-            <button
-              onClick={onClose}
-              aria-label="Back"
-              className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
-            >
-              <ArrowLeft size={20} weight="bold" />
-            </button>
-          )}
-          <div className="min-w-0">
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 min-w-0">
+            {onClose && (
+              <button
+                onClick={onClose}
+                aria-label="Back"
+                className="w-11 h-11 flex items-center justify-center -ml-2 rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
+              >
+                <ArrowLeft size={20} weight="bold" />
+              </button>
+            )}
             <h1 className="text-3xl font-bold text-stone-800">Birthdays</h1>
-            <p className="text-stone-500 mt-1 text-sm">
-              {birthdays.length === 0
-                ? 'No birthdays added yet'
-                : `${birthdays.length} birthday${birthdays.length !== 1 ? 's' : ''}`}
-            </p>
           </div>
+          <button
+            onClick={() => setModal('add')}
+            className="w-9 h-9 flex items-center justify-center bg-coral hover:bg-coral-600 active:bg-coral-700 text-white rounded-xl text-lg font-medium transition-colors shrink-0"
+          >
+            +
+          </button>
         </div>
-        <button
-          onClick={() => setModal('add')}
-          className="w-9 h-9 flex items-center justify-center bg-coral hover:bg-coral-600 active:bg-coral-700 text-white rounded-xl text-lg font-medium transition-colors shrink-0"
-        >
-          +
-        </button>
+        <p className="text-stone-500 mt-1 text-sm">
+          {birthdays.length === 0
+            ? 'No birthdays added yet'
+            : `${birthdays.length} birthday${birthdays.length !== 1 ? 's' : ''}`}
+        </p>
       </div>
 
       {sorted.length === 0 ? (
