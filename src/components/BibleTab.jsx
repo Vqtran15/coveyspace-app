@@ -435,6 +435,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 value={verseStr}
                 onChange={e => handleVerseChange(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSave()}
