@@ -725,6 +725,7 @@ export default function BibleTab({ userId }) {
   const [dndState, setDndState] = useState(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
   const [cardMenuIdx, setCardMenuIdx] = useState(null)
+  const [showChapterMenu, setShowChapterMenu] = useState(false)
   const [previews, setPreviews] = useState({})
   const [navDirection, setNavDirection] = useState(null)
 
@@ -1351,29 +1352,13 @@ export default function BibleTab({ userId }) {
                     : chapterError ? 'Error' : ''}
                 </h1>
                 <div className="flex items-center gap-0.5 shrink-0">
-                  {!chapterLoading && (
-                    <button
-                      onClick={() => { setSelectMode(m => !m); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
-                      className={['px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors mr-0.5', selectMode ? 'bg-stone-100 text-stone-700' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'].join(' ')}
-                    >
-                      {selectMode ? 'Cancel' : 'Select'}
-                    </button>
-                  )}
                   {openChapter && !chapterError && !selectMode && (
                     <>
                       <motion.button
                         whileTap={{ scale: 0.9 }}
-                        onClick={chapterLoading || isAlreadySaved ? undefined : () => setAddEditSheet({ mode: 'add', passage: {
-                          bookId: openChapter.bookId,
-                          chapter: openChapter.chapterNum,
-                          startVerse: openChapter.startVerse,
-                          endVerse: openChapter.endVerse,
-                          label: openChapter.startVerse != null
-                            ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
-                            : `${openChapter.bookName} ${openChapter.chapterNum}`,
-                        }})}
-                        aria-label={isAlreadySaved ? 'Already saved' : 'Save passage to Quick Access'}
-                        className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-ember cursor-default' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
+                        onClick={() => setShowChapterMenu(true)}
+                        aria-label="Save or select"
+                        className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-ember' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
                       >
                         <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
                       </motion.button>
@@ -1396,6 +1381,14 @@ export default function BibleTab({ userId }) {
                         <CaretRight size={18} weight="bold" />
                       </motion.button>
                     </>
+                  )}
+                  {!chapterLoading && selectMode && (
+                    <button
+                      onClick={() => { setSelectMode(false); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-stone-100 text-stone-700"
+                    >
+                      Cancel
+                    </button>
                   )}
                 </div>
               </div>
@@ -1565,6 +1558,70 @@ export default function BibleTab({ userId }) {
             onClose={() => { setShowBrowser(false); setSuggestedBook(null) }}
             initialBook={suggestedBook}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ── Chapter action sheet (Save / Select verses) ──────────────────── */}
+      <AnimatePresence>
+        {showChapterMenu && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/40"
+            onClick={() => setShowChapterMenu(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              className="bg-white rounded-t-2xl shadow-xl px-4 pt-4 pb-2"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  setShowChapterMenu(false)
+                  if (!isAlreadySaved) setAddEditSheet({ mode: 'add', passage: {
+                    bookId: openChapter.bookId,
+                    chapter: openChapter.chapterNum,
+                    startVerse: openChapter.startVerse,
+                    endVerse: openChapter.endVerse,
+                    label: openChapter.startVerse != null
+                      ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
+                      : `${openChapter.bookName} ${openChapter.chapterNum}`,
+                  }})
+                }}
+                disabled={isAlreadySaved}
+                className="flex items-center gap-3 w-full px-3 py-3.5 rounded-xl text-left transition-colors disabled:opacity-50 hover:bg-stone-50"
+              >
+                <Bookmark size={20} weight={isAlreadySaved ? 'fill' : 'regular'} className={isAlreadySaved ? 'text-ember' : 'text-stone-500'} />
+                <div>
+                  <p className="text-sm font-semibold text-stone-800">{isAlreadySaved ? 'Already saved' : 'Save chapter'}</p>
+                  <p className="text-xs text-stone-400">Add to Quick Access</p>
+                </div>
+              </button>
+              <div className="h-px bg-stone-100 mx-3" />
+              <button
+                onClick={() => { setShowChapterMenu(false); setSelectMode(true); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
+                className="flex items-center gap-3 w-full px-3 py-3.5 rounded-xl text-left transition-colors hover:bg-stone-50"
+              >
+                <Plus size={20} className="text-stone-500" />
+                <div>
+                  <p className="text-sm font-semibold text-stone-800">Select verses</p>
+                  <p className="text-xs text-stone-400">Pick a range to save to Quick Access</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setShowChapterMenu(false)}
+                className="w-full mt-2 mb-1 py-3 rounded-xl text-sm font-semibold text-stone-500 bg-stone-100 hover:bg-stone-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
