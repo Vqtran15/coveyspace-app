@@ -1334,7 +1334,7 @@ export default function BibleTab({ userId }) {
           >
             {/* Sticky header */}
             <div className="px-4 pt-4 shrink-0 border-b border-stone-200/60">
-              {/* Row 1: back + title + actions */}
+              {/* Row 1: back + title (+ Cancel in select mode) */}
               <div className="flex items-center gap-2 pb-2">
                 <motion.button
                   whileTap={{ scale: 0.92 }}
@@ -1351,67 +1351,65 @@ export default function BibleTab({ userId }) {
                     ? `${openChapter.bookName} ${openChapter.chapterNum}`
                     : chapterError ? 'Error' : ''}
                 </h1>
-                <div className="flex items-center gap-0.5 shrink-0">
-                  {openChapter && !chapterError && !selectMode && (
-                    <>
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setShowChapterMenu(true)}
-                        aria-label="Save or select"
-                        className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-ember' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
-                      >
-                        <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
-                        disabled={chapterLoading || openChapter.chapterNum <= 1}
-                        aria-label="Previous chapter"
-                        className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
-                      >
-                        <CaretLeft size={18} weight="bold" />
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
-                        disabled={chapterLoading || openChapter.chapterNum >= maxChapters}
-                        aria-label="Next chapter"
-                        className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
-                      >
-                        <CaretRight size={18} weight="bold" />
-                      </motion.button>
-                    </>
-                  )}
-                  {!chapterLoading && selectMode && (
-                    <button
-                      onClick={() => { setSelectMode(false); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
-                      className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-stone-100 text-stone-700"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
+                {!chapterLoading && selectMode && (
+                  <button
+                    onClick={() => { setSelectMode(false); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors bg-stone-100 text-stone-700 shrink-0"
+                  >
+                    Cancel
+                  </button>
+                )}
               </div>
-              {/* Row 2: font size controls — centered strip, hidden in select mode */}
-              {!chapterLoading && !selectMode && (
-                <div className="flex items-center justify-center gap-4 pb-2.5">
-                  <button
-                    onClick={() => changeVerseSize(-1)}
-                    disabled={verseSize === VERSE_SIZES[0]}
-                    aria-label="Decrease font size"
-                    className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-base font-bold"
-                  >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">−</span></button>
-                  <div className="flex items-center gap-1.5">
-                    {VERSE_SIZES.map(s => (
-                      <span key={s} className={`block w-1.5 h-1.5 rounded-full transition-colors ${s === verseSize ? 'bg-ember' : 'bg-stone-300'}`} />
-                    ))}
+              {/* Row 2: reading controls bar — bookmark · font size · chapter nav */}
+              {!chapterLoading && !selectMode && openChapter && !chapterError && (
+                <div className="flex items-center justify-between pb-2.5 px-1">
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowChapterMenu(true)}
+                    aria-label="Save or select"
+                    className={['w-9 h-9 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-ember' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
+                  >
+                    <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
+                  </motion.button>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => changeVerseSize(-1)}
+                      disabled={verseSize === VERSE_SIZES[0]}
+                      aria-label="Decrease font size"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-base font-bold"
+                    >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">−</span></button>
+                    <div className="flex items-center gap-1.5">
+                      {VERSE_SIZES.map(s => (
+                        <span key={s} className={`block w-1.5 h-1.5 rounded-full transition-colors ${s === verseSize ? 'bg-ember' : 'bg-stone-300'}`} />
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => changeVerseSize(1)}
+                      disabled={verseSize === VERSE_SIZES[VERSE_SIZES.length - 1]}
+                      aria-label="Increase font size"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-lg font-bold"
+                    >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">+</span></button>
                   </div>
-                  <button
-                    onClick={() => changeVerseSize(1)}
-                    disabled={verseSize === VERSE_SIZES[VERSE_SIZES.length - 1]}
-                    aria-label="Increase font size"
-                    className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-lg font-bold"
-                  >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">+</span></button>
+                  <div className="flex items-center">
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
+                      disabled={openChapter.chapterNum <= 1}
+                      aria-label="Previous chapter"
+                      className="w-9 h-9 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                    >
+                      <CaretLeft size={18} weight="bold" />
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
+                      disabled={openChapter.chapterNum >= maxChapters}
+                      aria-label="Next chapter"
+                      className="w-9 h-9 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                    >
+                      <CaretRight size={18} weight="bold" />
+                    </motion.button>
+                  </div>
                 </div>
               )}
             </div>
