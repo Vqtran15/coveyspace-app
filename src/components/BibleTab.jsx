@@ -1028,7 +1028,7 @@ export default function BibleTab({ userId }) {
           {userPassages === null && (
             <div className="grid grid-cols-2 gap-2">
               {[0, 1, 2, 3].map(i => (
-                <div key={i} className="h-16 bg-stone-100 rounded-2xl animate-pulse"
+                <div key={i} className="h-[92px] bg-stone-100 rounded-2xl animate-pulse"
                   style={{ animationDelay: `${i * 60}ms` }} />
               ))}
             </div>
@@ -1061,7 +1061,7 @@ export default function BibleTab({ userId }) {
 
           {/* Unified 2-col grid */}
           {userPassages !== null && userPassages.length > 0 && (
-            <div ref={gridRef} className="grid grid-cols-2 gap-2 items-start">
+            <div ref={gridRef} className="grid grid-cols-2 gap-2">
               <AnimatePresence mode="popLayout">
               {userPassages.map((p, i) => {
                 const isSource = dndState?.fromIdx === i
@@ -1077,7 +1077,7 @@ export default function BibleTab({ userId }) {
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
                     className={[
-                      'relative group bg-white border rounded-2xl select-none shadow-sm',
+                      'relative group bg-white border rounded-2xl select-none shadow-sm h-[92px]',
                       isSource ? 'opacity-30 border-dashed border-stone-400'
                         : isTarget ? 'border-jade border-2'
                         : 'border-stone-200',
@@ -1095,10 +1095,10 @@ export default function BibleTab({ userId }) {
                     <motion.button
                       whileTap={!editMode ? { scale: 0.96 } : undefined}
                       onClick={() => !editMode && openPassage(p)}
-                      className={['w-full text-left rounded-2xl px-3 py-2.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
+                      className={['w-full h-full text-left rounded-2xl px-3 py-2.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
                     >
                       <BookOpen size={16} weight="bold" className="text-jade mb-1" />
-                      <p className={['text-sm font-semibold text-stone-800 leading-snug', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
+                      <p className={['text-sm font-semibold text-stone-800 leading-snug line-clamp-1', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
                       {!editMode && previews[p.id] && (
                         <p className="text-xs text-stone-400 leading-snug line-clamp-2 mt-0.5">{previews[p.id]}</p>
                       )}
@@ -1404,10 +1404,10 @@ export default function BibleTab({ userId }) {
             height: dndPosRef.current?.cardH ?? 0,
             pointerEvents: 'none', zIndex: 9999, willChange: 'transform',
           }}
-          className="bg-white border-2 border-jade rounded-2xl shadow-2xl px-3.5 py-3.5 opacity-92"
+          className="bg-white border-2 border-jade rounded-2xl shadow-2xl px-3 py-2.5 opacity-92"
         >
-          <BookOpen size={18} weight="bold" className="text-jade mb-1.5" />
-          <p className="text-sm font-semibold text-stone-800 leading-snug">
+          <BookOpen size={16} weight="bold" className="text-jade mb-1" />
+          <p className="text-sm font-semibold text-stone-800 leading-snug line-clamp-1 pr-4">
             {userPassages[dndState.fromIdx]?.label}
           </p>
         </div>
