@@ -1014,13 +1014,7 @@ export default function BibleTab({ userId }) {
     setSelectMode(false)
     setVerseSelectAnchor(null)
     setVerseSelectEnd(null)
-  }
-
-  function handleCopyVerse(v) {
-    if (!openChapter) return
-    const ref = `${openChapter.bookName} ${openChapter.chapterNum}:${v.number}`
-    navigator.clipboard.writeText(`${ref} — ${v.text} (${TRANSLATION})`)
-      .then(() => toast('Verse copied!', 'success'))
+    setShowChapterMenu(false)
   }
 
   function handleCopySelection() {
@@ -1524,10 +1518,8 @@ export default function BibleTab({ userId }) {
                                 {v.number}
                               </span>
                               <span className={`text-${verseSize} leading-relaxed text-stone-700`}>{v.text}</span>
-                              {selectMode ? (
+                              {selectMode && (
                                 <div className={['w-3.5 h-3.5 rounded-sm border-2 shrink-0 mt-1 self-start transition-colors', isHighlighted ? 'bg-ember border-ember' : 'border-stone-300'].join(' ')} />
-                              ) : (
-                                <Copy size={13} className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start" />
                               )}
                             </motion.div>
                           )
