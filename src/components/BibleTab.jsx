@@ -534,7 +534,7 @@ function BookButton({ book, onSelect }) {
       className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-jade/8 hover:border-jade/30 border border-transparent transition-colors active:scale-95 text-left w-full"
     >
       <span className="text-sm font-medium text-stone-700 truncate pr-2">{book.name}</span>
-      <span className="text-xs text-stone-400 shrink-0">{book.chapters}</span>
+      <span className="text-xs text-stone-500 shrink-0">{book.chapters}</span>
     </button>
   )
 }
@@ -1123,7 +1123,7 @@ export default function BibleTab({ userId }) {
               className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
             >
               <span className="font-medium text-stone-700">{book.name}</span>
-              <span className="text-xs text-stone-400">{book.chapters} ch</span>
+              <span className="text-xs text-stone-500">{book.chapters} ch</span>
             </button>
           ))}
         </div>
@@ -1204,7 +1204,7 @@ export default function BibleTab({ userId }) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-stone-600">No passages yet</p>
-                <p className="text-xs text-stone-400 mt-0.5">Tap + to add your favourite verses</p>
+                <p className="text-xs text-stone-500 mt-0.5">Tap + to add your favorite verses</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.97 }}

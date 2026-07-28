@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { CalendarStar, Plus, CaretDown, CaretUp, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
+import { CalendarStar, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -77,12 +77,12 @@ function RsvpCounts({ rsvps }) {
   const going    = (rsvps ?? []).filter(r => r.status === 'going').length
   const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe').length
   const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going').length
-  if (!going && !maybe && !notGoing) return <span className="text-xs text-stone-400">No RSVPs yet</span>
+  if (!going && !maybe && !notGoing) return <span className="text-xs text-stone-500">No RSVPs yet</span>
   const parts = []
   if (going)    parts.push(`${going} going`)
   if (maybe)    parts.push(`${maybe} maybe`)
   if (notGoing) parts.push(`${notGoing} can't go`)
-  return <span className="text-xs text-stone-400">{parts.join(' · ')}</span>
+  return <span className="text-xs text-stone-500">{parts.join(' · ')}</span>
 }
 
 // ── Create / Edit form ────────────────────────────────────────────────────────
@@ -312,6 +312,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
               ].map(({ status, label, Icon, active, inactive }) => (
                 <button
                   key={status}
+                  aria-pressed={myRsvp?.status === status}
                   onClick={() => onRsvp(event.id, status, myRsvp?.status)}
                   className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
                 >
@@ -400,12 +401,12 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
                 )}
                 {event.location && event.event_time && <span className="text-stone-300 text-xs">·</span>}
                 {event.event_time && (
-                  <span className="text-xs text-stone-400">{formatDateShort(event.event_date, event.event_time)}</span>
+                  <span className="text-xs text-stone-500">{formatDateShort(event.event_date, event.event_time)}</span>
                 )}
               </div>
             )}
             {event.description && (
-              <p className="text-xs text-stone-400 mt-1.5 line-clamp-2 leading-relaxed">{event.description}</p>
+              <p className="text-xs text-stone-500 mt-1.5 line-clamp-2 leading-relaxed">{event.description}</p>
             )}
           </div>
           <button
@@ -413,7 +414,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
             aria-label="Open event details"
             className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 active:bg-stone-200 transition-colors shrink-0 -mr-1 mt-0.5"
           >
-            <DotsThreeVertical size={20} weight="bold" />
+            <CaretRight size={20} weight="bold" />
           </button>
         </div>
 

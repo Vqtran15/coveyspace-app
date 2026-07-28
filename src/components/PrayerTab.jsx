@@ -333,7 +333,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           ))}
         </div>
       ) : members.length === 0 ? (
-        <div className="text-center py-16 text-stone-400">
+        <div className="text-center py-16 text-stone-500">
           <div className="flex justify-center mb-3">
             <HandsPraying size={48} weight="fill" className="text-stone-300" />
           </div>
@@ -341,7 +341,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         </div>
       ) : viewMode === 'members' ? (
         filteredMembers.length === 0 ? (
-          <div className="text-center py-12 text-stone-400">
+          <div className="text-center py-12 text-stone-500">
             <MagnifyingGlass size={40} className="mx-auto mb-2 text-stone-300" />
             <p className="text-sm">No members match "{searchQuery}"</p>
           </div>
@@ -359,7 +359,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         )
       ) : (
         filteredFeed.length === 0 ? (
-          <div className="text-center py-12 text-stone-400">
+          <div className="text-center py-12 text-stone-500">
             {q ? (
               <>
                 <MagnifyingGlass size={40} className="mx-auto mb-2 text-stone-300" />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarStar } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarStar, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -101,9 +101,9 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
           <button
             onClick={close}
             aria-label="Close announcement"
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
+            className="text-stone-400 hover:text-stone-600 w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
-            &times;
+            <X size={20} />
           </button>
         </div>
         <form onSubmit={handleSave} className="px-5 pb-6 space-y-4">

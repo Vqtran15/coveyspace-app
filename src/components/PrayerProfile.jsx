@@ -345,7 +345,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   onChange={e => setRequestText(e.target.value)}
                   placeholder="Write a prayer request…"
                   rows={4}
-                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
                 />
               </div>
               <div>
@@ -354,7 +354,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   type="date"
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                  className="w-full appearance-none border border-stone-200 rounded-xl px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
                 />
               </div>
               {error && (
@@ -436,6 +436,10 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                           <div
                             className={`relative rounded-xl border shadow-sm px-3 py-2.5 select-none ${r.answered ? 'bg-sage/8 border-sage/20' : 'bg-jade/8 border-jade/20'}`}
                             onClick={() => !isOwnProfile && handleBubbleTap(r.id)}
+                            role={!isOwnProfile && editingId !== r.id ? 'button' : undefined}
+                            tabIndex={!isOwnProfile && editingId !== r.id ? 0 : undefined}
+                            aria-label={!isOwnProfile ? 'Double-tap to pray for this request' : undefined}
+                            onKeyDown={!isOwnProfile ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleBubbleTap(r.id) } } : undefined}
                           >
                             {editingId === r.id ? (
                               <form onSubmit={handleSaveRequest} className="space-y-2 pb-1">
@@ -443,13 +447,13 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                   type="date"
                                   value={editDate}
                                   onChange={e => setEditDate(e.target.value)}
-                                  className="w-full appearance-none border border-stone-300 rounded-lg px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
+                                  className="w-full appearance-none border border-stone-200 rounded-xl px-3 py-1.5 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm"
                                 />
                                 <textarea
                                   value={editText}
                                   onChange={e => setEditText(e.target.value)}
                                   rows={3}
-                                  className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
+                                  className="w-full border border-stone-200 rounded-xl px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent text-sm resize-none"
                                   required
                                   autoFocus
                                 />
@@ -457,7 +461,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                   <button
                                     type="button"
                                     onClick={() => setEditingId(null)}
-                                    className="flex-1 py-1.5 border border-stone-300 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
+                                    className="flex-1 py-1.5 border border-stone-200 rounded-lg text-stone-600 text-xs font-medium hover:bg-stone-100 transition-colors"
                                   >
                                     Cancel
                                   </button>
