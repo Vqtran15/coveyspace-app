@@ -531,7 +531,7 @@ function BookButton({ book, onSelect }) {
   return (
     <button
       onClick={() => onSelect(book)}
-      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-ember/8 hover:border-ember/30 border border-transparent transition-colors active:scale-95 text-left w-full"
+      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white border border-stone-100 hover:border-ember/30 hover:bg-ember/5 transition-colors active:scale-95 text-left w-full"
     >
       <span className="text-sm font-medium text-stone-700 truncate pr-2">{book.name}</span>
       <span className="text-xs text-stone-500 shrink-0">{book.chapters}</span>
@@ -593,7 +593,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                       value={bookSearch}
                       onChange={e => setBookSearch(e.target.value)}
                       placeholder="Search books…"
-                      className="w-full pl-8 pr-8 py-2 rounded-xl bg-stone-100 border border-transparent text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember/30 transition"
+                      className="w-full pl-8 pr-8 py-2 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
                     />
                     {bookSearch && (
                       <button onClick={() => setBookSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400">
