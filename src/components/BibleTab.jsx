@@ -753,8 +753,6 @@ export default function BibleTab({ userId }) {
 
   const saveTimerRef = useRef(null)
   const openIdRef = useRef(0)
-  const longPressTimerRef = useRef(null)
-  const longPressStartRef = useRef(null)
   const cardRefs = useRef([])
   const gridRef = useRef(null)
   const highlightRef = useRef(null)
@@ -1023,32 +1021,6 @@ export default function BibleTab({ userId }) {
     const ref = `${openChapter.bookName} ${openChapter.chapterNum}:${v.number}`
     navigator.clipboard.writeText(`${ref} — ${v.text} (${TRANSLATION})`)
       .then(() => toast('Verse copied!', 'success'))
-  }
-
-  function startLongPress(v, e) {
-    if (selectMode) return
-    longPressStartRef.current = { x: e.clientX, y: e.clientY }
-    longPressTimerRef.current = setTimeout(() => {
-      longPressTimerRef.current = null
-      longPressStartRef.current = null
-      haptic()
-      handleCopyVerse(v)
-    }, 500)
-  }
-
-  function cancelLongPress() {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = null
-    }
-    longPressStartRef.current = null
-  }
-
-  function checkLongPressMove(e) {
-    if (!longPressTimerRef.current || !longPressStartRef.current) return
-    const dx = e.clientX - longPressStartRef.current.x
-    const dy = e.clientY - longPressStartRef.current.y
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) cancelLongPress()
   }
 
   function handleCopySelection() {
@@ -1543,11 +1515,6 @@ export default function BibleTab({ userId }) {
                               transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
                               whileTap={{ scale: 0.99 }}
                               onClick={selectMode ? () => handleVerseTap(v) : undefined}
-                              onPointerDown={e => startLongPress(v, e)}
-                              onPointerUp={cancelLongPress}
-                              onPointerCancel={cancelLongPress}
-                              onPointerMove={checkLongPressMove}
-                              onContextMenu={e => { if (!selectMode) e.preventDefault() }}
                               className={[
                                 'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
                                 isHighlighted ? 'bg-ember/10 hover:bg-ember/15' : 'hover:bg-stone-50',
@@ -1670,7 +1637,7 @@ export default function BibleTab({ userId }) {
                 <Plus size={20} className="text-stone-500" />
                 <div>
                   <p className="text-sm font-semibold text-stone-800">Select verses</p>
-                  <p className="text-xs text-stone-400">Pick a range to save to Quick Access</p>
+                  <p className="text-xs text-stone-400">Pick a range to copy or save to Quick Access</p>
                 </div>
               </button>
               <button
