@@ -215,11 +215,10 @@ async function fetchChapter(bookId, chapter) {
 function AddEditSheet({ initial, onSave, onClose }) {
   const [bookId, setBookId] = useState(initial?.bookId ?? '')
   const [chapterStr, setChapterStr] = useState(initial?.chapter ? String(initial.chapter) : '')
-  const [verseStr, setVerseStr] = useState(() => {
-    if (!initial?.startVerse) return ''
-    if (initial.endVerse && initial.endVerse !== initial.startVerse) return `${initial.startVerse}–${initial.endVerse}`
-    return String(initial.startVerse)
-  })
+  const [startVerseStr, setStartVerseStr] = useState(initial?.startVerse ? String(initial.startVerse) : '')
+  const [endVerseStr, setEndVerseStr] = useState(
+    initial?.endVerse && initial.endVerse !== initial.startVerse ? String(initial.endVerse) : ''
+  )
   const [label, setLabel] = useState(initial?.label ?? '')
   const [labelEdited, setLabelEdited] = useState(!!initial?.id)
   const [errors, setErrors] = useState({})
@@ -231,17 +230,19 @@ function AddEditSheet({ initial, onSave, onClose }) {
 
   const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
 
-  function buildAutoLabel(bid, ch, vs) {
+  function buildAutoLabel(bid, ch, sv, ev) {
     const book = ALL_BOOKS.find(b => b.id === bid)
     if (!book || !ch) return ''
     const chNum = parseInt(ch, 10)
     if (isNaN(chNum)) return ''
     const base = `${book.name} ${chNum}`
-    const vsTrimmed = vs.trim()
-    if (!vsTrimmed) return base
-    const m = vsTrimmed.match(/^(\d+)(?:[-–](\d+))?$/)
-    if (!m) return base
-    return m[2] ? `${base}:${m[1]}–${m[2]}` : `${base}:${m[1]}`
+    if (!sv) return base
+    const svNum = parseInt(sv, 10)
+    if (isNaN(svNum)) return base
+    if (!ev) return `${base}:${svNum}`
+    const evNum = parseInt(ev, 10)
+    if (isNaN(evNum) || evNum <= svNum) return `${base}:${svNum}`
+    return `${base}:${svNum}–${evNum}`
   }
 
   useEffect(() => {
@@ -274,21 +275,28 @@ function AddEditSheet({ initial, onSave, onClose }) {
     const ch = parseInt(chapterStr, 10)
     const shouldResetChapter = book && !isNaN(ch) && ch > book.chapters
     if (shouldResetChapter) setChapterStr('')
-    if (!labelEdited) setLabel(buildAutoLabel(bid, shouldResetChapter ? '' : chapterStr, verseStr))
+    if (!labelEdited) setLabel(buildAutoLabel(bid, shouldResetChapter ? '' : chapterStr, startVerseStr, endVerseStr))
   }
 
   function handleChapterChange(val) {
     setChapterStr(val)
     setErrors(e => ({ ...e, chapter: false }))
     setVerseExistsError(null)
-    if (!labelEdited) setLabel(buildAutoLabel(bookId, val, verseStr))
+    if (!labelEdited) setLabel(buildAutoLabel(bookId, val, startVerseStr, endVerseStr))
   }
 
-  function handleVerseChange(val) {
-    setVerseStr(val)
-    setErrors(e => ({ ...e, verse: false }))
+  function handleStartVerseChange(val) {
+    setStartVerseStr(val)
+    setErrors(e => ({ ...e, startVerse: false }))
     setVerseExistsError(null)
-    if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, val))
+    if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, val, endVerseStr))
+  }
+
+  function handleEndVerseChange(val) {
+    setEndVerseStr(val)
+    setErrors(e => ({ ...e, endVerse: false }))
+    setVerseExistsError(null)
+    if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, startVerseStr, val))
   }
 
   function handleLabelChange(val) {
@@ -305,14 +313,22 @@ function AddEditSheet({ initial, onSave, onClose }) {
     const ch = parseInt(chapterStr, 10)
     if (!book || isNaN(ch) || ch < 1 || ch > (book?.chapters ?? 0)) newErrors.chapter = true
     let startVerse = null, endVerse = null
-    if (verseStr.trim()) {
-      const m = verseStr.trim().match(/^(\d+)(?:[-–](\d+))?$/)
-      if (!m) {
-        newErrors.verse = true
+    if (startVerseStr.trim()) {
+      const sv = parseInt(startVerseStr, 10)
+      if (isNaN(sv) || sv < 1) {
+        newErrors.startVerse = true
       } else {
-        startVerse = parseInt(m[1], 10)
-        endVerse = m[2] ? parseInt(m[2], 10) : null
-        if (endVerse !== null && endVerse < startVerse) newErrors.verse = true
+        startVerse = sv
+      }
+    }
+    if (endVerseStr.trim()) {
+      const ev = parseInt(endVerseStr, 10)
+      if (isNaN(ev) || ev < 1) {
+        newErrors.endVerse = true
+      } else if (startVerse !== null && ev <= startVerse) {
+        newErrors.endVerse = true
+      } else {
+        endVerse = ev
       }
     }
     if (Object.values(newErrors).some(Boolean)) { setErrors(newErrors); return }
@@ -339,7 +355,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       }
     }
 
-    const finalLabel = label.trim() || buildAutoLabel(bookId, chapterStr, verseStr)
+    const finalLabel = label.trim() || buildAutoLabel(bookId, chapterStr, startVerseStr, endVerseStr)
     onSave({ id: initial?.id ?? newId(), label: finalLabel, bookId, chapter: ch, startVerse, endVerse })
   }
 
@@ -403,8 +419,8 @@ function AddEditSheet({ initial, onSave, onClose }) {
             {errors.book && <p className="text-xs text-red-500 mt-1">Please select a book</p>}
           </div>
 
-          {/* Chapter + Verse side by side */}
-          <div className="flex gap-3">
+          {/* Chapter + From verse + To verse */}
+          <div className="flex gap-2">
             <div className="flex-1">
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
                 Chapter
@@ -418,7 +434,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
                 onKeyDown={e => e.key === 'Enter' && handleSave()}
                 placeholder="1"
                 className={[
-                  'w-full px-4 py-2.5 rounded-xl border text-sm text-stone-800',
+                  'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
                   errors.chapter ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
                 ].join(' ')}
@@ -431,23 +447,44 @@ function AddEditSheet({ initial, onSave, onClose }) {
             </div>
             <div className="flex-1">
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-                Verse(s) <span className="font-normal normal-case text-stone-400">(optional)</span>
+                From <span className="font-normal normal-case text-stone-400">(opt)</span>
               </label>
               <input
-                type="text"
-                inputMode="numeric"
-                value={verseStr}
-                onChange={e => handleVerseChange(e.target.value)}
+                type="number"
+                min={1}
+                value={startVerseStr}
+                onChange={e => handleStartVerseChange(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSave()}
-                placeholder="16 or 28–39"
+                placeholder="16"
                 className={[
-                  'w-full px-4 py-2.5 rounded-xl border text-sm text-stone-800',
+                  'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.verse || verseExistsError ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                  errors.startVerse || verseExistsError ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
                 ].join(' ')}
               />
-              {(errors.verse || verseExistsError) && (
-                <p className="text-xs text-red-500 mt-1">{verseExistsError ?? 'Try 16 or 28–39'}</p>
+              {(errors.startVerse || verseExistsError) && (
+                <p className="text-xs text-red-500 mt-1">{verseExistsError ?? 'Invalid'}</p>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
+                To <span className="font-normal normal-case text-stone-400">(opt)</span>
+              </label>
+              <input
+                type="number"
+                min={startVerseStr ? parseInt(startVerseStr, 10) + 1 : 2}
+                value={endVerseStr}
+                onChange={e => handleEndVerseChange(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSave()}
+                placeholder="39"
+                className={[
+                  'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
+                  'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
+                  errors.endVerse ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                ].join(' ')}
+              />
+              {errors.endVerse && (
+                <p className="text-xs text-red-500 mt-1">Must be &gt; From</p>
               )}
             </div>
           </div>
