@@ -1076,7 +1076,7 @@ export default function BibleTab({ userId }) {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="px-4 pt-4 pb-4">
+    <div className="px-4 pt-8 pb-4">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -1388,6 +1388,13 @@ export default function BibleTab({ userId }) {
                   )}
                 </div>
             </div>
+
+            {/* Select mode hint */}
+            {selectMode && (
+              <p className="text-xs text-stone-500 text-center py-2 px-4 bg-stone-50 border-b border-stone-100 shrink-0">
+                Tap verses to select, then save to Quick Access
+              </p>
+            )}
 
             {/* Scrollable content with page-turn animation */}
             <div className="flex-1 min-h-0 relative overflow-hidden">

@@ -478,7 +478,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                               <>
                                 <button
                                   onClick={e => { e.stopPropagation(); openActionSheet(r) }}
-                                  className="absolute top-2 right-2 p-0.5 text-stone-400 hover:text-stone-600 transition-colors"
+                                  className="absolute top-1 right-1 p-2 text-stone-400 hover:text-stone-600 transition-colors"
                                   aria-label="Request options"
                                 >
                                   <DotsThreeVertical size={16} weight="bold" />
@@ -494,6 +494,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                 )}
                                 <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                                 <ReactionAvatars reactions={requestReactions} />
+                                {!isOwnProfile && (
+                                  <button
+                                    onClick={e => { e.stopPropagation(); toggleReaction(r.id) }}
+                                    disabled={togglingIds.has(r.id)}
+                                    className={`mt-2 flex items-center gap-1.5 text-xs font-semibold transition-colors disabled:opacity-40 ${requestReactions.some(rx => rx.user_id === currentUserId) ? 'text-jade' : 'text-stone-400 hover:text-jade'}`}
+                                  >
+                                    <HandsPraying size={13} weight={requestReactions.some(rx => rx.user_id === currentUserId) ? 'fill' : 'regular'} />
+                                    {requestReactions.some(rx => rx.user_id === currentUserId) ? 'Praying' : 'Pray'}
+                                  </button>
+                                )}
                                 {celebratingIds.has(r.id) && (
                                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl overflow-hidden">
                                     <Confetti size={56} weight="fill" className="text-sage-700 animate-celebration" />

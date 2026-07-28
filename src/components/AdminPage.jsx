@@ -22,7 +22,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [groupNameValue, setGroupNameValue] = useState('')
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
   const [groupNameSaving, setGroupNameSaving] = useState(false)
-  const [membersOpen, setMembersOpen] = useState(false)
+  const [membersOpen, setMembersOpen] = useState(true)
   const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
 

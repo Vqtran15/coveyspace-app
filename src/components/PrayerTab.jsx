@@ -45,7 +45,7 @@ function MemberCard({ member, index, onClick }) {
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`w-full text-left p-4 rounded-xl bg-white border-2 border-stone-200 hover:border-jade/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${entranceClass}`}
+      className={`w-full text-left p-4 rounded-xl bg-white border border-stone-200 hover:border-jade/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${entranceClass}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -94,7 +94,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
   const userReacted   = reactions?.some(r => r.user_id === currentUserId) ?? false
 
   return (
-    <div style={entranceStyle} className={`bg-white border-2 border-stone-200 rounded-xl p-4 shadow-sm ${entranceClass}`}>
+    <div style={entranceStyle} className={`bg-white border border-stone-200 rounded-xl p-4 shadow-sm ${entranceClass}`}>
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
           <AvatarCircle size="8" icon={member?.avatar_icon} colorKey={member?.avatar_color} userId={member?.user_id} name={member?.display_name} imageUrl={member?.avatar_image_url} />
@@ -285,34 +285,45 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             onClick={() => setViewMode('members')}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
-            By Member
+            Friends
           </button>
           <button
             onClick={() => setViewMode('feed')}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
-            Feed
+            Requests
           </button>
         </div>
       )}
 
       {/* Search */}
       {!loading && members.length > 0 && (
-        <div className="relative mb-4">
-          <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={viewMode === 'members' ? 'Search members…' : 'Search requests…'}
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
-          />
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1">
+            <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={viewMode === 'members' ? 'Search friends…' : 'Search requests…'}
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                aria-label="Clear search"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+              className="text-sm text-jade font-medium shrink-0"
             >
-              <X size={16} />
+              Cancel
             </button>
           )}
         </div>

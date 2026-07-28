@@ -61,7 +61,7 @@ const SERVICES_CONFIG = {
 
 const TABS = [
   { path: '/home',     shortLabel: 'Home',     Icon: House },
-  { path: '/schedule', shortLabel: 'Schedule', Icon: NotePencil },
+  { path: '/schedule', shortLabel: 'Sign Up',  Icon: NotePencil },
   { path: '/events',   shortLabel: 'Events',   Icon: CalendarStar },
   { path: '/chat',     shortLabel: 'Chat',     Icon: ChatCircleDots },
   { path: '/prayer',   shortLabel: 'Prayer',   Icon: HandsPraying },

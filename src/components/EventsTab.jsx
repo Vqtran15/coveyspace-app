@@ -314,7 +314,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
                   key={status}
                   aria-pressed={myRsvp?.status === status}
                   onClick={() => onRsvp(event.id, status, myRsvp?.status)}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
+                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
                 >
                   <Icon size={18} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
                   {label}
