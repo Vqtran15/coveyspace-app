@@ -225,11 +225,9 @@ function AddEditSheet({ initial, onSave, onClose }) {
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [verseExistsError, setVerseExistsError] = useState(null)
-  const [kbOffset, setKbOffset] = useState(() => {
-    const vv = window.visualViewport
-    if (!vv) return 0
-    return Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
-  })
+
+  const overlayRef = useRef(null)
+  const sheetRef = useRef(null)
 
   const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
 
@@ -249,11 +247,23 @@ function AddEditSheet({ initial, onSave, onClose }) {
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
-    function onVVResize() {
-      setKbOffset(Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0)))
+    function update() {
+      if (!overlayRef.current || !sheetRef.current) return
+      const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
+      if (offset > 0) {
+        overlayRef.current.style.paddingBottom = `${offset}px`
+        sheetRef.current.style.maxHeight = `${vv.height - 16}px`
+      } else {
+        overlayRef.current.style.paddingBottom = ''
+        sheetRef.current.style.maxHeight = ''
+      }
     }
-    vv.addEventListener('resize', onVVResize)
-    return () => vv.removeEventListener('resize', onVVResize)
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
   }, [])
 
   function handleBookChange(bid) {
@@ -335,20 +345,21 @@ function AddEditSheet({ initial, onSave, onClose }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, paddingBottom: 0 }}
-      animate={{ opacity: 1, paddingBottom: kbOffset }}
+      ref={overlayRef}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
       className="fixed inset-0 z-[70] flex flex-col justify-end bg-black/30"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
+        ref={sheetRef}
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         className="bg-white rounded-t-3xl overflow-hidden"
-        style={{ maxHeight: `calc(100vh - ${kbOffset}px - env(safe-area-inset-top) - 16px)` }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-1">
@@ -1050,7 +1061,7 @@ export default function BibleTab({ userId }) {
 
           {/* Unified 2-col grid */}
           {userPassages !== null && userPassages.length > 0 && (
-            <div ref={gridRef} className="grid grid-cols-2 gap-2">
+            <div ref={gridRef} className="grid grid-cols-2 gap-2 items-start">
               <AnimatePresence mode="popLayout">
               {userPassages.map((p, i) => {
                 const isSource = dndState?.fromIdx === i

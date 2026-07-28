@@ -309,17 +309,19 @@ test.describe('A8 — BibleBrowser component', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 test.describe('A9 — AddEditSheet keyboard avoidance', () => {
-  test('kbOffset state exists', () => {
-    expect(src).toContain('kbOffset')
+  test('uses ref-based keyboard avoidance (overlayRef + sheetRef)', () => {
+    expect(src).toContain('overlayRef')
+    expect(src).toContain('sheetRef')
   })
 
-  test('visualViewport resize listener registered', () => {
+  test('visualViewport resize and scroll listeners registered', () => {
     expect(src).toContain('visualViewport')
     expect(src).toContain("'resize'")
+    expect(src).toContain("'scroll'")
   })
 
-  test('overlay paddingBottom tracks kbOffset to push sheet above keyboard', () => {
-    expect(src).toContain('paddingBottom: kbOffset')
+  test('overlay paddingBottom set directly via DOM ref', () => {
+    expect(src).toContain('overlayRef.current.style.paddingBottom')
   })
 })
 
