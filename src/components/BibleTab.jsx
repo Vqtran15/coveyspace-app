@@ -1345,11 +1345,9 @@ export default function BibleTab({ userId }) {
                   <ArrowLeft size={20} weight="bold" />
                 </motion.button>
                 <h1 className="text-2xl font-bold text-stone-800 leading-tight truncate flex-1">
-                  {chapterLoading
-                    ? 'Loading…'
-                    : openChapter
+                  {openChapter
                     ? `${openChapter.bookName} ${openChapter.chapterNum}`
-                    : chapterError ? 'Error' : ''}
+                    : chapterLoading ? 'Loading…' : chapterError ? 'Error' : ''}
                 </h1>
                 {!chapterLoading && selectMode && (
                   <button
@@ -1361,7 +1359,7 @@ export default function BibleTab({ userId }) {
                 )}
               </div>
               {/* Row 2: reading controls bar — bookmark · font size · chapter nav */}
-              {!chapterLoading && !selectMode && openChapter && !chapterError && (
+              {!selectMode && openChapter && !chapterError && (
                 <div className="flex items-center justify-between pb-2.5 px-1">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
