@@ -4,9 +4,9 @@ export default function AnnouncementBanner({ announcement, closing = false, onDi
   if (!announcement) return null
   return (
     <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
-      <div className="relative overflow-hidden rounded-2xl bg-jade-50 border border-jade/30 shadow-sm px-5 py-4">
-        <span className="absolute left-0 top-0 h-full w-1.5 bg-jade rounded-l-2xl" />
-        <p className="text-xs font-bold text-jade uppercase tracking-wider mb-2 pl-3 flex items-center gap-1.5">
+      <div className="relative overflow-hidden rounded-2xl bg-ember-50 border border-ember/30 shadow-sm px-5 py-4">
+        <span className="absolute left-0 top-0 h-full w-1.5 bg-ember rounded-l-2xl" />
+        <p className="text-xs font-bold text-ember uppercase tracking-wider mb-2 pl-3 flex items-center gap-1.5">
           <MegaphoneSimple size={12} weight="fill" />
           From the team
         </p>

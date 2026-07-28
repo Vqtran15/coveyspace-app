@@ -19,7 +19,7 @@ export default {
           600:   '#9E4A2E',
           700:   '#833C22',
         },
-        jade: {
+        ember: {
           50:    '#FEF4EE',
           DEFAULT:'#C4622D',
           700:   '#A85228',

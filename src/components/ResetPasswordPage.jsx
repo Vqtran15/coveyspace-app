@@ -18,7 +18,7 @@ export default function ResetPasswordPage({ onDone }) {
   }
 
   const inputClass =
-    'w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition-shadow text-sm'
+    'w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition-shadow text-sm'
 
   return (
     <div
@@ -27,7 +27,7 @@ export default function ResetPasswordPage({ onDone }) {
     >
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-jade mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ember mb-4">
             <ForkKnife size={32} weight="fill" className="text-white" />
           </div>
           <h1 className="text-2xl font-bold text-stone-800">Set New Password</h1>
@@ -76,7 +76,7 @@ export default function ResetPasswordPage({ onDone }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+              className="w-full py-3 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm"
             >
               {loading ? 'Updating…' : 'Update Password'}
             </button>

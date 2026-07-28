@@ -203,7 +203,7 @@ export default function AvatarPicker({
                       disabled={savingIcon}
                       className={`h-11 rounded-xl flex items-center justify-center transition-colors ${
                         icon === name && !imageUrl
-                          ? `${avatarColor(userId, colorKey)} ring-2 ring-offset-1 ring-jade`
+                          ? `${avatarColor(userId, colorKey)} ring-2 ring-offset-1 ring-ember`
                           : 'bg-stone-100 hover:bg-stone-200 active:bg-stone-200'
                       }`}
                     >
@@ -233,7 +233,7 @@ export default function AvatarPicker({
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={savingPhoto}
-                    className="px-5 py-2.5 text-sm font-semibold text-jade border border-jade rounded-xl hover:bg-jade/5 active:scale-[0.98] transition-all disabled:opacity-40"
+                    className="px-5 py-2.5 text-sm font-semibold text-ember border border-ember rounded-xl hover:bg-ember/5 active:scale-[0.98] transition-all disabled:opacity-40"
                   >
                     Replace photo
                   </button>
@@ -255,7 +255,7 @@ export default function AvatarPicker({
                   ) : (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-5 py-2.5 text-sm font-semibold text-white bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-xl transition-all"
+                      className="px-5 py-2.5 text-sm font-semibold text-white bg-ember hover:bg-ember-700 active:scale-[0.98] rounded-xl transition-all"
                     >
                       Choose photo
                     </button>

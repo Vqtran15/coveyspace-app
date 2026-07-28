@@ -55,13 +55,13 @@ export default function UpdatePrompt({ splashActive = false }) {
       className="fixed inset-x-0 top-0 z-[60] animate-toast-in"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="bg-jade rounded-b-3xl">
+      <div className="bg-ember rounded-b-3xl">
         <button
           onClick={() => {
             updateServiceWorker(true)
             setTimeout(() => window.location.reload(), 500)
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-jade-700 transition-colors rounded-b-3xl"
+          className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-ember-700 transition-colors rounded-b-3xl"
         >
           <ArrowClockwise size={16} weight="bold" className="shrink-0" />
           <span className="text-sm font-medium flex-1 text-left">Update available</span>

@@ -129,12 +129,12 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder="Event name"
-          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
         />
       </div>
       <div>
         <label className="block text-xs font-semibold text-stone-500 mb-1">Date <span className="text-coral">*</span></label>
-        <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-jade">
+        <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-ember">
           <input
             type="date"
             value={date}
@@ -146,7 +146,7 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
       </div>
       <div>
         <label className="block text-xs font-semibold text-stone-500 mb-1">Time <span className="text-stone-400 font-normal">(optional)</span></label>
-        <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-jade">
+        <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-ember">
           <input
             type="time"
             value={time}
@@ -163,7 +163,7 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
           value={location}
           onChange={e => setLocation(e.target.value)}
           placeholder="Where is it?"
-          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
         />
       </div>
       <div>
@@ -173,7 +173,7 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
           onChange={e => setDescription(e.target.value)}
           placeholder="Any details to share…"
           rows={3}
-          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none"
+          className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent resize-none"
         />
       </div>
       <div className="flex gap-2 pt-1">
@@ -186,7 +186,7 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
         <button
           onClick={handleSave}
           disabled={!title.trim() || !date || saving}
-          className="flex-1 py-2.5 rounded-xl bg-jade text-white text-sm font-semibold disabled:opacity-50 transition-colors"
+          className="flex-1 py-2.5 rounded-xl bg-ember text-white text-sm font-semibold disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving…' : event?.id ? 'Save Changes' : 'Create Event'}
         </button>
@@ -269,9 +269,9 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
         {/* Date badge + title */}
         <div className="flex items-start gap-4 px-5 pt-1 pb-5">
-          <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0">
-            <span className="text-[11px] font-bold text-jade uppercase tracking-wide">{month}</span>
-            <span className="text-2xl font-bold text-jade leading-none">{day}</span>
+          <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0">
+            <span className="text-[11px] font-bold text-ember uppercase tracking-wide">{month}</span>
+            <span className="text-2xl font-bold text-ember leading-none">{day}</span>
           </div>
           <div className="pt-1 min-w-0">
             <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
@@ -287,8 +287,8 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           {/* Location */}
           {event.location && (
             <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-200 shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-jade/10 flex items-center justify-center shrink-0">
-                <MapPin size={16} className="text-jade" weight="fill" />
+              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                <MapPin size={16} className="text-ember" weight="fill" />
               </div>
               <span className="text-sm font-medium text-stone-700">{event.location}</span>
             </div>
@@ -306,7 +306,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
-                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',        inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',        inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white',  inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white',   inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, active, inactive }) => (
@@ -326,7 +326,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           {/* Share to Chat */}
           <button
             onClick={onShareToChat}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-jade/8 border border-jade/20 text-sm font-semibold text-jade hover:bg-jade/12 active:bg-jade/15 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-ember/8 border border-ember/20 text-sm font-semibold text-ember hover:bg-ember/12 active:bg-ember/15 transition-colors"
           >
             <ChatCircleDots size={18} />
             Share to Chat
@@ -338,7 +338,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe')
             const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going')
             const sections = [
-              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-jade/10 text-jade',             border: 'border-l-jade/40' },
+              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-ember/10 text-ember',             border: 'border-l-ember/40' },
               { key: 'maybe',     label: 'Maybe',    people: maybe,    pill: 'bg-lagoon/20 text-lagoon-700',     border: 'border-l-lagoon-600' },
               { key: 'not_going', label: "Can't go", people: notGoing, pill: 'bg-stone-100 text-stone-500',      border: 'border-l-stone-300' },
             ].filter(s => s.people.length > 0)
@@ -385,9 +385,9 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
       >
         {/* Top section */}
         <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
-          <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
-            <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
-            <span className="text-2xl font-bold text-jade leading-none">{day}</span>
+          <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
+            <span className="text-[10px] font-bold text-ember uppercase tracking-wide">{month}</span>
+            <span className="text-2xl font-bold text-ember leading-none">{day}</span>
           </div>
           <div className="flex-1 min-w-0 pt-0.5">
             <p className="font-bold text-stone-800 text-base leading-snug">{event.title}</p>
@@ -395,7 +395,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {event.location && (
                   <>
-                    <MapPin size={11} className="text-jade shrink-0" weight="fill" />
+                    <MapPin size={11} className="text-ember shrink-0" weight="fill" />
                     <span className="text-xs text-stone-500 truncate">{event.location}</span>
                   </>
                 )}
@@ -425,7 +425,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
         <div className="px-4 pt-3 pb-3.5">
           <div className="flex gap-2 mb-2.5">
             {[
-              { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-jade text-white',      inactive: 'bg-stone-100 text-stone-500' },
+              { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',      inactive: 'bg-stone-100 text-stone-500' },
               { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-500' },
               { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
             ].map(({ status, label, Icon, active, inactive }) => (
@@ -457,9 +457,9 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
       className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left animate-stack-in"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex flex-col items-center justify-center bg-jade/10 border border-jade/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
-        <span className="text-[10px] font-bold text-jade uppercase tracking-wide">{month}</span>
-        <span className="text-xl font-bold text-jade leading-none">{day}</span>
+      <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
+        <span className="text-[10px] font-bold text-ember uppercase tracking-wide">{month}</span>
+        <span className="text-xl font-bold text-ember leading-none">{day}</span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-stone-800 text-sm truncate">{event.title}</p>
@@ -641,7 +641,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -654,7 +654,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             <button
               onClick={() => { haptic(); setShowForm(true) }}
               aria-label="Create event"
-              className="w-11 h-11 flex items-center justify-center rounded-xl bg-jade text-white hover:bg-jade/90 transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember/90 transition-colors"
             >
               <Plus size={18} weight="bold" />
             </button>
@@ -695,14 +695,14 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-jade/10 flex items-center justify-center mb-4">
-                <CalendarStar size={32} className="text-jade" weight="duotone" />
+              <div className="w-16 h-16 rounded-2xl bg-ember/10 flex items-center justify-center mb-4">
+                <CalendarStar size={32} className="text-ember" weight="duotone" />
               </div>
               <p className="font-semibold text-stone-700 mb-1">No upcoming events</p>
               {isAdmin && (
                 <button
                   onClick={() => { haptic(); setShowForm(true) }}
-                  className="mt-3 px-4 py-2 rounded-xl bg-jade text-white text-sm font-semibold hover:bg-jade/90 transition-colors"
+                  className="mt-3 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
                 >
                   Create an event
                 </button>
@@ -812,15 +812,15 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                         disabled={!!sendingToConv}
                         className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-50"
                       >
-                        <div className="w-10 h-10 rounded-2xl bg-jade/10 flex items-center justify-center shrink-0">
-                          <ChatCircleDots size={20} className="text-jade" />
+                        <div className="w-10 h-10 rounded-2xl bg-ember/10 flex items-center justify-center shrink-0">
+                          <ChatCircleDots size={20} className="text-ember" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-stone-800 text-sm truncate">{convPickerLabel(conv)}</p>
                           <p className="text-xs text-stone-400">{conv.type === 'group' ? 'Group chat' : 'Direct message'}</p>
                         </div>
                         {sendingToConv === conv.id && (
-                          <div className="w-4 h-4 rounded-full border-2 border-jade border-t-transparent animate-spin shrink-0" />
+                          <div className="w-4 h-4 rounded-full border-2 border-ember border-t-transparent animate-spin shrink-0" />
                         )}
                       </button>
                     ))}

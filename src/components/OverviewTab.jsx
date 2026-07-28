@@ -95,7 +95,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
       >
         <div className="flex items-center justify-between p-5 pb-4">
           <div className="flex items-center gap-2">
-            <Megaphone size={20} weight="fill" className="text-jade" />
+            <Megaphone size={20} weight="fill" className="text-ember" />
             <h2 className="text-lg font-bold text-stone-800">Announcement</h2>
           </div>
           <button
@@ -113,7 +113,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
             onChange={e => setText(e.target.value)}
             placeholder="Write an announcement for your group…"
             rows={4}
-            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none"
+            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent resize-none"
           />
           <div className="flex gap-2">
             {value && (
@@ -129,7 +129,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 bg-jade hover:bg-jade-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40"
+              className="flex-1 py-2.5 bg-ember hover:bg-ember-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
@@ -275,7 +275,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -314,9 +314,9 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {/* Solo-admin nudge — shown until someone joins */}
             {soloAdmin && (
               <div className="w-full animate-stack-in lg:col-span-2">
-                <div className="bg-jade/5 border border-jade/25 rounded-2xl p-5 flex items-center gap-4">
+                <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-jade mb-0.5">Your group is just you</p>
+                    <p className="text-sm font-semibold text-ember mb-0.5">Your group is just you</p>
                     <p className="text-xs text-stone-500">Share an invite link so your members can join with one tap.</p>
                   </div>
                   <button
@@ -331,7 +331,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                         toast('Invite link copied!', 'success')
                       }
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2.5 bg-jade text-white text-sm font-semibold rounded-xl shrink-0 transition-all active:scale-[0.98]"
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-ember text-white text-sm font-semibold rounded-xl shrink-0 transition-all active:scale-[0.98]"
                   >
                     <ShareNetwork size={15} weight="bold" />
                     Invite
@@ -345,7 +345,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               announcement ? (
                 <div className="w-full animate-stack-in lg:col-span-2">
                   <div
-                    className="w-full bg-jade rounded-2xl p-5 shadow-md shadow-jade/25 animate-announcement-shake"
+                    className="w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 animate-announcement-shake"
                     style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
                   >
                     <div className="flex items-start gap-4">
@@ -368,15 +368,15 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               ) : (
                 <button
                   onClick={() => setEditingAnnouncement(true)}
-                  className="w-full bg-jade/8 border border-dashed border-jade/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
+                  className="w-full bg-ember/8 border border-dashed border-ember/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
                   style={{ animationDelay: '0ms' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-jade/10 flex items-center justify-center shrink-0">
-                      <Megaphone size={20} weight="fill" className="text-jade/50" />
+                    <div className="w-10 h-10 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                      <Megaphone size={20} weight="fill" className="text-ember/50" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold text-jade uppercase tracking-wide mb-0.5">Announcement</p>
+                      <p className="text-[11px] font-semibold text-ember uppercase tracking-wide mb-0.5">Announcement</p>
                       <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
                     </div>
                   </div>
@@ -399,8 +399,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 mealsEnabled && {
                   key: 'meals',
                   onClick: () => navigate('/schedule'),
-                  icon: <ForkKnife size={24} weight="fill" className="text-jade" />,
-                  iconBg: 'bg-jade/10',
+                  icon: <ForkKnife size={24} weight="fill" className="text-ember" />,
+                  iconBg: 'bg-ember/10',
                   label: 'Next Meal',
                   primary: nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet'),
                   secondary: nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null,

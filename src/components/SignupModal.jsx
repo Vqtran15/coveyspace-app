@@ -115,13 +115,13 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
         </div>
 
         <div className="mx-6 mb-4">
-          <label className="block text-xs font-medium text-jade uppercase tracking-wide mb-1">{itemNoun}</label>
+          <label className="block text-xs font-medium text-ember uppercase tracking-wide mb-1">{itemNoun}</label>
           <input
             type="text"
             value={dish}
             onChange={e => setDish(e.target.value)}
             placeholder={`Add a ${itemNoun.toLowerCase()}`}
-            className="w-full bg-jade-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+            className="w-full bg-ember-50 border border-lagoon-200 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
           />
           {supportsCategories && (
             <div className="flex gap-2 mt-2">
@@ -152,7 +152,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Chipotle"
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
               required
             />
           </div>
@@ -166,7 +166,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
               onChange={e => setNotes(e.target.value)}
               placeholder=""
               rows={2}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent resize-none"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent resize-none"
             />
           </div>
 
@@ -179,7 +179,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
+            className="w-full py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
           >
             {saving ? 'Saving…' : signup ? 'Update' : 'Sign Up'}
           </button>

@@ -16,17 +16,17 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
   return (
     <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div
-        className="relative overflow-hidden rounded-2xl bg-jade-50 border border-jade/30 shadow-sm px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
+        className="relative overflow-hidden rounded-2xl bg-ember-50 border border-ember/30 shadow-sm px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
         onClick={() => { trackEvent('birthday_banner_tapped'); onTap?.() }}
       >
-        <span className="absolute left-0 top-0 h-full w-1.5 bg-jade rounded-l-2xl" />
-        <p className="text-xs font-bold text-jade uppercase tracking-wider mb-2 pl-3">
+        <span className="absolute left-0 top-0 h-full w-1.5 bg-ember rounded-l-2xl" />
+        <p className="text-xs font-bold text-ember uppercase tracking-wider mb-2 pl-3">
           Upcoming {multi ? 'Birthdays' : 'Birthday'}
         </p>
         <div className="pl-3 flex items-center justify-between gap-3">
           {multi ? (
             <p className="font-semibold text-stone-800 flex items-center gap-1.5 min-w-0 truncate">
-              <Cake size={16} weight="fill" className="text-jade shrink-0" />
+              <Cake size={16} weight="fill" className="text-ember shrink-0" />
               {maxDays === 0
                 ? `${upcoming.length} birthdays today!`
                 : `${upcoming.length} Birthdays to celebrate soon!`}
@@ -34,10 +34,10 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
           ) : (
             <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
               <span className="font-semibold text-stone-800 truncate flex items-center gap-1.5">
-                <Cake size={16} weight="fill" className="text-jade shrink-0" />
+                <Cake size={16} weight="fill" className="text-ember shrink-0" />
                 {singleName(single)}
               </span>
-              <span className={`text-sm font-medium shrink-0 ${single.daysUntil === 0 ? 'text-jade' : 'text-stone-500'}`}>
+              <span className={`text-sm font-medium shrink-0 ${single.daysUntil === 0 ? 'text-ember' : 'text-stone-500'}`}>
                 {single.daysUntil === 0 ? 'Today!' : single.daysUntil === 1 ? 'Tomorrow' : `in ${single.daysUntil} days`}
               </span>
             </div>

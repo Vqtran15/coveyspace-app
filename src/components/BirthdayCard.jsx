@@ -11,7 +11,7 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
     <button
       onClick={() => { haptic(); onClick() }}
       style={entranceStyle}
-      className={`relative overflow-hidden w-full text-left p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
+      className={`relative overflow-hidden w-full text-left p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
         days <= 14
           ? 'bg-coral-light border-coral-100 hover:border-coral'
           : days <= 30
@@ -24,12 +24,12 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
         <div>
           <div className="flex items-center gap-1.5 font-semibold text-stone-800">
             {birthday.name}
-            {days <= 7 && <Cake size={15} weight="fill" className={days === 0 ? 'text-jade' : 'text-coral'} />}
+            {days <= 7 && <Cake size={15} weight="fill" className={days === 0 ? 'text-ember' : 'text-coral'} />}
           </div>
           <div className="text-sm text-stone-500 mt-0.5">{formatBirthdayDate(birthday.birthday)}</div>
         </div>
         {days === 0 ? (
-          <span className="text-xs font-medium bg-jade text-white px-2.5 py-1 rounded-full shrink-0">
+          <span className="text-xs font-medium bg-ember text-white px-2.5 py-1 rounded-full shrink-0">
             Today!
           </span>
         ) : days <= 14 ? (
@@ -37,7 +37,7 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
             in {days} day{days !== 1 ? 's' : ''}
           </span>
         ) : days <= 30 ? (
-          <span className="text-xs font-medium bg-lagoon-100 text-jade px-2.5 py-1 rounded-full shrink-0">
+          <span className="text-xs font-medium bg-lagoon-100 text-ember px-2.5 py-1 rounded-full shrink-0">
             in {days} days
           </span>
         ) : (

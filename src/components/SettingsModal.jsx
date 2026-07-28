@@ -139,7 +139,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
       >
         <div className="flex items-center justify-between p-5 pb-4 shrink-0">
           <div className="flex items-center gap-2">
-            <GearSix size={20} weight="fill" className="text-jade" />
+            <GearSix size={20} weight="fill" className="text-ember" />
             <h2 className="text-lg font-bold text-stone-800">Settings</h2>
           </div>
           <button
@@ -156,7 +156,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             <div className="pt-2 border-t border-stone-100">
               <button
                 onClick={() => { close(); setTimeout(() => navigate('/admin'), 200) }}
-                className="w-full flex items-center gap-3 px-4 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] rounded-2xl transition-all"
+                className="w-full flex items-center gap-3 px-4 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] rounded-2xl transition-all"
               >
                 <ShieldCheck size={20} weight="fill" className="text-white/80 shrink-0" />
                 <div className="flex-1 text-left">
@@ -182,7 +182,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                   className="w-full flex items-center gap-3 px-1 py-2.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
                 >
                   {pushSubscribed
-                    ? <Bell size={18} weight="fill" className="text-jade shrink-0" />
+                    ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
                     : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
                   }
                   <span className="flex-1 text-left font-medium">
@@ -210,7 +210,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 <button
                   onClick={() => setAvatarPickerOpen(o => !o)}
                   aria-label="Edit avatar"
-                  className="absolute -bottom-0.5 -right-0.5 w-8 h-8 rounded-full bg-jade text-white flex items-center justify-center shadow-sm"
+                  className="absolute -bottom-0.5 -right-0.5 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center shadow-sm"
                 >
                   <PencilSimple size={11} weight="bold" />
                 </button>
@@ -225,7 +225,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 )}
                 <button
                   onClick={() => setAvatarPickerOpen(o => !o)}
-                  className="text-xs text-jade font-medium mt-0.5"
+                  className="text-xs text-ember font-medium mt-0.5"
                 >
                   {avatarPickerOpen ? 'Close' : 'Edit photo'}
                 </button>
@@ -270,7 +270,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     onChange={e => setNameValue(e.target.value)}
                     maxLength={40}
                     required
-                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                   />
                   <div className="flex gap-2 pt-1">
                     <button
@@ -283,7 +283,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     <button
                       type="submit"
                       disabled={nameSaving || !nameValue.trim()}
-                      className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                      className="flex-1 py-2 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
                     >
                       {nameSaving ? 'Saving…' : 'Save'}
                     </button>
@@ -326,7 +326,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                       value={currentPw}
                       onChange={e => setCurrentPw(e.target.value)}
                       required
-                      className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                      className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                     />
                     <button
                       type="button"
@@ -344,7 +344,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                       value={newPw}
                       onChange={e => setNewPw(e.target.value)}
                       required
-                      className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                      className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                     />
                     <button
                       type="button"
@@ -361,7 +361,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     value={confirmPw}
                     onChange={e => setConfirmPw(e.target.value)}
                     required
-                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                    className="w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                   />
 
                   {pwError && (
@@ -379,7 +379,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     <button
                       type="submit"
                       disabled={pwSaving || !currentPw || !newPw || !confirmPw}
-                      className="flex-1 py-2 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                      className="flex-1 py-2 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
                     >
                       {pwSaving ? 'Saving…' : 'Update'}
                     </button>
@@ -412,9 +412,9 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             )}
             <button
               onClick={() => setFeedbackOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-jade hover:text-jade-700 hover:bg-jade/5 rounded-xl transition-colors mb-1"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-ember hover:text-ember-700 hover:bg-ember/5 rounded-xl transition-colors mb-1"
             >
-              <ChatTeardropDots size={15} weight="fill" className="text-jade shrink-0" />
+              <ChatTeardropDots size={15} weight="fill" className="text-ember shrink-0" />
               Send Feedback
             </button>
 

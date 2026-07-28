@@ -253,13 +253,13 @@ test.describe('RSVP interactions', () => {
     await page.waitForTimeout(1500)
   })
 
-  test('clicking Going activates bg-jade on the button', async ({ page }) => {
+  test('clicking Going activates bg-ember on the button', async ({ page }) => {
     const goingBtn = page.getByRole('button', { name: 'Going' }).first()
     await goingBtn.click()
     await page.waitForTimeout(1200)
 
     const cls = await goingBtn.getAttribute('class')
-    expect(cls).toMatch(/bg-jade/)
+    expect(cls).toMatch(/bg-ember/)
   })
 
   test('clicking Going again (toggle off) removes active state', async ({ page }) => {
@@ -271,7 +271,7 @@ test.describe('RSVP interactions', () => {
 
     // Verify it's active
     let cls = await goingBtn.getAttribute('class')
-    expect(cls).toMatch(/bg-jade/)
+    expect(cls).toMatch(/bg-ember/)
 
     // Second click — toggle off
     await goingBtn.click()
@@ -405,10 +405,10 @@ test.describe('Theme compliance', () => {
     expect(html).not.toMatch(/from-amber-\d+|to-amber-\d+/)
   })
 
-  test('date badge uses jade tint: bg-jade/10 class', async ({ page }) => {
+  test('date badge uses ember tint: bg-ember/10 class', async ({ page }) => {
     await goToEvents(page)
 
-    const badge = page.locator('.bg-jade\\/10').first()
+    const badge = page.locator('.bg-ember\\/10').first()
     await expect(badge).toBeVisible({ timeout: 10000 })
   })
 

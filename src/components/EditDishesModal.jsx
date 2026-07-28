@@ -135,7 +135,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
                 required
               />
             </div>
@@ -145,7 +145,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
                 required
               />
             </div>
@@ -158,7 +158,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 placeholder="e.g. 123 Main St or John's house"
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
               />
             </div>
           </div>
@@ -177,10 +177,10 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                       value={entry.dish}
                       onChange={e => updateDish(entry.key, e.target.value)}
                       placeholder=""
-                      className="w-full border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                      className="w-full border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
                     />
                     {signup && (
-                      <p className="text-xs text-jade mt-0.5 pl-1">
+                      <p className="text-xs text-ember mt-0.5 pl-1">
                         Signed up: {signup.name}
                       </p>
                     )}
@@ -218,7 +218,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
             <button
               type="button"
               onClick={addSlot}
-              className="w-full py-2 mt-1 border-2 border-dashed border-stone-300 hover:border-coral text-stone-500 hover:text-jade rounded-lg text-sm font-medium transition-colors"
+              className="w-full py-2 mt-1 border-2 border-dashed border-stone-300 hover:border-coral text-stone-500 hover:text-ember rounded-lg text-sm font-medium transition-colors"
             >
               + Add another {noun.toLowerCase()}
             </button>
@@ -242,7 +242,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
               <button
                 type="submit"
                 disabled={saving || entries.length === 0}
-                className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
+                className="flex-1 py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

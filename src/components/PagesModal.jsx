@@ -15,7 +15,7 @@ export default function PagesModal({ editLabel, editSubLabel, pageNounPlural, on
       >
         <div className="flex items-center justify-between p-5 pb-4">
           <div className="flex items-center gap-2">
-            <ListBullets size={20} weight="fill" className="text-jade" />
+            <ListBullets size={20} weight="fill" className="text-ember" />
             <h2 className="text-lg font-bold text-stone-800">{pageNounPlural}</h2>
           </div>
           <button
@@ -45,7 +45,7 @@ export default function PagesModal({ editLabel, editSubLabel, pageNounPlural, on
           )}
           <button
             onClick={onManagePages}
-            className="w-full flex items-center px-4 py-3.5 rounded-xl border-2 border-stone-200 bg-white hover:border-jade hover:bg-lagoon-50 transition-all"
+            className="w-full flex items-center px-4 py-3.5 rounded-xl border-2 border-stone-200 bg-white hover:border-ember hover:bg-lagoon-50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-lagoon-50 flex items-center justify-center shrink-0">

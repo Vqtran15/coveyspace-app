@@ -176,7 +176,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         <button
           onClick={handleConfirm}
           disabled={saving}
-          className="flex-1 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40"
+          className="flex-1 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Use Photo'}
         </button>

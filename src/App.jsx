@@ -482,12 +482,12 @@ export default function App() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col fixed inset-y-0 left-0 w-56 bg-white border-r border-stone-200 z-40">
         <div className="px-4 py-5 border-b border-stone-100 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-jade flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-full bg-ember flex items-center justify-center shrink-0">
             <svg viewBox="0 0 256 256" className="w-4 h-4 fill-white">
               <path d="M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z" />
             </svg>
           </div>
-          <span className="font-league-gothic text-2xl text-jade tracking-wide">Covey Space</span>
+          <span className="font-league-gothic text-2xl text-ember tracking-wide">Covey Space</span>
         </div>
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
           {visibleTabs.map(t => {
@@ -497,7 +497,7 @@ export default function App() {
                 key={t.path}
                 onClick={() => handleTabChange(t.path)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  active ? 'bg-jade text-white' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-800'
+                  active ? 'bg-ember text-white' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-800'
                 }`}
               >
                 <t.Icon size={20} weight={active ? 'fill' : 'regular'} />
@@ -537,7 +537,7 @@ export default function App() {
                   {active && (
                     <motion.span
                       layoutId="tab-pill"
-                      className="absolute inset-0 bg-jade rounded-2xl"
+                      className="absolute inset-0 bg-ember rounded-2xl"
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -553,7 +553,7 @@ export default function App() {
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
                   )}
                 </span>
-                <span className={`text-[13px] font-medium tracking-wide ${active ? 'text-jade' : ''}`}>{t.shortLabel}</span>
+                <span className={`text-[13px] font-medium tracking-wide ${active ? 'text-ember' : ''}`}>{t.shortLabel}</span>
               </button>
             )
           })}

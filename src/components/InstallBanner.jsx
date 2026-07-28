@@ -50,11 +50,11 @@ export default function InstallBanner() {
 
   return (
     <div
-      className={`rounded-2xl border border-jade/30 bg-jade/5 p-4 mb-3 animate-stack-in transition-opacity duration-[250ms] ${closing ? 'opacity-0' : 'opacity-100'}`}
+      className={`rounded-2xl border border-ember/30 bg-ember/5 p-4 mb-3 animate-stack-in transition-opacity duration-[250ms] ${closing ? 'opacity-0' : 'opacity-100'}`}
     >
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-jade/15 flex items-center justify-center shrink-0">
-          <DeviceMobile size={18} weight="fill" className="text-jade" />
+        <div className="w-9 h-9 rounded-xl bg-ember/15 flex items-center justify-center shrink-0">
+          <DeviceMobile size={18} weight="fill" className="text-ember" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-stone-800 leading-snug">Add to your home screen</p>
@@ -63,7 +63,7 @@ export default function InstallBanner() {
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setExpanded(e => !e)}
-            className="text-xs font-semibold text-jade px-2.5 py-1.5 rounded-lg hover:bg-jade/10 active:bg-jade/20 transition-colors flex items-center gap-1"
+            className="text-xs font-semibold text-ember px-2.5 py-1.5 rounded-lg hover:bg-ember/10 active:bg-ember/20 transition-colors flex items-center gap-1"
           >
             {expanded ? 'Hide' : 'How?'}
             {expanded
@@ -82,14 +82,14 @@ export default function InstallBanner() {
       </div>
 
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-jade/20">
+        <div className="mt-4 pt-4 border-t border-ember/20">
           <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-3">
             {PLATFORM_LABEL[platform]}
           </p>
           <ol className="flex flex-col gap-3">
             {STEPS[platform].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="w-5 h-5 rounded-full bg-jade text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                <span className="w-5 h-5 rounded-full bg-ember text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                   {i + 1}
                 </span>
                 <p className="text-sm text-stone-600 leading-snug">{step}</p>

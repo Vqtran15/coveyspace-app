@@ -80,7 +80,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between p-5 pb-4 shrink-0">
           <div className="flex items-center gap-2">
-            <ChatTeardropDots size={20} weight="fill" className="text-jade" />
+            <ChatTeardropDots size={20} weight="fill" className="text-ember" />
             <h2 className="text-lg font-bold text-stone-800">Send Feedback</h2>
           </div>
           <button
@@ -94,14 +94,14 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
         <div className="px-5 pb-6">
           {submitted ? (
             <div className="flex flex-col items-center text-center py-6 gap-3">
-              <CheckCircle size={44} weight="fill" className="text-jade" />
+              <CheckCircle size={44} weight="fill" className="text-ember" />
               <p className="font-semibold text-stone-800">Thanks for the feedback!</p>
               <p className="text-sm text-stone-400 leading-relaxed">
                 I read every response and use it to make Covey Space better.
               </p>
               <button
                 onClick={close}
-                className="mt-2 px-6 py-2.5 bg-jade text-white text-sm font-semibold rounded-xl hover:bg-jade-700 transition-colors"
+                className="mt-2 px-6 py-2.5 bg-ember text-white text-sm font-semibold rounded-xl hover:bg-ember-700 transition-colors"
               >
                 Done
               </button>
@@ -119,7 +119,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
                       onClick={() => setType(key)}
                       className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-colors ${
                         type === key
-                          ? 'bg-jade text-white'
+                          ? 'bg-ember text-white'
                           : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                       }`}
                     >
@@ -146,7 +146,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
                   rows={5}
                   maxLength={2000}
                   required
-                  className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300 resize-none"
+                  className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300 resize-none"
                 />
                 <p className="text-right text-xs text-stone-300 mt-1">{message.length}/2000</p>
               </div>
@@ -158,7 +158,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
               <button
                 type="submit"
                 disabled={submitting || !message.trim()}
-                className="w-full py-3 bg-jade text-white text-sm font-semibold rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-ember text-white text-sm font-semibold rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Sending…' : 'Send Feedback'}
               </button>

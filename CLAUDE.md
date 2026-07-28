@@ -63,9 +63,9 @@ ALWAYS double check your work before reporting it as done. Re-read changed files
 
 ### Colors
 - **Page background**: `bg-sunrise-50` (`#FBF8F4`) — warm off-white
-- **Primary accent**: `jade` (`#C4622D`) — CTAs, focus rings, active states
+- **Primary accent**: `ember` (`#C4622D`) — CTAs, focus rings, active states
 - **Supporting palette**: `coral` (`#B85A3A`), `lagoon` (`#E8A838`), `sage` (`#A1CCA6`)
-- **Color in cards lives in icon/badge boxes only** — never use a brand color as the full card background. Tints by context: `bg-amber-50` (meals/dates), `bg-jade/10` (jade items), `bg-lagoon-50` (lagoon items), `bg-coral/10` (coral items), `bg-sage-50` (prayer/sage items)
+- **Color in cards lives in icon/badge boxes only** — never use a brand color as the full card background. Tints by context: `bg-amber-50` (meals/dates), `bg-ember/10` (ember items), `bg-lagoon-50` (lagoon items), `bg-coral/10` (coral items), `bg-sage-50` (prayer/sage items)
 
 ### Cards
 - Standard card: `bg-white rounded-2xl border border-stone-100 shadow-sm`
@@ -73,8 +73,8 @@ ALWAYS double check your work before reporting it as done. Re-read changed files
 - Never use `rounded-xl` for cards — that's for buttons, inputs, and icon boxes
 
 ### Buttons
-- Primary: `bg-jade text-white rounded-xl` (hover: `hover:bg-jade-700`)
-- Secondary: `border border-stone-200 text-stone-500 rounded-lg hover:border-jade hover:text-jade hover:bg-jade/5`
+- Primary: `bg-ember text-white rounded-xl` (hover: `hover:bg-ember-700`)
+- Secondary: `border border-stone-200 text-stone-500 rounded-lg hover:border-ember hover:text-ember hover:bg-ember/5`
 - Destructive: `border border-red-200 text-red-500 rounded-xl hover:bg-red-50`
 - Small inline: `px-3 py-1.5 rounded-lg text-xs font-medium`
 
@@ -91,7 +91,7 @@ ALWAYS double check your work before reporting it as done. Re-read changed files
 
 ### Segment controls
 Container: `bg-stone-100 rounded-xl p-1`
-Active tab: `bg-jade text-white rounded-lg shadow-sm`
+Active tab: `bg-ember text-white rounded-lg shadow-sm`
 Inactive tab: `text-stone-500 hover:text-stone-700`
 
 ### Typography
@@ -108,7 +108,7 @@ Inactive tab: `text-stone-500 hover:text-stone-700`
 - Use `animate-modal-in` / `animate-modal-out` and `animate-overlay-in` / `animate-overlay-out` for transitions
 
 ### Inputs
-`border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent`
+`border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent`
 
 ## QA Rule
 After every code change, QA the affected functionality before reporting done. Use one of:

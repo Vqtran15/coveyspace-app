@@ -41,8 +41,8 @@ async function attachAndSend(page) {
   await fileInput.setInputFiles(TEST_IMG)
   await page.waitForTimeout(800) // preview renders
 
-  // Send button: jade bg, type=button, in the message input bar
-  const sendBtn = page.locator('button[type="button"].bg-jade').last()
+  // Send button: ember bg, type=button, in the message input bar
+  const sendBtn = page.locator('button[type="button"].bg-ember').last()
   await expect(sendBtn).toBeEnabled({ timeout: 5000 })
   await sendBtn.click()
 }

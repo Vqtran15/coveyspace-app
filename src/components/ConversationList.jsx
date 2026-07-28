@@ -279,8 +279,8 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       {(showNotifBanner || notifBannerClosing) && (
         <div className={`shrink-0 px-4 pt-4 ${notifBannerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
-          <div className="max-w-3xl mx-auto flex items-center gap-3 bg-jade/10 border border-jade/20 rounded-2xl px-4 py-3">
-            <Bell size={18} weight="fill" className="text-jade shrink-0" />
+          <div className="max-w-3xl mx-auto flex items-center gap-3 bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3">
+            <Bell size={18} weight="fill" className="text-ember shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-stone-700">Chat notifications are off</p>
               <p className="text-xs text-stone-400 mt-0.5">Tap Enable to get notified of new messages</p>
@@ -288,7 +288,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             <button
               onClick={onPushToggle}
               disabled={pushToggling}
-              className="text-xs font-semibold text-white bg-jade px-3 py-1.5 rounded-lg shrink-0 hover:bg-jade-700 transition-colors disabled:opacity-40"
+              className="text-xs font-semibold text-white bg-ember px-3 py-1.5 rounded-lg shrink-0 hover:bg-ember-700 transition-colors disabled:opacity-40"
             >
               {pushToggling ? '…' : 'Enable'}
             </button>
@@ -322,13 +322,13 @@ export default function ConversationList({ session, groupId, members, enterClass
               setSearchQuery('')
               if (!searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
             }}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-jade text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
           >
             <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
           </button>
           <button
             onClick={openModal}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-jade text-white hover:bg-jade-700 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
             title="New message"
           >
             <PencilSimple size={20} weight="bold" />
@@ -347,7 +347,7 @@ export default function ConversationList({ session, groupId, members, enterClass
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search conversations…"
-              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
@@ -414,7 +414,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
                   >
                     <div className="relative shrink-0">
-                      <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : conv.image_url ? 'bg-stone-200 shadow-md' : 'bg-jade'}`}>
+                      <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : conv.image_url ? 'bg-stone-200 shadow-md' : 'bg-ember'}`}>
                         {isDm
                           ? otherMember?.avatar_image_url
                             ? <img src={otherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
@@ -427,7 +427,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                         }
                       </div>
                       {unread && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-jade rounded-full border-2 border-white" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -435,7 +435,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                         <span className={`text-sm truncate ${unread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
                           {name}
                         </span>
-                        <span className={`text-xs shrink-0 ${unread ? 'font-semibold text-jade' : 'text-stone-400'}`}>
+                        <span className={`text-xs shrink-0 ${unread ? 'font-semibold text-ember' : 'text-stone-400'}`}>
                           {formatListTime(lastMessages[conv.id]?.created_at)}
                         </span>
                       </div>
@@ -575,7 +575,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
                       Add members
                       {selectedMembers.size > 0 && (
-                        <span className="ml-2 text-jade normal-case font-semibold">
+                        <span className="ml-2 text-ember normal-case font-semibold">
                           {selectedMembers.size} selected
                         </span>
                       )}
@@ -598,7 +598,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                               }
                             </div>
                             <span className="flex-1 text-sm font-medium text-stone-800 text-left">{m.display_name}</span>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-jade border-jade' : 'border-stone-300'}`}>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
                               {selected && <Check size={11} weight="bold" className="text-white" />}
                             </div>
                           </button>
@@ -610,7 +610,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                 <button
                   onClick={createGroupChat}
                   disabled={creating || selectedMembers.size === 0}
-                  className="w-full py-3 rounded-xl bg-jade text-white font-semibold text-sm hover:bg-jade-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full py-3 rounded-xl bg-ember text-white font-semibold text-sm hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {creating ? 'Creating…' : 'Create group chat'}
                 </button>

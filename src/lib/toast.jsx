@@ -11,7 +11,7 @@ const ICONS = {
 }
 
 const STYLES = {
-  success: 'bg-jade text-white',
+  success: 'bg-ember text-white',
   error:   'bg-red-500 text-white',
   info:    'bg-stone-800 text-white',
 }

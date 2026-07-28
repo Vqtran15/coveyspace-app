@@ -42,7 +42,7 @@ export default function NotesModal({ groupId, onClose }) {
         <div className="flex items-center justify-between p-5 pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <NotePencil size={20} weight="fill" className="text-jade" />
+              <NotePencil size={20} weight="fill" className="text-ember" />
               <h2 className="text-lg font-bold text-stone-800">Public Notes</h2>
             </div>
             <p className="text-xs text-stone-400 mt-0.5 ml-7">Shared with all group members</p>
@@ -62,12 +62,12 @@ export default function NotesModal({ groupId, onClose }) {
             placeholder={loading ? 'Loading…' : 'Write notes for your group…'}
             disabled={loading}
             rows={8}
-            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent disabled:opacity-40"
+            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 resize-none focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent disabled:opacity-40"
           />
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="mt-3 w-full py-2.5 bg-jade hover:bg-jade-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 text-sm"
+            className="mt-3 w-full py-2.5 bg-ember hover:bg-ember-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-40 text-sm"
           >
             {saving ? 'Saving…' : saved ? 'Saved!' : 'Save Notes'}
           </button>

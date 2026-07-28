@@ -1,4 +1,21 @@
-import { useState, useEffect, useRef, useLayoutEffect, useMemo, lazy, Suspense } from 'react'
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: new-features.spec.js >> Regression — ChatView internals >> unsized image filter logic is still present (hasAttribute width/height check)
+- Location: e2e/new-features.spec.js:295:3
+
+# Error details
+
+```
+Error: expect(received).toContain(expected) // indexOf
+
+Expected substring: "img.hasAttribute('width')"
+Received string:    "import { useState, useEffect, useRef, useLayoutEffect, useMemo, lazy, Suspense } from 'react'
 import { flushSync } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
@@ -16,16 +33,14 @@ import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../utils/format.js'
 import { haptic } from '../lib/haptic.js'
-import { trackEvent } from '../lib/analytics.js'
-
+import { trackEvent } from '../lib/analytics.js'·
 const PAGE_SIZE   = 50
 const CACHE_LIMIT = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
 const GROUP_TIME_GAP = 5 * 60 * 1000
 const DRAFT_KEY    = convId => `draft:${convId}`
 const READ_AT_KEY  = convId => `readAt:${convId}`
-const CACHE_KEY    = convId => `chat_v1_${convId}`
-
+const CACHE_KEY    = convId => `chat_v1_${convId}`·
 function loadCache(convId) {
   try { return JSON.parse(localStorage.getItem(CACHE_KEY(convId)) ?? 'null') } catch { return null }
 }
@@ -37,9 +52,7 @@ function saveCache(convId, msgs) {
       .map(({ _isNew, ...m }) => m)
     localStorage.setItem(CACHE_KEY(convId), JSON.stringify(clean))
   } catch {}
-}
-
-
+}··
 function dateSeparatorLabel(iso) {
   const d = new Date(iso)
   const now = new Date()
@@ -47,26 +60,24 @@ function dateSeparatorLabel(iso) {
   if (d.toDateString() === now.toDateString()) return 'Today'
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-}
-
+}·
 function highlightText(text, query) {
   if (!query.trim() || !text) return text
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const escaped = query.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')
   const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
   return (
     <>
       {parts.map((part, i) =>
         i % 2 === 1
-          ? <mark key={i} className="bg-yellow-200 text-stone-900 rounded-sm">{part}</mark>
+          ? <mark key={i} className=\"bg-yellow-200 text-stone-900 rounded-sm\">{part}</mark>
           : part
       )}
     </>
   )
-}
-
+}·
 function renderMessageBody(body, query) {
   // eslint-disable-next-line no-useless-escape
-  const URL_RE = /https?:\/\/[^\s<>'"]+[^\s<>'".,!?;:)\]']*/g
+  const URL_RE = /https?:\\/\\/[^\\s<>'\"]+[^\\s<>'\".,!?;:)\\]']*/g
   const parts = []
   let last = 0, m
   while ((m = URL_RE.exec(body)) !== null) {
@@ -78,22 +89,20 @@ function renderMessageBody(body, query) {
   if (!parts.length) return query ? highlightText(body, query) : body
   return parts.map((part, i) =>
     part.type === 'url'
-      ? <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
+      ? <a key={i} href={part.value} target=\"_blank\" rel=\"noopener noreferrer\"
             onClick={e => e.stopPropagation()}
-            className="underline break-all text-inherit opacity-80 active:opacity-60">
+            className=\"underline break-all text-inherit opacity-80 active:opacity-60\">
             {part.value}
           </a>
       : <span key={i}>{query ? highlightText(part.value, query) : part.value}</span>
   )
-}
-
+}·
 function typingLabel(users) {
   if (!users.length) return ''
   if (users.length === 1) return `${users[0]} is typing…`
   if (users.length === 2) return `${users[0]} and ${users[1]} are typing…`
   return `${users.length} people are typing…`
-}
-
+}·
 export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null }) {
   const [messages, setMessages]         = useState([])
   const [loading, setLoading]           = useState(true)
@@ -151,8 +160,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [editingPollId, setEditingPollId]     = useState(null)
   const [editPollQuestion, setEditPollQuestion] = useState('')
   const [editPollOptions, setEditPollOptions]   = useState([])
-  const [savingPoll, setSavingPoll]           = useState(false)
-
+  const [savingPoll, setSavingPoll]           = useState(false)·
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
   const fileInputRef       = useRef(null)
@@ -167,8 +175,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const preserveScrollRef  = useRef(null)
   const isAtBottomRef              = useRef(true)
   const initialScrollDoneRef       = useRef(false)
-  const pendingScrollRef           = useRef(null)
-
+  const pendingScrollRef           = useRef(null)·
   const freshLoadRef          = useRef(false)
   const wasAtBottomRef        = useRef(true)
   const messagesContainerRef  = useRef(null)
@@ -177,21 +184,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const justAddedOptionRef    = useRef(false)
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
-  const groupIconFileRef      = useRef(null)
-
+  const groupIconFileRef      = useRef(null)·
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }
-
+  }·
   const myId = session.user.id
-  const convId = conversation.id
-
+  const convId = conversation.id·
   // Resolve the current display name for a message sender.
   // Falls back to the stored name for users who've left the group.
   function senderName(userId, storedName) {
     return members.find(m => m.user_id === userId)?.display_name || storedName
-  }
-
+  }·
   function convTitle() {
     if (conversation.type === 'direct') {
       const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
@@ -208,8 +211,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (!names.length) return 'Group Chat'
     if (names.length <= 3) return names.join(', ')
     return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
-  }
-
+  }·
   // ── Poll helpers ─────────────────────────────────────────────────────────
   async function fetchPollsForMessages(msgs) {
     const ids = [...new Set(msgs.filter(m => m.poll_id).map(m => m.poll_id))]
@@ -225,8 +227,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setPolls(prev => ({ ...prev, ...map }))
       if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => scrollToBottom()))
     }
-  }
-
+  }·
   // ── Event helpers ─────────────────────────────────────────────────────────
   function formatEventDate(dateStr, timeStr) {
     const d = new Date(dateStr + 'T00:00:00')
@@ -239,8 +240,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const hour12 = h % 12 || 12
     const mins = m === 0 ? '' : `:${String(m).padStart(2, '0')}`
     return `${mon} ${day} · ${hour12}${mins} ${suffix}`
-  }
-
+  }·
   async function fetchEventsForMessages(msgs) {
     const ids = [...new Set(msgs.filter(m => m.event_id).map(m => m.event_id))]
     if (!ids.length) return
@@ -259,8 +259,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setChatEvents(prev => ({ ...prev, ...map }))
       if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => scrollToBottom()))
     }
-  }
-
+  }·
   async function rsvpInChat(eventId, status) {
     const ev = chatEvents[eventId]
     if (!ev) return
@@ -279,8 +278,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     } else {
       await supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: myId, status }, { onConflict: 'event_id,user_id' })
     }
-  }
-
+  }·
   async function createPoll() {
     const question = pollQuestion.trim()
     const opts = pollOptions.map(o => o.trim()).filter(Boolean)
@@ -294,8 +292,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         options: opts.map(text => ({ text })),
         created_by: myId,
       }).select('id').single()
-      if (pollErr || !poll) throw pollErr ?? new Error('poll insert failed')
-
+      if (pollErr || !poll) throw pollErr ?? new Error('poll insert failed')·
       const replyId = replyingTo?.id ?? null
       const { data: newMsg, error: msgErr } = await supabase.from('messages').insert({
         community_group_id: groupId,
@@ -306,11 +303,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         poll_id: poll.id,
         reply_to_id: replyId,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-      if (msgErr) throw msgErr
-
+      if (msgErr) throw msgErr·
       // Build poll data object once — used for both state AND embedded in the message
-      const pollData = { question, options: opts.map(text => ({ text })), votes: [] }
-
+      const pollData = { question, options: opts.map(text => ({ text })), votes: [] }·
       // Update polls + messages in the same synchronous block so they land in one React render.
       // Also embed _poll on the message itself as a fallback in case the polls state update
       // races with the realtime INSERT handler.
@@ -323,8 +318,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             ? prev
             : [...prev, { ...newMsg, poll_id: poll.id, _poll: pollData, _isNew: true }]
         )
-      }
-
+      }·
       setPollCreating(false)
       setPollQuestion('')
       setPollOptions(['', ''])
@@ -334,8 +328,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     } finally {
       setPollSubmitting(false)
     }
-  }
-
+  }·
   async function castVote(pollId, optionIndex) {
     setPolls(prev => {
       if (!prev[pollId]) return prev
@@ -344,16 +337,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     })
     const { error } = await supabase.from('poll_votes').upsert({ poll_id: pollId, user_id: myId, option_index: optionIndex })
     if (error) console.error('castVote error:', error)
-  }
-
+  }·
   function startEditPoll(pollId, poll) {
     if (!poll) return
     setEditPollQuestion(poll.question)
     setEditPollOptions(poll.options.map(o => o.text))
     setEditingPollId(pollId)
     setPollMenuOpenId(null)
-  }
-
+  }·
   async function savePoll(pollId) {
     const question = editPollQuestion.trim()
     const opts = editPollOptions.map(o => o.trim()).filter(Boolean)
@@ -375,8 +366,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     } finally {
       setSavingPoll(false)
     }
-  }
-
+  }·
   async function deletePoll(pollId, messageId) {
     setPollMenuOpenId(null)
     setDeletingPollId(pollId)
@@ -386,8 +376,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setDeletingPollId(null)
     await supabase.from('messages').delete().eq('id', messageId)
     await supabase.from('polls').delete().eq('id', pollId)
-  }
-
+  }·
   // ── Messages + reactions + realtime ──────────────────────────────────────
   useEffect(() => {
     onRead?.()
@@ -405,8 +394,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     pendingScrollRef.current = null
     freshLoadRef.current = true
     setTimeout(() => { freshLoadRef.current = false }, 5000)
-    setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
-
+    setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')·
     const cached = loadCache(convId)
     if (cached?.length) {
       setMessages(cached)
@@ -417,8 +405,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       fetchEventsForMessages(cached)
     } else {
       setLoading(true)
-    }
-
+    }·
     supabase
       .from('messages')
       .select('*, reply_message:reply_to_id(id, body, display_name, image_url)')
@@ -446,8 +433,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setReactions(map)
         fetchPollsForMessages(msgs)
         fetchEventsForMessages(msgs)
-      })
-
+      })·
     const msgCh = supabase
       .channel(`chat-msg:${convId}`)
       .on('postgres_changes', {
@@ -479,8 +465,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }, ({ old: msg }) => {
         setMessages(prev => prev.filter(m => m.id !== msg.id))
       })
-      .subscribe()
-
+      .subscribe()·
     const rxCh = supabase
       .channel(`chat-rx:${convId}`)
       .on('postgres_changes', {
@@ -507,8 +492,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           return { ...prev, [r.message_id]: byEmoji }
         })
       })
-      .subscribe()
-
+      .subscribe()·
     // Load member read times for read receipts
     supabase
       .from('conversation_members')
@@ -520,15 +504,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           if (m.user_id !== myId) map[m.user_id] = m.last_read_at
         }
         setMemberReadTimes(map)
-      })
-
+      })·
     // Mark ourselves as read on enter
     const openTime = new Date().toISOString()
     localStorage.setItem(READ_AT_KEY(convId), openTime)
     supabase.from('conversation_members')
       .update({ last_read_at: openTime })
-      .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
-
+      .eq('conversation_id', convId).eq('user_id', myId).then(() => {})·
     const readCh = supabase
       .channel(`read:${convId}`)
       .on('postgres_changes', {
@@ -539,8 +521,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           setMemberReadTimes(prev => ({ ...prev, [row.user_id]: row.last_read_at }))
         }
       })
-      .subscribe()
-
+      .subscribe()·
     const convMetaCh = supabase
       .channel(`conv-meta:${convId}`)
       .on('postgres_changes', {
@@ -550,8 +531,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setConvName(conv.name ?? null)
         setConvImageUrl(conv.image_url ?? null)
       })
-      .subscribe()
-
+      .subscribe()·
     const pollVotesCh = supabase
       .channel(`poll-votes:${convId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'poll_votes' }, ({ new: v, old: o, eventType }) => {
@@ -569,8 +549,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           return { ...prev, [vote.poll_id]: { ...p, votes } }
         })
       })
-      .subscribe()
-
+      .subscribe()·
     const eventRsvpsCh = supabase
       .channel(`event-rsvps:${convId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, ({ new: r, old: o, eventType }) => {
@@ -591,8 +570,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           return { ...prev, [rsvp.event_id]: { ...ev, rsvps } }
         })
       })
-      .subscribe()
-
+      .subscribe()·
     return () => {
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
@@ -608,8 +586,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         .eq('user_id', myId)
         .then(() => {})
     }
-  }, [convId])
-
+  }, [convId])·
   // ── Initial load: mark contentReady once messages arrive ─────────────────
   useEffect(() => {
     if (loading || initialScrollDoneRef.current) return
@@ -622,8 +599,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
     }
     setContentReady(true)
-  }, [loading, messages])
-
+  }, [loading, messages])·
   // Reveal messages after scroll-to-bottom to prevent layout-jump disorientation.
   //
   // Wait for all visible images to decode before revealing so that scrollHeight
@@ -633,21 +609,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // An 800ms fallback caps the wait for slow or large images.
   useEffect(() => {
     if (!contentReady) return
-    if (!messagesContainerRef.current) { setVisible(true); return }
-
-    const allImgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))
-
-    if (!allImgs.length) { setVisible(true); return }
-
+    if (!messagesContainerRef.current) { setVisible(true); return }·
+    const allImgs = Array.from(messagesContainerRef.current.querySelectorAll('img'))·
+    if (!allImgs.length) { setVisible(true); return }·
     let cancelled = false
-    const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 800)
-
+    const fallback = setTimeout(() => { if (!cancelled) setVisible(true) }, 800)·
     Promise.all(allImgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
-      .then(() => { if (!cancelled) { clearTimeout(fallback); setVisible(true) } })
-
+      .then(() => { if (!cancelled) { clearTimeout(fallback); setVisible(true) } })·
     return () => { cancelled = true; clearTimeout(fallback) }
-  }, [contentReady])
-
+  }, [contentReady])·
   // Scroll to bottom synchronously before the first paint of the revealed messages.
   // Also sync isAtBottomRef so the ResizeObserver re-pins correctly if slow images
   // finish loading after the reveal (fallback timer or very late network responses).
@@ -657,8 +627,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setIsAtBottom(true)
       scrollToBottom()
     }
-  }, [visible])
-
+  }, [visible])·
   // Re-pin to bottom as images in new realtime messages load after initial reveal.
   useEffect(() => {
     if (!visible || !messagesContainerRef.current) return
@@ -667,8 +636,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
-  }, [visible])
-
+  }, [visible])·
   // Re-pin to bottom when returning from background if we were at the bottom.
   useEffect(() => {
     function onVisibilityChange() {
@@ -680,8 +648,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
     return () => document.removeEventListener('visibilitychange', onVisibilityChange)
-  }, [])
-
+  }, [])·
   // ── Typing presence ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!displayName) return
@@ -708,8 +675,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       supabase.removeChannel(channel)
       presenceChannelRef.current = null
     }
-  }, [convId, displayName])
-
+  }, [convId, displayName])·
   useLayoutEffect(() => {
     if (!scrollRef.current) return
     if (preserveScrollRef.current) {
@@ -720,34 +686,27 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (visible && isAtBottomRef.current) {
       scrollToBottom()
     }
-  }, [messages])
-
+  }, [messages])·
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape' && searchOpen) { setSearchOpen(false); setSearchQuery('') }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [searchOpen])
-
+  }, [searchOpen])·
   // Auto-focus the newly added poll option input so the keyboard stays up
   useEffect(() => {
     if (justAddedOptionRef.current) {
       justAddedOptionRef.current = false
       pollOptionRefs.current[pollOptions.length - 1]?.focus()
     }
-  }, [pollOptions.length])
-
-
-
-
+  }, [pollOptions.length])····
   useEffect(() => {
     if (!selectedMsgId && !confirmDeleteId) return
     function clear() { setSelectedMsgId(null); setConfirmDeleteId(null) }
     document.addEventListener('click', clear)
     return () => document.removeEventListener('click', clear)
-  }, [selectedMsgId, confirmDeleteId])
-
+  }, [selectedMsgId, confirmDeleteId])·
   // ── Scroll ────────────────────────────────────────────────────────────────
   function handleScroll() {
     const el = scrollRef.current
@@ -776,8 +735,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
     }
     if (el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
-  }
-
+  }·
   async function loadMore() {
     if (loadingMore || !hasMore || !messages.length) return
     setLoadingMore(true)
@@ -813,14 +771,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
     setHasMore(older.length === PAGE_SIZE)
     setLoadingMore(false)
-  }
-
+  }·
   // ── Input ─────────────────────────────────────────────────────────────────
   function toggleSearch() {
     if (searchOpen) { setSearchOpen(false); setSearchQuery('') }
     else { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50) }
-  }
-
+  }·
   function handleTextInput(e) {
     const val = e.target.value
     setText(val)
@@ -835,12 +791,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         presenceChannelRef.current?.track({ display_name: displayName, typing: false })
       }, 3000)
     }
-  }
-
+  }·
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
-
+  }·
   // ── Send ──────────────────────────────────────────────────────────────────
   async function handleSend(e) {
     e?.preventDefault()
@@ -848,14 +802,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const trimmed = text.trim()
     if (!trimmed && imagePreviews.length === 0) return
     clearTimeout(typingTimeoutRef.current)
-    presenceChannelRef.current?.track({ display_name: displayName, typing: false })
-
+    presenceChannelRef.current?.track({ display_name: displayName, typing: false })·
     const replyId = replyingTo?.id ?? null
     const replyMsg = replyingTo
       ? { id: replyingTo.id, body: replyingTo.body, display_name: replyingTo.display_name, image_url: replyingTo.image_url }
       : null
-    setReplyingTo(null)
-
+    setReplyingTo(null)·
     if (imagePreviews.length > 0) {
       const captured = [...imagePreviews]
       const capturedText = trimmed || null
@@ -886,8 +838,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
       sendImages(tempMessages, capturedText).finally(() => { sendingRef.current = false })
       return
-    }
-
+    }·
     sendingRef.current = true
     setSending(true)
     try {
@@ -915,8 +866,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       sendingRef.current = false
       setSending(false)
     }
-  }
-
+  }·
   async function sendImages(tempMessages, textBody) {
     await Promise.all(tempMessages.map(temp =>
       sendImage(temp._tempId, temp._file, temp.image_url, temp.reply_to_id, null)
@@ -935,8 +885,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
       }
     }
-  }
-
+  }·
   // Returns { file, width, height } — dimensions are the final stored pixel size.
   function compressImage(file) {
     if (!file.type.startsWith('image/') || file.type === 'image/gif') {
@@ -952,8 +901,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       const url = URL.createObjectURL(file)
       const img = new Image()
       img.onload = () => {
-        URL.revokeObjectURL(url)
-
+        URL.revokeObjectURL(url)·
         function tryEncode(maxDim, quality) {
           const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight))
           const w = Math.round(img.naturalWidth * scale)
@@ -964,7 +912,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           canvas.getContext('2d').drawImage(img, 0, 0, w, h)
           canvas.toBlob(blob => {
             if (blob) {
-              resolve({ file: new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h })
+              resolve({ file: new File([blob], file.name.replace(/\\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h })
             } else if (maxDim > 600) {
               // toBlob returned null (memory pressure); retry at half the dimension
               tryEncode(Math.round(maxDim / 2), quality)
@@ -973,16 +921,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               reject(new Error('Image compression failed'))
             }
           }, 'image/jpeg', quality)
-        }
-
+        }·
         tryEncode(1200, 0.82)
       }
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
       img.src = url
     })
-  }
-
-
+  }··
   async function uploadGroupIcon(file) {
     if (!file || uploadingGroupIcon) return
     setUploadingGroupIcon(true)
@@ -1012,8 +957,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     } finally {
       setUploadingGroupIcon(false)
     }
-  }
-
+  }·
   async function removeGroupIcon() {
     const oldUrl = convImageUrl
     setConvImageUrl(null)
@@ -1025,11 +969,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       return
     }
     if (oldUrl) {
-      const match = oldUrl.match(/\/chat-images\/(.+)$/)
+      const match = oldUrl.match(/\\/chat-images\\/(.+)$/)
       if (match) await supabase.storage.from('chat-images').remove([match[1]])
     }
-  }
-
+  }·
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
       const { file: compressed, width: imgWidth, height: imgHeight } = await compressImage(file)
@@ -1039,8 +982,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         .from('chat-images')
         .upload(path, compressed, { contentType: compressed.type })
       if (upErr) throw upErr
-      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
-
+      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)·
       const { data: newMsg } = await supabase.from('messages').insert({
         community_group_id: groupId,
         conversation_id: convId,
@@ -1051,8 +993,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         reply_to_id: replyId,
         image_width:  imgWidth  ?? null,
         image_height: imgHeight ?? null,
-      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-
+      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()·
       if (newMsg) {
         trackEvent('chat_message_sent', { type: 'image', conv_type: conversation.type })
         await new Promise(resolve => {
@@ -1064,31 +1005,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => {
           const without = prev.filter(m => m._tempId !== tempId)
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
-        })
-
+        })·
       }
     } catch (err) {
       console.error('Image send failed:', err)
       setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: false, _failed: true } : m))
     }
-  }
-
+  }·
   async function retryMessage(tempId) {
     const msg = messages.find(m => m._tempId === tempId)
     if (!msg?._file) return
     setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: true, _failed: false } : m))
     sendImage(tempId, msg._file, msg.image_url, msg.reply_to_id, msg._textBody ?? null)
-  }
-
+  }·
   function closeReactionPicker() {
     setReactionPickerClosing(true)
     setTimeout(() => { setShowMoreEmojis(false); setReactionPickerClosing(false) }, 250)
-  }
-
+  }·
   function closeEmojiPicker() {
     setShowEmojiPicker(false)
-  }
-
+  }·
   function insertEmoji(emoji) {
     const el = textareaRef.current
     if (!el) return
@@ -1101,8 +1037,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       el.focus()
       el.setSelectionRange(start + emoji.length, start + emoji.length)
     }, 0)
-  }
-
+  }·
   function handleFileChange(e) {
     const files = Array.from(e.target.files ?? [])
     e.target.value = ''
@@ -1114,8 +1049,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       reader.onload = ev => setImagePreviews(prev => [...prev, { file, previewUrl: ev.target.result }])
       reader.readAsDataURL(file)
     }
-  }
-
+  }·
   // ── Reactions ─────────────────────────────────────────────────────────────
   async function toggleReaction(messageId, emoji) {
     const existing = reactions[messageId]?.[emoji]?.find(r => r.user_id === myId)
@@ -1131,8 +1065,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         emoji,
       })
     }
-  }
-
+  }·
   async function deleteMessage(msgId) {
     setConfirmDeleteMsg(false); closeMenu()
     const original = messages.find(m => m.id === msgId)
@@ -1147,8 +1080,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       const path = original.image_url.split('/chat-images/')[1]
       if (path) await supabase.storage.from('chat-images').remove([path])
     }
-  }
-
+  }·
   // ── Action menu ───────────────────────────────────────────────────────────
   function openMenuFromEl(el, msgId, isOwn) {
     resetMenuClosing()
@@ -1160,21 +1092,18 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setActiveMsg(msgId)
     setShowMoreEmojis(false)
     setReactionPickerClosing(false)
-  }
-
+  }·
   function exitEdit() {
     const id = editingMsgId
     if (!id) return
     setEditingMsgId(null)
     setEditClosingId(id)
     setTimeout(() => setEditClosingId(prev => prev === id ? null : prev), 280)
-  }
-
+  }·
   function openMenu(e, msgId, isOwn) {
     e.preventDefault?.()
     openMenuFromEl(e.currentTarget, msgId, isOwn)
-  }
-
+  }·
   function handleDoubleTap(e, msgId, isOwn) {
     if (e.target.closest('button, a')) return
     if (longPressFiredRef.current) { longPressFiredRef.current = false; return }
@@ -1193,8 +1122,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setSelectedMsgId(null)
       setConfirmDeleteId(null)
     }
-  }
-
+  }·
   function handleLongPressStart(e, msgId, isOwn) {
     if (e.target.closest('button, a')) return
     const el = e.currentTarget
@@ -1211,15 +1139,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         openMenuFromEl(el, msgId, isOwn)
       }
     }, 500)
-  }
-
+  }·
   function handleLongPressEnd() {
     if (longPressRef.current) {
       clearTimeout(longPressRef.current)
       longPressRef.current = null
     }
-  }
-
+  }·
   function startEdit(msgId) {
     const msg = messages.find(m => m.id === msgId)
     if (!msg?.body) return
@@ -1233,8 +1159,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       el.style.height = el.scrollHeight + 'px'
       el.focus()
     }, 50)
-  }
-
+  }·
   async function handleSaveEdit(e) {
     e?.preventDefault()
     const original = messages.find(m => m.id === editingMsgId)?.body
@@ -1244,8 +1169,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const { error } = await supabase.from('messages').update({ body: editText.trim() }).eq('id', id)
     if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editText.trim(), _edited: true } : m))
     else toast('Failed to edit message', 'error')
-  }
-
+  }·
   function handleReply(msgId) {
     const msg = messages.find(m => m.id === msgId)
     if (msg) {
@@ -1253,13 +1177,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setTimeout(() => textareaRef.current?.focus(), 50)
     }
     closeMenu()
-  }
-
+  }·
   function scrollToMessage(msgId) {
     document.getElementById(`msg-${msgId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
-
-
+  }··
   async function handleRenameGroup(e) {
     e.preventDefault()
     if (!renameValue.trim()) return
@@ -1275,16 +1196,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
     setRenameSaving(false)
     setRenamingGroup(false)
-  }
-
+  }·
   // ── Derived ───────────────────────────────────────────────────────────────
   const filteredMsgs = searchQuery.trim()
     ? messages.filter(m =>
         m.body?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : messages
-
+    : messages·
   const items = []
   let lastDate = null
   for (const msg of filteredMsgs) {
@@ -1294,8 +1213,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       lastDate = d
     }
     items.push({ type: 'msg', msg })
-  }
-
+  }·
   const readersAtMessage = useMemo(() => {
     const map = {}
     for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
@@ -1313,19 +1231,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
     }
     return map
-  }, [memberReadTimes, filteredMsgs, members])
-
+  }, [memberReadTimes, filteredMsgs, members])·
   const typing = typingLabel(typingUsers)
   const title = convTitle()
-  const activeMessage = messages.find(m => m.id === activeMsg)
-
+  const activeMessage = messages.find(m => m.id === activeMsg)·
   const dmOtherMember = conversation.type === 'direct'
     ? members.find(m => m.user_id !== myId)
     : null
   const isMainGroupChat = conversation.type === 'group'
     && (conversation.conversation_members?.length ?? 0) >= members.length
-  const canEditGroupInfo = conversation.type === 'group' && (isMainGroupChat ? isAdmin : true)
-
+  const canEditGroupInfo = conversation.type === 'group' && (isMainGroupChat ? isAdmin : true)·
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div
@@ -1333,16 +1248,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
     >
       {/* Header */}
-      <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2">
+      <div className=\"max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2\">
         <button
           onClick={onBack}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
+          className=\"w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0\"
         >
-          <ArrowLeft size={20} weight="bold" />
+          <ArrowLeft size={20} weight=\"bold\" />
         </button>
         <button
           onClick={() => setInfoOpen(true)}
-          className="flex-1 min-w-0 flex items-center gap-2.5 text-left active:opacity-75 transition-opacity"
+          className=\"flex-1 min-w-0 flex items-center gap-2.5 text-left active:opacity-75 transition-opacity\"
         >
           <div className={`w-9 h-9 rounded-full shrink-0 overflow-hidden flex items-center justify-center ${
             conversation.type === 'group'
@@ -1351,21 +1266,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           }`}>
             {conversation.type === 'group'
               ? convImageUrl
-                ? <img src={convImageUrl} alt="" className="w-full h-full object-cover" />
-                : <Users size={18} weight="fill" className="text-white" />
+                ? <img src={convImageUrl} alt=\"\" className=\"w-full h-full object-cover\" />
+                : <Users size={18} weight=\"fill\" className=\"text-white\" />
               : dmOtherMember?.avatar_image_url
-                ? <img src={dmOtherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                ? <img src={dmOtherMember.avatar_image_url} alt=\"\" className=\"w-full h-full object-cover\" />
                 : dmOtherMember?.avatar_icon
                   ? <AvatarIcon name={dmOtherMember.avatar_icon} size={18} />
-                  : <span className="text-white text-sm font-bold">{initials(title)}</span>
+                  : <span className=\"text-white text-sm font-bold\">{initials(title)}</span>
             }
           </div>
-          <h1 className="text-xl font-bold text-stone-800 truncate">{title}</h1>
+          <h1 className=\"text-xl font-bold text-stone-800 truncate\">{title}</h1>
         </button>
         {conversation.type === 'group' && (
           <button
             onClick={() => setNotesOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+            className=\"w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors\"
           >
             <Notepad size={20} />
           </button>
@@ -1376,71 +1291,67 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         >
           <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
         </button>
-      </div>
-
+      </div>·
       {/* Search bar */}
       {searchOpen && (
-        <div className="max-w-3xl mx-auto w-full px-4 pb-2 shrink-0 animate-overlay-in">
-          <div className="relative">
-            <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+        <div className=\"max-w-3xl mx-auto w-full px-4 pb-2 shrink-0 animate-overlay-in\">
+          <div className=\"relative\">
+            <MagnifyingGlass size={16} className=\"absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none\" />
             <input
               ref={searchInputRef}
-              type="text"
+              type=\"text\"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search messages…"
-              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              placeholder=\"Search messages…\"
+              className=\"w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent\"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                <X size={14} weight="bold" />
+              <button onClick={() => setSearchQuery('')} className=\"absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600\">
+                <X size={14} weight=\"bold\" />
               </button>
             )}
           </div>
           {searchQuery && (
-            <p className="text-xs text-stone-400 mt-1.5 px-1">
+            <p className=\"text-xs text-stone-400 mt-1.5 px-1\">
               {filteredMsgs.length} {filteredMsgs.length === 1 ? 'message' : 'messages'} found
             </p>
           )}
         </div>
-      )}
-
+      )}·
       {/* Unread pill */}
       {firstUnreadId && !searchOpen && (
-        <div className="shrink-0 flex justify-center py-1.5 animate-overlay-in">
+        <div className=\"shrink-0 flex justify-center py-1.5 animate-overlay-in\">
           <button
             onClick={() => {
               document.getElementById(`msg-${firstUnreadId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
               setFirstUnreadId(null)
             }}
-            className="flex items-center gap-1.5 bg-ember text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md"
+            className=\"flex items-center gap-1.5 bg-ember text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md\"
           >
-            <ArrowUp size={12} weight="bold" />
+            <ArrowUp size={12} weight=\"bold\" />
             {openUnreadCount} new message{openUnreadCount !== 1 ? 's' : ''}
           </button>
         </div>
-      )}
-
+      )}·
       {/* Messages */}
-      <div className="relative flex-1 min-h-0">
-      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full">
+      <div className=\"relative flex-1 min-h-0\">
+      <div ref={scrollRef} onScroll={handleScroll} className=\"h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full\">
         {loadingMore && (
-          <div className="flex justify-center py-3">
-            <div className="flex items-center gap-1.5">
+          <div className=\"flex justify-center py-3\">
+            <div className=\"flex items-center gap-1.5\">
               {[0, 1, 2].map(i => (
                 <div
                   key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-stone-300 animate-bounce"
+                  className=\"w-1.5 h-1.5 rounded-full bg-stone-300 animate-bounce\"
                   style={{ animationDelay: `${i * 120}ms` }}
                 />
               ))}
             </div>
           </div>
-        )}
-
+        )}·
         {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
         {!visible && (
-          <div className="flex flex-col py-4 gap-3">
+          <div className=\"flex flex-col py-4 gap-3\">
             {[
               { side: 'left',  w: 'w-48' },
               { side: 'right', w: 'w-36' },
@@ -1457,7 +1368,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 style={{ animationDelay: `${i * 70}ms` }}
               >
                 {item.side === 'left' && (
-                  <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
+                  <div className=\"w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden\"
                     style={{
                       background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
                       backgroundSize: '200% 100%',
@@ -1478,11 +1389,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   }}
                 />
               </div>
-            ))}
-
+            ))}·
             {/* Typing indicator */}
-            <div className="flex items-end gap-2 animate-msg-in-left" style={{ animationDelay: '620ms' }}>
-              <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
+            <div className=\"flex items-end gap-2 animate-msg-in-left\" style={{ animationDelay: '620ms' }}>
+              <div className=\"w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden\"
                 style={{
                   background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
                   backgroundSize: '200% 100%',
@@ -1490,52 +1400,50 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   animationDelay: '700ms',
                 }}
               />
-              <div className="flex items-center gap-1 bg-stone-100 rounded-2xl rounded-bl-sm px-3.5 py-3">
+              <div className=\"flex items-center gap-1 bg-stone-100 rounded-2xl rounded-bl-sm px-3.5 py-3\">
                 {[0, 1, 2].map(j => (
                   <div
                     key={j}
-                    className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-dot-bounce"
+                    className=\"w-1.5 h-1.5 rounded-full bg-stone-400 animate-dot-bounce\"
                     style={{ animationDelay: `${j * 180}ms` }}
                   />
                 ))}
               </div>
             </div>
           </div>
-        )}
-
+        )}·
         {/* Messages — rendered hidden when contentReady so images load in background,
             then revealed after scroll-to-bottom via the visible flag */}
         {contentReady && !loading && (
           filteredMsgs.length === 0 ? (
             visible && (
-              <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
+              <div className=\"flex flex-col items-center justify-center h-full py-16 text-stone-400\">
                 {searchQuery ? (
                   <>
-                    <MagnifyingGlass size={40} className="text-stone-300 mb-3" />
-                    <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
+                    <MagnifyingGlass size={40} className=\"text-stone-300 mb-3\" />
+                    <p className=\"text-sm\">No messages match &ldquo;{searchQuery}&rdquo;</p>
                   </>
                 ) : (
-                  <p className="text-sm">No messages yet. Say hello!</p>
+                  <p className=\"text-sm\">No messages yet. Say hello!</p>
                 )}
               </div>
             )
           ) : (
           <div
             ref={messagesContainerRef}
-            className="space-y-0.5 py-2 pb-4"
+            className=\"space-y-0.5 py-2 pb-4\"
             style={!visible ? { height: 0, overflow: 'hidden' } : {}}
           >
             {items.map((item, i) => {
               if (item.type === 'date') {
                 return (
-                  <div key={item.key} className="flex items-center gap-3 py-3">
-                    <div className="flex-1 h-px bg-stone-200" />
-                    <span className="text-xs text-stone-400 font-medium">{item.label}</span>
-                    <div className="flex-1 h-px bg-stone-200" />
+                  <div key={item.key} className=\"flex items-center gap-3 py-3\">
+                    <div className=\"flex-1 h-px bg-stone-200\" />
+                    <span className=\"text-xs text-stone-400 font-medium\">{item.label}</span>
+                    <div className=\"flex-1 h-px bg-stone-200\" />
                   </div>
                 )
-              }
-
+              }·
               const { msg } = item
               const isOwn = msg.user_id === myId
               const nextItem = items[i + 1]
@@ -1544,14 +1452,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
               const isFirstInGroup = prevItem?.type !== 'msg' || prevItem.msg.user_id !== msg.user_id || new Date(msg.created_at) - new Date(prevItem.msg.created_at) > GROUP_TIME_GAP
               const prevIsImage = prevItem?.type === 'msg' && !!prevItem.msg.image_url
               const msgReactions = reactions[msg.id]
-              const hasReactions = msgReactions && Object.keys(msgReactions).length > 0
-
+              const hasReactions = msgReactions && Object.keys(msgReactions).length > 0·
               // ── Poll card ──────────────────────────────────────────────────
               if (msg.poll_id) {
                 const poll = polls[msg.poll_id] ?? msg._poll
                 if (!poll) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
+                  <div key={msg.id} id={`msg-${msg.id}`} className=\"!mt-3 !mb-5\">
+                    <div className=\"bg-stone-100 rounded-2xl h-28 animate-pulse\" />
                   </div>
                 )
                 const isEditing = editingPollId === msg.poll_id
@@ -1563,29 +1470,27 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     key={msg.id}
                     className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
                   >
-                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-
+                    <div className=\"bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden\">·
                       {/* Header */}
-                      <div className="px-4 pt-3 pb-2 border-b border-stone-100 flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
-                            <ChartBar size={11} weight="bold" />
+                      <div className=\"px-4 pt-3 pb-2 border-b border-stone-100 flex items-start justify-between gap-2\">
+                        <div className=\"min-w-0\">
+                          <div className=\"flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5\">
+                            <ChartBar size={11} weight=\"bold\" />
                             {isEditing ? 'Edit Poll' : `Poll · ${senderName(msg.user_id, msg.display_name)}`}
                           </div>
-                          {!isEditing && <p className="text-sm font-bold text-stone-800 leading-snug">{poll.question}</p>}
-                        </div>
-
+                          {!isEditing && <p className=\"text-sm font-bold text-stone-800 leading-snug\">{poll.question}</p>}
+                        </div>·
                         {/* Dots menu — creator only */}
                         {isOwn && !isEditing && (
-                          <div className="relative shrink-0">
+                          <div className=\"relative shrink-0\">
                             <button
                               onClick={() => setPollMenuOpenId(prev => prev === msg.poll_id ? null : msg.poll_id)}
-                              className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+                              className=\"w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors\"
                             >
-                              <DotsThreeVertical size={16} weight="bold" />
+                              <DotsThreeVertical size={16} weight=\"bold\" />
                             </button>
                             {pollMenuOpenId === msg.poll_id && (
-                              <div className="fixed inset-0 z-40" onClick={() => setPollMenuOpenId(null)} />
+                              <div className=\"fixed inset-0 z-40\" onClick={() => setPollMenuOpenId(null)} />
                             )}
                             <AnimatePresence>
                               {pollMenuOpenId === msg.poll_id && (
@@ -1595,20 +1500,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                                   exit={{ opacity: 0, scale: 0.88, y: -6 }}
                                   transition={{ type: 'spring', stiffness: 420, damping: 26 }}
                                   style={{ transformOrigin: 'top right' }}
-                                  className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 min-w-[130px]"
+                                  className=\"absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-stone-200 py-1 min-w-[130px]\"
                                 >
                                   <button
                                     onClick={() => startEditPoll(msg.poll_id, poll)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50"
+                                    className=\"w-full flex items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-50\"
                                   >
-                                    <PencilSimple size={14} weight="bold" />
+                                    <PencilSimple size={14} weight=\"bold\" />
                                     Edit poll
                                   </button>
                                   <button
                                     onClick={() => deletePoll(msg.poll_id, msg.id)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                                    className=\"w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50\"
                                   >
-                                    <Trash size={14} weight="bold" />
+                                    <Trash size={14} weight=\"bold\" />
                                     Delete poll
                                   </button>
                                 </motion.div>
@@ -1616,30 +1521,29 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             </AnimatePresence>
                           </div>
                         )}
-                      </div>
-
+                      </div>·
                       {/* Content — AnimatePresence swaps edit form ↔ voting view */}
-                      <AnimatePresence mode="wait" initial={false}>
+                      <AnimatePresence mode=\"wait\" initial={false}>
                         {isEditing ? (
                           <motion.div
-                            key="edit"
+                            key=\"edit\"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
                             transition={{ duration: 0.18, ease: 'easeOut' }}
-                            className="px-4 py-3 flex flex-col gap-2"
+                            className=\"px-4 py-3 flex flex-col gap-2\"
                           >
                             <input
-                              type="text"
+                              type=\"text\"
                               value={editPollQuestion}
                               onChange={e => setEditPollQuestion(e.target.value)}
-                              placeholder="Question"
-                              className="w-full text-sm font-medium text-stone-800 border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember/30"
+                              placeholder=\"Question\"
+                              className=\"w-full text-sm font-medium text-stone-800 border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember/30\"
                             />
                             {editPollOptions.map((opt, i) => (
-                              <div key={i} className="flex items-center gap-2">
+                              <div key={i} className=\"flex items-center gap-2\">
                                 <input
-                                  type="text"
+                                  type=\"text\"
                                   value={opt}
                                   onChange={e => {
                                     const next = [...editPollOptions]
@@ -1647,14 +1551,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                                     setEditPollOptions(next)
                                   }}
                                   placeholder={`Option ${i + 1}`}
-                                  className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember/30"
+                                  className=\"flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember/30\"
                                 />
                                 {editPollOptions.length > 2 && (
                                   <button
                                     onClick={() => setEditPollOptions(prev => prev.filter((_, j) => j !== i))}
-                                    className="text-stone-400 hover:text-red-400 transition-colors"
+                                    className=\"text-stone-400 hover:text-red-400 transition-colors\"
                                   >
-                                    <X size={14} weight="bold" />
+                                    <X size={14} weight=\"bold\" />
                                   </button>
                                 )}
                               </div>
@@ -1662,23 +1566,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             {editPollOptions.length < 10 && (
                               <button
                                 onClick={() => setEditPollOptions(prev => [...prev, ''])}
-                                className="self-start flex items-center gap-1 text-xs text-ember font-semibold"
+                                className=\"self-start flex items-center gap-1 text-xs text-ember font-semibold\"
                               >
-                                <PlusIcon size={12} weight="bold" /> Add option
+                                <PlusIcon size={12} weight=\"bold\" /> Add option
                               </button>
                             )}
-                            <p className="text-[10px] text-stone-400">Saving will reset all votes.</p>
-                            <div className="flex gap-2 mt-0.5">
+                            <p className=\"text-[10px] text-stone-400\">Saving will reset all votes.</p>
+                            <div className=\"flex gap-2 mt-0.5\">
                               <button
                                 onClick={() => setEditingPollId(null)}
-                                className="flex-1 py-2 text-sm font-semibold text-stone-500 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                                className=\"flex-1 py-2 text-sm font-semibold text-stone-500 border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors\"
                               >
                                 Cancel
                               </button>
                               <button
                                 onClick={() => savePoll(msg.poll_id)}
                                 disabled={!editPollQuestion.trim() || editPollOptions.filter(o => o.trim()).length < 2 || savingPoll}
-                                className="flex-1 py-2 text-sm font-semibold text-white bg-ember rounded-xl disabled:opacity-40 transition-colors"
+                                className=\"flex-1 py-2 text-sm font-semibold text-white bg-ember rounded-xl disabled:opacity-40 transition-colors\"
                               >
                                 {savingPoll ? 'Saving…' : 'Save'}
                               </button>
@@ -1686,13 +1590,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                           </motion.div>
                         ) : (
                           <motion.div
-                            key="vote"
+                            key=\"vote\"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
                             transition={{ duration: 0.18, ease: 'easeOut' }}
                           >
-                            <div className="px-4 py-3 flex flex-col gap-2">
+                            <div className=\"px-4 py-3 flex flex-col gap-2\">
                               {poll.options.map((opt, oi) => {
                                 const voteCount = poll.votes.filter(v => v.option_index === oi).length
                                 const pct = totalVotes ? Math.round((voteCount / totalVotes) * 100) : 0
@@ -1707,20 +1611,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                                       className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-ember/10' : 'bg-stone-50'}`}
                                       style={{ width: `${Math.max(pct, 4)}%` }}
                                     />
-                                    <div className="relative flex items-center justify-between">
+                                    <div className=\"relative flex items-center justify-between\">
                                       <span className={`text-sm font-medium ${voted ? 'text-ember' : 'text-stone-700'}`}>{opt.text}</span>
-                                      <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
+                                      <span className=\"text-xs text-stone-400 font-semibold ml-3 shrink-0\">{pct}%</span>
                                     </div>
                                   </button>
                                 )
                               })}
-                              <p className="text-[10px] text-stone-400 mt-0.5">
+                              <p className=\"text-[10px] text-stone-400 mt-0.5\">
                                 {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
                                 {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
                               </p>
                             </div>
-                            <div className="px-4 pb-2.5 text-right">
-                              <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                            <div className=\"px-4 pb-2.5 text-right\">
+                              <span className=\"text-[10px] text-stone-400\">{formatMessageTime(msg.created_at)}</span>
                             </div>
                           </motion.div>
                         )}
@@ -1728,13 +1632,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                     </div>
                   </div>
                 )
-              }
-
+              }·
               if (msg.event_id) {
                 const ev = chatEvents[msg.event_id]
                 if (!ev) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
+                  <div key={msg.id} id={`msg-${msg.id}`} className=\"!mt-3 !mb-5\">
+                    <div className=\"bg-stone-100 rounded-2xl h-28 animate-pulse\" />
                   </div>
                 )
                 const myEvRsvp = ev.rsvps.find(r => r.user_id === myId)
@@ -1743,28 +1646,28 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 const notGoingCount = ev.rsvps.filter(r => r.status === 'not_going').length
                 return (
                   <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
-                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className=\"bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden\">
                       {/* Header */}
-                      <div className="px-4 pt-3 pb-2 border-b border-stone-100">
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
-                          <CalendarStar size={11} weight="bold" />
+                      <div className=\"px-4 pt-3 pb-2 border-b border-stone-100\">
+                        <div className=\"flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5\">
+                          <CalendarStar size={11} weight=\"bold\" />
                           {`Event · ${senderName(msg.user_id, msg.display_name)}`}
                         </div>
-                        <p className="text-sm font-bold text-stone-800 leading-snug">{ev.title}</p>
-                        <p className="text-xs text-stone-500 mt-0.5">{formatEventDate(ev.event_date, ev.event_time)}</p>
+                        <p className=\"text-sm font-bold text-stone-800 leading-snug\">{ev.title}</p>
+                        <p className=\"text-xs text-stone-500 mt-0.5\">{formatEventDate(ev.event_date, ev.event_time)}</p>
                         {ev.location && (
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <MapPin size={11} className="text-stone-400 shrink-0" />
-                            <p className="text-xs text-stone-500 truncate">{ev.location}</p>
+                          <div className=\"flex items-center gap-1 mt-0.5\">
+                            <MapPin size={11} className=\"text-stone-400 shrink-0\" />
+                            <p className=\"text-xs text-stone-500 truncate\">{ev.location}</p>
                           </div>
                         )}
                       </div>
                       {/* RSVP buttons */}
-                      <div className="px-4 py-3 flex gap-2">
+                      <div className=\"px-4 py-3 flex gap-2\">
                         {[
                           { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',      inactive: 'bg-stone-100 text-stone-600' },
                           { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-600' },
-                          { status: 'not_going', label: "Can't go", Icon: X,           active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-600' },
+                          { status: 'not_going', label: \"Can't go\", Icon: X,           active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-600' },
                         ].map(({ status, label, Icon, active, inactive }) => (
                           <button
                             key={status}
@@ -1777,7 +1680,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         ))}
                       </div>
                       {/* Count + timestamp */}
-                      <div className="px-4 pb-3 flex items-center gap-2">
+                      <div className=\"px-4 pb-3 flex items-center gap-2\">
                         {ev.rsvps.filter(r => r.status === 'going').slice(0, 4).map((r, i) => (
                           <div
                             key={r.user_id}
@@ -1785,21 +1688,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             style={{ marginLeft: i === 0 ? 0 : -6, zIndex: 4 - i }}
                           >
                             {r.profile?.avatar_image_url
-                              ? <img src={r.profile.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                              : <span className="text-white text-[7px] font-bold">{(r.profile?.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                              ? <img src={r.profile.avatar_image_url} alt=\"\" className=\"w-full h-full object-cover\" />
+                              : <span className=\"text-white text-[7px] font-bold\">{(r.profile?.display_name ?? '?').charAt(0).toUpperCase()}</span>
                             }
                           </div>
                         ))}
-                        <span className="text-xs text-stone-400">
+                        <span className=\"text-xs text-stone-400\">
                           {[goingCount && `${goingCount} going`, maybeCount && `${maybeCount} maybe`, notGoingCount && `${notGoingCount} can't go`].filter(Boolean).join(' · ') || 'No RSVPs yet'}
                         </span>
-                        <span className="ml-auto text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                        <span className=\"ml-auto text-[10px] text-stone-400\">{formatMessageTime(msg.created_at)}</span>
                       </div>
                     </div>
                   </div>
                 )
-              }
-
+              }·
               return (
                 <div
                   id={`msg-${msg.id}`}
@@ -1812,51 +1714,50 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   onTouchMove={handleLongPressEnd}
                 >
                   {isOwn && selectedMsgId === msg.id && !editingMsgId && (
-                    <div className="self-center flex items-center gap-2 animate-overlay-in">
+                    <div className=\"self-center flex items-center gap-2 animate-overlay-in\">
                       {msg.body && (
                         <button
                           onClick={e => { e.stopPropagation(); setSelectedMsgId(null); startEdit(msg.id) }}
-                          className="w-11 h-11 rounded-full bg-stone-100 border border-stone-200 text-stone-500 hover:text-stone-700 hover:bg-stone-200 flex items-center justify-center shrink-0 transition-colors"
+                          className=\"w-11 h-11 rounded-full bg-stone-100 border border-stone-200 text-stone-500 hover:text-stone-700 hover:bg-stone-200 flex items-center justify-center shrink-0 transition-colors\"
                         >
-                          <PencilSimple size={17} weight="bold" />
+                          <PencilSimple size={17} weight=\"bold\" />
                         </button>
                       )}
                       <button
                         onClick={e => { e.stopPropagation(); setSelectedMsgId(null); setConfirmDeleteId(msg.id) }}
-                        className="w-11 h-11 rounded-full bg-red-50 border border-red-100 text-red-400 hover:text-red-600 hover:bg-red-100 flex items-center justify-center shrink-0 transition-colors"
+                        className=\"w-11 h-11 rounded-full bg-red-50 border border-red-100 text-red-400 hover:text-red-600 hover:bg-red-100 flex items-center justify-center shrink-0 transition-colors\"
                       >
-                        <Trash size={17} weight="fill" />
+                        <Trash size={17} weight=\"fill\" />
                       </button>
                     </div>
                   )}
                   {isOwn && confirmDeleteId === msg.id && (
-                    <div className="self-center flex items-center gap-2 animate-overlay-in">
-                      <span className="text-xs text-stone-400 whitespace-nowrap">Delete?</span>
+                    <div className=\"self-center flex items-center gap-2 animate-overlay-in\">
+                      <span className=\"text-xs text-stone-400 whitespace-nowrap\">Delete?</span>
                       <button
                         onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
-                        className="text-sm text-stone-400 hover:text-stone-600 font-medium px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 transition-colors"
+                        className=\"text-sm text-stone-400 hover:text-stone-600 font-medium px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 transition-colors\"
                       >
                         No
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); setConfirmDeleteId(null); deleteMessage(msg.id) }}
-                        className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-2 rounded-xl transition-colors"
+                        className=\"text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-2 rounded-xl transition-colors\"
                       >
                         Yes
                       </button>
                     </div>
                   )}
                   {!isOwn && (
-                    <div className="w-8 shrink-0 self-start mt-1">
-                      {isFirstInGroup && (() => { const m = members.find(x => x.user_id === msg.user_id); return <AvatarCircle size="8" name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
+                    <div className=\"w-8 shrink-0 self-start mt-1\">
+                      {isFirstInGroup && (() => { const m = members.find(x => x.user_id === msg.user_id); return <AvatarCircle size=\"8\" name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
                     </div>
-                  )}
-
+                  )}·
                   <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
                     {!isOwn && isFirstInGroup && (
-                      <p className="text-xs font-semibold text-stone-500 mb-2 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
+                      <p className=\"text-xs font-semibold text-stone-500 mb-2 ml-1\">{senderName(msg.user_id, msg.display_name)}</p>
                     )}
-                    <div className="relative">
+                    <div className=\"relative\">
                     <div className={`overflow-hidden select-none transition-colors duration-200
                       ${editingMsgId === msg.id ? 'animate-edit-pop' : editClosingId === msg.id ? 'animate-edit-close' : ''}
                       ${isOwn
@@ -1881,32 +1782,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       )}
                       {msg.image_url && (
                         msg._pending || msg._failed ? (
-                          <div className="relative">
-                            <img src={msg.image_url} alt="shared" className="block" style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto' }} loading="lazy" />
+                          <div className=\"relative\">
+                            <img src={msg.image_url} alt=\"shared\" className=\"block\" style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto' }} loading=\"lazy\" />
                             {msg._pending && (
-                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                              <div className=\"absolute inset-0 bg-black/30 flex items-center justify-center\">
+                                <div className=\"w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin\" />
                               </div>
                             )}
                             {msg._failed && (
                               <button
-                                className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5 w-full"
+                                className=\"absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5 w-full\"
                                 onClick={e => { e.stopPropagation(); retryMessage(msg._tempId) }}
                               >
-                                <X size={22} className="text-white" weight="bold" />
-                                <span className="text-white text-xs font-medium">Tap to retry</span>
+                                <X size={22} className=\"text-white\" weight=\"bold\" />
+                                <span className=\"text-white text-xs font-medium\">Tap to retry</span>
                               </button>
                             )}
                           </div>
                         ) : (
                           <img
                             src={msg.image_url}
-                            alt="shared"
+                            alt=\"shared\"
                             draggable={false}
                             {...(msg.image_width && msg.image_height
                               ? { width: msg.image_width, height: msg.image_height }
                               : {})}
-                            className="block cursor-pointer"
+                            className=\"block cursor-pointer\"
                             style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto', WebkitTouchCallout: 'none' }}
                             onContextMenu={e => e.preventDefault()}
                             onClick={e => {
@@ -1931,7 +1832,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                         )
                       )}
                       {editingMsgId === msg.id ? (
-                        <form onSubmit={handleSaveEdit} className="px-3 py-2 animate-overlay-in">
+                        <form onSubmit={handleSaveEdit} className=\"px-3 py-2 animate-overlay-in\">
                           <textarea
                             ref={editTextareaRef}
                             value={editText}
@@ -1945,14 +1846,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                               if (e.key === 'Escape') exitEdit()
                             }}
                             rows={1}
-                            className="w-full text-sm bg-transparent border-0 outline-none text-white resize-none placeholder:text-white/50"
+                            className=\"w-full text-sm bg-transparent border-0 outline-none text-white resize-none placeholder:text-white/50\"
                             style={{ minWidth: 140 }}
                           />
-                          <div className="flex gap-3 mt-1.5">
-                            <button type="button" onClick={exitEdit} className="text-[11px] text-white/90 hover:text-white font-medium transition-colors">
+                          <div className=\"flex gap-3 mt-1.5\">
+                            <button type=\"button\" onClick={exitEdit} className=\"text-[11px] text-white/90 hover:text-white font-medium transition-colors\">
                               Cancel
                             </button>
-                            <button type="submit" disabled={!editText.trim()} className="text-[11px] text-white font-semibold disabled:opacity-40 transition-opacity">
+                            <button type=\"submit\" disabled={!editText.trim()} className=\"text-[11px] text-white font-semibold disabled:opacity-40 transition-opacity\">
                               Save
                             </button>
                           </div>
@@ -1964,24 +1865,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       )}
                     </div>
                     {isLastInGroup && isOwn && !msg.image_url && (
-                      <svg className="absolute bottom-0 -right-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 0 0 C 0 10 9 10 9 12 L 0 12 Z" fill={editingMsgId === msg.id ? '#57534e' : '#C4622D'} />
+                      <svg className=\"absolute bottom-0 -right-[9px] pointer-events-none\" width=\"9\" height=\"12\" viewBox=\"0 0 9 12\" xmlns=\"http://www.w3.org/2000/svg\">
+                        <path d=\"M 0 0 C 0 10 9 10 9 12 L 0 12 Z\" fill={editingMsgId === msg.id ? '#57534e' : '#C4622D'} />
                       </svg>
                     )}
                     {isLastInGroup && !isOwn && !msg.image_url && (
-                      <svg className="absolute bottom-0 -left-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 9 0 C 9 10 0 10 0 12 L 9 12 Z" fill="white" />
-                        <path d="M 9 0 C 9 10 0 10 0 12" fill="none" stroke="#e7e5e4" strokeWidth="1" />
+                      <svg className=\"absolute bottom-0 -left-[9px] pointer-events-none\" width=\"9\" height=\"12\" viewBox=\"0 0 9 12\" xmlns=\"http://www.w3.org/2000/svg\">
+                        <path d=\"M 9 0 C 9 10 0 10 0 12 L 9 12 Z\" fill=\"white\" />
+                        <path d=\"M 9 0 C 9 10 0 10 0 12\" fill=\"none\" stroke=\"#e7e5e4\" strokeWidth=\"1\" />
                       </svg>
                     )}
-                    </div>
-
+                    </div>·
                     {isLastInGroup && (
                       <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-400'}`}>
                         {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatMessageTime(msg.created_at)}
                       </p>
-                    )}
-
+                    )}·
                     {hasReactions && (
                       <div className={`flex flex-wrap gap-1 mt-1 ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
                         {Object.entries(msgReactions).map(([emoji, users]) => (
@@ -2001,7 +1900,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       </div>
                     )}
                     {isOwn && readersAtMessage[msg.id]?.length > 0 && (
-                      <div className="flex gap-0.5 mt-1 justify-end">
+                      <div className=\"flex gap-0.5 mt-1 justify-end\">
                         {readersAtMessage[msg.id].slice(0, 6).map(member => (
                           <div
                             key={member.user_id}
@@ -2009,10 +1908,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                             className={`w-4 h-4 rounded-full shrink-0 overflow-hidden ${member.avatar_image_url ? 'bg-stone-200' : `flex items-center justify-center ${avatarColor(member.user_id, member.avatar_color)}`}`}
                           >
                             {member.avatar_image_url
-                              ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                              ? <img src={member.avatar_image_url} alt=\"\" className=\"w-full h-full object-cover\" />
                               : member.avatar_icon
                                 ? <AvatarIcon name={member.avatar_icon} size={9} />
-                                : <span className="text-white text-[8px] font-bold leading-none">{initials(member.display_name)}</span>
+                                : <span className=\"text-white text-[8px] font-bold leading-none\">{initials(member.display_name)}</span>
                             }
                           </div>
                         ))}
@@ -2024,18 +1923,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             })}
           </div>
           )
-        )}
-
+        )}·
         {fetchingFresh && (
-          <div className="flex justify-center py-3">
-            <div className="w-4 h-4 rounded-full border-2 border-stone-200 border-t-stone-400 animate-spin" />
+          <div className=\"flex justify-center py-3\">
+            <div className=\"w-4 h-4 rounded-full border-2 border-stone-200 border-t-stone-400 animate-spin\" />
           </div>
         )}
-      </div>
-
+      </div>·
       {/* Scroll-to-bottom — floats inside messages area, above typing + input */}
       {!isAtBottom && !searchOpen && (
-        <div className="absolute bottom-3 inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none">
+        <div className=\"absolute bottom-3 inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none\">
           <button
             onClick={() => {
               setIsAtBottom(true)
@@ -2046,101 +1943,99 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 .eq('conversation_id', convId).eq('user_id', myId).then(() => {})
               scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
             }}
-            className="pointer-events-auto relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center"
+            className=\"pointer-events-auto relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center\"
           >
-            <ArrowDown size={16} weight="bold" />
+            <ArrowDown size={16} weight=\"bold\" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
+              <span className=\"absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none\">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </button>
         </div>
       )}
-      </div>
-
+      </div>·
       {/* Typing indicator */}
       {typing && (
-        <div className="shrink-0 px-4 pb-2 max-w-3xl mx-auto w-full animate-overlay-in">
-          <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
-          <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
+        <div className=\"shrink-0 px-4 pb-2 max-w-3xl mx-auto w-full animate-overlay-in\">
+          <span className=\"text-[11px] text-stone-400 ml-1 block mb-1\">{typing}</span>
+          <div className=\"bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm\">
             {[0, 1, 2].map(i => (
               <div
                 key={i}
-                className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-bounce"
+                className=\"w-1.5 h-1.5 rounded-full bg-stone-400 animate-bounce\"
                 style={{ animationDelay: `${i * 150}ms` }}
               />
             ))}
           </div>
         </div>
-      )}
-
+      )}·
       {/* Input bar */}
-      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full relative">
+      <div className=\"shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full relative\">
         {/* Reply preview */}
         {replyingTo && (
-          <div className="flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2">
-            <div className="w-0.5 self-stretch bg-ember rounded-full shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-ember truncate">{senderName(replyingTo.user_id, replyingTo.display_name)}</p>
-              <p className="text-xs text-stone-400 truncate">
+          <div className=\"flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2\">
+            <div className=\"w-0.5 self-stretch bg-ember rounded-full shrink-0\" />
+            <div className=\"flex-1 min-w-0\">
+              <p className=\"text-xs font-semibold text-ember truncate\">{senderName(replyingTo.user_id, replyingTo.display_name)}</p>
+              <p className=\"text-xs text-stone-400 truncate\">
                 {replyingTo.image_url && !replyingTo.body ? '📷 Photo' : replyingTo.body}
               </p>
             </div>
-            <button onClick={() => setReplyingTo(null)} className="text-stone-400 hover:text-stone-600 shrink-0">
-              <X size={14} weight="bold" />
+            <button onClick={() => setReplyingTo(null)} className=\"text-stone-400 hover:text-stone-600 shrink-0\">
+              <X size={14} weight=\"bold\" />
             </button>
           </div>
         )}
         {imagePreviews.length > 0 && (
-          <div className="flex gap-2 mb-2 overflow-x-auto pt-2 pb-0.5">
+          <div className=\"flex gap-2 mb-2 overflow-x-auto pt-2 pb-0.5\">
             {imagePreviews.map((preview, i) => (
-              <div key={preview.previewUrl} className="relative shrink-0">
-                <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
+              <div key={preview.previewUrl} className=\"relative shrink-0\">
+                <img src={preview.previewUrl} alt=\"preview\" className=\"h-20 w-20 object-cover rounded-xl border border-stone-200\" />
                 <button
                   onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
+                  className=\"absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center\"
                 >
-                  <X size={10} weight="bold" />
+                  <X size={10} weight=\"bold\" />
                 </button>
               </div>
             ))}
           </div>
         )}
         {pollCreating && !pollSubmitting && (
-          <div className="fixed inset-0 z-[7]" onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} />
+          <div className=\"fixed inset-0 z-[7]\" onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} />
         )}
         <AnimatePresence>
           {pollCreating && (
             <motion.div
-              key="poll-create"
+              key=\"poll-create\"
               initial={{ opacity: 0, y: 8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              className="absolute bottom-full left-0 right-0 pb-2 px-4 z-[8]"
+              className=\"absolute bottom-full left-0 right-0 pb-2 px-4 z-[8]\"
             >
-            <div className="border border-stone-200 rounded-2xl bg-white p-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-bold text-stone-800">Create Poll</p>
-              <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className="text-stone-400 hover:text-stone-600">
-                <X size={16} weight="bold" />
+            <div className=\"border border-stone-200 rounded-2xl bg-white p-3\">
+            <div className=\"flex items-center justify-between mb-2\">
+              <p className=\"text-sm font-bold text-stone-800\">Create Poll</p>
+              <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className=\"text-stone-400 hover:text-stone-600\">
+                <X size={16} weight=\"bold\" />
               </button>
             </div>
             <input
               ref={pollQuestionRef}
-              type="text"
+              type=\"text\"
               value={pollQuestion}
               onChange={e => setPollQuestion(e.target.value)}
-              placeholder="Ask a question…"
-              className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              placeholder=\"Ask a question…\"
+              className=\"w-full text-sm border border-stone-200 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent\"
             />
-            <div className="flex flex-col gap-1.5 mb-2.5">
+            <div className=\"flex flex-col gap-1.5 mb-2.5\">
               {pollOptions.map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className=\"flex items-center gap-2\">
                   <input
                     ref={el => pollOptionRefs.current[i] = el}
-                    type="text"
+                    type=\"text\"
                     value={opt}
                     onChange={e => {
                       const next = [...pollOptions]
@@ -2148,32 +2043,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       setPollOptions(next)
                     }}
                     placeholder={`Option ${i + 1}`}
-                    className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                    className=\"flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent\"
                   />
                   {pollOptions.length > 2 && (
                     <button
                       onClick={() => setPollOptions(prev => prev.filter((_, j) => j !== i))}
-                      className="text-stone-300 hover:text-red-400 shrink-0"
+                      className=\"text-stone-300 hover:text-red-400 shrink-0\"
                     >
-                      <X size={14} weight="bold" />
+                      <X size={14} weight=\"bold\" />
                     </button>
                   )}
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between">
+            <div className=\"flex items-center justify-between\">
               {pollOptions.length < 10 ? (
                 <button
                   onClick={() => { justAddedOptionRef.current = true; setPollOptions(prev => [...prev, '']) }}
-                  className="flex items-center gap-1 text-xs text-ember font-semibold hover:text-ember-700 transition-colors"
+                  className=\"flex items-center gap-1 text-xs text-ember font-semibold hover:text-ember-700 transition-colors\"
                 >
-                  <PlusIcon size={12} weight="bold" /> Add option
+                  <PlusIcon size={12} weight=\"bold\" /> Add option
                 </button>
               ) : <span />}
               <button
                 onClick={createPoll}
                 disabled={!pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2 || pollSubmitting}
-                className="text-sm font-semibold bg-ember text-white px-4 py-1.5 rounded-xl disabled:opacity-40 hover:bg-ember-700 transition-colors"
+                className=\"text-sm font-semibold bg-ember text-white px-4 py-1.5 rounded-xl disabled:opacity-40 hover:bg-ember-700 transition-colors\"
               >
                 {pollSubmitting ? 'Creating…' : 'Create Poll'}
               </button>
@@ -2183,25 +2078,25 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           )}
         </AnimatePresence>
         {showEmojiPicker && (
-          <div className="fixed inset-0 z-[9]" onClick={closeEmojiPicker} />
+          <div className=\"fixed inset-0 z-[9]\" onClick={closeEmojiPicker} />
         )}
         <AnimatePresence>
           {showEmojiPicker && (
             <motion.div
-              key="emoji-picker"
+              key=\"emoji-picker\"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              className="fixed inset-x-0 bottom-0 z-[11]"
+              className=\"fixed inset-x-0 bottom-0 z-[11]\"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
               <Suspense fallback={null}>
                 <EmojiPicker
                   onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                  width="100%"
+                  width=\"100%\"
                   height={350}
-                  searchPlaceholder="Search emojis…"
+                  searchPlaceholder=\"Search emojis…\"
                   previewConfig={{ showPreview: false }}
                   autoFocusSearch={false}
                 />
@@ -2209,17 +2104,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </motion.div>
           )}
         </AnimatePresence>
-        <div className="flex items-end gap-2 relative z-10">
+        <div className=\"flex items-end gap-2 relative z-10\">
           <button
-            type="button"
+            type=\"button\"
             onClick={() => { if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click() } }}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-ember hover:bg-stone-100 transition-colors shrink-0"
+            className=\"w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-ember hover:bg-stone-100 transition-colors shrink-0\"
           >
             <ImageIcon size={22} />
           </button>
-          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+          <input ref={fileInputRef} type=\"file\" accept=\"image/*\" multiple className=\"hidden\" onChange={handleFileChange} />
           <button
-            type="button"
+            type=\"button\"
             onClick={() => {
               if (pollCreating) {
                 setPollCreating(false); setPollQuestion(''); setPollOptions(['', ''])
@@ -2245,13 +2140,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             value={text}
             onChange={handleTextInput}
             onKeyDown={handleKeyDown}
-            placeholder="Message…"
+            placeholder=\"Message…\"
             rows={1}
-            className="flex-1 resize-none border border-stone-200 rounded-2xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-stone-50"
+            className=\"flex-1 resize-none border border-stone-200 rounded-2xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-stone-50\"
             style={{ maxHeight: 120, overflowY: 'auto' }}
           />
           <button
-            type="button"
+            type=\"button\"
             onPointerDown={e => e.preventDefault()}
             onClick={() => {
               if (showEmojiPicker) { closeEmojiPicker(); return }
@@ -2268,26 +2163,25 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             <Smiley size={22} />
           </button>
           <button
-            type="button"
+            type=\"button\"
             onClick={handleSend}
             disabled={sending || (!text.trim() && imagePreviews.length === 0)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            className=\"w-9 h-9 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed\"
           >
-            <PaperPlaneTilt size={18} weight="fill" />
+            <PaperPlaneTilt size={18} weight=\"fill\" />
           </button>
         </div>
-      </div>
-
+      </div>·
       {/* Action menu */}
       {activeMsg && menuPos && (
         <>
-        <div className="fixed inset-0 z-[29] select-none" onTouchStart={e => { e.preventDefault(); closeMenu() }} onClick={closeMenu} />
+        <div className=\"fixed inset-0 z-[29] select-none\" onTouchStart={e => { e.preventDefault(); closeMenu() }} onClick={closeMenu} />
         <div
-          className="fixed z-30"
+          className=\"fixed z-30\"
           style={{ bottom: menuPos.bottom, ...('right' in menuPos ? { right: menuPos.right } : { left: '50%', transform: 'translateX(-50%)' }) }}
         >
         <div className={`bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 ${menuClosing ? 'animate-popup-out' : 'animate-popup-in'}`}>
-          <div className="flex items-center gap-0.5">
+          <div className=\"flex items-center gap-0.5\">
             {EMOJIS.map(emoji => {
               const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
               return (
@@ -2306,7 +2200,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             >
               {showMoreEmojis ? '×' : '+'}
             </button>
-            <div className="w-px h-6 bg-stone-100 mx-0.5" />
+            <div className=\"w-px h-6 bg-stone-100 mx-0.5\" />
             {activeMessage?.body && (
               <button
                 onClick={() => {
@@ -2314,49 +2208,49 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   closeMenu()
                   toast('Copied', 'success')
                 }}
-                className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
+                className=\"w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors\"
               >
-                <Copy size={14} weight="bold" />
+                <Copy size={14} weight=\"bold\" />
               </button>
             )}
             <button
               onClick={() => handleReply(activeMsg)}
-              className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-colors"
+              className=\"w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-colors\"
             >
-              <ArrowBendUpLeft size={15} weight="bold" />
+              <ArrowBendUpLeft size={15} weight=\"bold\" />
             </button>
             {activeMessage?.user_id === myId && (
               <>
-                <div className="w-px h-6 bg-stone-100 mx-0.5" />
+                <div className=\"w-px h-6 bg-stone-100 mx-0.5\" />
                 {activeMessage?.body && (
                   <button
                     onClick={() => startEdit(activeMsg)}
-                    className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
+                    className=\"w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors\"
                   >
-                    <PencilSimple size={14} weight="bold" />
+                    <PencilSimple size={14} weight=\"bold\" />
                   </button>
                 )}
                 <button
                   onClick={() => setConfirmDeleteMsg(true)}
-                  className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
+                  className=\"w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors\"
                 >
-                  <Trash size={14} weight="bold" />
+                  <Trash size={14} weight=\"bold\" />
                 </button>
               </>
             )}
           </div>
           {confirmDeleteMsg && (
-            <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-stone-100 px-1">
-              <span className="text-xs text-stone-500 flex-1">Delete message?</span>
+            <div className=\"flex items-center gap-2 mt-1 pt-1.5 border-t border-stone-100 px-1\">
+              <span className=\"text-xs text-stone-500 flex-1\">Delete message?</span>
               <button
                 onClick={() => setConfirmDeleteMsg(false)}
-                className="text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
+                className=\"text-xs text-stone-400 hover:text-stone-600 font-medium px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors\"
               >
                 Cancel
               </button>
               <button
                 onClick={() => deleteMessage(activeMsg)}
-                className="text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors"
+                className=\"text-xs text-white bg-red-500 hover:bg-red-600 font-medium px-2 py-1 rounded-lg transition-colors\"
               >
                 Delete
               </button>
@@ -2365,30 +2259,27 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </div>
         </div>
         </>
-      )}
-
+      )}·
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
         <>
-          <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
+          <div className=\"fixed inset-0 z-[39]\" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
           <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
-                width="100%"
+                width=\"100%\"
                 height={350}
-                searchPlaceholder="Search emojis…"
+                searchPlaceholder=\"Search emojis…\"
                 previewConfig={{ showPreview: false }}
                 autoFocusSearch={false}
               />
             </Suspense>
           </div>
         </>
-      )}
-
+      )}·
       {activeMsg && (
-        <div className="fixed inset-0 z-20" onClick={closeMenu} />
-      )}
-
+        <div className=\"fixed inset-0 z-20\" onClick={closeMenu} />
+      )}·
       {/* Conversation info panel */}
       {infoOpen && (
         <div
@@ -2399,118 +2290,116 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto max-h-[70vh] overflow-y-auto ${infoClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 pt-5 pb-2">
-              <h2 className="text-lg font-bold text-stone-800">
+            <div className=\"flex items-center justify-between px-5 pt-5 pb-2\">
+              <h2 className=\"text-lg font-bold text-stone-800\">
                 {conversation.type === 'group' ? 'Group Info' : 'Contact Info'}
               </h2>
               <button
                 onClick={closeInfo}
-                className="text-stone-400 hover:text-stone-600 text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+                className=\"text-stone-400 hover:text-stone-600 text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100\"
               >
                 &times;
               </button>
-            </div>
-
+            </div>·
             {/* Avatar + name */}
-            <div className="flex flex-col items-center py-5 px-5">
-              <div className="relative mb-3">
+            <div className=\"flex flex-col items-center py-5 px-5\">
+              <div className=\"relative mb-3\">
                 <div className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ${conversation.type === 'group' ? (convImageUrl ? 'bg-stone-200 shadow-md' : 'bg-ember') : dmOtherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(dmOtherMember?.user_id ?? '', dmOtherMember?.avatar_color)}`}>
                   {conversation.type === 'group'
                     ? convImageUrl
-                      ? <img src={convImageUrl} alt="" className="w-full h-full object-cover" />
-                      : <Users size={40} weight="fill" className="text-white" />
+                      ? <img src={convImageUrl} alt=\"\" className=\"w-full h-full object-cover\" />
+                      : <Users size={40} weight=\"fill\" className=\"text-white\" />
                     : dmOtherMember?.avatar_image_url
-                      ? <img src={dmOtherMember.avatar_image_url} alt={title} className="w-full h-full object-cover" />
+                      ? <img src={dmOtherMember.avatar_image_url} alt={title} className=\"w-full h-full object-cover\" />
                       : dmOtherMember?.avatar_icon
                         ? <AvatarIcon name={dmOtherMember.avatar_icon} size={40} />
-                        : <span className="text-white text-2xl font-bold">{initials(title)}</span>
+                        : <span className=\"text-white text-2xl font-bold\">{initials(title)}</span>
                   }
                   {uploadingGroupIcon && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <div className=\"absolute inset-0 bg-black/40 flex items-center justify-center\">
+                      <div className=\"w-6 h-6 rounded-full border-2 border-white border-t-transparent animate-spin\" />
                     </div>
                   )}
                 </div>
                 {canEditGroupInfo && (
                   <button
                     onClick={() => groupIconFileRef.current?.click()}
-                    className="absolute bottom-0 right-0 w-7 h-7 bg-ember rounded-full flex items-center justify-center shadow-md border-2 border-white"
+                    className=\"absolute bottom-0 right-0 w-7 h-7 bg-ember rounded-full flex items-center justify-center shadow-md border-2 border-white\"
                   >
-                    <Camera size={14} className="text-white" weight="fill" />
+                    <Camera size={14} className=\"text-white\" weight=\"fill\" />
                   </button>
                 )}
                 {canEditGroupInfo && convImageUrl && (
                   <button
                     onClick={removeGroupIcon}
-                    className="absolute bottom-0 left-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-white"
+                    className=\"absolute bottom-0 left-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-white\"
                   >
-                    <Trash size={14} className="text-red-500" weight="fill" />
+                    <Trash size={14} className=\"text-red-500\" weight=\"fill\" />
                   </button>
                 )}
               </div>
               <input
                 ref={groupIconFileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
+                type=\"file\"
+                accept=\"image/*\"
+                className=\"hidden\"
                 onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) uploadGroupIcon(f) }}
               />
               {renamingGroup ? (
-                <form onSubmit={handleRenameGroup} className="flex items-center gap-2 w-full max-w-xs">
+                <form onSubmit={handleRenameGroup} className=\"flex items-center gap-2 w-full max-w-xs\">
                   <input
                     autoFocus
                     value={renameValue}
                     onChange={e => setRenameValue(e.target.value)}
-                    className="flex-1 border border-stone-200 rounded-xl px-3 py-1.5 text-base font-bold text-stone-800 text-center focus:outline-none focus:ring-2 focus:ring-ember"
+                    className=\"flex-1 border border-stone-200 rounded-xl px-3 py-1.5 text-base font-bold text-stone-800 text-center focus:outline-none focus:ring-2 focus:ring-ember\"
                   />
-                  <button type="submit" disabled={renameSaving} className="text-ember disabled:opacity-40">
-                    <Check size={18} weight="bold" />
+                  <button type=\"submit\" disabled={renameSaving} className=\"text-ember disabled:opacity-40\">
+                    <Check size={18} weight=\"bold\" />
                   </button>
-                  <button type="button" onClick={() => setRenamingGroup(false)} className="text-stone-400">
-                    <X size={18} weight="bold" />
+                  <button type=\"button\" onClick={() => setRenamingGroup(false)} className=\"text-stone-400\">
+                    <X size={18} weight=\"bold\" />
                   </button>
                 </form>
               ) : (
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold text-stone-800 text-center">{title}</h3>
+                <div className=\"flex items-center gap-2\">
+                  <h3 className=\"text-xl font-bold text-stone-800 text-center\">{title}</h3>
                   {canEditGroupInfo && (
                     <button
                       onClick={() => { setRenameValue(title); setRenamingGroup(true) }}
-                      className="text-stone-400 hover:text-stone-600 transition-colors"
+                      className=\"text-stone-400 hover:text-stone-600 transition-colors\"
                     >
                       <PencilSimple size={15} />
                     </button>
                   )}
                 </div>
               )}
-              <p className="text-sm text-stone-400 mt-1">
+              <p className=\"text-sm text-stone-400 mt-1\">
                 {conversation.type === 'group' ? `${members.length} member${members.length !== 1 ? 's' : ''}` : 'Direct Message'}
               </p>
-            </div>
-
+            </div>·
             {/* Member list (group only) */}
             {conversation.type === 'group' && (
-              <div className="px-5 pb-8">
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Members</p>
-                <div className="space-y-1">
+              <div className=\"px-5 pb-8\">
+                <p className=\"text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3\">Members</p>
+                <div className=\"space-y-1\">
                   {members.map(m => (
-                    <div key={m.user_id} className="flex items-center gap-3 py-2">
+                    <div key={m.user_id} className=\"flex items-center gap-3 py-2\">
                       <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${m.avatar_image_url ? 'bg-stone-200 shadow-md' : `flex items-center justify-center ${avatarColor(m.user_id, m.avatar_color)}`}`}>
                         {m.avatar_image_url
-                          ? <img src={m.avatar_image_url} alt={m.display_name} className="w-full h-full object-cover" />
+                          ? <img src={m.avatar_image_url} alt={m.display_name} className=\"w-full h-full object-cover\" />
                           : m.avatar_icon
                             ? <AvatarIcon name={m.avatar_icon} size={20} />
-                            : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
+                            : <span className=\"text-white text-sm font-bold\">{initials(m.display_name)}</span>
                         }
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm text-stone-800 truncate">{m.display_name}</span>
+                      <div className=\"flex-1 min-w-0\">
+                        <div className=\"flex items-center gap-1.5\">
+                          <span className=\"text-sm text-stone-800 truncate\">{m.display_name}</span>
                           {m.role === 'admin' && (
-                            <ShieldCheck size={12} weight="fill" className="text-ember shrink-0" />
+                            <ShieldCheck size={12} weight=\"fill\" className=\"text-ember shrink-0\" />
                           )}
                           {m.user_id === myId && (
-                            <span className="text-stone-400 text-xs shrink-0">(You)</span>
+                            <span className=\"text-stone-400 text-xs shrink-0\">(You)</span>
                           )}
                         </div>
                       </div>
@@ -2521,26 +2410,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             )}
           </div>
         </div>
-      )}
-
-      {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}
-
+      )}·
+      {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}·
       {/* Image lightbox */}
       {lightboxImg && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center animate-overlay-in"
+          className=\"fixed inset-0 z-50 bg-black/90 flex items-center justify-center animate-overlay-in\"
           onClick={() => setLightboxImg(null)}
         >
           <button
             onClick={() => setLightboxImg(null)}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+            className=\"absolute top-4 right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors\"
           >
-            <X size={20} weight="bold" />
+            <X size={20} weight=\"bold\" />
           </button>
           <img
             src={lightboxImg}
-            alt="Full size"
-            className="max-w-full max-h-full object-contain rounded-lg"
+            alt=\"Full size\"
+            className=\"max-w-full max-h-full object-contain rounded-lg\"
             style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
             onClick={e => e.stopPropagation()}
           />
@@ -2549,3 +2436,232 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     </div>
   )
 }
+"
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e5] [cursor=pointer]:
+    - paragraph [ref=e7]: Upcoming Birthdays
+    - generic [ref=e8]:
+      - paragraph [ref=e9]:
+        - img [ref=e10]
+        - text: 2 Birthdays to celebrate soon!
+      - button [ref=e12]:
+        - img [ref=e13]
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - heading "Hi, E2E!" [level=1] [ref=e18]
+      - button [ref=e19] [cursor=pointer]:
+        - img [ref=e22]
+    - generic [ref=e24]:
+      - button "Next Event Next event Thu, Jul 30" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e29]:
+          - paragraph [ref=e30]: Next Event
+          - paragraph [ref=e31]: Next event
+          - paragraph [ref=e32]: Thu, Jul 30
+        - img [ref=e33]
+      - button "Next Meal Pasta Thu, Jul 30" [ref=e35] [cursor=pointer]:
+        - img [ref=e37]
+        - generic [ref=e39]:
+          - paragraph [ref=e40]: Next Meal
+          - paragraph [ref=e41]: Pasta
+          - paragraph [ref=e42]: Thu, Jul 30
+        - img [ref=e43]
+      - button "Next Service Service Thu, Aug 6" [ref=e45] [cursor=pointer]:
+        - img [ref=e47]
+        - generic [ref=e49]:
+          - paragraph [ref=e50]: Next Service
+          - paragraph [ref=e51]: Service
+          - paragraph [ref=e52]: Thu, Aug 6
+        - img [ref=e53]
+      - button "Pray for Today Patrick S. Prayer request" [ref=e55] [cursor=pointer]:
+        - img [ref=e57]
+        - generic [ref=e59]:
+          - paragraph [ref=e60]: Pray for Today
+          - paragraph [ref=e61]: Patrick S.
+          - paragraph [ref=e62]: Prayer request
+        - img [ref=e63]
+      - button "Upcoming Birthdays 2 birthdays coming up!" [ref=e65] [cursor=pointer]:
+        - generic:
+          - img
+        - generic:
+          - img
+        - generic:
+          - img
+        - generic:
+          - img
+        - generic:
+          - img
+        - generic:
+          - img
+        - generic:
+          - img
+        - generic:
+          - img
+        - img [ref=e67]
+        - generic [ref=e69]:
+          - paragraph [ref=e70]: Upcoming Birthdays
+          - paragraph [ref=e71]: 2 birthdays coming up!
+        - img [ref=e72]
+      - button "Guide Community Guide Tap to open" [ref=e74] [cursor=pointer]:
+        - img [ref=e76]
+        - generic [ref=e78]:
+          - paragraph [ref=e79]: Guide
+          - paragraph [ref=e80]: Community Guide
+          - paragraph [ref=e81]: Tap to open
+        - img [ref=e82]
+      - button "Giving Monthly Giving Tap to open" [ref=e84] [cursor=pointer]:
+        - img [ref=e86]
+        - generic [ref=e88]:
+          - paragraph [ref=e89]: Giving
+          - paragraph [ref=e90]: Monthly Giving
+          - paragraph [ref=e91]: Tap to open
+        - img [ref=e92]
+  - complementary [ref=e94]:
+    - generic [ref=e95]:
+      - img [ref=e97]
+      - generic [ref=e99]: Covey Space
+    - navigation [ref=e100]:
+      - button "Home" [ref=e101] [cursor=pointer]:
+        - img [ref=e102]
+        - text: Home
+      - button "Sign Up" [ref=e104] [cursor=pointer]:
+        - img [ref=e105]
+        - text: Sign Up
+      - button "Events" [ref=e107] [cursor=pointer]:
+        - img [ref=e108]
+        - text: Events
+      - button "Chat" [ref=e110] [cursor=pointer]:
+        - img [ref=e111]
+        - text: Chat
+      - button "Prayer" [ref=e114] [cursor=pointer]:
+        - img [ref=e115]
+        - text: Prayer
+      - button "Bible" [ref=e117] [cursor=pointer]:
+        - img [ref=e118]
+        - text: Bible
+    - button "Settings" [ref=e121] [cursor=pointer]:
+      - img [ref=e122]
+      - text: Settings
+```
+
+# Test source
+
+```ts
+  196 | 
+  197 |   test('poll card render block (if msg.poll_id) is present in the message render loop', () => {
+  198 |     expect(source).toContain('if (msg.poll_id)')
+  199 |   })
+  200 | 
+  201 |   test('poll option buttons call castVote on click', () => {
+  202 |     expect(source).toContain('castVote(msg.poll_id,')
+  203 |   })
+  204 | 
+  205 |   test('createPoll returns early if question is blank', () => {
+  206 |     // The guard: if (!question || opts.length < 2 || pollSubmitting) return
+  207 |     expect(source).toContain('if (!question || opts.length < 2 || pollSubmitting) return')
+  208 |   })
+  209 | 
+  210 |   test('createPoll guard: fewer than 2 non-empty options causes early return', () => {
+  211 |     // opts is derived via filter(Boolean), so the < 2 guard covers this
+  212 |     expect(source).toContain('opts.length < 2')
+  213 |   })
+  214 | 
+  215 |   test('remove-option (X) button is hidden when only 2 options remain (pollOptions.length > 2 guard)', () => {
+  216 |     // The remove button is shown only when pollOptions.length > 2
+  217 |     expect(source).toContain('pollOptions.length > 2')
+  218 |   })
+  219 | })
+  220 | 
+  221 | // ─── Feature 3: Migration SQL checks ─────────────────────────────────────────
+  222 | 
+  223 | test.describe('Feature 3 — migration_54_polls.sql', () => {
+  224 |   let sql
+  225 | 
+  226 |   test.beforeAll(() => {
+  227 |     sql = fs.readFileSync(MIGRATION_SQL_PATH, 'utf8')
+  228 |   })
+  229 | 
+  230 |   test('migration file exists', () => {
+  231 |     expect(fs.existsSync(MIGRATION_SQL_PATH)).toBe(true)
+  232 |   })
+  233 | 
+  234 |   test('polls table is created', () => {
+  235 |     expect(sql).toMatch(/CREATE TABLE\s+IF NOT EXISTS\s+polls/i)
+  236 |   })
+  237 | 
+  238 |   test('poll_votes table is created', () => {
+  239 |     expect(sql).toMatch(/CREATE TABLE\s+IF NOT EXISTS\s+poll_votes/i)
+  240 |   })
+  241 | 
+  242 |   test('poll_votes has composite PRIMARY KEY (poll_id, user_id)', () => {
+  243 |     expect(sql).toMatch(/PRIMARY KEY\s*\(\s*poll_id\s*,\s*user_id\s*\)/i)
+  244 |   })
+  245 | 
+  246 |   test('messages table gets poll_id column via ALTER TABLE', () => {
+  247 |     expect(sql).toMatch(/ALTER TABLE\s+messages/i)
+  248 |     expect(sql).toContain('poll_id')
+  249 |   })
+  250 | 
+  251 |   test('RLS is enabled on polls table', () => {
+  252 |     expect(sql).toMatch(/ALTER TABLE\s+polls\s+ENABLE ROW LEVEL SECURITY/i)
+  253 |   })
+  254 | 
+  255 |   test('RLS is enabled on poll_votes table', () => {
+  256 |     expect(sql).toMatch(/ALTER TABLE\s+poll_votes\s+ENABLE ROW LEVEL SECURITY/i)
+  257 |   })
+  258 | })
+  259 | 
+  260 | // ─── Regression checks ───────────────────────────────────────────────────────
+  261 | 
+  262 | test.describe('Regression — ChatView internals', () => {
+  263 |   let source
+  264 | 
+  265 |   test.beforeAll(() => {
+  266 |     source = fs.readFileSync(CHAT_VIEW_PATH, 'utf8')
+  267 |   })
+  268 | 
+  269 |   test('img.decode() reveal logic is still present in ChatView', () => {
+  270 |     expect(source).toContain('img.decode')
+  271 |   })
+  272 | 
+  273 |   test('closeEmojiPicker function is still present (not removed)', () => {
+  274 |     expect(source).toContain('function closeEmojiPicker(')
+  275 |   })
+  276 | 
+  277 |   test('closeEmojiPicker is called somewhere in ChatView (emoji picker still wired up)', () => {
+  278 |     // At minimum it should appear more than once (definition + at least one call site)
+  279 |     const occurrences = (source.match(/closeEmojiPicker/g) ?? []).length
+  280 |     expect(occurrences).toBeGreaterThanOrEqual(2)
+  281 |   })
+  282 | 
+  283 |   test('loadMore function still fetches reactions for older messages', () => {
+  284 |     // The loadMore function should include a supabase query for reactions
+  285 |     expect(source).toContain('async function loadMore(')
+  286 |     // After loading older messages, it fetches reactions for them
+  287 |     expect(source).toMatch(/loadMore[\s\S]{1,2000}from\('reactions'\)/)
+  288 |   })
+  289 | 
+  290 |   test('img.decode fallback cap of 800ms is still present', () => {
+  291 |     expect(source).toContain('800')
+  292 |     expect(source).toContain('img.decode')
+  293 |   })
+  294 | 
+  295 |   test('unsized image filter logic is still present (hasAttribute width/height check)', () => {
+> 296 |     expect(source).toContain("img.hasAttribute('width')")
+      |                    ^ Error: expect(received).toContain(expected) // indexOf
+  297 |     expect(source).toContain("img.hasAttribute('height')")
+  298 |   })
+  299 | })
+  300 | 
+  301 | // ─── Runtime smoke test (skipped when no auth) ────────────────────────────────
+  302 | 
+  303 | test('app loads without crashing (regression smoke)', async ({ page }) => {
+  304 |   test.skip(true, 'Runtime smoke test requires Supabase auth — skipping in CI / test env. Static source checks above cover the feature code.')
+  305 | })
+  306 | 
+```

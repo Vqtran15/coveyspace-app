@@ -123,14 +123,14 @@ export default function AuthPage() {
   }
 
   const inputClass =
-    'w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition-shadow text-sm'
+    'w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition-shadow text-sm'
 
   const animClass =
     animDir === 'right' ? 'animate-slide-in-right' : animDir === 'left' ? 'animate-slide-in-left' : ''
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-jade-50 to-white flex items-start justify-center p-4"
+      className="min-h-screen bg-gradient-to-b from-ember-50 to-white flex items-start justify-center p-4"
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2.5rem)' }}
     >
       <div className="w-full max-w-sm">
@@ -139,10 +139,10 @@ export default function AuthPage() {
           {/* Logo inside card */}
           <div className="pt-7 pb-5 text-center border-b border-stone-100">
             <div className="inline-flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-jade ring-4 ring-jade/20 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-ember ring-4 ring-ember/20 flex items-center justify-center shrink-0">
                 <UsersThree size={24} weight="fill" className="text-white" />
               </div>
-              <h1 className="font-league-gothic text-5xl tracking-wide text-jade">Covey Space</h1>
+              <h1 className="font-league-gothic text-5xl tracking-wide text-ember">Covey Space</h1>
             </div>
           </div>
 
@@ -153,7 +153,7 @@ export default function AuthPage() {
               onClick={() => switchMode('signin')}
               className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${
                 mode === 'signin' || mode === 'forgot'
-                  ? 'text-jade border-b-2 border-jade -mb-px'
+                  ? 'text-ember border-b-2 border-ember -mb-px'
                   : 'text-stone-400'
               }`}
             >
@@ -164,7 +164,7 @@ export default function AuthPage() {
               onClick={() => switchMode('signup')}
               className={`flex-1 py-3.5 text-sm font-semibold transition-colors ${
                 mode === 'signup'
-                  ? 'text-jade border-b-2 border-jade -mb-px'
+                  ? 'text-ember border-b-2 border-ember -mb-px'
                   : 'text-stone-400'
               }`}
             >
@@ -214,7 +214,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={() => setJoinMode('join')}
                       className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-                        joinMode === 'join' ? 'bg-jade text-white' : 'text-stone-400'
+                        joinMode === 'join' ? 'bg-ember text-white' : 'text-stone-400'
                       }`}
                     >
                       Join a Group
@@ -223,7 +223,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={() => setJoinMode('create')}
                       className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-                        joinMode === 'create' ? 'bg-jade text-white' : 'text-stone-400'
+                        joinMode === 'create' ? 'bg-ember text-white' : 'text-stone-400'
                       }`}
                     >
                       Start New Group
@@ -365,7 +365,7 @@ export default function AuthPage() {
                 </div>
               )}
               {notice && (
-                <div className="text-sm text-jade bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <div className="text-sm text-ember bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                   {notice}
                 </div>
               )}
@@ -373,7 +373,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-jade active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
+                className="w-full py-3 bg-ember active:scale-[0.98] text-white font-semibold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>

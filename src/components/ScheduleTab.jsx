@@ -40,7 +40,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -69,7 +69,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
               onClick={() => switchTo('meals')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
                 segment === 'meals'
-                  ? 'bg-jade text-white shadow-sm'
+                  ? 'bg-ember text-white shadow-sm'
                   : 'text-stone-500 hover:text-stone-700'
               }`}
             >
@@ -80,7 +80,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
               onClick={() => switchTo('services')}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
                 segment === 'services'
-                  ? 'bg-jade text-white shadow-sm'
+                  ? 'bg-ember text-white shadow-sm'
                   : 'text-stone-500 hover:text-stone-700'
               }`}
             >

@@ -27,7 +27,7 @@ function ProgressDots({ steps, currentStep }) {
         <div
           key={s}
           className={`rounded-full transition-all duration-300 ${
-            i === idx ? 'w-5 h-2 bg-jade' : i < idx ? 'w-2 h-2 bg-jade/40' : 'w-2 h-2 bg-stone-200'
+            i === idx ? 'w-5 h-2 bg-ember' : i < idx ? 'w-2 h-2 bg-ember/40' : 'w-2 h-2 bg-stone-200'
           }`}
         />
       ))}
@@ -37,21 +37,21 @@ function ProgressDots({ steps, currentStep }) {
 
 const TOUR_CARDS = [
   { key: 'chat_enabled',      Icon: ChatCircleDots, color: 'bg-sage/20 text-sage-700',     title: 'Group Chat',        desc: 'A main group chat, plus direct messages and smaller group threads.' },
-  { key: 'meals_enabled',     Icon: ForkKnife,      color: 'bg-jade/10 text-jade',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
+  { key: 'meals_enabled',     Icon: ForkKnife,      color: 'bg-ember/10 text-ember',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
   { key: 'prayer_enabled',    Icon: HandsPraying,   color: 'bg-sunrise/10 text-sunrise',   title: 'Prayer Requests',   desc: 'Every member has a profile. Look back later and see what God has done.' },
   { key: 'birthdays_enabled', Icon: Cake,           color: 'bg-coral/10 text-coral',       title: 'Birthdays',         desc: 'Upcoming birthdays show on the home screen so no one gets forgotten.' },
   { key: 'services_enabled',  Icon: CalendarCheck,  color: 'bg-lagoon/10 text-lagoon-600', title: 'Service Schedules', desc: 'Monthly service sign-ups that rotate automatically.' },
 ]
 
 const FEATURE_TOGGLES = [
-  { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Weekly rotating meal signups',    Icon: ForkKnife,      color: 'text-jade' },
+  { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Weekly rotating meal signups',    Icon: ForkKnife,      color: 'text-ember' },
   { key: 'services_enabled',  label: 'Service Schedules', desc: 'Monthly service signups',          Icon: CalendarCheck,  color: 'text-lagoon-600' },
   { key: 'chat_enabled',      label: 'Group Chat',        desc: 'Group and direct messages',        Icon: ChatCircleDots, color: 'text-sage-700' },
   { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',           Icon: HandsPraying,   color: 'text-sunrise' },
   { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral' },
-  { key: 'guide_enabled',     label: 'Community Guide',   desc: 'PDF, link, or written notes',     Icon: Link,           color: 'text-jade' },
+  { key: 'guide_enabled',     label: 'Community Guide',   desc: 'PDF, link, or written notes',     Icon: Link,           color: 'text-ember' },
   { key: 'events_enabled',   label: 'Events',            desc: 'One-off events with RSVP',        Icon: CalendarStar,   color: 'text-amber-500' },
-  { key: 'bible_enabled',    label: 'Bible',             desc: 'Bible reader with verse search',  Icon: BookOpen,       color: 'text-jade' },
+  { key: 'bible_enabled',    label: 'Bible',             desc: 'Bible reader with verse search',  Icon: BookOpen,       color: 'text-ember' },
   { key: 'giving_enabled',   label: 'Giving',            desc: 'Monthly tithing/giving link',     Icon: Coins,          color: 'text-amber-600' },
 ]
 
@@ -363,7 +363,7 @@ export default function WelcomeSplash({
     // ── STEP: welcome ──────────────────────────────────────────────────────────
     if (step === 'welcome') return (
       <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
-        <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.1s' }}>
+        <div className="mb-6 text-ember animate-welcome-pop" style={{ animationDelay: '0.1s' }}>
           <Confetti size={80} weight="fill" />
         </div>
         {isAdmin ? (
@@ -371,7 +371,7 @@ export default function WelcomeSplash({
             <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
               You created
             </p>
-            <h1 className="text-3xl font-bold text-jade text-center mb-3 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+            <h1 className="text-3xl font-bold text-ember text-center mb-3 animate-fade-up" style={{ animationDelay: '0.4s' }}>
               {groupName || 'your group'}
             </h1>
             <div className="flex items-center gap-1.5 mb-8 animate-fade-up" style={{ animationDelay: '0.48s' }}>
@@ -387,7 +387,7 @@ export default function WelcomeSplash({
             <p className="text-stone-500 text-base mb-2 animate-fade-up" style={{ animationDelay: '0.3s' }}>
               You joined
             </p>
-            <h1 className="text-3xl font-bold text-jade text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+            <h1 className="text-3xl font-bold text-ember text-center mb-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
               {groupName || 'your group'}
             </h1>
             <p className="text-stone-400 text-sm max-w-xs mb-10 animate-fade-up" style={{ animationDelay: '0.52s' }}>
@@ -397,7 +397,7 @@ export default function WelcomeSplash({
         )}
         <button
           onClick={() => setStep('personalize')}
-          className="px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
+          className="px-8 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
           style={{ animationDelay: '0.65s' }}
         >
           Let's go
@@ -449,7 +449,7 @@ export default function WelcomeSplash({
                 <select
                   value={bdMonth}
                   onChange={e => setBdMonth(e.target.value)}
-                  className="flex-1 text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade text-stone-700"
+                  className="flex-1 text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-700"
                 >
                   <option value="">Month</option>
                   {MONTHS.map((m, i) => (
@@ -459,7 +459,7 @@ export default function WelcomeSplash({
                 <select
                   value={bdDay}
                   onChange={e => setBdDay(e.target.value)}
-                  className="w-24 text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade text-stone-700"
+                  className="w-24 text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-700"
                 >
                   <option value="">Day</option>
                   {DAYS.map(d => (
@@ -471,7 +471,7 @@ export default function WelcomeSplash({
 
             <button
               onClick={handlePersonalizeNext}
-              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
               Next
             </button>
@@ -500,7 +500,7 @@ export default function WelcomeSplash({
                   </div>
                   <button
                     onClick={() => setFeatures(f => ({ ...f, [key]: !f[key] }))}
-                    className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${features[key] ? 'bg-jade' : 'bg-stone-200'}`}
+                    className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${features[key] ? 'bg-ember' : 'bg-stone-200'}`}
                   >
                     <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${features[key] ? 'left-[22px]' : 'left-0.5'}`} />
                   </button>
@@ -518,7 +518,7 @@ export default function WelcomeSplash({
           <button
             onClick={handleFeaturesNext}
             disabled={savingFeatures}
-            className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40"
+            className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40"
           >
             {savingFeatures ? 'Saving…' : 'Next'}
           </button>
@@ -541,7 +541,7 @@ export default function WelcomeSplash({
             {showMeals && (
               <div className="mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
                 <div className="flex items-center gap-2 mb-3">
-                  <ForkKnife size={14} weight="fill" className="text-jade" />
+                  <ForkKnife size={14} weight="fill" className="text-ember" />
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Meals</p>
                 </div>
                 <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
@@ -561,7 +561,7 @@ export default function WelcomeSplash({
                               setMealDow(next.length > 0 ? next : null)
                             }}
                             className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
-                              selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                              selected ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                             }`}
                           >
                             {d}
@@ -579,7 +579,7 @@ export default function WelcomeSplash({
                           type="button"
                           onClick={() => setMealFreqMode(value)}
                           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                            mealFreqMode === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                            mealFreqMode === value ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                           }`}
                         >
                           {label}
@@ -597,7 +597,7 @@ export default function WelcomeSplash({
                             type="button"
                             onClick={() => setMealBiweeklyPat(value)}
                             className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                              mealBiweeklyPat === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                              mealBiweeklyPat === value ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                             }`}
                           >
                             {label}
@@ -623,7 +623,7 @@ export default function WelcomeSplash({
                                   : [...prev, n].sort((a, b) => a - b)
                               )}
                               className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
-                                selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                                selected ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                               }`}
                             >
                               {label}
@@ -643,14 +643,14 @@ export default function WelcomeSplash({
                           placeholder={`e.g. ${['Taco Night', 'Pasta Night', 'BBQ Night', 'Soup Night'][i] ?? 'Meal name'}`}
                           value={name}
                           onChange={e => setMealNames(prev => prev.map((v, j) => j === i ? e.target.value : v))}
-                          className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                          className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                         />
                       ))}
                     </div>
                     {mealNames.length < 4 && (
                       <button
                         onClick={() => setMealNames(prev => [...prev, ''])}
-                        className="mt-2 text-xs text-jade font-semibold"
+                        className="mt-2 text-xs text-ember font-semibold"
                       >
                         + Add another meal
                       </button>
@@ -675,7 +675,7 @@ export default function WelcomeSplash({
                           key={String(val)}
                           onClick={() => setServiceAutofill(val)}
                           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                            serviceAutofill === val ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                            serviceAutofill === val ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                           }`}
                         >
                           {label}
@@ -701,7 +701,7 @@ export default function WelcomeSplash({
                                   setServiceDow(next.length > 0 ? next : null)
                                 }}
                                 className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
-                                  selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                                  selected ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                 }`}
                               >
                                 {d}
@@ -719,7 +719,7 @@ export default function WelcomeSplash({
                               type="button"
                               onClick={() => setServiceFreqMode(value)}
                               className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                                serviceFreqMode === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                                serviceFreqMode === value ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                               }`}
                             >
                               {label}
@@ -737,7 +737,7 @@ export default function WelcomeSplash({
                                 type="button"
                                 onClick={() => setServiceBiweeklyPat(value)}
                                 className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                                  serviceBiweeklyPat === value ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                                  serviceBiweeklyPat === value ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                 }`}
                               >
                                 {label}
@@ -763,7 +763,7 @@ export default function WelcomeSplash({
                                       : [...prev, n].sort((a, b) => a - b)
                                   )}
                                   className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
-                                    selected ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                                    selected ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                   }`}
                                 >
                                   {label}
@@ -788,7 +788,7 @@ export default function WelcomeSplash({
             <button
               onClick={handleSetupNext}
               disabled={savingSetup}
-              className="w-full py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40"
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40"
             >
               {savingSetup ? 'Saving…' : 'Next'}
             </button>
@@ -806,7 +806,7 @@ export default function WelcomeSplash({
     // ── STEP: invite (admin only) ──────────────────────────────────────────────
     if (step === 'invite') return (
       <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
-        <div className="mb-5 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
+        <div className="mb-5 text-ember animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
           <Users size={64} weight="fill" />
         </div>
         <h1 className="text-2xl font-bold text-stone-800 mb-2 animate-fade-up" style={{ animationDelay: '0.15s' }}>
@@ -820,7 +820,7 @@ export default function WelcomeSplash({
           {!loadingCode && (
             <button
               onClick={shareCode}
-              className="w-full py-3.5 bg-jade text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mb-4"
+              className="w-full py-3.5 bg-ember text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mb-4"
             >
               <ShareNetwork size={16} weight="bold" />
               {codeCopied ? '✓ Copied!' : 'Share Invite Link'}
@@ -828,7 +828,7 @@ export default function WelcomeSplash({
           )}
           {loadingCode && (
             <div className="flex items-center justify-center mb-4 h-12">
-              <span className="w-6 h-6 rounded-full border-2 border-jade border-t-transparent animate-spin" />
+              <span className="w-6 h-6 rounded-full border-2 border-ember border-t-transparent animate-spin" />
             </div>
           )}
 
@@ -901,7 +901,7 @@ export default function WelcomeSplash({
                 <button
                   key={i}
                   onClick={() => setTourSlide(i)}
-                  className={`rounded-full transition-all duration-300 ${i === tourSlide ? 'w-5 h-2 bg-jade' : 'w-2 h-2 bg-stone-300'}`}
+                  className={`rounded-full transition-all duration-300 ${i === tourSlide ? 'w-5 h-2 bg-ember' : 'w-2 h-2 bg-stone-300'}`}
                 />
               ))}
             </div>
@@ -911,7 +911,7 @@ export default function WelcomeSplash({
                 if (isStandalone) memberCta ? closeAndNavigate(memberCta.path, memberCta.state) : close()
                 else setStep('install')
               }}
-              className="w-full max-w-xs py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              className="w-full max-w-xs py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
               {isLastSlide ? (isStandalone && memberCta ? memberCta.label : 'Got it') : 'Next'}
             </button>
@@ -923,7 +923,7 @@ export default function WelcomeSplash({
     // ── STEP: install ──────────────────────────────────────────────────────────
     return (
       <div className="flex flex-col items-center justify-center flex-1 p-6 overflow-y-auto overscroll-contain">
-        <div className="mb-6 text-jade animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
+        <div className="mb-6 text-ember animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
           <DeviceMobile size={72} weight="fill" />
         </div>
         <h1 className="text-2xl font-bold text-stone-800 text-center mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
@@ -935,7 +935,7 @@ export default function WelcomeSplash({
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.42s' }}>
           <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow-sm mb-6">
             <div className="flex items-center gap-3 px-4 py-4">
-              <BoxArrowUp size={22} className="shrink-0 text-jade" />
+              <BoxArrowUp size={22} className="shrink-0 text-ember" />
               <div>
                 <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
                 <p className="text-xs text-stone-400 mt-0.5">
@@ -944,7 +944,7 @@ export default function WelcomeSplash({
               </div>
             </div>
             <div className="flex items-center gap-3 px-4 py-4">
-              <DotsThreeVertical size={22} className="shrink-0 text-jade" weight="bold" />
+              <DotsThreeVertical size={22} className="shrink-0 text-ember" weight="bold" />
               <div>
                 <p className="text-sm font-semibold text-stone-700">Android</p>
                 <p className="text-xs text-stone-400 mt-0.5">
@@ -956,20 +956,20 @@ export default function WelcomeSplash({
           {'Notification' in window && 'PushManager' in window && (
             <div className="bg-white border border-stone-100 rounded-2xl shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.52s' }}>
               <div className="flex items-center gap-3 px-4 py-4">
-                <Bell size={22} className="shrink-0 text-jade" weight="fill" />
+                <Bell size={22} className="shrink-0 text-ember" weight="fill" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-stone-700">Chat Notifications</p>
                   <p className="text-xs text-stone-400 mt-0.5">Get notified when new messages arrive</p>
                 </div>
                 {notifPermission === 'granted' ? (
-                  <span className="text-xs font-semibold text-jade shrink-0">On ✓</span>
+                  <span className="text-xs font-semibold text-ember shrink-0">On ✓</span>
                 ) : notifPermission === 'denied' ? (
                   <span className="text-xs text-stone-400 shrink-0">Blocked</span>
                 ) : (
                   <button
                     onClick={requestNotifPermission}
                     disabled={notifRequesting}
-                    className="text-xs font-semibold text-white bg-jade px-3 py-1.5 rounded-lg shrink-0 hover:bg-jade-700 transition-colors disabled:opacity-40"
+                    className="text-xs font-semibold text-white bg-ember px-3 py-1.5 rounded-lg shrink-0 hover:bg-ember-700 transition-colors disabled:opacity-40"
                   >
                     {notifRequesting ? '…' : 'Enable'}
                   </button>
@@ -981,7 +981,7 @@ export default function WelcomeSplash({
             <>
               <button
                 onClick={() => closeAndNavigate(memberCta.path, memberCta.state)}
-                className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+                className="w-full px-8 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
               >
                 {memberCta.label}
               </button>
@@ -995,7 +995,7 @@ export default function WelcomeSplash({
           ) : (
             <button
               onClick={close}
-              className="w-full px-8 py-3.5 bg-jade hover:bg-jade-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              className="w-full px-8 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
               {isAdmin ? 'Go to my group' : "I'm ready"}
             </button>

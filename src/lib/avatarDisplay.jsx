@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 
 export const AVATAR_COLOR_OPTIONS = [
-  { key: 'jade',        bgClass: 'bg-jade',         label: 'Rust'     },
+  { key: 'ember',        bgClass: 'bg-ember',         label: 'Rust'     },
   { key: 'coral',       bgClass: 'bg-coral',         label: 'Clay'     },
   { key: 'lagoon-700',  bgClass: 'bg-lagoon-700',    label: 'Amber'    },
   { key: 'sage-700',    bgClass: 'bg-sage-700',      label: 'Forest'   },
@@ -10,7 +10,7 @@ export const AVATAR_COLOR_OPTIONS = [
 ]
 
 const AVATAR_COLOR_MAP = Object.fromEntries(AVATAR_COLOR_OPTIONS.map(o => [o.key, o.bgClass]))
-const AVATAR_COLORS_DEFAULT = ['bg-jade', 'bg-coral', 'bg-lagoon-700']
+const AVATAR_COLORS_DEFAULT = ['bg-ember', 'bg-coral', 'bg-lagoon-700']
 
 export function avatarColor(userId = '', colorKey = null) {
   if (colorKey && AVATAR_COLOR_MAP[colorKey]) return AVATAR_COLOR_MAP[colorKey]

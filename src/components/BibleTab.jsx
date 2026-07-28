@@ -405,7 +405,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
               className={[
                 'w-full px-4 py-2.5 rounded-xl border text-sm bg-white appearance-none',
                 'focus:outline-none focus:ring-2 transition',
-                errors.book ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                errors.book ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
                 !bookId ? 'text-stone-400' : 'text-stone-800',
               ].join(' ')}
             >
@@ -437,7 +437,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
                 className={[
                   'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.chapter ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                  errors.chapter ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
                 ].join(' ')}
               />
               {errors.chapter && (
@@ -460,7 +460,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
                 className={[
                   'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.startVerse || verseExistsError ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                  errors.startVerse || verseExistsError ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
                 ].join(' ')}
               />
               {(errors.startVerse || verseExistsError) && (
@@ -481,7 +481,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
                 className={[
                   'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
                   'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.endVerse ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-jade/20',
+                  errors.endVerse ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
                 ].join(' ')}
               />
               {errors.endVerse && (
@@ -500,7 +500,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
               onChange={e => handleLabelChange(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
               placeholder="Custom name for this passage"
-              className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade/20 transition"
+              className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember/20 transition"
             />
           </div>
 
@@ -514,7 +514,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-jade text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+              className="flex-1 py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               {saving ? 'Checking…' : 'Save'}
             </button>
@@ -531,7 +531,7 @@ function BookButton({ book, onSelect }) {
   return (
     <button
       onClick={() => onSelect(book)}
-      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-jade/8 hover:border-jade/30 border border-transparent transition-colors active:scale-95 text-left w-full"
+      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-ember/8 hover:border-ember/30 border border-transparent transition-colors active:scale-95 text-left w-full"
     >
       <span className="text-sm font-medium text-stone-700 truncate pr-2">{book.name}</span>
       <span className="text-xs text-stone-500 shrink-0">{book.chapters}</span>
@@ -593,7 +593,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                       value={bookSearch}
                       onChange={e => setBookSearch(e.target.value)}
                       placeholder="Search books…"
-                      className="w-full pl-8 pr-8 py-2 rounded-xl bg-stone-100 border border-transparent text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade/30 transition"
+                      className="w-full pl-8 pr-8 py-2 rounded-xl bg-stone-100 border border-transparent text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember/30 transition"
                     />
                     {bookSearch && (
                       <button onClick={() => setBookSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400">
@@ -671,7 +671,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                       key={ch}
                       whileTap={{ scale: 0.88 }}
                       onClick={() => onSelectChapter(selectedBook.id, ch)}
-                      className="aspect-square rounded-xl bg-white border border-stone-200 text-sm font-semibold text-stone-700 hover:bg-jade hover:border-jade hover:text-white transition-colors flex items-center justify-center"
+                      className="aspect-square rounded-xl bg-white border border-stone-200 text-sm font-semibold text-stone-700 hover:bg-ember hover:border-ember hover:text-white transition-colors flex items-center justify-center"
                     >
                       {ch}
                     </motion.button>
@@ -736,6 +736,17 @@ export default function BibleTab({ userId }) {
   const [selectMode, setSelectMode] = useState(false)
   const [verseSelectAnchor, setVerseSelectAnchor] = useState(null)
   const [verseSelectEnd, setVerseSelectEnd] = useState(null)
+  const VERSE_SIZES = ['sm', 'base', 'lg', 'xl']
+  const [verseSize, setVerseSize] = useState(() => {
+    try { return localStorage.getItem(`bible_fontsize_${userId}`) || 'base' } catch { return 'base' }
+  })
+  function changeVerseSize(dir) {
+    setVerseSize(cur => {
+      const next = VERSE_SIZES[Math.max(0, Math.min(VERSE_SIZES.length - 1, VERSE_SIZES.indexOf(cur) + dir))]
+      try { localStorage.setItem(`bible_fontsize_${userId}`, next) } catch {}
+      return next
+    })
+  }
   const dndPosRef = useRef(null)
   const ghostRef = useRef(null)
 
@@ -1084,7 +1095,7 @@ export default function BibleTab({ userId }) {
         <button
           onClick={() => setShowBrowser(true)}
           aria-label="Browse Bible"
-          className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:text-ember hover:bg-stone-100 transition-colors"
         >
           <Books size={22} />
         </button>
@@ -1103,7 +1114,7 @@ export default function BibleTab({ userId }) {
           onChange={e => handleSearch(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
           placeholder="John 3:16, Psalm 23…"
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent transition"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
         />
         {query && (
           <button
@@ -1144,7 +1155,7 @@ export default function BibleTab({ userId }) {
                 <button
                   key={`${r.bookId}-${r.chapterNum}`}
                   onClick={() => openPassage({ bookId: r.bookId, chapter: r.chapterNum, startVerse: null, endVerse: null })}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-stone-700 shadow-sm hover:border-jade hover:text-jade transition-colors"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-stone-700 shadow-sm hover:border-ember hover:text-ember transition-colors"
                 >
                   <ClockCounterClockwise size={12} className="text-stone-400" />
                   {r.label}
@@ -1165,7 +1176,7 @@ export default function BibleTab({ userId }) {
                   className={[
                     'px-3 py-1 rounded-lg text-xs font-semibold transition-colors',
                     editMode
-                      ? 'bg-jade text-white'
+                      ? 'bg-ember text-white'
                       : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100',
                   ].join(' ')}
                 >
@@ -1175,7 +1186,7 @@ export default function BibleTab({ userId }) {
               <button
                 onClick={() => setAddEditSheet({ mode: 'add' })}
                 aria-label="Add passage to Quick Access"
-                className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-jade hover:bg-stone-100 transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-ember hover:bg-stone-100 transition-colors"
               >
                 <Plus size={18} weight="bold" />
               </button>
@@ -1209,7 +1220,7 @@ export default function BibleTab({ userId }) {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setAddEditSheet({ mode: 'add' })}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-jade text-white text-sm font-semibold"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold"
               >
                 <Plus size={16} weight="bold" />
                 Add to Quick Access
@@ -1237,7 +1248,7 @@ export default function BibleTab({ userId }) {
                     className={[
                       'relative group bg-white border rounded-2xl select-none shadow-sm h-[92px]',
                       isSource ? 'opacity-30 border-dashed border-stone-400'
-                        : isTarget ? 'border-jade border-2'
+                        : isTarget ? 'border-ember border-2'
                         : 'border-stone-200',
                       editMode ? 'cursor-grab active:cursor-grabbing' : '',
                       cardMenuIdx === i ? 'z-[50]' : '',
@@ -1255,7 +1266,7 @@ export default function BibleTab({ userId }) {
                       onClick={() => !editMode && openPassage(p)}
                       className={['w-full h-full text-left rounded-2xl px-3 py-2.5', editMode ? 'pl-7 cursor-grab' : ''].join(' ')}
                     >
-                      <BookOpen size={16} weight="bold" className="text-jade mb-1" />
+                      <BookOpen size={16} weight="bold" className="text-ember mb-1" />
                       <p className={['text-sm font-semibold text-stone-800 leading-snug', p.label.length > 13 ? 'line-clamp-2' : 'line-clamp-1', editMode ? 'pr-9' : 'pr-4'].join(' ')}>{p.label}</p>
                       {!editMode && previews[p.id] && (
                         <p className={['text-xs text-stone-400 leading-snug mt-0.5', p.label.length > 13 ? 'line-clamp-1' : 'line-clamp-2'].join(' ')}>{previews[p.id]}</p>
@@ -1340,6 +1351,22 @@ export default function BibleTab({ userId }) {
                   </h1>
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
+                  {!chapterLoading && !selectMode && (
+                    <div className="flex items-center mr-1">
+                      <button
+                        onClick={() => changeVerseSize(-1)}
+                        disabled={verseSize === VERSE_SIZES[0]}
+                        aria-label="Decrease font size"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-base font-bold"
+                      >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">−</span></button>
+                      <button
+                        onClick={() => changeVerseSize(1)}
+                        disabled={verseSize === VERSE_SIZES[VERSE_SIZES.length - 1]}
+                        aria-label="Increase font size"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-lg font-bold"
+                      >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">+</span></button>
+                    </div>
+                  )}
                   {!chapterLoading && (
                     <button
                       onClick={() => { setSelectMode(m => !m); setVerseSelectAnchor(null); setVerseSelectEnd(null) }}
@@ -1362,7 +1389,7 @@ export default function BibleTab({ userId }) {
                             : `${openChapter.bookName} ${openChapter.chapterNum}`,
                         }})}
                         aria-label={isAlreadySaved ? 'Already saved' : 'Save passage to Quick Access'}
-                        className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-jade cursor-default' : 'text-stone-400 hover:text-jade hover:bg-stone-100'].join(' ')}
+                        className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', chapterLoading ? 'opacity-30 cursor-default' : isAlreadySaved ? 'text-ember cursor-default' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
                       >
                         <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
                       </motion.button>
@@ -1409,7 +1436,7 @@ export default function BibleTab({ userId }) {
                     transition={{ duration: 0.15 }}
                     className="absolute inset-0 z-10 flex items-center justify-center bg-sunrise-50/80 pointer-events-none"
                   >
-                    <div className="w-7 h-7 border-2 border-jade border-t-transparent rounded-full animate-spin" />
+                    <div className="w-7 h-7 border-2 border-ember border-t-transparent rounded-full animate-spin" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1432,7 +1459,7 @@ export default function BibleTab({ userId }) {
                       <p className="text-sm text-stone-500">{chapterError}</p>
                       <button
                         onClick={handleBack}
-                        className="text-sm font-semibold text-jade"
+                        className="text-sm font-semibold text-ember"
                       >
                         Go back
                       </button>
@@ -1473,15 +1500,15 @@ export default function BibleTab({ userId }) {
                               onClick={() => handleVerseTap(v)}
                               className={[
                                 'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
-                                isHighlighted ? 'bg-jade/10 hover:bg-jade/15' : 'hover:bg-stone-50',
+                                isHighlighted ? 'bg-ember/10 hover:bg-ember/15' : 'hover:bg-stone-50',
                               ].join(' ')}
                             >
-                              <span className="font-bold text-jade text-xs pt-0.5 w-5 shrink-0 text-right select-none">
+                              <span className="font-bold text-ember text-xs pt-0.5 w-5 shrink-0 text-right select-none">
                                 {v.number}
                               </span>
-                              <span className="text-sm leading-relaxed text-stone-700">{v.text}</span>
+                              <span className={`text-${verseSize} leading-relaxed text-stone-700`}>{v.text}</span>
                               {selectMode ? (
-                                <div className={['w-3.5 h-3.5 rounded-sm border-2 shrink-0 mt-1 self-start transition-colors', isHighlighted ? 'bg-jade border-jade' : 'border-stone-300'].join(' ')} />
+                                <div className={['w-3.5 h-3.5 rounded-sm border-2 shrink-0 mt-1 self-start transition-colors', isHighlighted ? 'bg-ember border-ember' : 'border-stone-300'].join(' ')} />
                               ) : (
                                 <Copy size={13} className="shrink-0 mt-0.5 text-stone-300 opacity-40 transition-opacity self-start" />
                               )}
@@ -1507,7 +1534,7 @@ export default function BibleTab({ userId }) {
                 >
                   <button
                     onClick={handleSaveSelection}
-                    className="w-full py-3 rounded-xl bg-jade text-white text-sm font-semibold flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-ember text-white text-sm font-semibold flex items-center justify-center gap-2"
                   >
                     <Bookmark size={16} weight="fill" />
                     Save Verses {selectionRange.start}{selectionRange.start !== selectionRange.end ? `–${selectionRange.end}` : ''}
@@ -1610,9 +1637,9 @@ export default function BibleTab({ userId }) {
             height: dndPosRef.current?.cardH ?? 0,
             pointerEvents: 'none', zIndex: 9999, willChange: 'transform',
           }}
-          className="bg-white border-2 border-jade rounded-2xl shadow-2xl px-3 py-2.5 opacity-92"
+          className="bg-white border-2 border-ember rounded-2xl shadow-2xl px-3 py-2.5 opacity-92"
         >
-          <BookOpen size={16} weight="bold" className="text-jade mb-1" />
+          <BookOpen size={16} weight="bold" className="text-ember mb-1" />
           <p className="text-sm font-semibold text-stone-800 leading-snug line-clamp-1 pr-4">
             {userPassages[dndState.fromIdx]?.label}
           </p>

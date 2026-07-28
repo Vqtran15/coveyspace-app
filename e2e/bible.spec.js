@@ -255,8 +255,8 @@ test.describe('A7 — Grid drag-and-drop (pointer events)', () => {
     expect(src).toContain('opacity-30')
   })
 
-  test('drop target card shows jade border', () => {
-    expect(src).toContain('border-jade')
+  test('drop target card shows ember border', () => {
+    expect(src).toContain('border-ember')
   })
 
   test('handleDeletePassage cancels pending debounced save before writing', () => {

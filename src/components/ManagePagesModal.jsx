@@ -127,7 +127,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
           <div className="flex items-center gap-1">
             <button
               onClick={onAddPage}
-              className="text-stone-400 hover:text-jade w-8 h-8 flex items-center justify-center rounded-full hover:bg-lagoon-50"
+              className="text-stone-400 hover:text-ember w-8 h-8 flex items-center justify-center rounded-full hover:bg-lagoon-50"
             >
               <Plus size={18} weight="bold" />
             </button>
@@ -146,7 +146,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
             <p className="text-stone-500 text-sm mb-4">No {pageNounPlural.toLowerCase()} yet.</p>
             <button
               onClick={onAddPage}
-              className="px-5 py-2.5 bg-jade hover:bg-jade-700 text-white font-medium rounded-lg transition-colors"
+              className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-lg transition-colors"
             >
               + Add {pageNoun}
             </button>
@@ -174,7 +174,7 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
                     ref={el => (rowRefs.current[i] = el)}
                     style={{ height: ROW_HEIGHT, ...(dragging ? { position: 'relative', zIndex: 10 } : null) }}
                     className={`flex items-center gap-2 px-3 rounded-xl border-2 bg-white ${
-                      dragging ? 'border-jade shadow-xl' : 'border-stone-200 transition-transform duration-150'
+                      dragging ? 'border-ember shadow-xl' : 'border-stone-200 transition-transform duration-150'
                     }`}
                   >
                     <button

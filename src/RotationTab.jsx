@@ -238,7 +238,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           <p className="text-stone-500 text-sm">{error}</p>
           <button
             onClick={load}
-            className="mt-4 px-4 py-2 bg-jade hover:bg-jade-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="mt-4 px-4 py-2 bg-ember hover:bg-ember-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             Retry
           </button>
@@ -310,7 +310,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             {!autoFill && <div className="mb-6" />}
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-5 py-2.5 bg-jade hover:bg-jade-700 text-white font-medium rounded-lg transition-colors"
+              className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-lg transition-colors"
             >
               + Add First {pageNoun}
             </button>

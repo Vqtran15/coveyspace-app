@@ -45,7 +45,7 @@ function MemberCard({ member, index, onClick }) {
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`w-full text-left p-4 rounded-xl bg-white border border-stone-200 hover:border-jade/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${entranceClass}`}
+      className={`w-full text-left p-4 rounded-xl bg-white border border-stone-200 hover:border-ember/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -116,7 +116,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
               disabled={toggling}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
                 userReacted
-                  ? 'bg-jade/10 text-jade'
+                  ? 'bg-ember/10 text-ember'
                   : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
               }`}
             >
@@ -269,7 +269,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-jade border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
           </div>
         </div>
       )}
@@ -283,13 +283,13 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         <div className="flex bg-stone-100 rounded-xl p-1 mb-4">
           <button
             onClick={() => setViewMode('members')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             Friends
           </button>
           <button
             onClick={() => setViewMode('feed')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-jade text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
           >
             Requests
           </button>
@@ -306,7 +306,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={viewMode === 'members' ? 'Search friends…' : 'Search requests…'}
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
             />
             {searchQuery && (
               <button
@@ -321,7 +321,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="text-sm text-jade font-medium shrink-0"
+              className="text-sm text-ember font-medium shrink-0"
             >
               Cancel
             </button>

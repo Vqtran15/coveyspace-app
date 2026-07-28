@@ -226,8 +226,8 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
       <div className={`mb-6 bg-white rounded-2xl shadow border border-stone-100 ${headerEntranceClass}`}>
         <div className="p-4 flex items-start gap-4">
           {Icon && (
-            <div className={`shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isMeal ? 'bg-amber-50' : 'bg-jade/10'}`}>
-              <Icon size={28} weight="duotone" className={isMeal ? 'text-amber-500' : 'text-jade'} />
+            <div className={`shrink-0 w-14 h-14 rounded-xl flex items-center justify-center ${isMeal ? 'bg-amber-50' : 'bg-ember/10'}`}>
+              <Icon size={28} weight="duotone" className={isMeal ? 'text-amber-500' : 'text-ember'} />
             </div>
           )}
           <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
@@ -284,7 +284,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm transition-colors disabled:opacity-40 hover:bg-stone-50"
                               >
                                 {page.is_paused
-                                  ? <><PlayCircle size={14} weight="fill" className="text-jade" /><span className="text-jade">Resume</span></>
+                                  ? <><PlayCircle size={14} weight="fill" className="text-ember" /><span className="text-ember">Resume</span></>
                                   : <><PauseCircle size={14} weight="fill" className="text-amber-500" /><span className="text-amber-600">Pause</span></>
                                 }
                               </button>
@@ -368,7 +368,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           ))}
           <button
             onClick={handleAddSlot}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-jade hover:bg-jade-700 active:bg-jade-800 text-white transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-ember hover:bg-ember-700 active:bg-ember-800 text-white transition-colors"
           >
             <Plus size={16} weight="bold" />
             <span className="text-sm font-medium">Add {noun}</span>

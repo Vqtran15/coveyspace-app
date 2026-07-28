@@ -137,7 +137,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
               <select
                 value={duplicateFrom}
                 onChange={e => handleDuplicateChange(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent bg-white"
+                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-white"
               >
                 <option value="">Start from scratch</option>
                 {pages.map(p => (
@@ -153,7 +153,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
               required
               autoFocus
             />
@@ -165,7 +165,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
               type="date"
               value={date}
               onChange={handleDateChange}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
               required
             />
           </div>
@@ -181,7 +181,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
                 max={30}
                 value={slotCount}
                 onChange={e => setSlotCount(Number(e.target.value))}
-                className="flex-1 accent-jade"
+                className="flex-1 accent-ember"
               />
               <span className="w-10 text-center font-semibold text-stone-700">{slotCount}</span>
             </div>
@@ -201,7 +201,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
                     value={dish}
                     onChange={e => setDish(i, e.target.value)}
                     placeholder=""
-                    className="flex-1 border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-jade focus:border-transparent"
+                    className="flex-1 border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
                   />
                 </div>
               ))}
@@ -225,7 +225,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 bg-jade hover:bg-jade-700 active:bg-jade-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
+              className="flex-1 py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
             >
               {saving ? 'Adding…' : `Add ${pageNoun}`}
             </button>

@@ -26,7 +26,7 @@ const HTML = `<!DOCTYPE html>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* Replicate the custom border colour used in focus-within */
-    .focus-within\\:ring-jade:focus-within { --tw-ring-color: #2d9e6b; }
+    .focus-within\\:ring-ember:focus-within { --tw-ring-color: #2d9e6b; }
   </style>
 </head>
 <body class="bg-gray-100">

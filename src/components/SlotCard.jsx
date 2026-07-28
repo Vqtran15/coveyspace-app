@@ -21,10 +21,10 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-jade ${
+      className={`group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
         filled
           ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
-          : 'bg-sunrise-50 border-stone-200 hover:border-jade'
+          : 'bg-sunrise-50 border-stone-200 hover:border-ember'
       } ${entranceClass} ${pulse ? 'animate-card-pulse' : ''}`}
     >
       {dishName ? (
@@ -35,13 +35,13 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
 
       {filled ? (
         <>
-          <div className="text-sm text-jade font-medium truncate">→ {signup.name}</div>
+          <div className="text-sm text-ember font-medium truncate">→ {signup.name}</div>
           {signup.notes && (
             <div className="text-xs text-stone-400 mt-1.5 line-clamp-1 italic">{signup.notes}</div>
           )}
         </>
       ) : (
-        <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-jade/40 text-jade bg-white group-hover:bg-jade group-hover:text-white group-hover:border-jade transition-all">
+        <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-ember/40 text-ember bg-white group-hover:bg-ember group-hover:text-white group-hover:border-ember transition-all">
           + Sign up
         </span>
       )}

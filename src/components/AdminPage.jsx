@@ -164,7 +164,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <ArrowLeft size={20} weight="bold" />
         </button>
         <div className="flex items-center gap-2">
-          <ShieldCheck size={20} weight="fill" className="text-jade" />
+          <ShieldCheck size={20} weight="fill" className="text-ember" />
           <h1 className="text-2xl font-bold text-stone-800">Admin</h1>
         </div>
       </div>
@@ -172,14 +172,14 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       <div className="space-y-8">
         {/* Onboarding nudge — solo admin, nobody has joined yet */}
         {members.length === 1 && inviteCode && (
-          <div className="bg-jade/5 border border-jade/25 rounded-2xl p-5 space-y-3">
+          <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 space-y-3">
             <div>
-              <p className="text-sm font-semibold text-jade">Your group is just you</p>
+              <p className="text-sm font-semibold text-ember">Your group is just you</p>
               <p className="text-xs text-stone-500 mt-1">Share the invite link so people can join with one tap — no code to type.</p>
             </div>
             <button
               onClick={handleShareLink}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-jade text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-ember text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98]"
             >
               <ShareNetwork size={16} weight="bold" />
               Share Invite Link
@@ -206,7 +206,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   <button
                     onClick={handleChangeGroupName}
                     disabled={groupNameSaving}
-                    className="flex-1 py-2.5 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                    className="flex-1 py-2.5 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
                   >
                     {groupNameSaving ? 'Saving…' : 'Confirm'}
                   </button>
@@ -221,7 +221,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   onChange={e => setGroupNameValue(e.target.value)}
                   maxLength={60}
                   placeholder="Group name"
-                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-jade placeholder:text-stone-300"
+                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                 />
                 <div className="flex gap-2">
                   <button
@@ -233,7 +233,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   <button
                     onClick={() => setGroupNameConfirm(true)}
                     disabled={!groupNameValue.trim() || groupNameValue.trim() === groupName}
-                    className="flex-1 py-2.5 text-sm font-medium text-white bg-jade rounded-xl hover:bg-jade-700 transition-colors disabled:opacity-40"
+                    className="flex-1 py-2.5 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
                   >
                     Save
                   </button>
@@ -280,7 +280,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   <button
                     onClick={() => setConfirmRotate(true)}
                     disabled={codeRotating}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-jade hover:bg-jade-700 transition-colors shrink-0 disabled:opacity-40"
+                    className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-ember hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40"
                   >
                     {codeRotating ? 'Resetting…' : 'Reset invite code'}
                   </button>
@@ -293,7 +293,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                 <button
                   onClick={handleShareLink}
                   disabled={!inviteCode}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-jade/10 text-jade text-sm font-semibold rounded-xl transition-colors active:bg-jade/20 disabled:opacity-40"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-ember/10 text-ember text-sm font-semibold rounded-xl transition-colors active:bg-ember/20 disabled:opacity-40"
                 >
                   <ShareNetwork size={15} weight="bold" />
                   Share Invite Link
@@ -331,7 +331,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                           {m.user_id === userId && <span className="text-stone-400 text-xs shrink-0">(You)</span>}
                         </div>
                         {m.role === 'admin' && (
-                          <span className="text-xs text-jade font-semibold flex items-center gap-1">
+                          <span className="text-xs text-ember font-semibold flex items-center gap-1">
                             <ShieldCheck size={10} weight="fill" /> Admin
                           </span>
                         )}
@@ -343,7 +343,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                             disabled={!!settingRoleId}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
                               m.role === 'admin'
-                                ? 'bg-jade/10 text-jade hover:bg-jade/20'
+                                ? 'bg-ember/10 text-ember hover:bg-ember/20'
                                 : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                             }`}
                           >
@@ -376,7 +376,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                         </button>
                         <button
                           onClick={() => handleSetRole(confirmRoleAction.id, confirmRoleAction.newRole)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-jade hover:bg-jade-700 transition-colors"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-ember hover:bg-ember-700 transition-colors"
                         >
                           Confirm
                         </button>
@@ -437,7 +437,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                     aria-checked={enabled}
                     aria-label={label}
                     onClick={() => handleSaveRotation({ [key]: !enabled })}
-                    className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${enabled ? 'bg-jade' : 'bg-stone-200'}`}
+                    className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${enabled ? 'bg-ember' : 'bg-stone-200'}`}
                   >
                     <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${enabled ? 'left-[22px]' : 'left-0.5'}`} />
                   </button>
@@ -468,7 +468,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                         handleSaveRotation({ meal_day_of_week: next })
                       }}
                       className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                        selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                        selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                       }`}
                     >
                       {d}
@@ -489,7 +489,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                       if (value === 'biweekly') handleSaveRotation({ meal_week_occurrences: [2,4] })
                     }}
                     className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                      mealFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                      mealFreqMode === value ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                     }`}
                   >
                     {label}
@@ -507,7 +507,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                           key={label}
                           onClick={() => handleSaveRotation({ meal_week_occurrences: pat })}
                           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                           }`}
                         >
                           {label}
@@ -536,7 +536,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                               handleSaveRotation({ meal_week_occurrences: next })
                             }}
                             className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                              selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                              selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                             }`}
                           >
                             {label}
@@ -563,7 +563,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   onClick={() => handleSaveRotation({ service_autofill: val })}
                   className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
                     (groupSettings?.service_autofill ?? false) === val
-                      ? 'bg-jade text-white'
+                      ? 'bg-ember text-white'
                       : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                   }`}
                 >
@@ -589,7 +589,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                             handleSaveRotation({ service_day_of_week: next })
                           }}
                           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                           }`}
                         >
                           {d}
@@ -610,7 +610,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                           if (value === 'biweekly') handleSaveRotation({ service_week_occurrences: [2,4] })
                         }}
                         className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                          serviceFreqMode === value ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          serviceFreqMode === value ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                         }`}
                       >
                         {label}
@@ -628,7 +628,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                               key={label}
                               onClick={() => handleSaveRotation({ service_week_occurrences: pat })}
                               className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                               }`}
                             >
                               {label}
@@ -657,7 +657,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                                   handleSaveRotation({ service_week_occurrences: next })
                                 }}
                                 className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                  selected ? 'bg-jade text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                  selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                                 }`}
                               >
                                 {label}
