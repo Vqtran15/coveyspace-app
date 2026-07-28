@@ -753,6 +753,8 @@ export default function BibleTab({ userId }) {
 
   const saveTimerRef = useRef(null)
   const openIdRef = useRef(0)
+  const longPressTimerRef = useRef(null)
+  const longPressStartRef = useRef(null)
   const cardRefs = useRef([])
   const gridRef = useRef(null)
   const highlightRef = useRef(null)
@@ -1023,8 +1025,53 @@ export default function BibleTab({ userId }) {
       .then(() => toast('Verse copied!', 'success'))
   }
 
+  function startLongPress(v, e) {
+    if (selectMode) return
+    longPressStartRef.current = { x: e.clientX, y: e.clientY }
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTimerRef.current = null
+      longPressStartRef.current = null
+      haptic()
+      handleCopyVerse(v)
+    }, 500)
+  }
+
+  function cancelLongPress() {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+    longPressStartRef.current = null
+  }
+
+  function checkLongPressMove(e) {
+    if (!longPressTimerRef.current || !longPressStartRef.current) return
+    const dx = e.clientX - longPressStartRef.current.x
+    const dy = e.clientY - longPressStartRef.current.y
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) cancelLongPress()
+  }
+
+  function handleCopySelection() {
+    if (!openChapter || !selectionRange) return
+    const { start, end } = selectionRange
+    const ref = start === end
+      ? `${openChapter.bookName} ${openChapter.chapterNum}:${start}`
+      : `${openChapter.bookName} ${openChapter.chapterNum}:${start}–${end}`
+    const text = openChapter.verses
+      .filter(v => v.number >= start && v.number <= end)
+      .map(v => v.text)
+      .join(' ')
+    navigator.clipboard.writeText(`${ref} — ${text} (${TRANSLATION})`)
+      .then(() => {
+        toast('Verses copied!', 'success')
+        setSelectMode(false)
+        setVerseSelectAnchor(null)
+        setVerseSelectEnd(null)
+      })
+  }
+
   function handleVerseTap(v) {
-    if (!selectMode) { handleCopyVerse(v); return }
+    if (!selectMode) return
     if (verseSelectAnchor === null) {
       setVerseSelectAnchor(v.number)
       setVerseSelectEnd(null)
@@ -1495,7 +1542,12 @@ export default function BibleTab({ userId }) {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
                               whileTap={{ scale: 0.99 }}
-                              onClick={() => handleVerseTap(v)}
+                              onClick={selectMode ? () => handleVerseTap(v) : undefined}
+                              onPointerDown={e => startLongPress(v, e)}
+                              onPointerUp={cancelLongPress}
+                              onPointerCancel={cancelLongPress}
+                              onPointerMove={checkLongPressMove}
+                              onContextMenu={e => { if (!selectMode) e.preventDefault() }}
                               className={[
                                 'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
                                 isHighlighted ? 'bg-ember/10 hover:bg-ember/15' : 'hover:bg-stone-50',
@@ -1530,13 +1582,22 @@ export default function BibleTab({ userId }) {
                   transition={{ duration: 0.15 }}
                   className="px-4 pt-3 pb-4 shrink-0 bg-white border-t border-stone-100"
                 >
-                  <button
-                    onClick={handleSaveSelection}
-                    className="w-full py-3 rounded-xl bg-ember text-white text-sm font-semibold flex items-center justify-center gap-2"
-                  >
-                    <Bookmark size={16} weight="fill" />
-                    Save Verses {selectionRange.start}{selectionRange.start !== selectionRange.end ? `–${selectionRange.end}` : ''}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCopySelection}
+                      className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-700 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors"
+                    >
+                      <Copy size={16} />
+                      Copy
+                    </button>
+                    <button
+                      onClick={handleSaveSelection}
+                      className="flex-1 py-3 rounded-xl bg-ember text-white text-sm font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Bookmark size={16} weight="fill" />
+                      Save {selectionRange.start}{selectionRange.start !== selectionRange.end ? `–${selectionRange.end}` : ''}
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
