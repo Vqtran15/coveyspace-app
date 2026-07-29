@@ -189,6 +189,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             .select('id, member_user_id, request, created_at')
             .in('member_user_id', memberIds)
             .gte('created_at', cutoff)
+            .eq('answered', false)
             .order('created_at', { ascending: false })
           const profileMap = Object.fromEntries((memberData ?? []).map(p => [p.user_id, p]))
           const seen = new Set()
