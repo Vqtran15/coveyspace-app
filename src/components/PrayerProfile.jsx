@@ -314,7 +314,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     <>
       {/* Full-screen prayer profile page */}
       <div
-        className={`fixed inset-0 bg-white z-40 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+        className={`fixed inset-0 lg:left-56 bg-white z-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         {/* Header */}
