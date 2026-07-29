@@ -242,7 +242,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           memberName: member.display_name,
           submittedByUserId: currentUserId,
         },
-      })
+      }).catch(() => {})
     }
     setRequests(prev => [data, ...prev])
     setNewId(data.id)
