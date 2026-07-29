@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { HandsPraying, Plus, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical } from '@phosphor-icons/react'
+import { HandsPraying, Plus, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
@@ -65,6 +65,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
   const [actionSheetReq, setActionSheetReq] = useState(null)
   const [sheetClosing, setSheetClosing]     = useState(false)
   const [addFormExiting, setAddFormExiting] = useState(false)
+  const [notifyGroup, setNotifyGroup]       = useState(true)
 
   const isOwnProfile = member.user_id === currentUserId
 
@@ -216,6 +217,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
       setAddFormExiting(false)
       setRequestText('')
       setDate(new Date().toISOString().split('T')[0])
+      setNotifyGroup(true)
       setError(null)
     }, 200)
   }
@@ -232,6 +234,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
       .single()
     if (err) { setError(err.message); setSaving(false); return }
     trackEvent('prayer_request_added')
+    if (notifyGroup && groupId) {
+      supabase.functions.invoke('send-prayer-request-push', {
+        body: {
+          groupId,
+          memberUserId: member.user_id,
+          memberName: member.display_name,
+          submittedByUserId: currentUserId,
+        },
+      })
+    }
     setRequests(prev => [data, ...prev])
     setNewId(data.id)
     clearTimeout(newIdTimerRef.current)
@@ -245,6 +257,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
       setAddFormExiting(false)
       setRequestText('')
       setDate(new Date().toISOString().split('T')[0])
+      setNotifyGroup(true)
     }, 200)
   }
 
@@ -356,6 +369,26 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   onChange={e => setDate(e.target.value)}
                   className="w-full appearance-none border border-stone-200 rounded-xl px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent text-sm"
                 />
+              </div>
+              {/* Notify toggle */}
+              <div className="flex items-center justify-between gap-3 py-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Bell size={16} className={notifyGroup ? 'text-ember shrink-0' : 'text-stone-300 shrink-0'} weight={notifyGroup ? 'fill' : 'regular'} />
+                  <div>
+                    <p className="text-sm font-medium text-stone-700">Notify group</p>
+                    <p className="text-xs text-stone-400">Skip during in-person meetings</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifyGroup}
+                  aria-label="Notify group"
+                  onClick={() => setNotifyGroup(v => !v)}
+                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${notifyGroup ? 'bg-ember' : 'bg-stone-200'}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${notifyGroup ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
               </div>
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
