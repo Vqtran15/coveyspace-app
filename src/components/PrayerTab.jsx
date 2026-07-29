@@ -45,7 +45,7 @@ function MemberCard({ member, index, onClick }) {
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`w-full text-left p-4 rounded-xl bg-white border border-stone-200 hover:border-ember/40 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
+      className={`w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -94,7 +94,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
   const userReacted   = reactions?.some(r => r.user_id === currentUserId) ?? false
 
   return (
-    <div style={entranceStyle} className={`bg-white border border-stone-200 rounded-xl p-4 shadow-sm ${entranceClass}`}>
+    <div style={entranceStyle} className={`bg-white border border-stone-100 rounded-2xl p-4 shadow-sm ${entranceClass}`}>
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
           <AvatarCircle size="8" icon={member?.avatar_icon} colorKey={member?.avatar_color} userId={member?.user_id} name={member?.display_name} imageUrl={member?.avatar_image_url} />
@@ -332,7 +332,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       {loading ? (
         <div className="space-y-2">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="bg-white border-2 border-stone-200 rounded-xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
+            <div key={i} className="bg-white border border-stone-100 rounded-2xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-stone-200 shrink-0" />
                 <div className="flex-1 space-y-2">
