@@ -223,7 +223,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     for (const v of vs ?? []) { if (map[v.poll_id]) map[v.poll_id].votes.push(v) }
     if (Object.keys(map).length) {
       setPolls(prev => ({ ...prev, ...map }))
-      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => scrollToBottom()))
+      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => { if (isAtBottomRef.current) scrollToBottom() }))
     }
   }
 
@@ -257,7 +257,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
     if (Object.keys(map).length) {
       setChatEvents(prev => ({ ...prev, ...map }))
-      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => scrollToBottom()))
+      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => { if (isAtBottomRef.current) scrollToBottom() }))
     }
   }
 
