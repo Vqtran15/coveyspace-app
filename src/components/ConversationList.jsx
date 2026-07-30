@@ -541,8 +541,11 @@ export default function ConversationList({ session, groupId, members, enterClass
             <div className="px-4 pt-2 pb-3">
               <button
                 onClick={() => {
-                  closeActionSheet()
-                  setTimeout(() => { resetDeleteConfirm(); setConfirmDeleteConv(actionSheetConv) }, 250)
+                  const conv = actionSheetConv
+                  resetActionSheet()
+                  setActionSheetConv(null)
+                  resetDeleteConfirm()
+                  setConfirmDeleteConv(conv)
                 }}
                 className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors text-left"
               >
