@@ -289,8 +289,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   }
 
   function isMainGroupChat(conv) {
-    if (conv.type !== 'group') return false
-    return (conv.conversation_members?.length ?? 0) >= members.length
+    return conv.id === pinnedGroupId
   }
 
   async function deleteConversation(conv) {
