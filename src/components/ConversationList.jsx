@@ -26,10 +26,19 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [deletingConvId, setDeletingConvId]   = useState(null)
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
+  const [pinnedGroupId, setPinnedGroupId]       = useState(null)
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
   const { className: headerClass } = useEntranceAnimation('/chat', 0)
+
+  // Pin the main group chat ID once, so sort order changes never displace it from the hero slot
+  useEffect(() => { setPinnedGroupId(null) }, [groupId])
+  useEffect(() => {
+    if (pinnedGroupId || !conversations.length || !members.length) return
+    const main = conversations.find(c => c.type === 'group' && (c.conversation_members?.length ?? 0) >= members.length)
+    if (main) setPinnedGroupId(main.id)
+  }, [conversations, members])
 
   async function loadConversations() {
     try {
@@ -389,7 +398,7 @@ export default function ConversationList({ session, groupId, members, enterClass
           const filtered = conversations.filter(conv =>
             !q || convName(conv).toLowerCase().includes(q) || lastPreview(conv).toLowerCase().includes(q)
           )
-          const mainConv  = !q ? filtered.find(c => isMainGroupChat(c)) ?? null : null
+          const mainConv  = !q && pinnedGroupId ? conversations.find(c => c.id === pinnedGroupId) ?? null : null
           const otherConvs = mainConv ? filtered.filter(c => c.id !== mainConv.id) : filtered
 
           function ConvRow({ conv, i }) {
