@@ -1908,6 +1908,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                               : {})}
                             className="block cursor-pointer"
                             style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto', WebkitTouchCallout: 'none' }}
+                            onLoad={() => { if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom() }}
                             onContextMenu={e => e.preventDefault()}
                             onClick={e => {
                               e.stopPropagation()
