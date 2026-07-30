@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -73,30 +73,34 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   return (
     <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
       {mainConv && (
-        <button
-          onClick={() => onSelect(mainConv)}
-          className="w-full bg-white rounded-2xl border border-stone-100 shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up"
-        >
-          <div className="flex items-center gap-4">
-            <div className="relative shrink-0">
-              <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-ember">
-                {mainConv.image_url
-                  ? <img src={mainConv.image_url} alt="" className="w-full h-full object-cover" />
-                  : <Users size={28} weight="fill" className="text-white" />
-                }
+        <>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-1 px-1">Group Chat</p>
+          <button
+            onClick={() => onSelect(mainConv)}
+            className="w-full bg-white rounded-2xl border border-ember/20 shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up"
+          >
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-ember">
+                  {mainConv.image_url
+                    ? <img src={mainConv.image_url} alt="" className="w-full h-full object-cover" />
+                    : <Users size={28} weight="fill" className="text-white" />
+                  }
+                </div>
+                {mainUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
               </div>
-              {mainUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                <span className={`text-base truncate ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
-                <span className={`text-xs shrink-0 ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                  <span className={`text-base truncate ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
+                  <span className={`text-xs shrink-0 ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
+                </div>
+                <p className={`text-xs truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
+                <p className="text-xs text-stone-400">{members.length} members</p>
               </div>
-              <p className={`text-sm truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
-              <p className="text-xs text-stone-400">{members.length} members</p>
+              <CaretRight size={16} className="text-stone-300 shrink-0" />
             </div>
-          </div>
-        </button>
+          </button>
+        </>
       )}
       {otherConvs.length > 0 && mainConv && (
         <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pt-2 pb-1 px-1">Direct Messages</p>
