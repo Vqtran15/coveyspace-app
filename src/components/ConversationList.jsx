@@ -103,7 +103,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
         </>
       )}
       {otherConvs.length > 0 && mainConv && (
-        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pt-2 pb-1 px-1">Direct Messages</p>
+        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pt-2 pb-1 px-1">Messages</p>
       )}
       {otherConvs.map((conv, i) => (
         <ConvRow
