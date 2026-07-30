@@ -14,6 +14,7 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   const [members, setMembers]                 = useState([])
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
+  const [pinnedGroupId, setPinnedGroupId]     = useState(null)
 
   // Prevent iOS from scrolling the window when the keyboard appears.
   // Without this, tapping the message input causes window.scrollY to drift,
@@ -35,6 +36,8 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       navigateRouter('.', { replace: true, state: null })
     }
   }, [])
+
+  useEffect(() => { setPinnedGroupId(null) }, [groupId])
 
   useEffect(() => {
     if (!groupId) return
@@ -106,6 +109,8 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       pushPermission={pushPermission}
       pushToggling={pushToggling}
       onPushToggle={onPushToggle}
+      pinnedGroupId={pinnedGroupId}
+      onPinGroup={setPinnedGroupId}
     />
   )
 }

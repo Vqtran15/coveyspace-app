@@ -122,7 +122,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   )
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -140,7 +140,6 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [deletingConvId, setDeletingConvId]   = useState(null)
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
-  const [pinnedGroupId, setPinnedGroupId]       = useState(null)
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
@@ -158,17 +157,16 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       setConversations(convs)
 
-      // Pin the group chat with the most members — done here where data is fresh
-      // and doesn't depend on the members prop load timing
-      setPinnedGroupId(prev => {
-        if (prev) return prev
+      // Pin the group chat with the most members — only if not already pinned
+      if (!pinnedGroupId) {
         const groupChats = convs.filter(c => c.type === 'group')
-        if (!groupChats.length) return prev
-        const main = groupChats.reduce((best, c) =>
-          (c.conversation_members?.length ?? 0) > (best.conversation_members?.length ?? 0) ? c : best
-        )
-        return main.id
-      })
+        if (groupChats.length) {
+          const main = groupChats.reduce((best, c) =>
+            (c.conversation_members?.length ?? 0) > (best.conversation_members?.length ?? 0) ? c : best
+          )
+          onPinGroup(main.id)
+        }
+      }
 
       if (autoOpenGroupChat) {
         const groupConv = convs.find(c => c.type === 'group')
