@@ -149,7 +149,7 @@ export default function ConversationList({ session, groupId, members, enterClass
     try {
       const { data: convs, error } = await supabase
         .from('conversations')
-        .select('*, conversation_members(user_id)')
+        .select('id, type, name, image_url, updated_at, created_at, community_group_id, conversation_members(user_id)')
         .order('updated_at', { ascending: false })
 
       if (error) throw error
@@ -157,15 +157,17 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       setConversations(convs)
 
-      // Pin the group chat with the most members — only if not already pinned
-      if (!pinnedGroupId) {
-        const groupChats = convs.filter(c => c.type === 'group')
-        if (groupChats.length) {
-          const main = groupChats.reduce((best, c) =>
-            (c.conversation_members?.length ?? 0) > (best.conversation_members?.length ?? 0) ? c : best
-          )
-          onPinGroup(main.id)
-        }
+      // Always re-detect: most members wins; tiebreak by oldest created_at
+      // (the community group chat is auto-created first, user chats come later)
+      const groupChats = convs.filter(c => c.type === 'group')
+      if (groupChats.length) {
+        const main = groupChats.reduce((best, c) => {
+          const cLen = c.conversation_members?.length ?? 0
+          const bLen = best.conversation_members?.length ?? 0
+          if (cLen !== bLen) return cLen > bLen ? c : best
+          return new Date(c.created_at) < new Date(best.created_at) ? c : best
+        })
+        onPinGroup(main.id)
       }
 
       if (autoOpenGroupChat) {
