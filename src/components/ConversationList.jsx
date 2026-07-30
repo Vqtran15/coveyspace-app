@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -8,14 +8,13 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-function ConvRow({ conv, myId, members, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onDeleteRequest, i }) {
+function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onOptionsRequest, i }) {
   const name        = convName(conv)
   const isDm        = conv.type === 'direct'
   const otherId     = isDm ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id : null
   const otherMember = isDm ? members.find(m => m.user_id === otherId) : null
   const unread      = isUnread(conv)
   const deletable   = !isMainGroupChat(conv)
-  const isDeleting  = deletingConvId === conv.id
   return (
     <div
       className="flex items-stretch bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-up"
@@ -50,17 +49,18 @@ function ConvRow({ conv, myId, members, lastMessages, deletingConvId, isUnread, 
       </button>
       {deletable && (
         <button
-          onClick={() => onDeleteRequest(conv)}
-          className="shrink-0 px-4 flex items-center text-stone-300 hover:text-red-500 active:text-red-600 transition-colors"
+          onClick={e => { e.stopPropagation(); onOptionsRequest(conv) }}
+          aria-label="Conversation options"
+          className="shrink-0 px-3 flex items-center text-stone-400 hover:text-stone-600 active:text-stone-800 transition-colors"
         >
-          {isDeleting ? <span className="text-xs text-stone-300">…</span> : <Trash size={16} />}
+          <DotsThreeVertical size={20} weight="bold" />
         </button>
       )}
     </div>
   )
 }
 
-function ConversationListBody({ conversations, searchQuery, pinnedGroupId, members, myId, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onDeleteRequest }) {
+function ConversationListBody({ conversations, searchQuery, pinnedGroupId, members, myId, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onOptionsRequest }) {
   const q = searchQuery.trim().toLowerCase()
   const filtered = conversations.filter(conv =>
     !q || convName(conv).toLowerCase().includes(q) || lastPreview(conv).toLowerCase().includes(q)
@@ -113,13 +113,12 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
           myId={myId}
           members={members}
           lastMessages={lastMessages}
-          deletingConvId={deletingConvId}
           isUnread={isUnread}
           convName={convName}
           lastPreview={lastPreview}
           isMainGroupChat={isMainGroupChat}
           onSelect={onSelect}
-          onDeleteRequest={onDeleteRequest}
+          onOptionsRequest={onOptionsRequest}
         />
       ))}
     </div>
@@ -142,6 +141,8 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [confirmDeleteConv, setConfirmDeleteConv] = useState(null)
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
+  const [actionSheetConv, setActionSheetConv] = useState(null)
+  const [actionSheetClosing, closeActionSheet, resetActionSheet] = useModalClose(() => setActionSheetConv(null))
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
@@ -520,10 +521,47 @@ export default function ConversationList({ session, groupId, members, enterClass
             lastPreview={lastPreview}
             isMainGroupChat={isMainGroupChat}
             onSelect={onSelect}
-            onDeleteRequest={conv => { resetDeleteConfirm(); setConfirmDeleteConv(conv) }}
+            onOptionsRequest={conv => { resetActionSheet(); setActionSheetConv(conv) }}
           />
         )}
       </div>
+
+      {/* Options action sheet */}
+      {actionSheetConv && (
+        <div
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${actionSheetClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          onClick={closeActionSheet}
+        >
+          <div
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-stone-200" />
+            </div>
+            <div className="px-4 pt-2 pb-3">
+              <button
+                onClick={() => {
+                  closeActionSheet()
+                  setTimeout(() => { resetDeleteConfirm(); setConfirmDeleteConv(actionSheetConv) }, 250)
+                }}
+                className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors text-left"
+              >
+                <Trash size={20} />
+                <span className="text-sm font-medium">Delete conversation</span>
+              </button>
+            </div>
+            <div className="px-4 pb-6">
+              <button
+                onClick={closeActionSheet}
+                className="w-full py-3.5 rounded-2xl bg-stone-100 text-stone-600 text-sm font-semibold hover:bg-stone-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation */}
       {confirmDeleteConv && (
