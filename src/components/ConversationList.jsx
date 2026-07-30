@@ -8,6 +8,120 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
+function ConvRow({ conv, myId, members, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onDeleteRequest, i }) {
+  const name        = convName(conv)
+  const isDm        = conv.type === 'direct'
+  const otherId     = isDm ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id : null
+  const otherMember = isDm ? members.find(m => m.user_id === otherId) : null
+  const unread      = isUnread(conv)
+  const deletable   = !isMainGroupChat(conv)
+  const isDeleting  = deletingConvId === conv.id
+  return (
+    <div
+      className="flex items-stretch bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-up"
+      style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
+    >
+      <button
+        onClick={() => onSelect(conv)}
+        className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
+      >
+        <div className="relative shrink-0">
+          <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : conv.image_url ? 'bg-stone-200 shadow-md' : 'bg-ember'}`}>
+            {isDm
+              ? otherMember?.avatar_image_url
+                ? <img src={otherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                : otherMember?.avatar_icon
+                  ? <AvatarIcon name={otherMember.avatar_icon} size={22} />
+                  : <span className="text-white text-sm font-bold">{initials(name)}</span>
+              : conv.image_url
+                ? <img src={conv.image_url} alt="" className="w-full h-full object-cover" />
+                : <Users size={22} weight="fill" className="text-white" />
+            }
+          </div>
+          {unread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className={`text-sm truncate ${unread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>{name}</span>
+            <span className={`text-xs shrink-0 ${unread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[conv.id]?.created_at)}</span>
+          </div>
+          <p className={`text-xs truncate mt-0.5 ${unread ? 'text-stone-700 font-medium' : 'text-stone-400'}`}>{lastPreview(conv)}</p>
+        </div>
+      </button>
+      {deletable && (
+        <button
+          onClick={() => onDeleteRequest(conv)}
+          className="shrink-0 px-4 flex items-center text-stone-300 hover:text-red-500 active:text-red-600 transition-colors"
+        >
+          {isDeleting ? <span className="text-xs text-stone-300">…</span> : <Trash size={16} />}
+        </button>
+      )}
+    </div>
+  )
+}
+
+function ConversationListBody({ conversations, searchQuery, pinnedGroupId, members, myId, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onDeleteRequest }) {
+  const q = searchQuery.trim().toLowerCase()
+  const filtered = conversations.filter(conv =>
+    !q || convName(conv).toLowerCase().includes(q) || lastPreview(conv).toLowerCase().includes(q)
+  )
+  const mainConv   = !q && pinnedGroupId ? conversations.find(c => c.id === pinnedGroupId) ?? null : null
+  const otherConvs = mainConv ? filtered.filter(c => c.id !== mainConv.id) : filtered
+  const mainUnread = mainConv ? isUnread(mainConv) : false
+  const mainName   = mainConv ? convName(mainConv) : ''
+
+  return (
+    <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
+      {mainConv && (
+        <button
+          onClick={() => onSelect(mainConv)}
+          className="w-full bg-white rounded-2xl border border-stone-100 shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up"
+        >
+          <div className="flex items-center gap-4">
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-ember">
+                {mainConv.image_url
+                  ? <img src={mainConv.image_url} alt="" className="w-full h-full object-cover" />
+                  : <Users size={28} weight="fill" className="text-white" />
+                }
+              </div>
+              {mainUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                <span className={`text-base truncate ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
+                <span className={`text-xs shrink-0 ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
+              </div>
+              <p className={`text-sm truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
+              <p className="text-xs text-stone-400">{members.length} members</p>
+            </div>
+          </div>
+        </button>
+      )}
+      {otherConvs.length > 0 && mainConv && (
+        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pt-2 pb-1 px-1">Direct Messages</p>
+      )}
+      {otherConvs.map((conv, i) => (
+        <ConvRow
+          key={conv.id}
+          conv={conv}
+          i={i}
+          myId={myId}
+          members={members}
+          lastMessages={lastMessages}
+          deletingConvId={deletingConvId}
+          isUnread={isUnread}
+          convName={convName}
+          lastPreview={lastPreview}
+          isMainGroupChat={isMainGroupChat}
+          onSelect={onSelect}
+          onDeleteRequest={onDeleteRequest}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
@@ -32,14 +146,6 @@ export default function ConversationList({ session, groupId, members, enterClass
   const myId = session.user.id
   const { className: headerClass } = useEntranceAnimation('/chat', 0)
 
-  // Pin the main group chat ID once, so sort order changes never displace it from the hero slot
-  useEffect(() => { setPinnedGroupId(null) }, [groupId])
-  useEffect(() => {
-    if (pinnedGroupId || !conversations.length || !members.length) return
-    const main = conversations.find(c => c.type === 'group' && (c.conversation_members?.length ?? 0) >= members.length)
-    if (main) setPinnedGroupId(main.id)
-  }, [conversations, members])
-
   async function loadConversations() {
     try {
       const { data: convs, error } = await supabase
@@ -51,6 +157,18 @@ export default function ConversationList({ session, groupId, members, enterClass
       if (!convs?.length) return
 
       setConversations(convs)
+
+      // Pin the group chat with the most members — done here where data is fresh
+      // and doesn't depend on the members prop load timing
+      setPinnedGroupId(prev => {
+        if (prev) return prev
+        const groupChats = convs.filter(c => c.type === 'group')
+        if (!groupChats.length) return prev
+        const main = groupChats.reduce((best, c) =>
+          (c.conversation_members?.length ?? 0) > (best.conversation_members?.length ?? 0) ? c : best
+        )
+        return main.id
+      })
 
       if (autoOpenGroupChat) {
         const groupConv = convs.find(c => c.type === 'group')
@@ -393,108 +511,23 @@ export default function ConversationList({ session, groupId, members, enterClass
             <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />
             <p className="text-sm">No conversations yet</p>
           </div>
-        ) : (() => {
-          const q = searchQuery.trim().toLowerCase()
-          const filtered = conversations.filter(conv =>
-            !q || convName(conv).toLowerCase().includes(q) || lastPreview(conv).toLowerCase().includes(q)
-          )
-          const mainConv  = !q && pinnedGroupId ? conversations.find(c => c.id === pinnedGroupId) ?? null : null
-          const otherConvs = mainConv ? filtered.filter(c => c.id !== mainConv.id) : filtered
-
-          function ConvRow({ conv, i }) {
-            const name        = convName(conv)
-            const isDm        = conv.type === 'direct'
-            const otherId     = isDm ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id : null
-            const otherMember = isDm ? members.find(m => m.user_id === otherId) : null
-            const unread      = isUnread(conv)
-            const deletable   = !isMainGroupChat(conv)
-            const isDeleting  = deletingConvId === conv.id
-            return (
-              <div
-                key={conv.id}
-                className="flex items-stretch bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-up"
-                style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
-              >
-                <button
-                  onClick={() => onSelect(conv)}
-                  className="flex-1 flex items-center gap-3 px-4 py-3.5 text-left min-w-0 active:bg-stone-50 transition-colors"
-                >
-                  <div className="relative shrink-0">
-                    <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${isDm ? (otherMember?.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(otherId ?? '', otherMember?.avatar_color)) : conv.image_url ? 'bg-stone-200 shadow-md' : 'bg-ember'}`}>
-                      {isDm
-                        ? otherMember?.avatar_image_url
-                          ? <img src={otherMember.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                          : otherMember?.avatar_icon
-                            ? <AvatarIcon name={otherMember.avatar_icon} size={22} />
-                            : <span className="text-white text-sm font-bold">{initials(name)}</span>
-                        : conv.image_url
-                          ? <img src={conv.image_url} alt="" className="w-full h-full object-cover" />
-                          : <Users size={22} weight="fill" className="text-white" />
-                      }
-                    </div>
-                    {unread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className={`text-sm truncate ${unread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>{name}</span>
-                      <span className={`text-xs shrink-0 ${unread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[conv.id]?.created_at)}</span>
-                    </div>
-                    <p className={`text-xs truncate mt-0.5 ${unread ? 'text-stone-700 font-medium' : 'text-stone-400'}`}>{lastPreview(conv)}</p>
-                  </div>
-                </button>
-                {deletable && (
-                  <button
-                    onClick={() => { resetDeleteConfirm(); setConfirmDeleteConv(conv) }}
-                    className="shrink-0 px-4 flex items-center text-stone-300 hover:text-red-500 active:text-red-600 transition-colors"
-                  >
-                    {isDeleting ? <span className="text-xs text-stone-300">…</span> : <Trash size={16} />}
-                  </button>
-                )}
-              </div>
-            )
-          }
-
-          const mainUnread = mainConv ? isUnread(mainConv) : false
-          const mainName   = mainConv ? convName(mainConv) : ''
-
-          return (
-            <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
-              {/* Hero card for main group chat */}
-              {mainConv && (
-                <button
-                  onClick={() => onSelect(mainConv)}
-                  className="w-full bg-white rounded-2xl border border-stone-100 shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="relative shrink-0">
-                      <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-ember">
-                        {mainConv.image_url
-                          ? <img src={mainConv.image_url} alt="" className="w-full h-full object-cover" />
-                          : <Users size={28} weight="fill" className="text-white" />
-                        }
-                      </div>
-                      {mainUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                        <span className={`text-base truncate ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
-                        <span className={`text-xs shrink-0 ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
-                      </div>
-                      <p className={`text-sm truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
-                      <p className="text-xs text-stone-400">{members.length} members</p>
-                    </div>
-                  </div>
-                </button>
-              )}
-
-              {/* Section label + DM list */}
-              {otherConvs.length > 0 && mainConv && (
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pt-2 pb-1 px-1">Direct Messages</p>
-              )}
-              {otherConvs.map((conv, i) => <ConvRow key={conv.id} conv={conv} i={i} />)}
-            </div>
-          )
-        })()}
+        ) : (
+          <ConversationListBody
+            conversations={conversations}
+            searchQuery={searchQuery}
+            pinnedGroupId={pinnedGroupId}
+            members={members}
+            myId={myId}
+            lastMessages={lastMessages}
+            deletingConvId={deletingConvId}
+            isUnread={isUnread}
+            convName={convName}
+            lastPreview={lastPreview}
+            isMainGroupChat={isMainGroupChat}
+            onSelect={onSelect}
+            onDeleteRequest={conv => { resetDeleteConfirm(); setConfirmDeleteConv(conv) }}
+          />
+        )}
       </div>
 
       {/* Delete confirmation */}
