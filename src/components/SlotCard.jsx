@@ -37,7 +37,7 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
         <>
           <div className="text-sm text-ember font-medium truncate">→ {signup.name}</div>
           {signup.notes && (
-            <div className="text-xs text-stone-400 mt-1.5 line-clamp-1 italic">{signup.notes}</div>
+            <div className="text-xs text-stone-500 mt-1.5 line-clamp-1 italic">{signup.notes}</div>
           )}
         </>
       ) : (
