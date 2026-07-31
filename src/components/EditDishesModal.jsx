@@ -23,6 +23,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
       origSlot: i + 1,
     }))
   )
+  const [columns, setColumns]       = useState(page.slot_columns ?? 1)
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -88,7 +89,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
       .sort((a, b) => a.to - b.to)
 
     try {
-      await onSave({ newTitle: title.trim(), newDate: date, newLocation: location.trim() || null, newDishes, newCategories, removedOrigSlots, renames })
+      await onSave({ newTitle: title.trim(), newDate: date, newLocation: location.trim() || null, newDishes, newCategories, newColumns: columns, removedOrigSlots, renames })
     } catch (err) {
       setError(err.message ?? 'Could not save.')
       setSaving(false)
@@ -160,6 +161,26 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 placeholder="e.g. 123 Main St or John's house"
                 className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-2">Layout</label>
+              <div className="inline-flex bg-stone-100 rounded-xl p-1">
+                {[1, 2].map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-pressed={columns === n}
+                    onClick={() => setColumns(n)}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      columns === n
+                        ? 'bg-ember text-white shadow-sm'
+                        : 'text-stone-500 hover:text-stone-700'
+                    }`}
+                  >
+                    {n === 1 ? '1 column' : '2 columns'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

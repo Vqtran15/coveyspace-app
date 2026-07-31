@@ -160,7 +160,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     onPageUpdate(data)
   }
 
-  async function handleSaveDishes({ newTitle, newDate, newLocation, newDishes, newCategories, removedOrigSlots, renames }) {
+  async function handleSaveDishes({ newTitle, newDate, newLocation, newDishes, newCategories, newColumns, removedOrigSlots, renames }) {
     if (removedOrigSlots.length > 0) {
       const { error } = await supabase
         .from(tables.signups)
@@ -181,7 +181,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
     const { data, error } = await supabase
       .from(tables.pages)
-      .update({ title: newTitle, week_date: newDate, location: newLocation, slot_count: newDishes.length, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
+      .update({ title: newTitle, week_date: newDate, location: newLocation, slot_count: newDishes.length, slot_dishes: newDishes, slot_columns: newColumns ?? 1, ...(supportsCategories && { slot_categories: newCategories }) })
       .eq('id', page.id)
       .select()
       .single()
@@ -331,7 +331,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           </p>
         </div>
       ) : loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className={`grid ${page.slot_columns === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
           {slots.map(n => (
             <div key={n} className="h-24 bg-stone-100 rounded-xl animate-pulse" />
           ))}
@@ -348,7 +348,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
               {hasAnyCategory && !cat && groups['']?.length > 0 && (
                 <p className="text-xs font-bold uppercase tracking-widest text-stone-500 mb-2 px-1">Other</p>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className={`grid ${page.slot_columns === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
                 {(groups[cat] ?? []).map(n => (
                   <SlotCard
                     key={`${page.id}-${n}`}
