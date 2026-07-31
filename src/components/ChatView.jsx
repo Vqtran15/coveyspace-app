@@ -302,7 +302,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         conversation_id: convId,
         user_id: myId,
         display_name: displayName || 'Member',
-        body: null,
+        body: `📊 Poll: ${question}`,
         poll_id: poll.id,
         reply_to_id: replyId,
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()

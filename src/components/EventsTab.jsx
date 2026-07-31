@@ -535,7 +535,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
       conversation_id:    convId,
       user_id:            userId,
       display_name:       displayName || 'Member',
-      body:               null,
+      body:               `📅 ${selectedEvent.title} — ${formatDateShort(selectedEvent.event_date, selectedEvent.event_time)}`,
       event_id:           selectedEvent?.id,
     })
     setSendingToConv(null)
