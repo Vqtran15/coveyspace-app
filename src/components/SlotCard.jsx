@@ -23,7 +23,7 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
       style={entranceStyle}
       className={`group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
         filled
-          ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
+          ? 'bg-ember/5 border-ember/20 hover:border-ember/40'
           : 'bg-sunrise-50 border-stone-200 hover:border-ember'
       } ${entranceClass} ${pulse ? 'animate-card-pulse' : ''}`}
     >
