@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, ListBullets } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ListBullets, CalendarBlank } from '@phosphor-icons/react'
 import RotationTab from '../RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { mealCutoffDate } from '../utils/dates.js'
@@ -51,9 +51,10 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
           <div className="flex items-center gap-1">
             <button
               onClick={() => rotationRef.current?.jumpToToday()}
-              className="px-3 py-1.5 rounded-xl text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 active:bg-stone-200 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 active:bg-ember/10 transition-colors"
             >
-              Today
+              <CalendarBlank size={15} weight="bold" />
+              This Week
             </button>
             <button
               onClick={() => rotationRef.current?.openManagePages()}
