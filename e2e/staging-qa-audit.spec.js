@@ -308,6 +308,21 @@ test.describe('MealPage — slot_columns grid', () => {
   })
 })
 
+test.describe('RotationTab — auto-fill copies slot_columns', () => {
+  let src
+
+  test.beforeAll(() => { src = read('src/RotationTab.jsx') })
+
+  test('autoFillPages insert includes slot_columns from template', () => {
+    expect(src).toContain('slot_columns: template.slot_columns')
+  })
+
+  test('slot_columns is only copied when non-default (avoids inserting null)', () => {
+    // Only spread when the template has a non-1 value; DB default handles the 1 case
+    expect(src).toContain('template.slot_columns && template.slot_columns !== 1')
+  })
+})
+
 test.describe('migration_64_slot_columns.sql', () => {
   let sql
 

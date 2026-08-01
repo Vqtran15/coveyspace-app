@@ -55,6 +55,7 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
         slot_count: template.slot_count,
         slot_dishes: template.slot_dishes ?? [],
         ...(Array.isArray(template.slot_categories) && { slot_categories: template.slot_categories }),
+        ...(template.slot_columns && template.slot_columns !== 1 && { slot_columns: template.slot_columns }),
         position: result.length,
       })
       .select()
