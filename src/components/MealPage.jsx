@@ -11,7 +11,7 @@ import EditDishesModal from './EditDishesModal.jsx'
 
 const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
 const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
-const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-500' }
+const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-600' }
 
 export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false, Icon = null }) {
   const [signups, setSignups]           = useState([])
