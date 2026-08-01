@@ -8,7 +8,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onOptionsRequest, i }) {
+function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, isDeleting, onSelect, onOptionsRequest, i }) {
   const name        = convName(conv)
   const isDm        = conv.type === 'direct'
   const otherId     = isDm ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id : null
@@ -51,9 +51,10 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
         <button
           onClick={e => { e.stopPropagation(); onOptionsRequest(conv) }}
           aria-label="Conversation options"
-          className="shrink-0 px-3 flex items-center text-stone-400 hover:text-stone-600 active:text-stone-800 transition-colors"
+          disabled={isDeleting}
+          className="shrink-0 px-3 flex items-center text-stone-400 hover:text-stone-600 active:text-stone-800 transition-colors disabled:opacity-40"
         >
-          <DotsThreeVertical size={20} weight="bold" />
+          {isDeleting ? <span className="text-xs">…</span> : <DotsThreeVertical size={20} weight="bold" />}
         </button>
       )}
     </div>
@@ -117,6 +118,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
           convName={convName}
           lastPreview={lastPreview}
           isMainGroupChat={isMainGroupChat}
+          isDeleting={deletingConvId === conv.id}
           onSelect={onSelect}
           onOptionsRequest={onOptionsRequest}
         />
