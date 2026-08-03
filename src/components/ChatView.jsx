@@ -775,7 +775,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         if (msgRect.top < containerRect.bottom) setFirstUnreadId(null)
       }
     }
-    if (el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
+    // Guard with `visible`: during the initial load, scrollToBottom() may fire
+    // before layout stabilises, landing scrollTop near 0 with a large
+    // scrollHeight. Without this guard that would trigger loadMore(), set
+    // preserveScrollRef, and subsequently restore scroll to the middle of the
+    // feed instead of the bottom.
+    if (visible && el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
   }
 
   async function loadMore() {
@@ -2077,7 +2082,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 max-w-3xl mx-auto w-full relative" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-4 max-w-3xl mx-auto w-full relative">
         {/* Reply preview */}
         {replyingTo && (
           <div className="flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2">
