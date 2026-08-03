@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { CheckCircle } from '@phosphor-icons/react'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, category, signup, revealKey, isNew = false, onClick }) {
@@ -21,12 +22,15 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
+      className={`relative group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
         filled
           ? 'bg-white border-ember/40 hover:border-ember/60'
           : 'bg-white border-stone-200 hover:border-ember'
       } ${entranceClass} ${pulse ? 'animate-card-pulse' : ''}`}
     >
+      {filled && (
+        <CheckCircle size={18} weight="fill" className="absolute top-2.5 right-2.5 text-ember" />
+      )}
       {dishName ? (
         <div className="font-semibold text-stone-800 truncate mb-1">{dishName}</div>
       ) : (
