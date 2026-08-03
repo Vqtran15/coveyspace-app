@@ -253,20 +253,21 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
       {!compact && (
         <div className="max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 const idx = pages.findIndex(p => p.week_date >= effectiveCutoff)
                 setViewIndex(idx === -1 ? pages.length - 1 : idx)
                 window.scrollTo({ top: 0, behavior: 'instant' })
               }}
-              className="px-3 py-1.5 rounded-xl text-sm font-medium text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+              className="px-3 py-1.5 rounded-xl text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
             >
               Today
             </button>
             <button
               onClick={() => setShowManagePages(true)}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+              aria-label="Manage pages"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
             >
               <ListBullets size={20} weight="regular" />
             </button>

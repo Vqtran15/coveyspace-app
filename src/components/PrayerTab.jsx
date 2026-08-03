@@ -551,10 +551,10 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         {!loading && members.length > 0 && (
           <button
             onClick={openCreate}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 active:bg-ember/10 transition-colors"
+            aria-label="Shared prayer request"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
           >
-            <Users size={15} weight="bold" />
-            Shared
+            <Users size={20} weight="bold" />
           </button>
         )}
       </div>

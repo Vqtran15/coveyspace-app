@@ -1110,7 +1110,7 @@ export default function BibleTab({ userId }) {
         <button
           onClick={() => setShowBrowser(true)}
           aria-label="Browse Bible"
-          className="w-11 h-11 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
         >
           <Books size={22} />
         </button>

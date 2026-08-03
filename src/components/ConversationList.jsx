@@ -446,14 +446,15 @@ export default function ConversationList({ session, groupId, members, enterClass
               setSearchQuery('')
               if (!searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
             }}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+            aria-label="Search conversations"
+            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember'}`}
           >
             <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
           </button>
           <button
             onClick={openModal}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
-            title="New message"
+            aria-label="New message"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
           >
             <PencilSimple size={20} weight="bold" />
           </button>
