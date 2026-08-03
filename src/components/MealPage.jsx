@@ -77,23 +77,25 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
       onPageUpdate(updatedPage)
     }
 
-    const existing = signups.find(s => s.slot_number === slotNumber)
-    if (existing) {
-      const { error } = await supabase
-        .from(tables.signups)
-        .update({ ...signupData, updated_at: new Date().toISOString() })
-        .eq('id', existing.id)
-      if (error) throw new Error(error.message)
-    } else {
-      const { error } = await supabase
-        .from(tables.signups)
-        .insert({ meal_page_id: page.id, slot_number: slotNumber, ...signupData })
-      if (error) {
-        if (error.code === '23505') throw new Error(`That ${noun.toLowerCase()} was just taken — try another!`)
-        throw new Error(error.message)
+    if (signupData.name) {
+      const existing = signups.find(s => s.slot_number === slotNumber)
+      if (existing) {
+        const { error } = await supabase
+          .from(tables.signups)
+          .update({ ...signupData, updated_at: new Date().toISOString() })
+          .eq('id', existing.id)
+        if (error) throw new Error(error.message)
+      } else {
+        const { error } = await supabase
+          .from(tables.signups)
+          .insert({ meal_page_id: page.id, slot_number: slotNumber, ...signupData })
+        if (error) {
+          if (error.code === '23505') throw new Error(`That ${noun.toLowerCase()} was just taken — try another!`)
+          throw new Error(error.message)
+        }
       }
+      trackEvent('schedule_signup', { page_type: pageNoun.toLowerCase() })
     }
-    trackEvent('schedule_signup', { page_type: pageNoun.toLowerCase() })
     setSelectedSlot(null)
   }
 

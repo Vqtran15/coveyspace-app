@@ -103,7 +103,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
         <div className="flex items-center justify-between p-6 pb-4">
           <div>
             <h2 className="text-xl font-bold text-stone-800">
-              {signup ? 'Edit Sign-Up' : 'Sign Up'}
+              {signup ? 'Edit Sign-Up' : !dishName ? 'Add Item' : 'Sign Up'}
             </h2>
           </div>
           <button
@@ -146,14 +146,15 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Your Name</label>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              Your Name <span className="text-stone-400 font-normal">(optional)</span>
+            </label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Chipotle"
+              placeholder="Your name"
               className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-              required
             />
           </div>
 
@@ -178,10 +179,10 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || (!dish.trim() && !name.trim())}
             className="w-full py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
           >
-            {saving ? 'Saving…' : signup ? 'Update' : 'Sign Up'}
+            {saving ? 'Saving…' : signup ? 'Update' : name.trim() ? 'Sign Up' : 'Save Item'}
           </button>
 
           {signup && (
