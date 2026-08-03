@@ -447,7 +447,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 },
                 chatEnabled && lastGroupMessage !== null && lastGroupMessage !== undefined && {
                   key: 'chat',
-                  onClick: () => navigate('/chat'),
+                  onClick: () => navigate('/chat', { state: { openGroupChat: true } }),
                   icon: <ChatCircleDots size={24} weight="fill" className="text-stone-600" />,
                   iconBg: 'bg-stone-100',
                   label: 'Main Chat',
