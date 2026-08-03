@@ -1330,7 +1330,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   return (
     <div
       className={`flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
+      style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px)' }}
     >
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2">
@@ -2077,7 +2077,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-3 max-w-3xl mx-auto w-full relative">
+      <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 max-w-3xl mx-auto w-full relative" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         {/* Reply preview */}
         {replyingTo && (
           <div className="flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2">
