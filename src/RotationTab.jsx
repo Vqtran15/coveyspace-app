@@ -228,8 +228,34 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <div className="text-stone-400 text-sm animate-pulse">Loading…</div>
+      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
+        {!compact && (
+          <div className="pt-8 pb-4 flex items-center justify-between">
+            <div className="h-9 w-24 bg-stone-200 rounded-lg animate-pulse" />
+            <div className="w-11 h-11 rounded-xl bg-stone-100 animate-pulse" />
+          </div>
+        )}
+        <div className="pt-2 space-y-3">
+          <div className="bg-white rounded-2xl shadow border border-stone-100 p-4 mb-3 animate-pulse">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-xl bg-stone-200 shrink-0" />
+              <div className="flex-1 pt-1 space-y-2">
+                <div className="h-5 bg-stone-200 rounded w-2/5" />
+                <div className="h-3.5 bg-stone-100 rounded w-1/4" />
+              </div>
+            </div>
+          </div>
+          {[0, 1, 2, 3].map(i => (
+            <div
+              key={i}
+              className="bg-white border-2 border-stone-200 rounded-xl p-4 animate-pulse"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <div className="h-4 bg-stone-200 rounded w-1/2 mb-2.5" />
+              <div className="h-5 bg-stone-100 rounded-full w-20" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
