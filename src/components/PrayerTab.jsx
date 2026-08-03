@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { useToast } from '../lib/toast.jsx'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -82,7 +83,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
   const MAX = 3
   const shown = profiles.slice(0, MAX)
   const extra = profiles.length - MAX
-  const stackWidth = shown.length * 18 + 18
+  const stackWidth = shown.length * 26 + 10 + (extra > 0 ? 26 : 0)
 
   return (
     <button
@@ -254,6 +255,7 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
 export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey, avatarImageUrl }) {
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
+  const toast = useToast()
 
   const [members, setMembers]               = useState([])
   const [allRequests, setAllRequests]       = useState([])
@@ -450,7 +452,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       })
       .select()
       .single()
-    if (err) { setCreating(false); return }
+    if (err) { toast('Failed to save prayer request', 'error'); setCreating(false); return }
     setGroupPrayers(prev => [data, ...prev])
     setCreating(false)
     closeCreate()
@@ -737,7 +739,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           onUpdate={updated => {
             if (updated._deleted) {
               setGroupPrayers(prev => prev.filter(gp => gp.id !== updated.id))
-              setSelectedGroupPrayer(null)
+              // Don't unmount here — let handleClose() play the slide-out animation first
             } else {
               setGroupPrayers(prev => prev.map(gp => gp.id === updated.id ? updated : gp))
               setSelectedGroupPrayer(updated)

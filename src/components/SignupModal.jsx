@@ -179,7 +179,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
 
           <button
             type="submit"
-            disabled={saving || (!dish.trim() && !name.trim())}
+            disabled={saving || (!dish.trim() && !name.trim()) || (!!signup && !name.trim())}
             className="w-full py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
           >
             {saving ? 'Saving…' : signup ? 'Update' : name.trim() ? 'Sign Up' : 'Save Item'}
