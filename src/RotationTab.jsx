@@ -75,6 +75,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   const [pages, setPages]       = useState([])
   const [viewIndex, setViewIndex] = useState(0)
+  const [homeIdx, setHomeIdx]   = useState(0)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
   const [showAddModal, setShowAddModal]       = useState(false)
@@ -102,8 +103,10 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     }
 
     const upcomingIdx = sorted.findIndex(p => p.week_date >= effectiveCutoff)
+    const resolvedIdx = upcomingIdx === -1 ? Math.max(0, sorted.length - 1) : upcomingIdx
     setPages(sorted)
-    setViewIndex(upcomingIdx === -1 ? Math.max(0, sorted.length - 1) : upcomingIdx)
+    setViewIndex(resolvedIdx)
+    setHomeIdx(resolvedIdx)
     setLoading(false)
   }
 
@@ -253,25 +256,24 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
       {!compact && (
         <div className="max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const idx = pages.findIndex(p => p.week_date >= effectiveCutoff)
-                setViewIndex(idx === -1 ? pages.length - 1 : idx)
-                window.scrollTo({ top: 0, behavior: 'instant' })
-              }}
-              className="px-3 py-1.5 rounded-xl text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
-            >
-              Today
-            </button>
-            <button
-              onClick={() => setShowManagePages(true)}
-              aria-label="Manage pages"
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
-            >
-              <ListBullets size={20} weight="regular" />
-            </button>
-          </div>
+          <button
+            onClick={() => setShowManagePages(true)}
+            aria-label="Manage pages"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
+          >
+            <ListBullets size={20} weight="regular" />
+          </button>
+        </div>
+      )}
+
+      {viewIndex !== homeIdx && pages.length > 1 && (
+        <div className="max-w-3xl mx-auto px-4 pt-1 pb-1">
+          <button
+            onClick={() => { setViewIndex(homeIdx); window.scrollTo({ top: 0, behavior: 'instant' }); haptic() }}
+            className="w-full py-2.5 rounded-xl bg-ember/8 border border-ember/20 text-ember text-sm font-semibold transition-colors hover:bg-ember/15 active:bg-ember/20"
+          >
+            ← Back to this week
+          </button>
         </div>
       )}
 
