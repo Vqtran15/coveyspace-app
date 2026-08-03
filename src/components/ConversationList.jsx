@@ -127,7 +127,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   )
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup }) {
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -177,6 +177,14 @@ export default function ConversationList({ session, groupId, members, enterClass
           }
           onAutoOpenConsumed?.()
           onSelect(groupConv)
+        }
+      }
+
+      if (autoOpenMainChat) {
+        const mainConv = convs.find(c => c.name === 'Main Group Chat')
+        if (mainConv) {
+          onAutoOpenMainChatConsumed?.()
+          onSelect(mainConv)
         }
       }
 

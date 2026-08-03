@@ -9,6 +9,8 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   const navigateRouter = useNavigate()
   const [autoOpenGroupChat, setAutoOpenGroupChat] = useState(!!locationState?.openGroupChat)
   const consumeAutoOpen = useCallback(() => setAutoOpenGroupChat(false), [])
+  const [autoOpenMainChat, setAutoOpenMainChat] = useState(!!locationState?.openMainChat)
+  const consumeAutoOpenMain = useCallback(() => setAutoOpenMainChat(false), [])
   const [activeConv, setActiveConv]           = useState(null)
   const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
   const [members, setMembers]                 = useState([])
@@ -19,20 +21,26 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   // Prevent iOS from scrolling the window when the keyboard appears.
   // Without this, tapping the message input causes window.scrollY to drift,
   // leaving a gap between the input bar and the nav bar after sending.
+  // scrollY is preserved so navigating here from a scrolled page doesn't
+  // snap the viewport and push the input bar off-screen.
   useEffect(() => {
-    const prev = { position: document.body.style.position, width: document.body.style.width, overflow: document.body.style.overflow }
+    const scrollY = window.scrollY
+    const prev = { position: document.body.style.position, top: document.body.style.top, width: document.body.style.width, overflow: document.body.style.overflow }
+    document.body.style.top      = `-${scrollY}px`
     document.body.style.position = 'fixed'
     document.body.style.width    = '100%'
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.position = prev.position
+      document.body.style.top      = prev.top
       document.body.style.width    = prev.width
       document.body.style.overflow = prev.overflow
+      window.scrollTo(0, scrollY)
     }
   }, [])
 
   useEffect(() => {
-    if (locationState?.openGroupChat) {
+    if (locationState?.openGroupChat || locationState?.openMainChat) {
       navigateRouter('.', { replace: true, state: null })
     }
   }, [])
@@ -96,6 +104,8 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       enterClass={listClass}
       autoOpenGroupChat={autoOpenGroupChat}
       onAutoOpenConsumed={consumeAutoOpen}
+      autoOpenMainChat={autoOpenMainChat}
+      onAutoOpenMainChatConsumed={consumeAutoOpenMain}
       onSelect={openConv}
       onRead={onRead}
       onOpenSettings={onOpenSettings}
