@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, MagnifyingGlass, X, CaretRight } from '@phosphor-icons/react'
+import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
+import { useModalClose } from '../hooks/useModalClose.js'
 import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { haptic } from '../lib/haptic.js'
 import PrayerProfile from './PrayerProfile.jsx'
+import GroupPrayerProfile from './GroupPrayerProfile.jsx'
 
 function formatLastUpdated(requests) {
   if (!requests?.length) return null
@@ -37,6 +39,15 @@ function formatRelativeDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+function formatMemberNames(firstNames) {
+  if (firstNames.length === 0) return 'Group'
+  if (firstNames.length === 1) return firstNames[0]
+  if (firstNames.length === 2) return `${firstNames[0]} & ${firstNames[1]}`
+  return `${firstNames.slice(0, -1).join(', ')} & ${firstNames[firstNames.length - 1]}`
+}
+
+// ─── Individual member card ───────────────────────────────────────────────────
+
 function MemberCard({ member, index, onClick }) {
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
   const lastUpdated = formatLastUpdated(member.prayer_requests)
@@ -60,6 +71,63 @@ function MemberCard({ member, index, onClick }) {
     </button>
   )
 }
+
+// ─── Group prayer card (members view) ────────────────────────────────────────
+
+function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
+  const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
+  const profiles  = groupPrayer.member_user_ids.map(id => memberMap[id]).filter(Boolean)
+  const firstNames = profiles.map(p => p.display_name?.split(' ')[0]).filter(Boolean)
+  const label      = formatMemberNames(firstNames)
+  const MAX = 3
+  const shown = profiles.slice(0, MAX)
+  const extra = profiles.length - MAX
+  const stackWidth = shown.length * 18 + 18
+
+  return (
+    <button
+      onClick={onClick}
+      style={entranceStyle}
+      className={`w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center shrink-0" style={{ width: stackWidth }}>
+            {shown.map((p, i) => (
+              <div
+                key={p.user_id}
+                className={`w-9 h-9 rounded-full border-2 border-white overflow-hidden flex items-center justify-center shrink-0 ${p.avatar_image_url ? 'bg-stone-200' : avatarColor(p.user_id, p.avatar_color)}`}
+                style={{ marginLeft: i === 0 ? 0 : -10, zIndex: shown.length - i }}
+              >
+                {p.avatar_image_url
+                  ? <img src={p.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                  : p.avatar_icon
+                    ? <AvatarIcon name={p.avatar_icon} size={18} />
+                    : <span className="text-white text-xs font-bold">{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                }
+              </div>
+            ))}
+            {extra > 0 && (
+              <div
+                className="w-9 h-9 rounded-full border-2 border-white bg-stone-100 flex items-center justify-center shrink-0"
+                style={{ marginLeft: -10 }}
+              >
+                <span className="text-xs font-bold text-stone-500">+{extra}</span>
+              </div>
+            )}
+          </div>
+          <div className="font-semibold text-stone-800 truncate">{label}</div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs text-stone-400">{formatRelativeDate(groupPrayer.created_at)}</span>
+          <CaretRight size={14} weight="bold" className="text-stone-300" />
+        </div>
+      </div>
+    </button>
+  )
+}
+
+// ─── Shared reaction avatars ──────────────────────────────────────────────────
 
 function ReactionAvatars({ reactions }) {
   if (!reactions?.length) return null
@@ -88,6 +156,8 @@ function ReactionAvatars({ reactions }) {
   )
 }
 
+// ─── Individual feed card ─────────────────────────────────────────────────────
+
 function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, toggling, onPray, onOpen, index }) {
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
   const reactionCount = reactions?.length ?? 0
@@ -102,11 +172,9 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
         </button>
         <span className="text-xs text-stone-400 shrink-0 ml-2">{formatRelativeDate(req.created_at)}</span>
       </div>
-
       <button onClick={onOpen} className="w-full text-left">
         <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{req.request}</p>
       </button>
-
       {(reactionCount > 0 || !isOwnRequest) && (
         <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
           <ReactionAvatars reactions={reactions} />
@@ -115,9 +183,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
               onClick={onPray}
               disabled={toggling}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
-                userReacted
-                  ? 'bg-ember/10 text-ember'
-                  : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
+                userReacted ? 'bg-ember/10 text-ember' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
               }`}
             >
               <HandsPraying size={16} weight={userReacted ? 'fill' : 'regular'} />
@@ -130,18 +196,84 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
   )
 }
 
+// ─── Group feed card ──────────────────────────────────────────────────────────
+
+function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggling, onPray, onOpen, index }) {
+  const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
+  const profiles   = groupPrayer.member_user_ids.map(id => memberMap[id]).filter(Boolean)
+  const firstNames = profiles.map(p => p.display_name?.split(' ')[0]).filter(Boolean)
+  const label      = formatMemberNames(firstNames)
+  const userReacted = reactions?.some(r => r.user_id === currentUserId) ?? false
+
+  return (
+    <div style={entranceStyle} className={`bg-white border border-stone-100 rounded-2xl p-4 shadow-sm ${entranceClass}`}>
+      <div className="flex items-center justify-between mb-2.5">
+        <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center shrink-0">
+            {profiles.slice(0, 3).map((p, i) => (
+              <div
+                key={p.user_id}
+                className={`w-7 h-7 rounded-full border-2 border-white shrink-0 overflow-hidden flex items-center justify-center ${p.avatar_image_url ? 'bg-stone-200' : avatarColor(p.user_id, p.avatar_color)}`}
+                style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 3 - i }}
+              >
+                {p.avatar_image_url
+                  ? <img src={p.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                  : p.avatar_icon
+                    ? <AvatarIcon name={p.avatar_icon} size={13} />
+                    : <span className="text-white text-[9px] font-bold">{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                }
+              </div>
+            ))}
+          </div>
+          <span className="text-sm font-semibold text-stone-700 truncate">{label}</span>
+        </button>
+        <span className="text-xs text-stone-400 shrink-0 ml-2">{formatRelativeDate(groupPrayer.created_at)}</span>
+      </div>
+      <button onClick={onOpen} className="w-full text-left">
+        <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{groupPrayer.request}</p>
+      </button>
+      <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
+        <ReactionAvatars reactions={reactions} />
+        <button
+          onClick={onPray}
+          disabled={toggling}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+            userReacted ? 'bg-ember/10 text-ember' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
+          }`}
+        >
+          <HandsPraying size={16} weight={userReacted ? 'fill' : 'regular'} />
+          <span>{userReacted ? 'Praying' : 'Pray'}</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main tab ─────────────────────────────────────────────────────────────────
+
 export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey, avatarImageUrl }) {
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
-  const [members, setMembers]           = useState([])
-  const [allRequests, setAllRequests]   = useState([])
-  const [allReactions, setAllReactions] = useState({})
-  const [loading, setLoading]           = useState(true)
+
+  const [members, setMembers]               = useState([])
+  const [allRequests, setAllRequests]       = useState([])
+  const [allReactions, setAllReactions]     = useState({})
+  const [groupPrayers, setGroupPrayers]     = useState([])
+  const [groupReactions, setGroupReactions] = useState({})
+  const [loading, setLoading]               = useState(true)
   const [selectedMember, setSelectedMember] = useState(null)
-  const [searchQuery, setSearchQuery]   = useState('')
-  const [viewMode, setViewMode]         = useState('members')
-  const [togglingIds, setTogglingIds]   = useState(new Set())
+  const [selectedGroupPrayer, setSelectedGroupPrayer] = useState(null)
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [viewMode, setViewMode]             = useState('members')
+  const [togglingIds, setTogglingIds]       = useState(new Set())
   const hasAutoOpenedRef = useRef(false)
+
+  // Group prayer creation
+  const [showCreate, setShowCreate]               = useState(false)
+  const [createClosing, closeCreate, resetCreate] = useModalClose(() => setShowCreate(false))
+  const [selectedMemberIds, setSelectedMemberIds] = useState(new Set())
+  const [requestText, setRequestText]             = useState('')
+  const [creating, setCreating]                   = useState(false)
 
   useEffect(() => {
     if (hasAutoOpenedRef.current) return
@@ -156,12 +288,15 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   async function load() {
     if (!groupId) return
     try {
-      const [membersRes, reactionsRes] = await Promise.all([
+      const [membersRes, reactionsRes, groupPrayersRes] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId).order('display_name'),
         supabase.from('prayer_reactions').select('id, prayer_request_id, user_id, display_name, avatar_icon, avatar_color, avatar_image_url, prayer_request_owner_id, community_group_id').eq('community_group_id', groupId),
+        supabase.from('group_prayer_requests').select('*').eq('community_group_id', groupId).order('created_at', { ascending: false }),
       ])
+
       const profileList  = membersRes.data  ?? []
       const reactionList = reactionsRes.data ?? []
+      const gpList       = groupPrayersRes.data ?? []
 
       const memberIds = profileList.map(m => m.user_id)
       const requestsRes = memberIds.length
@@ -169,10 +304,22 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         : { data: [] }
       const requestList = requestsRes.data ?? []
 
+      // Fetch group prayer reactions if there are any
+      const gpIds = gpList.map(gp => gp.id)
+      const gpReactionsRes = gpIds.length
+        ? await supabase.from('group_prayer_reactions').select('*').in('group_prayer_request_id', gpIds)
+        : { data: [] }
+
       const reactionMap = {}
       for (const rx of reactionList) {
         if (!reactionMap[rx.prayer_request_id]) reactionMap[rx.prayer_request_id] = []
         reactionMap[rx.prayer_request_id].push(rx)
+      }
+
+      const gpReactionMap = {}
+      for (const rx of gpReactionsRes.data ?? []) {
+        if (!gpReactionMap[rx.group_prayer_request_id]) gpReactionMap[rx.group_prayer_request_id] = []
+        gpReactionMap[rx.group_prayer_request_id].push(rx)
       }
 
       setMembers(profileList.map(m => ({
@@ -181,17 +328,19 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       })))
       setAllRequests(requestList)
       setAllReactions(reactionMap)
+      setGroupPrayers(gpList)
+      setGroupReactions(gpReactionMap)
     } finally {
       setLoading(false)
     }
   }
 
-  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedMember)
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedMember && !selectedGroupPrayer)
 
   useEffect(() => { if (groupId) load() }, [groupId])
 
   function handleCountChange(memberId, delta) {
-    if (delta <= 0) return  // deletions refresh on close via load()
+    if (delta <= 0) return
     setMembers(prev => prev.map(m => {
       if (m.user_id !== memberId) return m
       const updated = [...(m.prayer_requests ?? []), { id: 'temp', created_at: new Date().toISOString() }]
@@ -244,22 +393,144 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
     setTogglingIds(prev => { const s = new Set(prev); s.delete(req.id); return s })
   }
 
+  async function toggleGroupReaction(gp) {
+    if (togglingIds.has(gp.id)) return
+    const rxs      = groupReactions[gp.id] ?? []
+    const existing = rxs.find(r => r.user_id === userId)
+    setTogglingIds(prev => new Set(prev).add(gp.id))
+    haptic()
+    if (existing) {
+      setGroupReactions(prev => ({ ...prev, [gp.id]: prev[gp.id].filter(r => r.user_id !== userId) }))
+      await supabase.from('group_prayer_reactions').delete().eq('id', existing.id)
+    } else {
+      const optimistic = {
+        id: `temp-${Date.now()}`,
+        group_prayer_request_id: gp.id,
+        community_group_id:      groupId,
+        user_id:                 userId,
+        display_name:            displayName,
+        avatar_icon:             avatarIcon    ?? null,
+        avatar_color:            avatarColorKey ?? null,
+        avatar_image_url:        avatarImageUrl ?? null,
+      }
+      setGroupReactions(prev => ({ ...prev, [gp.id]: [...(prev[gp.id] ?? []), optimistic] }))
+      const { data, error: err } = await supabase
+        .from('group_prayer_reactions')
+        .insert({
+          group_prayer_request_id: gp.id,
+          community_group_id:      groupId,
+          user_id:                 userId,
+          display_name:            displayName,
+          avatar_icon:             avatarIcon    ?? null,
+          avatar_color:            avatarColorKey ?? null,
+          avatar_image_url:        avatarImageUrl ?? null,
+        })
+        .select()
+        .maybeSingle()
+      if (err) {
+        setGroupReactions(prev => ({ ...prev, [gp.id]: prev[gp.id].filter(r => r.id !== optimistic.id) }))
+      } else if (data) {
+        setGroupReactions(prev => ({ ...prev, [gp.id]: prev[gp.id].map(r => r.id === optimistic.id ? data : r) }))
+      }
+    }
+    setTogglingIds(prev => { const s = new Set(prev); s.delete(gp.id); return s })
+  }
+
+  async function handleCreateGroupPrayer() {
+    if (selectedMemberIds.size < 2 || !requestText.trim() || creating) return
+    setCreating(true)
+    const { data, error: err } = await supabase
+      .from('group_prayer_requests')
+      .insert({
+        member_user_ids: Array.from(selectedMemberIds),
+        request:         requestText.trim(),
+        added_by:        displayName,
+        created_by:      userId,
+        community_group_id: groupId,
+      })
+      .select()
+      .single()
+    if (err) { setCreating(false); return }
+    setGroupPrayers(prev => [data, ...prev])
+    setCreating(false)
+    closeCreate()
+    setSelectedMemberIds(new Set())
+    setRequestText('')
+  }
+
+  function openCreate() {
+    resetCreate()
+    setSelectedMemberIds(new Set())
+    setRequestText('')
+    setShowCreate(true)
+  }
+
+  function toggleMember(id) {
+    setSelectedMemberIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  // ─── Derived lists ───────────────────────────────────────────────────────────
+
   const memberMap = Object.fromEntries(members.map(m => [m.user_id, m]))
+
   const feedItems = allRequests
     .filter(r => !r.answered)
     .map(r => ({ ...r, member: memberMap[r.member_user_id] }))
     .filter(r => r.member)
 
   const q = searchQuery.trim().toLowerCase()
+
+  // Members view: combine members + active group prayers, sorted by recency
+  const filteredGroupPrayers = groupPrayers.filter(gp =>
+    !gp.answered && (!q ||
+      gp.request?.toLowerCase().includes(q) ||
+      gp.member_user_ids.some(id => memberMap[id]?.display_name?.toLowerCase().includes(q))
+    )
+  )
   const filteredMembers = q
     ? members.filter(m => m.display_name?.toLowerCase().includes(q))
     : members
+
+  const combinedList = [
+    ...filteredMembers.map(m => ({
+      type: 'member',
+      data: m,
+      sortKey: m.prayer_requests?.[0]?.created_at ?? null,
+    })),
+    ...filteredGroupPrayers.map(gp => ({
+      type: 'group',
+      data: gp,
+      sortKey: gp.created_at,
+    })),
+  ].sort((a, b) => {
+    if (!a.sortKey && !b.sortKey) return 0
+    if (!a.sortKey) return 1
+    if (!b.sortKey) return -1
+    return new Date(b.sortKey) - new Date(a.sortKey)
+  })
+
+  // Feed view: combine individual + group requests, sorted by created_at desc
+  const allFeedItems = [
+    ...feedItems.map(r => ({ type: 'individual', data: r, sortKey: r.created_at })),
+    ...groupPrayers.filter(gp => !gp.answered).map(gp => ({ type: 'group', data: gp, sortKey: gp.created_at })),
+  ].sort((a, b) => new Date(b.sortKey) - new Date(a.sortKey))
+
   const filteredFeed = q
-    ? feedItems.filter(r =>
-        r.request?.toLowerCase().includes(q) ||
-        r.member?.display_name?.toLowerCase().includes(q)
-      )
-    : feedItems
+    ? allFeedItems.filter(item => {
+        if (item.type === 'individual') {
+          return item.data.request?.toLowerCase().includes(q) ||
+            item.data.member?.display_name?.toLowerCase().includes(q)
+        }
+        return item.data.request?.toLowerCase().includes(q) ||
+          item.data.member_user_ids.some(id => memberMap[id]?.display_name?.toLowerCase().includes(q))
+      })
+    : allFeedItems
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
@@ -274,8 +545,18 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
         </div>
       )}
 
-      <div className="mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
+        {!loading && members.length > 0 && (
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 active:bg-ember/10 transition-colors"
+          >
+            <Users size={15} weight="bold" />
+            Group
+          </button>
+        )}
       </div>
 
       {/* View toggle */}
@@ -319,16 +600,14 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             )}
           </div>
           {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="text-sm text-ember font-medium shrink-0"
-            >
+            <button onClick={() => setSearchQuery('')} className="text-sm text-ember font-medium shrink-0">
               Cancel
             </button>
           )}
         </div>
       )}
 
+      {/* Content */}
       {loading ? (
         <div className="space-y-2">
           {[0, 1, 2, 3].map(i => (
@@ -351,21 +630,31 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           <p className="text-sm">No members in this group yet</p>
         </div>
       ) : viewMode === 'members' ? (
-        filteredMembers.length === 0 ? (
+        combinedList.length === 0 ? (
           <div className="text-center py-12 text-stone-500">
             <MagnifyingGlass size={40} className="mx-auto mb-2 text-stone-300" />
             <p className="text-sm">No members match "{searchQuery}"</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredMembers.map((member, i) => (
-              <MemberCard
-                key={member.user_id}
-                member={member}
-                index={i}
-                onClick={() => setSelectedMember(member)}
-              />
-            ))}
+            {combinedList.map((item, i) =>
+              item.type === 'member' ? (
+                <MemberCard
+                  key={item.data.user_id}
+                  member={item.data}
+                  index={i}
+                  onClick={() => setSelectedMember(item.data)}
+                />
+              ) : (
+                <GroupPrayerCard
+                  key={item.data.id}
+                  groupPrayer={item.data}
+                  memberMap={memberMap}
+                  index={i}
+                  onClick={() => setSelectedGroupPrayer(item.data)}
+                />
+              )
+            )}
           </div>
         )
       ) : (
@@ -385,24 +674,39 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredFeed.map((req, i) => (
-              <FeedCard
-                key={req.id}
-                req={req}
-                member={req.member}
-                reactions={allReactions[req.id]}
-                currentUserId={userId}
-                isOwnRequest={req.member_user_id === userId}
-                toggling={togglingIds.has(req.id)}
-                onPray={() => toggleFeedReaction(req)}
-                onOpen={() => setSelectedMember(req.member)}
-                index={i}
-              />
-            ))}
+            {filteredFeed.map((item, i) =>
+              item.type === 'individual' ? (
+                <FeedCard
+                  key={item.data.id}
+                  req={item.data}
+                  member={item.data.member}
+                  reactions={allReactions[item.data.id]}
+                  currentUserId={userId}
+                  isOwnRequest={item.data.member_user_id === userId}
+                  toggling={togglingIds.has(item.data.id)}
+                  onPray={() => toggleFeedReaction(item.data)}
+                  onOpen={() => setSelectedMember(item.data.member)}
+                  index={i}
+                />
+              ) : (
+                <GroupFeedCard
+                  key={item.data.id}
+                  groupPrayer={item.data}
+                  memberMap={memberMap}
+                  reactions={groupReactions[item.data.id]}
+                  currentUserId={userId}
+                  toggling={togglingIds.has(item.data.id)}
+                  onPray={() => toggleGroupReaction(item.data)}
+                  onOpen={() => setSelectedGroupPrayer(item.data)}
+                  index={i}
+                />
+              )
+            )}
           </div>
         )
       )}
 
+      {/* Individual member profile */}
       {selectedMember && (
         <PrayerProfile
           member={selectedMember}
@@ -415,6 +719,105 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           onClose={() => { setSelectedMember(null); load() }}
           onCountChange={handleCountChange}
         />
+      )}
+
+      {/* Group prayer profile */}
+      {selectedGroupPrayer && (
+        <GroupPrayerProfile
+          groupPrayer={selectedGroupPrayer}
+          memberProfiles={selectedGroupPrayer.member_user_ids.map(id => memberMap[id]).filter(Boolean)}
+          displayName={displayName}
+          groupId={groupId}
+          currentUserId={userId}
+          isAdmin={isAdmin}
+          currentAvatarIcon={avatarIcon}
+          currentAvatarColor={avatarColorKey}
+          currentAvatarImageUrl={avatarImageUrl}
+          onClose={() => { setSelectedGroupPrayer(null); load() }}
+          onUpdate={updated => {
+            if (updated._deleted) {
+              setGroupPrayers(prev => prev.filter(gp => gp.id !== updated.id))
+              setSelectedGroupPrayer(null)
+            } else {
+              setGroupPrayers(prev => prev.map(gp => gp.id === updated.id ? updated : gp))
+              setSelectedGroupPrayer(updated)
+            }
+          }}
+        />
+      )}
+
+      {/* Group prayer creation sheet */}
+      {showCreate && (
+        <div
+          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${createClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          onClick={closeCreate}
+        >
+          <div
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${createClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Sheet header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
+              <h2 className="text-lg font-bold text-stone-800">Group Prayer</h2>
+              <button onClick={closeCreate} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Member selection */}
+            <div className="px-5 pb-3">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+                Select members
+                {selectedMemberIds.size > 0 && (
+                  <span className="ml-2 text-ember normal-case font-semibold">
+                    {selectedMemberIds.size} selected
+                  </span>
+                )}
+              </p>
+              <div className="space-y-0.5 max-h-48 overflow-y-auto">
+                {members.map(m => {
+                  const selected = selectedMemberIds.has(m.user_id)
+                  return (
+                    <button
+                      key={m.user_id}
+                      onClick={() => toggleMember(m.user_id)}
+                      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
+                    >
+                      <AvatarCircle size="sm" icon={m.avatar_icon} colorKey={m.avatar_color} userId={m.user_id} name={m.display_name} imageUrl={m.avatar_image_url} />
+                      <span className="flex-1 text-sm font-medium text-stone-800 text-left">{m.display_name}</span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
+                        {selected && <Check size={11} weight="bold" className="text-white" />}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Request textarea */}
+            <div className="px-5 pb-4">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Prayer request</p>
+              <textarea
+                value={requestText}
+                onChange={e => setRequestText(e.target.value)}
+                placeholder="What would you like the group to pray for?"
+                rows={3}
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent resize-none"
+              />
+            </div>
+
+            {/* Submit */}
+            <div className="px-5 pb-8">
+              <button
+                onClick={handleCreateGroupPrayer}
+                disabled={creating || selectedMemberIds.size < 2 || !requestText.trim()}
+                className="w-full py-3 rounded-xl bg-ember text-white font-semibold text-sm hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {creating ? 'Saving…' : selectedMemberIds.size < 2 ? 'Select at least 2 members' : 'Add Group Prayer'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   )
