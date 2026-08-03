@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarStar, X } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarStar, ChatCircleDots, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -11,6 +11,17 @@ import { useToast } from '../lib/toast.jsx'
 import ConfettiDots from './ConfettiDots.jsx'
 import InstallBanner from './InstallBanner.jsx'
 
+
+function relativeTime(dateStr) {
+  const diffMin = Math.round((Date.now() - new Date(dateStr)) / 60000)
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`
+  const days = Math.floor(diffMin / 1440)
+  if (days === 1) return 'yesterday'
+  if (days < 7) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 function shortDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -140,12 +151,13 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, givingUrl = null, guideUrl = null, guideType = null }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, chatEnabled = true, givingUrl = null, guideUrl = null, guideType = null }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
   const [nextService, setNextService]       = useState(undefined)
   const [nextEvent, setNextEvent]           = useState(undefined)
+  const [lastGroupMessage, setLastGroupMessage] = useState(undefined)
   const [announcement, setAnnouncement]     = useState(undefined)
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
@@ -156,16 +168,20 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
     setLoaded(false)
     const today = toDateString(new Date())
 
-    const [mealRes, serviceRes, eventRes] = await Promise.all([
+    const [mealRes, serviceRes, eventRes, mainChatConvRes] = await Promise.all([
       supabase.from('meal_pages').select('id, title, week_date, is_paused').gte('week_date', mealCutoffDate()).order('week_date').limit(1).maybeSingle(),
       supabase.from('serving_pages').select('title, week_date, is_paused').gte('week_date', today).order('week_date').limit(1).maybeSingle(),
       eventsEnabled && groupId
         ? supabase.from('events').select('id, title, event_date, event_time').eq('community_group_id', groupId).gte('event_date', today).order('event_date').limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
+      chatEnabled
+        ? supabase.from('conversations').select('id').eq('name', 'Main Group Chat').maybeSingle()
+        : Promise.resolve({ data: null }),
     ])
     setNextMeal(mealRes.data ?? null)
     setNextService(serviceRes.data ?? null)
     setNextEvent(eventRes.data ?? null)
+    const mainChatId = mainChatConvRes.data?.id ?? null
 
     if (groupId) {
       const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
@@ -211,13 +227,26 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
           setPrayerCard(null)
         }
       }
+
+      if (chatEnabled && mainChatId) {
+        const { data: latestMsg } = await supabase
+          .from('messages')
+          .select('body, display_name, created_at, image_url')
+          .eq('conversation_id', mainChatId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        setLastGroupMessage(latestMsg ?? null)
+      } else {
+        setLastGroupMessage(null)
+      }
     }
     setLoaded(true)
   }
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
-  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin, eventsEnabled])
+  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin, eventsEnabled, chatEnabled])
 
   useEffect(() => {
     if (!groupId) return
@@ -305,10 +334,11 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {mealsEnabled     && <CardSkeleton delay={isAdmin ? 80  : 0}   />}
             {servicesEnabled  && <CardSkeleton delay={isAdmin ? 160 : 80}  />}
             {eventsEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
-            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 320 : 240} />}
-            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 400 : 320} />}
-            {guideEnabled     && <CardSkeleton delay={isAdmin ? 480 : 400} />}
-            {givingEnabled    && <CardSkeleton delay={isAdmin ? 560 : 480} />}
+            {chatEnabled      && <CardSkeleton delay={isAdmin ? 320 : 240} />}
+            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 400 : 320} />}
+            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 480 : 400} />}
+            {guideEnabled     && <CardSkeleton delay={isAdmin ? 560 : 480} />}
+            {givingEnabled    && <CardSkeleton delay={isAdmin ? 640 : 560} />}
           </>
         ) : (
           <>
@@ -397,14 +427,14 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                   primary: nextEvent?.title ?? 'No upcoming events',
                   secondary: nextEvent?.event_date ? shortDate(nextEvent.event_date) : null,
                 },
-                mealsEnabled && {
+                mealsEnabled && nextMeal?.is_paused !== true && {
                   key: 'meals',
                   onClick: () => navigate('/schedule'),
                   icon: <ForkKnife size={24} weight="fill" className="text-ember" />,
                   iconBg: 'bg-ember/10',
                   label: 'Next Meal',
-                  primary: nextMeal?.is_paused ? 'No meal signup this week' : nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet'),
-                  secondary: nextMeal?.week_date && !nextMeal?.is_paused ? shortDate(nextMeal.week_date) : null,
+                  primary: nextMeal?.title ?? (isAdmin ? 'Add meals in the Sign Up tab' : 'No meals scheduled yet'),
+                  secondary: nextMeal?.week_date ? shortDate(nextMeal.week_date) : null,
                 },
                 servicesEnabled && nextService !== null && {
                   key: 'services',
@@ -414,6 +444,15 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                   label: 'Next Service',
                   primary: nextService?.is_paused ? 'No service signup this week' : nextService?.title ?? (isAdmin ? 'Add service dates in the Sign Up tab' : 'No service scheduled yet'),
                   secondary: nextService?.week_date && !nextService?.is_paused ? shortDate(nextService.week_date) : null,
+                },
+                chatEnabled && lastGroupMessage !== null && lastGroupMessage !== undefined && {
+                  key: 'chat',
+                  onClick: () => navigate('/chat'),
+                  icon: <ChatCircleDots size={24} weight="fill" className="text-stone-600" />,
+                  iconBg: 'bg-stone-100',
+                  label: 'Main Chat',
+                  primary: lastGroupMessage.image_url && !lastGroupMessage.body ? '📷 Photo' : lastGroupMessage.body,
+                  secondary: `${shortName(lastGroupMessage.display_name)} · ${relativeTime(lastGroupMessage.created_at)}`,
                 },
                 prayerEnabled && prayerCard && {
                   key: 'prayer',
