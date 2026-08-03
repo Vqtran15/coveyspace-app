@@ -22,8 +22,8 @@ function shortName(full) {
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] ?? ''
 }
 
-function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '', compact = false, fullWidth = false }) {
-  if (compact && !fullWidth) {
+function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '', compact = false }) {
+  if (compact) {
     return (
       <button
         onClick={onClick}
@@ -487,19 +487,15 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 },
               ].filter(Boolean)
 
-              return cards.map(({ key, ...rest }, i) => {
-                const isLastOdd = i === cards.length - 1 && cards.length % 2 !== 0
-                return (
-                  <Card
-                    key={key}
-                    {...rest}
-                    compact={useGrid}
-                    fullWidth={useGrid && isLastOdd}
-                    delay={baseDelay + i * 80}
-                    className={isLastOdd ? 'col-span-2' : ''}
-                  />
-                )
-              })
+              return cards.map(({ key, ...rest }, i) => (
+                <Card
+                  key={key}
+                  {...rest}
+                  compact={useGrid}
+                  delay={baseDelay + i * 80}
+                  className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'col-span-2' : ''}
+                />
+              ))
             })()}
           </>
         )}
