@@ -183,6 +183,12 @@ export default function ConversationList({ session, groupId, members, enterClass
       if (autoOpenMainChat) {
         const mainConv = convs.find(c => c.name === 'Main Group Chat')
         if (mainConv) {
+          // Clear any onboarding draft that may have been written by autoOpenGroupChat.
+          // Home-screen deep links should never pre-populate the input.
+          const draftKey = `draft:${mainConv.id}`
+          if (localStorage.getItem(draftKey) === "Hey everyone, just joined! 👋") {
+            localStorage.removeItem(draftKey)
+          }
           onAutoOpenMainChatConsumed?.()
           onSelect(mainConv)
         }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
@@ -18,15 +18,18 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
   const [listClass, setListClass]             = useState('')
   const [pinnedGroupId, setPinnedGroupId]     = useState(null)
 
+  // Scroll to top synchronously before paint so the body-lock below applies at
+  // offset 0. Without this, navigating here from a scrolled home screen would
+  // lock the body with top:-scrollYpx, shifting ChatView above the viewport
+  // and leaving the input bar floating mid-screen with empty space around it.
+  useLayoutEffect(() => { window.scrollTo(0, 0) }, [])
+
   // Prevent iOS from scrolling the window when the keyboard appears.
   // Without this, tapping the message input causes window.scrollY to drift,
   // leaving a gap between the input bar and the nav bar after sending.
-  // scrollY is preserved so navigating here from a scrolled page doesn't
-  // snap the viewport and push the input bar off-screen.
   useEffect(() => {
-    const scrollY = window.scrollY
     const prev = { position: document.body.style.position, top: document.body.style.top, width: document.body.style.width, overflow: document.body.style.overflow }
-    document.body.style.top      = `-${scrollY}px`
+    document.body.style.top      = ''
     document.body.style.position = 'fixed'
     document.body.style.width    = '100%'
     document.body.style.overflow = 'hidden'
@@ -35,7 +38,6 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       document.body.style.top      = prev.top
       document.body.style.width    = prev.width
       document.body.style.overflow = prev.overflow
-      window.scrollTo(0, scrollY)
     }
   }, [])
 
