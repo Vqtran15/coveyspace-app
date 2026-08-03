@@ -22,26 +22,7 @@ function shortName(full) {
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] ?? ''
 }
 
-function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '', compact = false }) {
-  if (compact) {
-    return (
-      <button
-        onClick={onClick}
-        style={{ animationDelay: `${delay}ms` }}
-        className={`relative overflow-hidden w-full bg-white rounded-2xl p-3 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in ${className}`}
-      >
-        {confetti && <ConfettiDots />}
-        <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center mb-2.5 ${iconBg}`}>
-          {icon}
-        </div>
-        <div className="relative">
-          <p className="text-[11px] font-semibold text-stone-500 uppercase tracking-wide mb-0.5">{label}</p>
-          <p className="text-sm font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
-          {secondary && <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{secondary}</p>}
-        </div>
-      </button>
-    )
-  }
+function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '' }) {
   return (
     <button
       onClick={onClick}
@@ -62,19 +43,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
   )
 }
 
-function CardSkeleton({ delay = 0, compact = false }) {
-  if (compact) {
-    return (
-      <div
-        className="w-full bg-white rounded-2xl p-3 border border-stone-100 shadow-sm animate-pulse"
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <div className="w-10 h-10 rounded-xl bg-stone-100 mb-2.5" />
-        <div className="h-2 bg-stone-100 rounded w-1/2 mb-1.5" />
-        <div className="h-3.5 bg-stone-200 rounded w-4/5" />
-      </div>
-    )
-  }
+function CardSkeleton({ delay = 0 }) {
   return (
     <div
       className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-pulse"
@@ -298,9 +267,6 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
   const showAnnouncement = isAdmin || !!announcement
 
-  const enabledFeatureCount = [mealsEnabled, servicesEnabled, eventsEnabled, prayerEnabled, birthdaysEnabled, guideEnabled, givingEnabled].filter(Boolean).length
-  const useGrid = enabledFeatureCount >= 4
-
   return (
     <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {/* Pull-to-refresh indicator */}
@@ -332,23 +298,23 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
       <InstallBanner />
 
-      <div className={useGrid ? 'grid grid-cols-2 gap-3 lg:gap-5' : 'space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0'}>
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         {!loaded ? (
           <>
-            {isAdmin && <div className="col-span-2"><CardSkeleton delay={0} /></div>}
-            {mealsEnabled     && <CardSkeleton compact={useGrid} delay={isAdmin ? 80  : 0}   />}
-            {servicesEnabled  && <CardSkeleton compact={useGrid} delay={isAdmin ? 160 : 80}  />}
-            {eventsEnabled    && <CardSkeleton compact={useGrid} delay={isAdmin ? 240 : 160} />}
-            {prayerEnabled    && <CardSkeleton compact={useGrid} delay={isAdmin ? 320 : 240} />}
-            {birthdaysEnabled && <CardSkeleton compact={useGrid} delay={isAdmin ? 400 : 320} />}
-            {guideEnabled     && <CardSkeleton compact={useGrid} delay={isAdmin ? 480 : 400} />}
-            {givingEnabled    && <CardSkeleton compact={useGrid} delay={isAdmin ? 560 : 480} />}
+            {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
+            {mealsEnabled     && <CardSkeleton delay={isAdmin ? 80  : 0}   />}
+            {servicesEnabled  && <CardSkeleton delay={isAdmin ? 160 : 80}  />}
+            {eventsEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
+            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 320 : 240} />}
+            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 400 : 320} />}
+            {guideEnabled     && <CardSkeleton delay={isAdmin ? 480 : 400} />}
+            {givingEnabled    && <CardSkeleton delay={isAdmin ? 560 : 480} />}
           </>
         ) : (
           <>
             {/* Solo-admin nudge — shown until someone joins */}
             {soloAdmin && (
-              <div className="w-full animate-stack-in col-span-2">
+              <div className="w-full animate-stack-in lg:col-span-2">
                 <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-ember mb-0.5">Your group is just you</p>
@@ -378,7 +344,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
             {/* Announcement — always first */}
             {showAnnouncement && (
               announcement ? (
-                <div className="w-full animate-stack-in col-span-2">
+                <div className="w-full animate-stack-in lg:col-span-2">
                   <div
                     className="w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 animate-announcement-shake"
                     style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
@@ -403,7 +369,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               ) : (
                 <button
                   onClick={() => setEditingAnnouncement(true)}
-                  className="w-full bg-ember/8 border border-dashed border-ember/30 rounded-2xl p-4 animate-stack-in text-left col-span-2"
+                  className="w-full bg-ember/8 border border-dashed border-ember/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
                   style={{ animationDelay: '0ms' }}
                 >
                   <div className="flex items-center gap-3">
@@ -491,9 +457,8 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 <Card
                   key={key}
                   {...rest}
-                  compact={useGrid}
                   delay={baseDelay + i * 80}
-                  className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'col-span-2' : ''}
+                  className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'lg:col-span-2' : ''}
                 />
               ))
             })()}
