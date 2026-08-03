@@ -187,7 +187,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
         <button onClick={handleClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors">
           <ArrowLeft size={22} weight="bold" className="text-stone-600" />
         </button>
-        <span className="font-semibold text-stone-800">Group Prayer</span>
+        <span className="font-semibold text-stone-800">Shared Prayer</span>
         {canManage ? (
           <button
             onClick={() => { resetActionSheet(); setActionSheetOpen(true) }}
@@ -324,7 +324,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
                 className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors text-left"
               >
                 <Trash size={20} />
-                <span className="text-sm font-medium">Delete group prayer</span>
+                <span className="text-sm font-medium">Delete shared prayer</span>
               </button>
             </div>
             <div className="px-4 pb-6">
@@ -347,7 +347,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-6">
-              <h2 className="text-lg font-bold text-stone-800 mb-1">Delete group prayer?</h2>
+              <h2 className="text-lg font-bold text-stone-800 mb-1">Delete shared prayer?</h2>
               <p className="text-sm text-stone-500 mb-5">
                 Prayer for <span className="font-semibold text-stone-700">{formatMemberNames(firstNames)}</span> will be permanently removed for everyone.
               </p>

@@ -554,7 +554,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-white border border-stone-300 text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 active:bg-ember/10 transition-colors"
           >
             <Users size={15} weight="bold" />
-            Group
+            Shared
           </button>
         )}
       </div>
@@ -758,7 +758,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           >
             {/* Sheet header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-4">
-              <h2 className="text-lg font-bold text-stone-800">Group Prayer</h2>
+              <h2 className="text-lg font-bold text-stone-800">Shared Prayer Request</h2>
               <button onClick={closeCreate} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
                 <X size={20} />
               </button>
@@ -813,7 +813,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
                 disabled={creating || selectedMemberIds.size < 2 || !requestText.trim()}
                 className="w-full py-3 rounded-xl bg-ember text-white font-semibold text-sm hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {creating ? 'Saving…' : selectedMemberIds.size < 2 ? 'Select at least 2 members' : 'Add Group Prayer'}
+                {creating ? 'Saving…' : selectedMemberIds.size < 2 ? 'Select at least 2 members' : 'Add Shared Prayer'}
               </button>
             </div>
           </div>
