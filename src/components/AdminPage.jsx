@@ -177,32 +177,58 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
     setPcoMembersLoading(true)
     setPcoMembers([])
     setMemberStatuses({})
+
+    // Step 1: memberships + embedded person (name/avatar only — no email in Groups v2)
     const { data } = await supabase.functions.invoke('pco-api', {
       body: { path: `/groups/v2/groups/${pcoGroupId}/memberships?include=person&per_page=100` },
     })
-    if (data?.included) {
-      const people = data.included
-        .filter(i => i.type === 'Person')
-        .map(p => ({
-          id:     p.id,
-          name:   p.attributes.name,
-          email:  p.attributes.email_address ?? null,
-          avatar: p.attributes.avatar,
-        }))
 
-      const withEmail = people.filter(p => p.email)
-      if (withEmail.length) {
-        const emails = withEmail.map(p => p.email)
-        const { data: statuses } = await supabase.rpc('check_pco_members', { emails })
-        const map = {}
-        statuses?.forEach(s => { map[s.email] = s.in_group })
-        setMemberStatuses(map)
+    const persons = data?.included?.filter(i => i.type === 'Person') ?? []
+
+    if (persons.length === 0) {
+      if (data?.data?.length > 0) {
+        setPcoMembers([{ id: '__debug__', name: `${data.data.length} memberships found but no person details returned`, email: null }])
       }
-      setPcoMembers(people)
-    } else if (data?.data) {
-      // included is absent — Groups API returned memberships but no person data
-      setPcoMembers([{ id: '__debug__', name: `${data.data.length} memberships found but no person details returned`, email: null }])
+      setPcoMembersLoading(false)
+      return
     }
+
+    // Step 2: fetch emails from People v2 — Groups v2 person records don't include email_address
+    const ids = persons.map(p => p.id).join(',')
+    const { data: peopleData } = await supabase.functions.invoke('pco-api', {
+      body: { path: `/people/v2/people?where[id]=${ids}&include=emails&per_page=${persons.length}` },
+    })
+
+    // Build person_id → email map: first try convenience attribute, then included Email resources
+    const emailMap = {}
+    peopleData?.data?.forEach(p => {
+      if (p.attributes?.email_address) emailMap[p.id] = p.attributes.email_address
+    })
+    peopleData?.included
+      ?.filter(i => i.type === 'Email')
+      ?.forEach(e => {
+        const pid = e.relationships?.person?.data?.id
+        if (pid && !emailMap[pid] && e.attributes?.address) {
+          emailMap[pid] = e.attributes.address
+        }
+      })
+
+    const people = persons.map(p => ({
+      id:     p.id,
+      name:   p.attributes.name,
+      email:  emailMap[p.id] ?? null,
+      avatar: p.attributes.avatar,
+    }))
+
+    const withEmail = people.filter(p => p.email)
+    if (withEmail.length) {
+      const emails = withEmail.map(p => p.email)
+      const { data: statuses } = await supabase.rpc('check_pco_members', { emails })
+      const map = {}
+      statuses?.forEach(s => { map[s.email] = s.in_group })
+      setMemberStatuses(map)
+    }
+    setPcoMembers(people)
     setPcoMembersLoading(false)
   }
 
