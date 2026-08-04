@@ -169,8 +169,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialScrollDoneRef       = useRef(false)
   const pendingScrollRef           = useRef(null)
 
-  const freshLoadRef          = useRef(false)
-  const wasAtBottomRef        = useRef(true)
+  const freshLoadRef               = useRef(false)
+  const wasAtBottomRef             = useRef(true)
+  const initialRevealScrollNeeded  = useRef(false)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
@@ -656,6 +657,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       isAtBottomRef.current = true
       setIsAtBottom(true)
       scrollToBottom()
+      // Mark that the next messages update should force a scroll-to-bottom.
+      // On iOS Safari, scrollHeight may be stale immediately after the messages
+      // container transitions from height:0 to full height, causing scrollToBottom()
+      // above to land at the wrong position. When the fresh fetch then updates
+      // messages, the useLayoutEffect([messages]) below will correct the scroll
+      // regardless of whether isAtBottomRef got knocked to false by a stale scroll event.
+      initialRevealScrollNeeded.current = true
     }
   }, [visible])
 
@@ -717,7 +725,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       preserveScrollRef.current = null
       return
     }
-    if (visible && isAtBottomRef.current) {
+    const forceScroll = initialRevealScrollNeeded.current
+    initialRevealScrollNeeded.current = false
+    if (visible && (isAtBottomRef.current || forceScroll)) {
       scrollToBottom()
     }
   }, [messages])
