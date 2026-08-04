@@ -378,7 +378,10 @@ export default function App() {
   }, [groupId])
 
   useEffect(() => {
-    if (location.pathname === '/chat') setUnreadChatCount(0)
+    if (location.pathname === '/chat') {
+      setUnreadChatCount(0)
+      navigator.clearAppBadge?.().catch(() => {})
+    }
     window.scrollTo(0, 0)
     trackPageView(location.pathname)
   }, [location.pathname])
