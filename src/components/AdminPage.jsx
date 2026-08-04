@@ -838,9 +838,9 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
               <div className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
                 <LinkSimple size={20} weight="bold" className="text-stone-500" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-stone-800">Planning Center</p>
-                <p className="text-xs text-stone-400 truncate">
+                <p className="text-xs text-stone-400">
                   {pcoConnection === undefined ? 'Loading…' :
                    pcoConnection
                      ? `Connected to ${pcoConnection.pco_organization_name ?? 'your church'}`
