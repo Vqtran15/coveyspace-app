@@ -27,6 +27,10 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
 
+  const [activeTab, setActiveTab] = useState(() =>
+    new URLSearchParams(location.search).get('pco') ? 'integrations' : 'settings'
+  )
+
   // PCO integration state
   const [pcoConnection, setPcoConnection]   = useState(undefined) // undefined=loading, null=not connected, {...}=connected
   const [pcoConnecting, setPcoConnecting]   = useState(false)
@@ -373,7 +377,33 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         </div>
       </div>
 
+      {/* Tab nav */}
+      <div className="flex bg-stone-100 rounded-xl p-1 mb-6">
+        {[
+          { id: 'settings',     label: 'Settings'     },
+          { id: 'features',     label: 'Features'     },
+          { id: 'integrations', label: 'Integrations' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            aria-pressed={activeTab === tab.id}
+            className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${
+              activeTab === tab.id
+                ? 'bg-ember text-white shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-8">
+
+        {/* ── Settings tab ─────────────────────────────────────── */}
+        {activeTab === 'settings' && <>
+
         {/* Onboarding nudge — solo admin, nobody has joined yet */}
         {members.length === 1 && inviteCode && (
           <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 space-y-3">
@@ -610,6 +640,11 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             )}
           </section>
         )}
+
+        </>}
+
+        {/* ── Features tab ─────────────────────────────────────── */}
+        {activeTab === 'features' && <>
 
         {/* Features */}
         <section>
@@ -879,6 +914,11 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
           <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
         </section>
 
+        </>}
+
+        {/* ── Integrations tab ─────────────────────────────────── */}
+        {activeTab === 'integrations' && <>
+
         {/* Integrations */}
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Integrations</p>
@@ -1097,6 +1137,8 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             )}
           </div>
         </section>
+
+        </>}
 
       </div>
     </div>
