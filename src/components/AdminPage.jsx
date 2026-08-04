@@ -30,6 +30,16 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [activeTab, setActiveTab] = useState(() =>
     new URLSearchParams(location.search).get('pco') ? 'integrations' : 'settings'
   )
+  const [tabAnimKey, setTabAnimKey]     = useState(0)
+  const [tabAnimClass, setTabAnimClass] = useState('')
+
+  const TAB_ORDER = { settings: 0, features: 1, integrations: 2 }
+  function switchTab(id) {
+    if (id === activeTab) return
+    setTabAnimClass(TAB_ORDER[id] > TAB_ORDER[activeTab] ? 'animate-slide-in-right' : 'animate-slide-in-left')
+    setTabAnimKey(k => k + 1)
+    setActiveTab(id)
+  }
 
   // PCO integration state
   const [pcoConnection, setPcoConnection]   = useState(undefined) // undefined=loading, null=not connected, {...}=connected
@@ -361,7 +371,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   }
 
   return (
-    <div className="max-w-3xl lg:max-w-2xl mx-auto px-4 pt-8 pb-12">
+    <div className="max-w-3xl lg:max-w-2xl mx-auto px-4 pt-8 pb-12 animate-slide-in-right">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
@@ -386,7 +396,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => switchTab(tab.id)}
             aria-pressed={activeTab === tab.id}
             className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${
               activeTab === tab.id
@@ -399,7 +409,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         ))}
       </div>
 
-      <div className="space-y-8">
+      <div key={tabAnimKey} className={`space-y-8 ${tabAnimClass}`}>
 
         {/* ── Settings tab ─────────────────────────────────────── */}
         {activeTab === 'settings' && <>
