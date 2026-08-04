@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, LinkSimple, CheckCircle, Copy, Envelope } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, LinkSimple, CheckCircle, Copy, Envelope, ArrowsClockwise } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -186,19 +186,22 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         .map(p => ({
           id:     p.id,
           name:   p.attributes.name,
-          email:  p.attributes.email_address,
+          email:  p.attributes.email_address ?? null,
           avatar: p.attributes.avatar,
         }))
-        .filter(p => p.email)
 
-      const emails = people.map(p => p.email)
-      if (emails.length) {
+      const withEmail = people.filter(p => p.email)
+      if (withEmail.length) {
+        const emails = withEmail.map(p => p.email)
         const { data: statuses } = await supabase.rpc('check_pco_members', { emails })
         const map = {}
         statuses?.forEach(s => { map[s.email] = s.in_group })
         setMemberStatuses(map)
       }
       setPcoMembers(people)
+    } else if (data?.data) {
+      // included is absent — Groups API returned memberships but no person data
+      setPcoMembers([{ id: '__debug__', name: `${data.data.length} memberships found but no person details returned`, email: null }])
     }
     setPcoMembersLoading(false)
   }
@@ -896,23 +899,35 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   ) : pcoGroups.length === 0 ? (
                     <p className="text-xs text-stone-400">No PCO Groups found. Make sure the Groups product is enabled in Planning Center.</p>
                   ) : (
-                    <div className="relative">
-                      <select
-                        value={selectedPcoGroup ?? ''}
-                        onChange={e => {
-                          const val = e.target.value || null
-                          setSelectedPcoGroup(val)
-                          if (val) loadPcoMembers(val)
-                          else { setPcoMembers([]); setMemberStatuses({}) }
-                        }}
-                        className="w-full appearance-none border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 bg-white pr-9 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                      >
-                        <option value="">Pick a PCO Group…</option>
-                        {pcoGroups.map(g => (
-                          <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                      </select>
-                      <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <select
+                          value={selectedPcoGroup ?? ''}
+                          onChange={e => {
+                            const val = e.target.value || null
+                            setSelectedPcoGroup(val)
+                            if (val) loadPcoMembers(val)
+                            else { setPcoMembers([]); setMemberStatuses({}) }
+                          }}
+                          className="w-full appearance-none border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 bg-white pr-9 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                        >
+                          <option value="">Pick a PCO Group…</option>
+                          {pcoGroups.map(g => (
+                            <option key={g.id} value={g.id}>{g.name}</option>
+                          ))}
+                        </select>
+                        <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                      </div>
+                      {selectedPcoGroup && (
+                        <button
+                          onClick={() => loadPcoMembers(selectedPcoGroup)}
+                          disabled={pcoMembersLoading}
+                          aria-label="Refresh member list"
+                          className="shrink-0 w-10 h-10 flex items-center justify-center border border-stone-200 rounded-xl text-stone-400 hover:text-ember hover:border-ember hover:bg-ember/5 transition-colors disabled:opacity-40"
+                        >
+                          <ArrowsClockwise size={16} className={pcoMembersLoading ? 'animate-spin' : ''} />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -929,16 +944,16 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                       aria-checked={pcoConnection?.pco_sync_group_id === selectedPcoGroup}
                       aria-label="Auto-sync new members to this PCO Group"
                       onClick={handleTogglePcoSync}
-                      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
+                      className={`relative shrink-0 w-11 h-6 rounded-full border-2 border-transparent transition-colors ${
                         pcoConnection?.pco_sync_group_id === selectedPcoGroup
                           ? 'bg-ember'
                           : 'bg-stone-200'
                       }`}
                     >
-                      <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                      <span className={`absolute top-0 left-0 w-5 h-5 bg-white rounded-full shadow transition-transform ${
                         pcoConnection?.pco_sync_group_id === selectedPcoGroup
-                          ? 'translate-x-6'
-                          : 'translate-x-1'
+                          ? 'translate-x-5'
+                          : 'translate-x-0'
                       }`} />
                     </button>
                   </div>
@@ -954,10 +969,10 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                         ))}
                       </div>
                     ) : pcoMembers.length === 0 ? (
-                      <p className="text-xs text-stone-400 py-3 text-center">No members with email addresses found in this group.</p>
+                      <p className="text-xs text-stone-500 py-3 text-center">No members found in this PCO Group.</p>
                     ) : (
                       <>
-                        <p className="text-xs text-stone-400 mb-3">{pcoMembers.length} people in this PCO Group</p>
+                        <p className="text-xs text-stone-400 mb-3">{pcoMembers.length} {pcoMembers.length === 1 ? 'person' : 'people'} in this PCO Group</p>
                         <div className="space-y-1">
                           {pcoMembers.map(member => {
                             const status = memberStatuses[member.email]
@@ -967,9 +982,11 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                               <div key={member.id} className="flex items-center gap-3 py-1.5">
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-stone-800 truncate">{member.name}</p>
-                                  <p className="text-xs text-stone-400 truncate">{member.email}</p>
+                                  <p className="text-xs text-stone-400 truncate">{member.email ?? 'No email in PCO'}</p>
                                 </div>
-                                {alreadyMember ? (
+                                {!member.email ? (
+                                  <span className="text-xs text-stone-300 shrink-0">Can't invite</span>
+                                ) : alreadyMember ? (
                                   <div className="flex items-center gap-1 text-sage-700 shrink-0">
                                     <CheckCircle size={14} weight="fill" />
                                     <span className="text-xs font-medium">Member</span>
