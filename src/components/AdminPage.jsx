@@ -688,7 +688,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
         </section>
 
         {/* Meal Schedule */}
-        <section>
+        {groupSettings?.meals_enabled && <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Meal Schedule</p>
           <div className="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
             <div>
@@ -789,10 +789,10 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             </div>
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">New meals are automatically created on these days using your existing meals as a rotating template.</p>
-        </section>
+        </section>}
 
         {/* Service Schedule */}
-        <section>
+        {groupSettings?.services_enabled && <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Service Schedule</p>
           <div className="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
             <div className="flex gap-2">
@@ -912,7 +912,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             )}
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
-        </section>
+        </section>}
 
         </>}
 
