@@ -39,7 +39,7 @@ self.addEventListener('push', event => {
 
         return Promise.all([
           self.registration.showNotification(title, options),
-          navigator.setAppBadge?.().catch?.(() => {}),
+          navigator.setAppBadge?.(1).catch?.(() => {}),
         ])
       })
   )

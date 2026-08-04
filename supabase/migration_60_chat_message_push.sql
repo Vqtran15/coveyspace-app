@@ -1,26 +1,20 @@
--- migration_60: Webhook for send-chat-message-push
+-- migration_60: App icon badge for unread chat messages
 --
--- This is a documentation-only file. Run these steps in the Supabase dashboard
--- for project ktmlyzwpgvhrwfgyoeiq.
+-- No new webhook needed — send-push already handles messages INSERT and sends
+-- push notifications to conversation members. The badge feature is purely
+-- client-side changes in src/App.jsx and src/sw.js.
 --
--- 1. Deploy the edge function:
---      supabase functions deploy send-chat-message-push
+-- If a webhook named on_chat_message_insert was created in the Supabase dashboard
+-- pointing to send-chat-message-push, DELETE IT — it duplicates send-push and
+-- causes two push events per message (two sounds/vibrations).
 --
--- 2. In the Supabase dashboard → Database → Webhooks, create a new webhook:
---      Name:    on_chat_message_insert
---      Table:   messages
---      Events:  INSERT
---      Type:    Supabase Edge Functions
---      Function: send-chat-message-push
+-- How the badge works:
+-- - App open: App.jsx useEffect syncs unreadChatCount → navigator.setAppBadge(count)
+--   Clears on /chat navigation.
+-- - App closed/backgrounded: sw.js push handler calls navigator.setAppBadge(1)
+--   alongside showNotification(). Clears on notification tap.
+-- - Foreground suppression: if the user already has the target page visible,
+--   both the notification popup and badge are skipped.
 --
--- No schema changes — this function uses the existing push_subscriptions and
--- profiles tables, and the messages INSERT trigger already fires on every new message.
---
--- Behavior:
--- - Fires on every new message INSERT
--- - Looks up the sender's display_name from profiles
--- - Sends a push notification to all members of the same community_group_id
---   who are NOT the sender (i.e., everyone else in the group)
--- - The service worker (sw.js) calls navigator.setAppBadge() on push receive,
---   which shows a badge dot on the installed PWA icon
--- - The badge is cleared when the user taps the notification or navigates to /chat
+-- send-chat-message-push was deployed but should not have an active webhook.
+-- It is superseded by the existing send-push function.
