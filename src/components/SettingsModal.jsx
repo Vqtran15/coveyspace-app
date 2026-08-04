@@ -25,6 +25,10 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
   const [nameOpen, setNameOpen] = useState(false)
   const [nameValue, setNameValue] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
+  const [legalNameOpen, setLegalNameOpen]     = useState(false)
+  const [legalFirst, setLegalFirst]           = useState('')
+  const [legalLast, setLegalLast]             = useState('')
+  const [legalNameSaving, setLegalNameSaving] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
@@ -42,13 +46,15 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     if (!userId) return
     supabase
       .from('profiles')
-      .select('avatar_icon, avatar_color, avatar_image_url')
+      .select('avatar_icon, avatar_color, avatar_image_url, first_name, last_name')
       .eq('user_id', userId)
       .single()
       .then(({ data }) => {
         setAvatarIcon(data?.avatar_icon ?? null)
         setAvatarColorKey(data?.avatar_color ?? null)
         setAvatarImageUrl(data?.avatar_image_url ?? null)
+        setLegalFirst(data?.first_name ?? '')
+        setLegalLast(data?.last_name  ?? '')
       })
     supabase.auth.getUser().then(({ data: { user } }) => setEmail(user?.email ?? ''))
   }, [userId])
@@ -70,6 +76,24 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
       setNameOpen(false)
     }
     setNameSaving(false)
+  }
+
+  async function handleChangeLegalName(e) {
+    e.preventDefault()
+    const trimmedFirst = legalFirst.trim()
+    if (!trimmedFirst) return
+    setLegalNameSaving(true)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ first_name: trimmedFirst, last_name: legalLast.trim() || null })
+      .eq('user_id', userId)
+    if (error) {
+      toast('Failed to update name', 'error')
+    } else {
+      toast('Name updated', 'success')
+      setLegalNameOpen(false)
+    }
+    setLegalNameSaving(false)
   }
 
   async function handleLeaveGroup() {
@@ -301,6 +325,74 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 >
                   <PencilSimple size={15} weight="bold" className="text-stone-400" />
                   Change display name
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* First & last name */}
+            <AnimatePresence initial={false}>
+              {legalNameOpen ? (
+                <motion.form
+                  key="legal-name-form"
+                  onSubmit={handleChangeLegalName}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                  className="mb-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 space-y-3"
+                >
+                  <p className="text-xs font-semibold text-stone-500">First &amp; Last Name</p>
+                  <div className="flex gap-2">
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="First"
+                      value={legalFirst}
+                      onChange={e => setLegalFirst(e.target.value)}
+                      maxLength={40}
+                      required
+                      autoComplete="given-name"
+                      className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last"
+                      value={legalLast}
+                      onChange={e => setLegalLast(e.target.value)}
+                      maxLength={40}
+                      autoComplete="family-name"
+                      className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setLegalNameOpen(false)}
+                      className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={legalNameSaving || !legalFirst.trim()}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
+                    >
+                      {legalNameSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </motion.form>
+              ) : (
+                <motion.button
+                  key="legal-name-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => setLegalNameOpen(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+                >
+                  <PencilSimple size={15} weight="bold" className="text-stone-400" />
+                  {legalFirst ? `${legalFirst}${legalLast ? ' ' + legalLast : ''}` : 'Add first & last name'}
                 </motion.button>
               )}
             </AnimatePresence>

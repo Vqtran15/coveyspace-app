@@ -11,7 +11,8 @@ export default function AuthPage() {
   const codeParam = searchParams.get('code')?.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) ?? null
   const [mode, setMode]             = useState((codeParam || searchParams.get('tab') === 'signup') ? 'signup' : 'signin')
   const [joinMode, setJoinMode]     = useState('join') // 'join' | 'create'
-  const [displayName, setDisplayName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName]   = useState('')
   const [inviteCode, setInviteCode] = useState(codeParam ?? '')
   const [newGroupName, setNewGroupName] = useState('')
   const [email, setEmail]           = useState('')
@@ -71,11 +72,13 @@ export default function AuthPage() {
         setLoading(false)
         return
       }
-      if (!displayName.trim()) {
-        setError('Please enter your name.')
+      if (!firstName.trim()) {
+        setError('Please enter your first name.')
         setLoading(false)
         return
       }
+
+      const displayName = firstName.trim() + (lastName.trim() ? ' ' + lastName.trim() : '')
 
       let metadata
       if (joinMode === 'join') {
@@ -84,14 +87,24 @@ export default function AuthPage() {
           setLoading(false)
           return
         }
-        metadata = { display_name: displayName.trim(), invite_code: inviteCode.trim().toUpperCase() }
+        metadata = {
+          display_name: displayName,
+          first_name: firstName.trim(),
+          last_name:  lastName.trim() || null,
+          invite_code: inviteCode.trim().toUpperCase(),
+        }
       } else {
         if (!newGroupName.trim()) {
           setError('Please enter a group name.')
           setLoading(false)
           return
         }
-        metadata = { display_name: displayName.trim(), community_group_name: newGroupName.trim() }
+        metadata = {
+          display_name: displayName,
+          first_name: firstName.trim(),
+          last_name:  lastName.trim() || null,
+          community_group_name: newGroupName.trim(),
+        }
       }
 
       const { data: signUpData, error: err } = await supabase.auth.signUp({ email, password, options: { data: metadata } })
@@ -193,19 +206,34 @@ export default function AuthPage() {
               {/* Signup-only fields */}
               {mode === 'signup' && (
                 <>
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
-                      Your Name
-                    </label>
-                    <input
-                      type="text"
-                      value={displayName}
-                      onChange={e => setDisplayName(e.target.value)}
-                      placeholder="e.g. Jane Smith"
-                      required
-                      autoComplete="name"
-                      className={inputClass}
-                    />
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={e => setFirstName(e.target.value)}
+                        placeholder="Jane"
+                        required
+                        autoComplete="given-name"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={e => setLastName(e.target.value)}
+                        placeholder="Smith"
+                        autoComplete="family-name"
+                        className={inputClass}
+                      />
+                    </div>
                   </div>
 
                   {/* Join vs Create toggle */}

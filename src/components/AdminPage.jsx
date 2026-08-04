@@ -161,7 +161,14 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       body: { path: '/groups/v2/groups?per_page=100&order=name' },
     })
     if (data?.data) {
-      setPcoGroups(data.data.map(g => ({ id: g.id, name: g.attributes.name })))
+      const groups = data.data.map(g => ({ id: g.id, name: g.attributes.name }))
+      setPcoGroups(groups)
+      // Auto-select whichever group is currently configured for sync
+      const syncId = pcoConnection?.pco_sync_group_id
+      if (syncId && groups.some(g => g.id === syncId)) {
+        setSelectedPcoGroup(syncId)
+        loadPcoMembers(syncId)
+      }
     }
     setPcoGroupsLoading(false)
   }
@@ -257,6 +264,18 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       toast('Could not detect PCO giving URL — set it manually in the Giving tab', 'error')
     }
     setPcoFetchingGiving(false)
+  }
+
+  async function handleTogglePcoSync() {
+    const currentSync = pcoConnection?.pco_sync_group_id ?? null
+    const newId = currentSync === selectedPcoGroup ? null : selectedPcoGroup
+    const { error } = await supabase.rpc('set_pco_sync_group', { target_group_id: newId })
+    if (error) {
+      toast('Failed to update sync setting', 'error')
+    } else {
+      setPcoConnection(prev => ({ ...prev, pco_sync_group_id: newId }))
+      toast(newId ? 'Sync enabled — new members will be added to this PCO Group' : 'Sync disabled', 'success')
+    }
   }
 
   // Load PCO connection on mount
@@ -897,6 +916,33 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                     </div>
                   )}
                 </div>
+
+                {/* Sync toggle */}
+                {selectedPcoGroup && (
+                  <div className="px-4 pb-3 flex items-center gap-3">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-stone-700">Auto-sync new members here</p>
+                      <p className="text-xs text-stone-400 mt-0.5">New Covey Space members are added to this PCO Group automatically</p>
+                    </div>
+                    <button
+                      role="switch"
+                      aria-checked={pcoConnection?.pco_sync_group_id === selectedPcoGroup}
+                      aria-label="Auto-sync new members to this PCO Group"
+                      onClick={handleTogglePcoSync}
+                      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
+                        pcoConnection?.pco_sync_group_id === selectedPcoGroup
+                          ? 'bg-ember'
+                          : 'bg-stone-200'
+                      }`}
+                    >
+                      <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                        pcoConnection?.pco_sync_group_id === selectedPcoGroup
+                          ? 'translate-x-6'
+                          : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </div>
+                )}
 
                 {/* Member list */}
                 {selectedPcoGroup && (
