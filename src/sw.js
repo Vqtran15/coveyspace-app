@@ -14,9 +14,10 @@ self.addEventListener('push', event => {
   let data = {}
   try { data = event.data?.json() ?? {} } catch {}
 
-  const title   = data.title ?? 'Covey Space'
-  const url     = data.url ?? '/chat'
-  const options = {
+  const title      = data.title ?? 'Covey Space'
+  const url        = data.url ?? '/chat'
+  const targetPath = new URL(url, self.location.origin).pathname
+  const options    = {
     body:      data.body ?? '',
     icon:      '/icons/icon-192.png',
     badge:     '/icons/icon-192.png',
@@ -26,10 +27,21 @@ self.addEventListener('push', event => {
   }
 
   event.waitUntil(
-    Promise.all([
-      self.registration.showNotification(title, options),
-      navigator.setAppBadge?.().catch?.(() => {}),
-    ])
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clientList => {
+        // If the user already has the target page open and visible, skip the
+        // notification popup and badge — the realtime subscription handles it.
+        const activeOnTarget = clientList.some(
+          c => c.visibilityState === 'visible' && new URL(c.url).pathname === targetPath
+        )
+        if (activeOnTarget) return
+
+        return Promise.all([
+          self.registration.showNotification(title, options),
+          navigator.setAppBadge?.().catch?.(() => {}),
+        ])
+      })
   )
 })
 
