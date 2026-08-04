@@ -59,6 +59,9 @@ END;
 $$;
 
 -- ─── 3. Update get_pco_connection to expose pco_sync_group_id ────────────────
+-- Must drop first because the return type is changing (new pco_sync_group_id column).
+
+DROP FUNCTION IF EXISTS get_pco_connection();
 
 CREATE OR REPLACE FUNCTION get_pco_connection()
 RETURNS TABLE (

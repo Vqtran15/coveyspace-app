@@ -26,8 +26,10 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
   const [nameValue, setNameValue] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
   const [legalNameOpen, setLegalNameOpen]     = useState(false)
-  const [legalFirst, setLegalFirst]           = useState('')
-  const [legalLast, setLegalLast]             = useState('')
+  const [legalFirst, setLegalFirst]           = useState('') // last-saved value (for display)
+  const [legalLast, setLegalLast]             = useState('') // last-saved value (for display)
+  const [editFirst, setEditFirst]             = useState('') // live form input
+  const [editLast, setEditLast]               = useState('') // live form input
   const [legalNameSaving, setLegalNameSaving] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
   const [currentPw, setCurrentPw] = useState('')
@@ -80,16 +82,19 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
 
   async function handleChangeLegalName(e) {
     e.preventDefault()
-    const trimmedFirst = legalFirst.trim()
+    const trimmedFirst = editFirst.trim()
+    const trimmedLast  = editLast.trim()
     if (!trimmedFirst) return
     setLegalNameSaving(true)
     const { error } = await supabase
       .from('profiles')
-      .update({ first_name: trimmedFirst, last_name: legalLast.trim() || null })
+      .update({ first_name: trimmedFirst, last_name: trimmedLast || null })
       .eq('user_id', userId)
     if (error) {
       toast('Failed to update name', 'error')
     } else {
+      setLegalFirst(trimmedFirst)
+      setLegalLast(trimmedLast)
       toast('Name updated', 'success')
       setLegalNameOpen(false)
     }
@@ -347,8 +352,8 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                       autoFocus
                       type="text"
                       placeholder="First"
-                      value={legalFirst}
-                      onChange={e => setLegalFirst(e.target.value)}
+                      value={editFirst}
+                      onChange={e => setEditFirst(e.target.value)}
                       maxLength={40}
                       required
                       autoComplete="given-name"
@@ -357,8 +362,8 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     <input
                       type="text"
                       placeholder="Last"
-                      value={legalLast}
-                      onChange={e => setLegalLast(e.target.value)}
+                      value={editLast}
+                      onChange={e => setEditLast(e.target.value)}
                       maxLength={40}
                       autoComplete="family-name"
                       className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
@@ -374,7 +379,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     </button>
                     <button
                       type="submit"
-                      disabled={legalNameSaving || !legalFirst.trim()}
+                      disabled={legalNameSaving || !editFirst.trim()}
                       className="flex-1 py-2 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
                     >
                       {legalNameSaving ? 'Saving…' : 'Save'}
@@ -388,7 +393,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.12 }}
-                  onClick={() => setLegalNameOpen(true)}
+                  onClick={() => { setEditFirst(legalFirst); setEditLast(legalLast); setLegalNameOpen(true) }}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
                 >
                   <PencilSimple size={15} weight="bold" className="text-stone-400" />
