@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork } from '@phosphor-icons/react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, LinkSimple, CheckCircle, Copy, Envelope } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -8,6 +8,7 @@ import { weekOccToMode } from '../utils/schedule.js'
 
 export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
 
   const [inviteCode, setInviteCode] = useState(null)
@@ -25,6 +26,20 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   const [membersOpen, setMembersOpen] = useState(true)
   const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
+
+  // PCO integration state
+  const [pcoConnection, setPcoConnection]   = useState(undefined) // undefined=loading, null=not connected, {...}=connected
+  const [pcoConnecting, setPcoConnecting]   = useState(false)
+  const [pcoDisconnecting, setPcoDisconnecting] = useState(false)
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false)
+  const [pcoGroups, setPcoGroups]           = useState([])
+  const [pcoGroupsLoading, setPcoGroupsLoading] = useState(false)
+  const [selectedPcoGroup, setSelectedPcoGroup] = useState(null)
+  const [pcoMembers, setPcoMembers]         = useState([])
+  const [pcoMembersLoading, setPcoMembersLoading] = useState(false)
+  const [memberStatuses, setMemberStatuses] = useState({}) // { [email]: true | 'invited' | false }
+  const [inviteSending, setInviteSending]   = useState({}) // { [email]: boolean }
+  const [pcoFetchingGiving, setPcoFetchingGiving] = useState(false)
 
   useEffect(() => {
     if (!isAdmin) { navigate('/home', { replace: true }); return }
@@ -132,6 +147,143 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       onGroupSettingsChange?.(groupSettings)
     }
   }
+
+  // ─── Planning Center integration ────────────────────────────────────────────
+
+  async function loadPcoConnection() {
+    const { data } = await supabase.rpc('get_pco_connection')
+    setPcoConnection(data?.[0] ?? null)
+  }
+
+  async function loadPcoGroups() {
+    setPcoGroupsLoading(true)
+    const { data } = await supabase.functions.invoke('pco-api', {
+      body: { path: '/groups/v2/groups?per_page=100&order=name' },
+    })
+    if (data?.data) {
+      setPcoGroups(data.data.map(g => ({ id: g.id, name: g.attributes.name })))
+    }
+    setPcoGroupsLoading(false)
+  }
+
+  async function loadPcoMembers(pcoGroupId) {
+    setPcoMembersLoading(true)
+    setPcoMembers([])
+    setMemberStatuses({})
+    const { data } = await supabase.functions.invoke('pco-api', {
+      body: { path: `/groups/v2/groups/${pcoGroupId}/memberships?include=person&per_page=100` },
+    })
+    if (data?.included) {
+      const people = data.included
+        .filter(i => i.type === 'Person')
+        .map(p => ({
+          id:     p.id,
+          name:   p.attributes.name,
+          email:  p.attributes.email_address,
+          avatar: p.attributes.avatar,
+        }))
+        .filter(p => p.email)
+
+      const emails = people.map(p => p.email)
+      if (emails.length) {
+        const { data: statuses } = await supabase.rpc('check_pco_members', { emails })
+        const map = {}
+        statuses?.forEach(s => { map[s.email] = s.in_group })
+        setMemberStatuses(map)
+      }
+      setPcoMembers(people)
+    }
+    setPcoMembersLoading(false)
+  }
+
+  async function handleConnectPco() {
+    setPcoConnecting(true)
+    const returnUrl = `${window.location.origin}/admin?pco=connected`
+    const { data, error } = await supabase.functions.invoke('pco-oauth-start', {
+      body: { return_url: returnUrl },
+    })
+    if (error || !data?.auth_url) {
+      toast('Failed to start Planning Center connection', 'error')
+      setPcoConnecting(false)
+      return
+    }
+    window.location.href = data.auth_url
+  }
+
+  async function handleDisconnectPco() {
+    setConfirmDisconnect(false)
+    setPcoDisconnecting(true)
+    const { error } = await supabase.functions.invoke('pco-disconnect', { body: {} })
+    if (error) {
+      toast('Failed to disconnect', 'error')
+    } else {
+      setPcoConnection(null)
+      setPcoGroups([])
+      setPcoMembers([])
+      setSelectedPcoGroup(null)
+      setMemberStatuses({})
+      toast('Planning Center disconnected', 'success')
+    }
+    setPcoDisconnecting(false)
+  }
+
+  async function handleSendInvite(member) {
+    const inviteUrl = `${window.location.origin}/login?code=${inviteCode}`
+    setInviteSending(prev => ({ ...prev, [member.email]: true }))
+    const { error } = await supabase.functions.invoke('pco-send-invite', {
+      body: { email: member.email, name: member.name, invite_url: inviteUrl, group_name: groupName },
+    })
+    if (error) {
+      toast('Failed to send invite', 'error')
+    } else {
+      toast(`Invite sent to ${member.name}`, 'success')
+      setMemberStatuses(prev => ({ ...prev, [member.email]: 'invited' }))
+    }
+    setInviteSending(prev => ({ ...prev, [member.email]: false }))
+  }
+
+  async function handleFetchPcoGiving() {
+    setPcoFetchingGiving(true)
+    const { data } = await supabase.functions.invoke('pco-api', { body: { path: '/giving/v2' } })
+    // PCO Giving v2 links.html_url is the church's giving page, or derive from API base URL
+    const givingUrl =
+      data?.links?.html_url ||
+      data?.data?.[0]?.links?.html_url ||
+      null
+    if (givingUrl) {
+      await handleSaveRotation({ giving_url: givingUrl, giving_enabled: true })
+      toast('Giving URL updated from Planning Center', 'success')
+    } else {
+      toast('Could not detect PCO giving URL — set it manually in the Giving tab', 'error')
+    }
+    setPcoFetchingGiving(false)
+  }
+
+  // Load PCO connection on mount
+  useEffect(() => {
+    if (isAdmin) loadPcoConnection()
+  }, [groupId])
+
+  // Handle OAuth callback query params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const pcoStatus = params.get('pco')
+    if (!pcoStatus) return
+    navigate(location.pathname, { replace: true })
+    if (pcoStatus === 'connected') {
+      loadPcoConnection()
+      toast('Planning Center connected!', 'success')
+    } else if (pcoStatus === 'error') {
+      toast('Planning Center connection failed. Please try again.', 'error')
+    }
+  }, [location.search])
+
+  // Load PCO groups when connection is first established
+  useEffect(() => {
+    if (pcoConnection) loadPcoGroups()
+  }, [!!pcoConnection])
+
+  // ────────────────────────────────────────────────────────────────────────────
 
   async function handleChangeGroupName() {
     const trimmed = groupNameValue.trim()
@@ -673,6 +825,184 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             )}
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
+        </section>
+
+        {/* Integrations */}
+        <section>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Integrations</p>
+          <p className="text-xs text-stone-400 mb-3">Connect third-party tools to streamline your group management.</p>
+
+          <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+            {/* Header row */}
+            <div className="px-4 py-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                <LinkSimple size={20} weight="bold" className="text-stone-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-stone-800">Planning Center</p>
+                <p className="text-xs text-stone-400 truncate">
+                  {pcoConnection === undefined ? 'Loading…' :
+                   pcoConnection
+                     ? `Connected to ${pcoConnection.pco_organization_name ?? 'your church'}`
+                     : 'Sync members from People & Groups'}
+                </p>
+              </div>
+              {pcoConnection === null && (
+                <button
+                  onClick={handleConnectPco}
+                  disabled={pcoConnecting}
+                  className="shrink-0 px-3 py-1.5 bg-ember text-white rounded-xl text-xs font-semibold disabled:opacity-50 hover:bg-ember-700 transition-colors"
+                >
+                  {pcoConnecting ? 'Redirecting…' : 'Connect'}
+                </button>
+              )}
+              {pcoConnection && (
+                <button
+                  onClick={() => setConfirmDisconnect(true)}
+                  className="shrink-0 text-xs text-stone-400 hover:text-red-500 transition-colors"
+                >
+                  Disconnect
+                </button>
+              )}
+            </div>
+
+            {/* Connected body */}
+            {pcoConnection && (
+              <div className="border-t border-stone-100">
+                {/* Group picker */}
+                <div className="px-4 pt-4 pb-3">
+                  <p className="text-xs font-semibold text-stone-500 mb-2">Import members from a PCO Group</p>
+                  {pcoGroupsLoading ? (
+                    <div className="h-10 bg-stone-100 rounded-xl animate-pulse" />
+                  ) : pcoGroups.length === 0 ? (
+                    <p className="text-xs text-stone-400">No PCO Groups found. Make sure the Groups product is enabled in Planning Center.</p>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value={selectedPcoGroup ?? ''}
+                        onChange={e => {
+                          const val = e.target.value || null
+                          setSelectedPcoGroup(val)
+                          if (val) loadPcoMembers(val)
+                          else { setPcoMembers([]); setMemberStatuses({}) }
+                        }}
+                        className="w-full appearance-none border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 bg-white pr-9 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                      >
+                        <option value="">Pick a PCO Group…</option>
+                        {pcoGroups.map(g => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </select>
+                      <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Member list */}
+                {selectedPcoGroup && (
+                  <div className="px-4 pb-4">
+                    {pcoMembersLoading ? (
+                      <div className="space-y-2 pt-1">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="h-11 bg-stone-100 rounded-xl animate-pulse" />
+                        ))}
+                      </div>
+                    ) : pcoMembers.length === 0 ? (
+                      <p className="text-xs text-stone-400 py-3 text-center">No members with email addresses found in this group.</p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-stone-400 mb-3">{pcoMembers.length} people in this PCO Group</p>
+                        <div className="space-y-1">
+                          {pcoMembers.map(member => {
+                            const status = memberStatuses[member.email]
+                            const alreadyMember = status === true
+                            const invited = status === 'invited'
+                            return (
+                              <div key={member.id} className="flex items-center gap-3 py-1.5">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-stone-800 truncate">{member.name}</p>
+                                  <p className="text-xs text-stone-400 truncate">{member.email}</p>
+                                </div>
+                                {alreadyMember ? (
+                                  <div className="flex items-center gap-1 text-sage-700 shrink-0">
+                                    <CheckCircle size={14} weight="fill" />
+                                    <span className="text-xs font-medium">Member</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}/login?code=${inviteCode}`)
+                                        toast('Invite link copied', 'success')
+                                      }}
+                                      aria-label="Copy invite link"
+                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 transition-colors"
+                                    >
+                                      <Copy size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleSendInvite(member)}
+                                      disabled={!!inviteSending[member.email] || invited}
+                                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                                        invited
+                                          ? 'bg-stone-100 text-stone-400 cursor-default'
+                                          : 'bg-ember text-white hover:bg-ember-700 disabled:opacity-50'
+                                      }`}
+                                    >
+                                      {inviteSending[member.email]
+                                        ? 'Sending…'
+                                        : invited
+                                          ? 'Sent ✓'
+                                          : <><Envelope size={12} weight="bold" />Invite</>}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Giving */}
+                <div className="border-t border-stone-100 px-4 py-3">
+                  <p className="text-xs font-semibold text-stone-500 mb-2">PCO Giving</p>
+                  <button
+                    onClick={handleFetchPcoGiving}
+                    disabled={pcoFetchingGiving}
+                    className="w-full py-2.5 border border-stone-200 text-stone-600 rounded-xl text-sm font-medium hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors disabled:opacity-50"
+                  >
+                    {pcoFetchingGiving ? 'Fetching…' : 'Auto-fill giving URL from PCO'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Disconnect confirmation */}
+            {confirmDisconnect && (
+              <div className="border-t border-stone-100 px-4 py-4 bg-red-50/60">
+                <p className="text-sm font-semibold text-stone-800 mb-1">Disconnect Planning Center?</p>
+                <p className="text-xs text-stone-500 mb-3">Your Covey Space group data won't be affected.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmDisconnect(false)}
+                    className="flex-1 py-2 border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDisconnectPco}
+                    disabled={pcoDisconnecting}
+                    className="flex-1 py-2 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors"
+                  >
+                    {pcoDisconnecting ? 'Disconnecting…' : 'Disconnect'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
       </div>
