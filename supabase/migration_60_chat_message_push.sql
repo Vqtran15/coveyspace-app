@@ -1,0 +1,26 @@
+-- migration_60: Webhook for send-chat-message-push
+--
+-- This is a documentation-only file. Run these steps in the Supabase dashboard
+-- for project ktmlyzwpgvhrwfgyoeiq.
+--
+-- 1. Deploy the edge function:
+--      supabase functions deploy send-chat-message-push
+--
+-- 2. In the Supabase dashboard → Database → Webhooks, create a new webhook:
+--      Name:    on_chat_message_insert
+--      Table:   messages
+--      Events:  INSERT
+--      Type:    Supabase Edge Functions
+--      Function: send-chat-message-push
+--
+-- No schema changes — this function uses the existing push_subscriptions and
+-- profiles tables, and the messages INSERT trigger already fires on every new message.
+--
+-- Behavior:
+-- - Fires on every new message INSERT
+-- - Looks up the sender's display_name from profiles
+-- - Sends a push notification to all members of the same community_group_id
+--   who are NOT the sender (i.e., everyone else in the group)
+-- - The service worker (sw.js) calls navigator.setAppBadge() on push receive,
+--   which shows a badge dot on the installed PWA icon
+-- - The badge is cleared when the user taps the notification or navigates to /chat

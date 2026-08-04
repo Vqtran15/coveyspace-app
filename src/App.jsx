@@ -383,6 +383,16 @@ export default function App() {
     trackPageView(location.pathname)
   }, [location.pathname])
 
+  // Sync unread count to the OS app icon badge
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return
+    if (unreadChatCount > 0) {
+      navigator.setAppBadge(unreadChatCount).catch(() => {})
+    } else {
+      navigator.clearAppBadge().catch(() => {})
+    }
+  }, [unreadChatCount])
+
   const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
   const isChat = location.pathname === '/chat'
   const isFullHeight = isChat

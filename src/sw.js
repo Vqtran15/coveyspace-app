@@ -25,11 +25,17 @@ self.addEventListener('push', event => {
     data:      { url },
   }
 
-  event.waitUntil(self.registration.showNotification(title, options))
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(title, options),
+      navigator.setAppBadge?.().catch?.(() => {}),
+    ])
+  )
 })
 
 self.addEventListener('notificationclick', event => {
   event.notification.close()
+  navigator.clearAppBadge?.().catch?.(() => {})
   const url = event.notification.data?.url ?? '/chat'
 
   event.waitUntil(
