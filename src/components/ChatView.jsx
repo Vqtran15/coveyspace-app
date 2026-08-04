@@ -2376,7 +2376,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
         <>
           <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
-          <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-modal-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
+          <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
@@ -2398,11 +2398,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {/* Conversation info panel */}
       {infoOpen && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeInfo}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto max-h-[70vh] overflow-y-auto ${infoClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto max-h-[70vh] overflow-y-auto ${infoClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 pt-5 pb-2">

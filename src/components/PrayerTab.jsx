@@ -751,11 +751,11 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       {/* Group prayer creation sheet */}
       {showCreate && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${createClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${createClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeCreate}
         >
           <div
-            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${createClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${createClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             {/* Sheet header */}

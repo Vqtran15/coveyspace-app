@@ -96,12 +96,12 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
       style={keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 16 } : undefined}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 pb-4">

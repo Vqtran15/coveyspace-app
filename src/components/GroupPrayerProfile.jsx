@@ -299,11 +299,11 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
       {/* Action sheet */}
       {actionSheetOpen && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${actionSheetClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${actionSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeActionSheet}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center pt-3 pb-1">
@@ -339,11 +339,11 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
       {/* Delete confirmation */}
       {confirmDelete && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${confirmDeleteClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${confirmDeleteClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeConfirmDelete}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${confirmDeleteClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${confirmDeleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-6">

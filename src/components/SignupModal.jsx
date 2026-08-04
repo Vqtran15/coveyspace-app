@@ -92,12 +92,12 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
   return (
     <div
       ref={overlayRef}
-      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
         ref={modalRef}
-        className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">

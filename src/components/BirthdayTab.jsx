@@ -59,11 +59,11 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end z-50 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end z-50 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-t-2xl shadow-xl w-full ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-t-2xl shadow-xl w-full ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
         style={{ marginBottom: keyboardOffset, transition: 'margin-bottom 0.15s ease-out' }}
         onClick={e => e.stopPropagation()}
       >

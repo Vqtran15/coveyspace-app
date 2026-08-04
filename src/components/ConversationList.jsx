@@ -545,11 +545,11 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* Options action sheet */}
       {actionSheetConv && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${actionSheetClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${actionSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeActionSheet}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center pt-3 pb-1">
@@ -585,11 +585,11 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* Delete confirmation */}
       {confirmDeleteConv && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${deleteClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${deleteClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeDeleteConfirm}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${deleteClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${deleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-6">
@@ -619,11 +619,11 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* New message sheet */}
       {newDmOpen && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeDm}
         >
           <div
-            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-modal-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             {/* Modal header */}

@@ -112,11 +112,11 @@ export default function ManagePagesModal({ pages, pageNoun, pageNounPlural, onRe
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
       onClick={close}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[80vh] flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[80vh] flex flex-col ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between p-5 pb-4 shrink-0">
