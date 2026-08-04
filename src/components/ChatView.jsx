@@ -666,7 +666,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       // have intentionally scrolled up.
       requestAnimationFrame(() => requestAnimationFrame(() => {
         if (!freshLoadRef.current) return
+        preserveScrollRef.current = null   // cancel any stale loadMore() preservation
         isAtBottomRef.current = true
+        initialRevealScrollNeeded.current = false  // no longer need the flag after rescue
         scrollToBottom()
       }))
     }
@@ -725,14 +727,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   useLayoutEffect(() => {
     if (!scrollRef.current) return
+    // forceScroll takes absolute priority: if loadMore() was triggered by a
+    // spurious scroll during initial load, cancel its preserveScrollRef and
+    // go to the bottom unconditionally.
+    const forceScroll = initialRevealScrollNeeded.current
+    initialRevealScrollNeeded.current = false
+    if (forceScroll) {
+      preserveScrollRef.current = null
+      isAtBottomRef.current = true
+      scrollToBottom()
+      return
+    }
     if (preserveScrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight - preserveScrollRef.current
       preserveScrollRef.current = null
       return
     }
-    const forceScroll = initialRevealScrollNeeded.current
-    initialRevealScrollNeeded.current = false
-    if (visible && (isAtBottomRef.current || forceScroll)) {
+    if (visible && isAtBottomRef.current) {
       scrollToBottom()
     }
   }, [messages])
@@ -790,12 +801,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         if (msgRect.top < containerRect.bottom) setFirstUnreadId(null)
       }
     }
-    // Guard with `visible`: during the initial load, scrollToBottom() may fire
-    // before layout stabilises, landing scrollTop near 0 with a large
-    // scrollHeight. Without this guard that would trigger loadMore(), set
+    // Guard with `visible` and `initialRevealScrollNeeded`: during the initial
+    // load, scrollToBottom() may fire before layout stabilises, landing
+    // scrollTop near 0. Without this guard that would trigger loadMore(), set
     // preserveScrollRef, and subsequently restore scroll to the middle of the
     // feed instead of the bottom.
-    if (visible && el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
+    if (visible && !initialRevealScrollNeeded.current && el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
   }
 
   async function loadMore() {
