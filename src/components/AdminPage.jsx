@@ -199,24 +199,28 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
       body: { path: `/people/v2/people?where[id]=${ids}&include=emails&per_page=${persons.length}` },
     })
 
-    // Build person_id → email map: first try convenience attribute, then included Email resources
-    const emailMap = {}
+    // Build person_id → { name, email } from People v2 (authoritative source for both)
+    const personMap = {}
     peopleData?.data?.forEach(p => {
-      if (p.attributes?.email_address) emailMap[p.id] = p.attributes.email_address
+      personMap[p.id] = {
+        name:  p.attributes.name ?? [p.attributes.first_name, p.attributes.last_name].filter(Boolean).join(' ') ?? null,
+        email: p.attributes.email_address ?? null,
+      }
     })
+    // Fill in emails from included Email resources (fallback if email_address is absent)
     peopleData?.included
       ?.filter(i => i.type === 'Email')
       ?.forEach(e => {
         const pid = e.relationships?.person?.data?.id
-        if (pid && !emailMap[pid] && e.attributes?.address) {
-          emailMap[pid] = e.attributes.address
+        if (pid && personMap[pid] && !personMap[pid].email && e.attributes?.address) {
+          personMap[pid].email = e.attributes.address
         }
       })
 
     const people = persons.map(p => ({
       id:     p.id,
-      name:   p.attributes.name,
-      email:  emailMap[p.id] ?? null,
+      name:   personMap[p.id]?.name  ?? p.attributes.name ?? null,
+      email:  personMap[p.id]?.email ?? null,
       avatar: p.attributes.avatar,
     }))
 
