@@ -184,7 +184,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
           {isAdmin && (
             <div className="pt-2 border-t border-stone-100">
               <button
-                onClick={() => { close(); setTimeout(() => navigate('/admin'), 200) }}
+                onClick={() => { close(); setTimeout(() => navigate('/admin'), 260) }}
                 className="w-full flex items-center gap-3 px-4 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] rounded-2xl transition-all"
               >
                 <ShieldCheck size={20} weight="fill" className="text-white/80 shrink-0" />
