@@ -315,19 +315,29 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
       <div className="mb-7 flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-stone-800">
-          Hi, <span className="relative inline-block">
-            {(displayName ?? '').split(' ')[0] || 'there'}
-            <motion.span
-              className="absolute inset-x-0 bottom-0 h-[2.5px] bg-ember rounded-full"
-              style={{ originX: 0 }}
-              initial={{ scaleX: 0, opacity: 1 }}
-              animate={{ scaleX: 1, opacity: 0 }}
+          <span className="relative inline-block">
+            Hi, {(displayName ?? '').split(' ')[0] || 'there'}!
+            <motion.svg
+              aria-hidden="true"
+              width="100%"
+              height="10"
+              viewBox="0 0 200 16"
+              preserveAspectRatio="none"
+              className="absolute -bottom-1 left-0"
+              initial={{ clipPath: 'inset(0 100% 0 0)', opacity: 1 }}
+              animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 0 }}
               transition={{
-                scaleX: { duration: 0.4, delay: 0.15, ease: 'easeOut' },
-                opacity: { duration: 0.3, delay: 0.75, ease: 'easeIn' },
+                clipPath: { duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] },
+                opacity: { duration: 0.3, delay: 0.8, ease: 'easeIn' },
               }}
-            />
-          </span>!
+            >
+              <path
+                d="M 0 12 C 30 12.5 70 11 100 11.5 C 140 12 170 10.5 200 10 L 200 4 C 160 6 120 7.5 100 8.5 C 70 9.5 30 10.5 0 10.5 Z"
+                fill="#C4622D"
+                fillOpacity="0.85"
+              />
+            </motion.svg>
+          </span>
         </h1>
         <button
           onClick={onOpenSettings}
