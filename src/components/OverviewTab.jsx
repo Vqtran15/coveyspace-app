@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, useAnimation } from 'framer-motion'
-
-let greetingDone = false
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
@@ -14,6 +12,7 @@ import { useToast } from '../lib/toast.jsx'
 import ConfettiDots from './ConfettiDots.jsx'
 import InstallBanner from './InstallBanner.jsx'
 
+let greetingDone = false
 
 function relativeTime(dateStr) {
   const diffMin = Math.round((Date.now() - new Date(dateStr)) / 60000)
