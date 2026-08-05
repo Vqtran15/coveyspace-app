@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart, ArrowLeft, Cake } from '@phosphor-icons/react'
@@ -80,46 +80,41 @@ function FloatingPasswordInput({ label, value, onChange, show, onToggle, require
   )
 }
 
-// Hook: track drag on handle bar; call onClose when swiped down far enough
+// Hook: drag handle → swipe-down-to-dismiss using a motion value so the DOM
+// updates bypass React state (no re-renders per touchmove = butter smooth).
 function useSheetDrag(onClose) {
-  const [dragY, setDragY]       = useState(0)
-  const [dragging, setDragging] = useState(false)
+  const y         = useMotionValue(0)
   const startY    = useRef(0)
   const startTime = useRef(0)
-  const lastY     = useRef(0)
 
   const onTouchStart = useCallback(e => {
     startY.current    = e.touches[0].clientY
     startTime.current = Date.now()
-    lastY.current     = 0
-    setDragging(true)
-  }, [])
+    y.stop()
+  }, [y])
 
   const onTouchMove = useCallback(e => {
     const dy = e.touches[0].clientY - startY.current
-    const clamped = dy > 0 ? dy : dy * 0.08
-    lastY.current = clamped
-    setDragY(clamped)
-  }, [])
+    // Positive = downward drag; resist upward with 8% elasticity
+    y.set(dy > 0 ? dy : dy * 0.08)
+  }, [y])
 
   const onTouchEnd = useCallback(() => {
+    const currentY = y.get()
     const elapsed  = Math.max(Date.now() - startTime.current, 1)
-    const velocity = lastY.current / elapsed
-    if (lastY.current > 80 || velocity > 0.45) {
-      setDragging(false)
+    const velocity = currentY / elapsed
+    if (currentY > 80 || velocity > 0.45) {
+      // Threshold exceeded — let AnimatePresence exit animation take over
       onClose()
     } else {
-      setDragY(0)
-      setDragging(false)
+      // Snap back with spring
+      fmAnimate(y, 0, { type: 'spring', stiffness: 400, damping: 35 })
     }
-  }, [onClose])
+  }, [y, onClose])
 
   return {
     dragHandleProps: { onTouchStart, onTouchMove, onTouchEnd },
-    sheetAnimProps: {
-      animate: { y: dragging ? dragY : 0 },
-      transition: dragging ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 32 },
-    },
+    dragY: y,
   }
 }
 
@@ -205,7 +200,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     setOpenSheet(null)
   }
 
-  const { dragHandleProps, sheetAnimProps } = useSheetDrag(closeSettingsSheet)
+  const { dragHandleProps, dragY } = useSheetDrag(closeSettingsSheet)
 
   async function handleChangeName(e) {
     e.preventDefault()
@@ -603,10 +598,11 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
           <motion.div
             key="sheet-panel"
             initial={{ y: '100%' }}
+            animate={{ y: 0 }}
             exit={{ y: '110%' }}
-            {...sheetAnimProps}
+            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+            style={{ y: dragY, paddingBottom: 'env(safe-area-inset-bottom)' }}
             className="fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl shadow-xl"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Drag handle */}
             <div
