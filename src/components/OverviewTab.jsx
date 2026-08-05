@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useAnimation } from 'framer-motion'
+
+let greetingDone = false
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
@@ -154,7 +156,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, chatEnabled = true, givingUrl = null, guideUrl = null, guideType = null }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, chatEnabled = true, givingUrl = null, guideUrl = null, guideType = null, greetingReady = false }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -166,6 +168,19 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
+  const [shouldAnimate]  = useState(() => !greetingDone)
+  const greetingControls = useAnimation()
+  const [announceShake, setAnnounceShake] = useState(false)
+
+  useEffect(() => {
+    if (!shouldAnimate || !greetingReady) return
+    greetingDone = true
+    greetingControls.start({ clipPath: 'inset(0 0% 0 0)', transition: { duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] } })
+    const fadeId   = setTimeout(() => greetingControls.start({ opacity: 0, transition: { duration: 0.3, ease: 'easeIn' } }), 650)
+    const shakeId  = setTimeout(() => setAnnounceShake(true),  1100)
+    const clearId  = setTimeout(() => setAnnounceShake(false), 1700)
+    return () => { clearTimeout(fadeId); clearTimeout(shakeId); clearTimeout(clearId) }
+  }, [greetingReady])
 
   async function load() {
     setLoaded(false)
@@ -317,26 +332,44 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
         <h1 className="text-3xl font-bold text-stone-800">
           <span className="relative inline-block">
             Hi, {(displayName ?? '').split(' ')[0] || 'there'}!
-            <motion.svg
-              aria-hidden="true"
-              width="100%"
-              height="10"
-              viewBox="0 0 200 16"
-              preserveAspectRatio="none"
-              className="absolute -bottom-1 left-0"
-              initial={{ clipPath: 'inset(0 100% 0 0)', opacity: 1 }}
-              animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 0 }}
-              transition={{
-                clipPath: { duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] },
-                opacity: { duration: 0.3, delay: 0.8, ease: 'easeIn' },
-              }}
-            >
-              <path
-                d="M 0 12 C 30 12.5 70 11 100 11.5 C 140 12 170 10.5 200 10 L 200 4 C 160 6 120 7.5 100 8.5 C 70 9.5 30 10.5 0 10.5 Z"
-                fill="#C4622D"
-                fillOpacity="0.85"
-              />
-            </motion.svg>
+            {shouldAnimate && (
+              <motion.svg
+                aria-hidden="true"
+                width="100%"
+                height="13"
+                viewBox="0 0 200 16"
+                preserveAspectRatio="none"
+                className="absolute -bottom-0.5 left-0"
+                style={{ overflow: 'visible' }}
+                initial={{ clipPath: 'inset(0 100% 0 0)', opacity: 1 }}
+                animate={greetingControls}
+              >
+                <defs>
+                  <linearGradient id="greeting-taper" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#C4622D" stopOpacity="0" />
+                    <stop offset="10%" stopColor="#C4622D" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#C4622D" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 0 14 C 14 3 30 4 200 4"
+                  fill="none"
+                  stroke="#C4622D"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  strokeOpacity="0.65"
+                />
+                <path
+                  d="M 0 14 C 14 3 30 4 200 4"
+                  fill="none"
+                  stroke="url(#greeting-taper)"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </motion.svg>
+            )}
           </span>
         </h1>
         <button
@@ -401,8 +434,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
               announcement ? (
                 <div className="w-full animate-stack-in lg:col-span-2">
                   <div
-                    className="w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 animate-announcement-shake"
-                    style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 1050ms both' }}
+                    className={`w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 ${announceShake ? 'animate-announcement-shake' : ''}`}
                   >
                     <div className="flex items-start gap-4">
                       <Megaphone size={34} weight="fill" className="text-white/90 shrink-0 mt-0.5" />
