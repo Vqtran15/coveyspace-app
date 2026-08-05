@@ -18,6 +18,32 @@ import { initials, formatMessageTime } from '../utils/format.js'
 import { haptic } from '../lib/haptic.js'
 import { trackEvent } from '../lib/analytics.js'
 
+// Particle burst that fires when the user adds a new reaction
+const REACTION_PARTICLES = [
+  { dx: 0,   dy: -22 },
+  { dx: 16,  dy: -16 },
+  { dx: 22,  dy: 0   },
+  { dx: 16,  dy: 16  },
+  { dx: 0,   dy: 22  },
+  { dx: -16, dy: -16 },
+]
+function ReactionParticles() {
+  return (
+    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      {REACTION_PARTICLES.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full bg-ember"
+          style={{ marginLeft: -3, marginTop: -3 }}
+          initial={{ x: 0, y: 0, scale: 1, opacity: 0.85 }}
+          animate={{ x: p.dx, y: p.dy, scale: 0, opacity: 0 }}
+          transition={{ duration: 0.4, delay: i * 0.02, ease: [0.32, 0, 0.67, 0] }}
+        />
+      ))}
+    </div>
+  )
+}
+
 const PAGE_SIZE   = 50
 const CACHE_LIMIT = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
@@ -107,6 +133,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [isAtBottom, setIsAtBottom]     = useState(true)
   const [typingUsers, setTypingUsers]   = useState([])
   const [reactions, setReactions]       = useState({})
+  const [justReacted, setJustReacted]   = useState({})
   const [activeMsg, setActiveMsg]       = useState(null)
   const [menuPos, setMenuPos]           = useState(null)
   const [showMoreEmojis, setShowMoreEmojis] = useState(false)
@@ -1161,6 +1188,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (existing) {
       await supabase.from('reactions').delete().eq('id', existing.id)
     } else {
+      const key = `${messageId}:${emoji}`
+      setJustReacted(prev => ({ ...prev, [key]: true }))
+      setTimeout(() => setJustReacted(prev => { const n = { ...prev }; delete n[key]; return n }), 650)
       await supabase.from('reactions').insert({
         message_id: messageId,
         community_group_id: groupId,
@@ -2022,20 +2052,30 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
                     {hasReactions && (
                       <div className={`flex flex-wrap gap-1 mt-1 ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
-                        {Object.entries(msgReactions).map(([emoji, users]) => (
-                          <button
-                            key={emoji}
-                            onClick={() => toggleReaction(msg.id, emoji)}
-                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${
-                              users.some(u => u.user_id === myId)
-                                ? 'bg-ember/10 border-ember/40 text-ember font-medium'
-                                : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
-                            }`}
-                          >
-                            <span>{emoji}</span>
-                            <span>{users.length}</span>
-                          </button>
-                        ))}
+                        {Object.entries(msgReactions).map(([emoji, users]) => {
+                          const isNew = justReacted[`${msg.id}:${emoji}`]
+                          const isMine = users.some(u => u.user_id === myId)
+                          return (
+                            <div key={emoji} className="relative">
+                              <AnimatePresence>
+                                {isNew && <ReactionParticles key="particles" />}
+                              </AnimatePresence>
+                              <motion.button
+                                onClick={() => toggleReaction(msg.id, emoji)}
+                                animate={isNew ? { scale: [1, 0.86, 1.32, 0.94, 1] } : { scale: 1 }}
+                                transition={isNew ? { duration: 0.42, times: [0, 0.15, 0.5, 0.75, 1] } : { type: 'spring', stiffness: 400, damping: 25 }}
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                                  isMine
+                                    ? 'bg-ember/10 border-ember/40 text-ember font-medium'
+                                    : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                                }`}
+                              >
+                                <span>{emoji}</span>
+                                <span>{users.length}</span>
+                              </motion.button>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                     {isOwn && readersAtMessage[msg.id]?.length > 0 && (

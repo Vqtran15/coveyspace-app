@@ -45,6 +45,26 @@ function formatDateShort(dateStr, timeStr) {
   return `${mon} ${day} · ${hour12}${mins} ${suffix}`
 }
 
+// Animated slot-machine counter — flips vertically when value changes
+function AnimatedCount({ value }) {
+  return (
+    <span className="relative inline-flex overflow-hidden leading-none align-bottom">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          initial={{ y: '110%', opacity: 0 }}
+          animate={{ y: '0%',   opacity: 1 }}
+          exit={{    y: '-110%', opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
+          className="inline-block"
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
+}
+
 function GoingAvatars({ rsvps }) {
   const going = (rsvps ?? []).filter(r => r.status === 'going')
   if (!going.length) return null
@@ -68,7 +88,7 @@ function GoingAvatars({ rsvps }) {
           }
         </div>
       ))}
-      {extra > 0 && <span className="text-xs text-stone-400 ml-1.5">+{extra}</span>}
+      {extra > 0 && <span className="text-xs text-stone-400 ml-1.5">+<AnimatedCount value={extra} /></span>}
     </div>
   )
 }
@@ -78,11 +98,15 @@ function RsvpCounts({ rsvps }) {
   const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe').length
   const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going').length
   if (!going && !maybe && !notGoing) return <span className="text-xs text-stone-500">No RSVPs yet</span>
-  const parts = []
-  if (going)    parts.push(`${going} going`)
-  if (maybe)    parts.push(`${maybe} maybe`)
-  if (notGoing) parts.push(`${notGoing} can't go`)
-  return <span className="text-xs text-stone-500">{parts.join(' · ')}</span>
+  return (
+    <span className="text-xs text-stone-500">
+      {going > 0 && <><AnimatedCount value={going} /> going</>}
+      {going > 0 && maybe > 0 && ' · '}
+      {maybe > 0 && <><AnimatedCount value={maybe} /> maybe</>}
+      {(going > 0 || maybe > 0) && notGoing > 0 && ' · '}
+      {notGoing > 0 && <><AnimatedCount value={notGoing} /> can't go</>}
+    </span>
+  )
 }
 
 // ── Create / Edit form ────────────────────────────────────────────────────────
@@ -269,10 +293,13 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
         {/* Date badge + title */}
         <div className="flex items-start gap-4 px-5 pt-1 pb-5">
-          <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0">
+          <motion.div
+            layoutId={`event-date-${event.id}`}
+            className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0"
+          >
             <span className="text-[11px] font-bold text-ember uppercase tracking-wide">{month}</span>
             <span className="text-2xl font-bold text-ember leading-none">{day}</span>
-          </div>
+          </motion.div>
           <div className="pt-1 min-w-0">
             <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
             <p className="text-sm text-stone-500 mt-1.5">{formatDateFull(event.event_date, event.event_time)}</p>
@@ -306,19 +333,23 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
-                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',        inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',       inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white',  inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white',   inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, active, inactive }) => (
-                <button
-                  key={status}
+                <motion.button
+                  key={`${status}-${myRsvp?.status === status}`}
+                  initial={myRsvp?.status === status ? { scale: 0.82 } : false}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 15 }}
+                  whileTap={{ scale: 0.87 }}
                   aria-pressed={myRsvp?.status === status}
                   onClick={() => onRsvp(event.id, status, myRsvp?.status)}
                   className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
                 >
                   <Icon size={18} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
                   {label}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -385,10 +416,13 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
       >
         {/* Top section */}
         <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
-          <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0">
+          <motion.div
+            layoutId={`event-date-${event.id}`}
+            className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-3 py-2 min-w-[52px] shrink-0"
+          >
             <span className="text-[10px] font-bold text-ember uppercase tracking-wide">{month}</span>
             <span className="text-2xl font-bold text-ember leading-none">{day}</span>
-          </div>
+          </motion.div>
           <div className="flex-1 min-w-0 pt-0.5">
             <p className="font-bold text-stone-800 text-base leading-snug">{event.title}</p>
             {(event.location || event.event_time) && (
@@ -427,17 +461,21 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
             {[
               { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',      inactive: 'bg-stone-100 text-stone-500' },
               { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-500' },
-              { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-500' },
+              { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white',  inactive: 'bg-stone-100 text-stone-500' },
             ].map(({ status, label, Icon, active, inactive }) => (
-              <button
-                key={status}
+              <motion.button
+                key={`${status}-${myRsvp?.status === status}`}
+                initial={myRsvp?.status === status ? { scale: 0.82 } : false}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 15 }}
+                whileTap={{ scale: 0.87 }}
                 onClick={() => { haptic(); onRsvp(event.id, status, myRsvp?.status) }}
                 aria-pressed={myRsvp?.status === status}
                 className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
               >
                 <Icon size={16} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
                 {label}
-              </button>
+              </motion.button>
             ))}
           </div>
           <div className="flex items-center gap-2">
@@ -457,10 +495,13 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
       className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left animate-stack-in"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0">
+      <motion.div
+        layoutId={`event-date-${event.id}`}
+        className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-3 py-1.5 min-w-[48px] shrink-0"
+      >
         <span className="text-[10px] font-bold text-ember uppercase tracking-wide">{month}</span>
         <span className="text-xl font-bold text-ember leading-none">{day}</span>
-      </div>
+      </motion.div>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-stone-800 text-sm truncate">{event.title}</p>
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -780,10 +821,17 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) setShowConvPicker(false) }}
           >
-            <div
+            <motion.div
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0.05, bottom: 0.6 }}
+              onDragEnd={(_, { velocity, offset }) => { if (offset.y > 80 || velocity.y > 400) setShowConvPicker(false) }}
               className="bg-white rounded-t-3xl"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
+              <div className="flex justify-center pt-3 pb-0" style={{ touchAction: 'none' }}>
+                <div className="w-8 h-1 rounded-full bg-stone-200" />
+              </div>
               <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
                 <h3 className="font-bold text-stone-800">Share to Chat</h3>
                 <button
@@ -827,7 +875,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -845,6 +893,9 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <div className="bg-white rounded-t-3xl overflow-hidden max-h-[90dvh]">
+              <div className="flex justify-center pt-3 pb-0" style={{ touchAction: 'none' }}>
+                <div className="w-8 h-1 rounded-full bg-stone-200" />
+              </div>
               <div className="overflow-y-auto max-h-[90dvh] p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-bold text-stone-800 text-base">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
@@ -877,7 +928,17 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
             onClick={e => { if (e.target === e.currentTarget) setDeleteTarget(null) }}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="bg-white rounded-t-3xl p-5">
+            <motion.div
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0.05, bottom: 0.6 }}
+              onDragEnd={(_, { velocity, offset }) => { if (offset.y > 80 || velocity.y > 400) setDeleteTarget(null) }}
+              className="bg-white rounded-t-3xl"
+            >
+              <div className="flex justify-center pt-3 pb-0" style={{ touchAction: 'none' }}>
+                <div className="w-8 h-1 rounded-full bg-stone-200" />
+              </div>
+              <div className="p-5">
               <h2 className="font-bold text-stone-800 text-base mb-1">Delete Event</h2>
               <p className="text-sm text-stone-500 mb-5">"{deleteTarget.title}" will be permanently deleted.</p>
               <div className="flex gap-2">
@@ -895,7 +956,8 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
                   {deleting ? 'Deleting…' : 'Delete'}
                 </button>
               </div>
-            </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

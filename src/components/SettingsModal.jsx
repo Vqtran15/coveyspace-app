@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -16,13 +16,119 @@ function daysInMonth(month) {
   return new Date(2000, month, 0).getDate()
 }
 
+// Floating label input — label shrinks + rises when focused or filled
+function FloatingInput({ label, value, onChange, type = 'text', required, maxLength, autoComplete, className: extra = '', ...props }) {
+  const [focused, setFocused] = useState(false)
+  const active = focused || (value != null && value !== '')
+  return (
+    <div className={`relative ${extra}`}>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        required={required}
+        maxLength={maxLength}
+        autoComplete={autoComplete}
+        className={`w-full pt-5 pb-2 px-3 rounded-xl border text-sm text-stone-800 bg-white focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition-colors ${active ? 'border-ember/50' : 'border-stone-200'}`}
+        {...props}
+      />
+      <label
+        className={`absolute left-3 pointer-events-none select-none transition-all duration-200 origin-left ${
+          active ? 'top-1.5 text-[10px] font-semibold text-ember' : 'top-3.5 text-sm text-stone-400'
+        }`}
+      >
+        {label}
+      </label>
+    </div>
+  )
+}
+
+// Floating label input with password visibility toggle
+function FloatingPasswordInput({ label, value, onChange, show, onToggle, required }) {
+  const [focused, setFocused] = useState(false)
+  const active = focused || (value != null && value !== '')
+  return (
+    <div className="relative">
+      <input
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        required={required}
+        className={`w-full pt-5 pb-2 px-3 pr-10 rounded-xl border text-sm text-stone-800 bg-white focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition-colors ${active ? 'border-ember/50' : 'border-stone-200'}`}
+      />
+      <label
+        className={`absolute left-3 pointer-events-none select-none transition-all duration-200 origin-left ${
+          active ? 'top-1.5 text-[10px] font-semibold text-ember' : 'top-3.5 text-sm text-stone-400'
+        }`}
+      >
+        {label}
+      </label>
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+        >
+          {show ? <EyeSlash size={16} /> : <Eye size={16} />}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// Hook: track drag on handle bar; call onClose when swiped down far enough
+function useSheetDrag(onClose) {
+  const [dragY, setDragY]       = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const startY    = useRef(0)
+  const startTime = useRef(0)
+  const lastY     = useRef(0)
+
+  const onTouchStart = useCallback(e => {
+    startY.current    = e.touches[0].clientY
+    startTime.current = Date.now()
+    lastY.current     = 0
+    setDragging(true)
+  }, [])
+
+  const onTouchMove = useCallback(e => {
+    const dy = e.touches[0].clientY - startY.current
+    const clamped = dy > 0 ? dy : dy * 0.08
+    lastY.current = clamped
+    setDragY(clamped)
+  }, [])
+
+  const onTouchEnd = useCallback(() => {
+    const elapsed  = Math.max(Date.now() - startTime.current, 1)
+    const velocity = lastY.current / elapsed
+    if (lastY.current > 80 || velocity > 0.45) {
+      setDragging(false)
+      onClose()
+    } else {
+      setDragY(0)
+      setDragging(false)
+    }
+  }, [onClose])
+
+  return {
+    dragHandleProps: { onTouchStart, onTouchMove, onTouchEnd },
+    sheetAnimProps: {
+      animate: { y: dragging ? dragY : 0 },
+      transition: dragging ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 32 },
+    },
+  }
+}
+
 export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
   const navigate = useNavigate()
   const toast = useToast()
 
   // Sheet state — one sheet open at a time
   const [openSheet, setOpenSheet] = useState(null) // 'name' | 'legal' | 'birthday' | 'password'
-  const [sheetClosing, setSheetClosing] = useState(false)
 
   // Avatar
   const [avatarIcon, setAvatarIcon] = useState(null)
@@ -90,19 +196,16 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
 
   function openSettingsSheet(name) {
     setOpenSheet(name)
-    setSheetClosing(false)
   }
 
   function closeSettingsSheet() {
     if (openSheet === 'password') {
       setCurrentPw(''); setNewPw(''); setConfirmPw(''); setPwError(null)
     }
-    setSheetClosing(true)
-    setTimeout(() => {
-      setOpenSheet(null)
-      setSheetClosing(false)
-    }, 280)
+    setOpenSheet(null)
   }
+
+  const { dragHandleProps, sheetAnimProps } = useSheetDrag(closeSettingsSheet)
 
   async function handleChangeName(e) {
     e.preventDefault()
@@ -195,7 +298,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     await supabase.auth.signOut()
   }
 
-  const inputCls = 'w-full text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300 text-stone-800'
   const cancelCls = 'flex-1 py-3 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors'
   const saveCls = 'flex-1 py-3 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40'
 
@@ -486,151 +588,155 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     </main>
 
     {/* Editing bottom sheets */}
-    {openSheet && (
-      <>
-        <div
-          className={`fixed inset-0 z-[60] bg-black/50 ${sheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
-          onClick={closeSettingsSheet}
-        />
-        <div
-          className={`fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl shadow-xl ${sheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
-          {openSheet === 'name' && (
-            <form onSubmit={handleChangeName} className="px-5 pt-6 pb-6 space-y-4">
-              <p className="text-base font-semibold text-stone-800">Display Name</p>
-              <input
-                type="text"
-                placeholder="Your name"
-                value={nameValue}
-                onChange={e => setNameValue(e.target.value)}
-                maxLength={40}
-                required
-                className={inputCls}
-              />
-              <div className="flex gap-3">
-                <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                <button type="submit" disabled={nameSaving || !nameValue.trim()} className={saveCls}>
-                  {nameSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </form>
-          )}
+    <AnimatePresence>
+      {openSheet && (
+        <>
+          <motion.div
+            key="sheet-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[60] bg-black/50"
+            onClick={closeSettingsSheet}
+          />
+          <motion.div
+            key="sheet-panel"
+            initial={{ y: '100%' }}
+            exit={{ y: '110%' }}
+            {...sheetAnimProps}
+            className="fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl shadow-xl"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            {/* Drag handle */}
+            <div
+              {...dragHandleProps}
+              className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: 'none' }}
+            >
+              <div className="w-8 h-1 rounded-full bg-stone-200" />
+            </div>
 
-          {openSheet === 'legal' && (
-            <form onSubmit={handleChangeLegalName} className="px-5 pt-6 pb-6 space-y-4">
-              <p className="text-base font-semibold text-stone-800">First &amp; Last Name</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="First"
-                  value={editFirst}
-                  onChange={e => setEditFirst(e.target.value)}
+            {openSheet === 'name' && (
+              <form onSubmit={handleChangeName} className="px-5 pt-3 pb-6 space-y-4">
+                <p className="text-base font-semibold text-stone-800">Display Name</p>
+                <FloatingInput
+                  label="Your name"
+                  value={nameValue}
+                  onChange={e => setNameValue(e.target.value)}
                   maxLength={40}
                   required
-                  autoComplete="given-name"
-                  className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300 text-stone-800"
                 />
-                <input
-                  type="text"
-                  placeholder="Last"
-                  value={editLast}
-                  onChange={e => setEditLast(e.target.value)}
-                  maxLength={40}
-                  autoComplete="family-name"
-                  className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300 text-stone-800"
-                />
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                <button type="submit" disabled={legalNameSaving || !editFirst.trim()} className={saveCls}>
-                  {legalNameSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </form>
-          )}
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
+                  <button type="submit" disabled={nameSaving || !nameValue.trim()} className={saveCls}>
+                    {nameSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            )}
 
-          {openSheet === 'birthday' && (
-            <div className="px-5 pt-6 pb-6 space-y-4">
-              <p className="text-base font-semibold text-stone-800">Birthday</p>
-              <div className="flex gap-2">
-                <select
-                  value={bdMonth ?? ''}
-                  onChange={e => { setBdMonth(Number(e.target.value) || null); setBdDay(null) }}
-                  className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
-                >
-                  <option value="">Month</option>
-                  {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-                </select>
-                <select
-                  value={bdDay ?? ''}
-                  onChange={e => setBdDay(Number(e.target.value) || null)}
-                  className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
-                >
-                  <option value="">Day</option>
-                  {Array.from({ length: daysInMonth(bdMonth) }, (_, i) => i + 1).map(d => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                <button type="button" onClick={handleSaveBirthday} disabled={!bdMonth || !bdDay || bdSaving} className={saveCls}>
-                  {bdSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </div>
-          )}
+            {openSheet === 'legal' && (
+              <form onSubmit={handleChangeLegalName} className="px-5 pt-3 pb-6 space-y-4">
+                <p className="text-base font-semibold text-stone-800">First &amp; Last Name</p>
+                <div className="flex gap-2">
+                  <FloatingInput
+                    label="First"
+                    value={editFirst}
+                    onChange={e => setEditFirst(e.target.value)}
+                    maxLength={40}
+                    required
+                    autoComplete="given-name"
+                    className="flex-1 min-w-0"
+                  />
+                  <FloatingInput
+                    label="Last"
+                    value={editLast}
+                    onChange={e => setEditLast(e.target.value)}
+                    maxLength={40}
+                    autoComplete="family-name"
+                    className="flex-1 min-w-0"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
+                  <button type="submit" disabled={legalNameSaving || !editFirst.trim()} className={saveCls}>
+                    {legalNameSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </form>
+            )}
 
-          {openSheet === 'password' && (
-            <form onSubmit={handleChangePassword} className="px-5 pt-6 pb-6 space-y-4">
-              <p className="text-base font-semibold text-stone-800">Change Password</p>
-              <div className="relative">
-                <input
-                  type={showCurrentPw ? 'text' : 'password'}
-                  placeholder="Current password"
+            {openSheet === 'birthday' && (
+              <div className="px-5 pt-3 pb-6 space-y-4">
+                <p className="text-base font-semibold text-stone-800">Birthday</p>
+                <div className="flex gap-2">
+                  <select
+                    value={bdMonth ?? ''}
+                    onChange={e => { setBdMonth(Number(e.target.value) || null); setBdDay(null) }}
+                    className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                  >
+                    <option value="">Month</option>
+                    {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+                  </select>
+                  <select
+                    value={bdDay ?? ''}
+                    onChange={e => setBdDay(Number(e.target.value) || null)}
+                    className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                  >
+                    <option value="">Day</option>
+                    {Array.from({ length: daysInMonth(bdMonth) }, (_, i) => i + 1).map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
+                  <button type="button" onClick={handleSaveBirthday} disabled={!bdMonth || !bdDay || bdSaving} className={saveCls}>
+                    {bdSaving ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {openSheet === 'password' && (
+              <form onSubmit={handleChangePassword} className="px-5 pt-3 pb-6 space-y-4">
+                <p className="text-base font-semibold text-stone-800">Change Password</p>
+                <FloatingPasswordInput
+                  label="Current password"
                   value={currentPw}
                   onChange={e => setCurrentPw(e.target.value)}
+                  show={showCurrentPw}
+                  onToggle={() => setShowCurrentPw(v => !v)}
                   required
-                  className={`${inputCls} pr-10`}
                 />
-                <button type="button" onClick={() => setShowCurrentPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                  {showCurrentPw ? <EyeSlash size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              <div className="relative">
-                <input
-                  type={showNewPw ? 'text' : 'password'}
-                  placeholder="New password"
+                <FloatingPasswordInput
+                  label="New password"
                   value={newPw}
                   onChange={e => setNewPw(e.target.value)}
+                  show={showNewPw}
+                  onToggle={() => setShowNewPw(v => !v)}
                   required
-                  className={`${inputCls} pr-10`}
                 />
-                <button type="button" onClick={() => setShowNewPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                  {showNewPw ? <EyeSlash size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              <input
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPw}
-                onChange={e => setConfirmPw(e.target.value)}
-                required
-                className={inputCls}
-              />
-              {pwError && <p className="text-xs text-red-500">{pwError}</p>}
-              <div className="flex gap-3">
-                <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                <button type="submit" disabled={pwSaving || !currentPw || !newPw || !confirmPw} className={saveCls}>
-                  {pwSaving ? 'Saving…' : 'Update'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </>
-    )}
+                <FloatingPasswordInput
+                  label="Confirm new password"
+                  value={confirmPw}
+                  onChange={e => setConfirmPw(e.target.value)}
+                  required
+                />
+                {pwError && <p className="text-xs text-red-500">{pwError}</p>}
+                <div className="flex gap-3">
+                  <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
+                  <button type="submit" disabled={pwSaving || !currentPw || !newPw || !confirmPw} className={saveCls}>
+                    {pwSaving ? 'Saving…' : 'Update'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
 
     {feedbackOpen && (
       <FeedbackModal
