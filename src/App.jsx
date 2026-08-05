@@ -6,6 +6,17 @@ import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
+
+// If a profile-linked entry (profile_user_id set) exists for a name, drop any
+// manual entry (profile_user_id null) with the same name. Prevents duplicates
+// when an admin manually added a member AND the member later set their birthday
+// via their profile (which triggers an auto-synced row).
+function dedupBirthdays(rows) {
+  const linkedNames = new Set(
+    rows.filter(b => b.profile_user_id).map(b => b.name.trim().toLowerCase())
+  )
+  return rows.filter(b => b.profile_user_id || !linkedNames.has(b.name.trim().toLowerCase()))
+}
 import { supabase } from './lib/supabase.js'
 import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
 import SplashScreen from './components/SplashScreen.jsx'
@@ -257,14 +268,14 @@ export default function App() {
 
   useEffect(() => {
     if (!session) return
-    supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(data ?? []))
+    supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
 
     const channel = supabase
       .channel(`birthdays:${groupId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'birthdays', filter: `community_group_id=eq.${groupId}` },
         ({ eventType, new: next, old: prev }) => {
-          if (eventType === 'INSERT') setBirthdays(b => b.some(r => r.id === next.id) ? b : [...b, next])
-          else if (eventType === 'UPDATE') setBirthdays(b => b.map(r => r.id === next.id ? next : r))
+          if (eventType === 'INSERT') setBirthdays(b => dedupBirthdays(b.some(r => r.id === next.id) ? b : [...b, next]))
+          else if (eventType === 'UPDATE') setBirthdays(b => dedupBirthdays(b.map(r => r.id === next.id ? next : r)))
           else if (eventType === 'DELETE') setBirthdays(b => b.filter(r => r.id !== prev.id))
         },
       )
@@ -479,7 +490,7 @@ export default function App() {
               .eq('user_id', session.user.id)
               .single()
               .then(({ data }) => { if (data) setProfile(data) })
-            supabase.from('birthdays').select('*').then(({ data }) => { if (data) setBirthdays(data) })
+            supabase.from('birthdays').select('*').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data)) })
           }}
           isAdmin={isAdmin}
           userId={session.user.id}
@@ -641,7 +652,7 @@ export default function App() {
             onBirthdaysChange={setBirthdays}
             revealKey="birthdays"
             onClose={closeBirthdays}
-            onRefresh={() => supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(data ?? []))}
+            onRefresh={() => supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))}
           />
         </div>
       )}
