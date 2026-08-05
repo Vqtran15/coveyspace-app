@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart, ArrowLeft, Cake } from '@phosphor-icons/react'
-import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -17,7 +16,6 @@ function daysInMonth(month) {
 }
 
 export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
-  const [closing, close] = useModalClose(onClose)
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -202,18 +200,13 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
 
   return (
     <>
-    {/* Page */}
-    <div
-      className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto overscroll-contain ${closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
-      <div className="max-w-md mx-auto px-4 pt-8 pb-16">
+    <main className="max-w-md mx-auto px-4 pt-8 pb-12">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-1 min-w-0 -ml-2">
             <button
-              onClick={close}
+              onClick={onClose}
               aria-label="Back"
               className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
             >
@@ -487,8 +480,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             )}
           </AnimatePresence>
         </div>
-      </div>
-    </div>
+    </main>
 
     {/* Editing bottom sheets */}
     {openSheet && (

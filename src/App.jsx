@@ -45,7 +45,7 @@ const BibleTab            = lazy(() => import('./components/BibleTab.jsx'))
 const AuthPage            = lazy(() => import('./components/AuthPage.jsx'))
 const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.jsx'))
 const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
-const SettingsModal       = lazy(() => import('./components/SettingsModal.jsx'))
+const SettingsPage        = lazy(() => import('./components/SettingsModal.jsx'))
 const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
 
 
@@ -106,7 +106,6 @@ export default function App() {
   const [isRecovery, setIsRecovery] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [groupSettings, setGroupSettings] = useState(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [guideOpen, setGuideOpen] = useState(false)
   const [guideClosing, setGuideClosing] = useState(false)
   const [givingOpen, setGivingOpen] = useState(false)
@@ -293,7 +292,6 @@ export default function App() {
 
   useEffect(() => {
     if (showWelcome) {
-      setSettingsOpen(false)
       setGuideOpen(false)
       setGivingOpen(false)
       setBirthdayOpen(false)
@@ -429,6 +427,11 @@ export default function App() {
     navigate(path)
   }
 
+  function navigateToSettings() {
+    enterFromRef.current = 'right'
+    navigate('/settings')
+  }
+
   return (
     <>
     <Suspense fallback={null}>
@@ -476,13 +479,14 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} onOpenGiving={() => setGivingOpen(true)} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} prayerEnabled={prayerEnabled} givingEnabled={givingEnabled} eventsEnabled={eventsEnabled} chatEnabled={chatEnabled} givingUrl={groupSettings?.giving_url ?? null} guideUrl={groupSettings?.guide_url ?? null} guideType={groupSettings?.guide_type ?? null} />} />
-          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} isAdmin={isAdmin} groupSettings={groupSettings} />} />
-          <Route path="/events"    element={<EventsTab groupId={groupId} userId={session.user.id} isAdmin={isAdmin} displayName={displayName} onOpenSettings={() => setSettingsOpen(true)} />} />
-          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={() => setSettingsOpen(true)} upcoming={upcoming} birthdayBannerDismissed={birthdayBannerDismissed} birthdayBannerClosing={birthdayBannerClosing} onDismissBirthdayBanner={dismissBirthdayBanner} onOpenBirthdays={() => setBirthdayOpen(true)} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
-          <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={() => setSettingsOpen(true)} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} />} />
-          <Route path="/bible"     element={<BibleTab userId={session.user.id} onOpenSettings={() => setSettingsOpen(true)} />} />
+          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={navigateToSettings} onOpenGiving={() => setGivingOpen(true)} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} prayerEnabled={prayerEnabled} givingEnabled={givingEnabled} eventsEnabled={eventsEnabled} chatEnabled={chatEnabled} givingUrl={groupSettings?.giving_url ?? null} guideUrl={groupSettings?.guide_url ?? null} guideType={groupSettings?.guide_type ?? null} />} />
+          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={navigateToSettings} isAdmin={isAdmin} groupSettings={groupSettings} />} />
+          <Route path="/events"    element={<EventsTab groupId={groupId} userId={session.user.id} isAdmin={isAdmin} displayName={displayName} onOpenSettings={navigateToSettings} />} />
+          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={navigateToSettings} upcoming={upcoming} birthdayBannerDismissed={birthdayBannerDismissed} birthdayBannerClosing={birthdayBannerClosing} onDismissBirthdayBanner={dismissBirthdayBanner} onOpenBirthdays={() => setBirthdayOpen(true)} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
+          <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={navigateToSettings} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} />} />
+          <Route path="/bible"     element={<BibleTab userId={session.user.id} onOpenSettings={navigateToSettings} />} />
           <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
+          <Route path="/settings"  element={<SettingsPage displayName={displayName} isAdmin={isAdmin} userId={session.user.id} onClose={() => navigate(-1)} onDisplayNameChange={name => setProfile(p => ({ ...p, display_name: name }))} onAvatarChange={({ icon, color, imageUrl }) => setProfile(p => ({ ...p, avatar_icon: icon, avatar_color: color, avatar_image_url: imageUrl }))} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} onRevisitGuide={() => { const key = `cg_welcomed_${session.user.id}_${groupId}`; removeCookie(key); navigate('/home'); setShowWelcome(true) }} />} />
           <Route path="*"          element={<Navigate to="/home" replace />} />
         </Routes>
       </div>
@@ -542,7 +546,7 @@ export default function App() {
         </nav>
         <div className="px-3 py-4 border-t border-stone-100">
           <button
-            onClick={() => setSettingsOpen(true)}
+            onClick={navigateToSettings}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-stone-500 hover:bg-stone-100 hover:text-stone-800 transition-colors"
           >
             <GearSix size={20} />
@@ -591,27 +595,6 @@ export default function App() {
         </nav>
       </LayoutGroup>
 
-      {settingsOpen && !showWelcome && location.pathname !== '/admin' && (
-        <SettingsModal
-          displayName={displayName}
-          isAdmin={isAdmin}
-          userId={session.user.id}
-          onClose={() => setSettingsOpen(false)}
-          onDisplayNameChange={name => setProfile(p => ({ ...p, display_name: name }))}
-          onAvatarChange={({ icon, color, imageUrl }) => setProfile(p => ({ ...p, avatar_icon: icon, avatar_color: color, avatar_image_url: imageUrl }))}
-          pushSupported={push.supported}
-          pushSubscribed={push.subscribed}
-          pushPermission={push.permission}
-          pushToggling={push.toggling}
-          onPushToggle={push.toggle}
-          onRevisitGuide={() => {
-            const key = `cg_welcomed_${session.user.id}_${groupId}`
-            removeCookie(key)
-            setSettingsOpen(false)
-            setShowWelcome(true)
-          }}
-        />
-      )}
 
       {guideOpen && (
         <div
