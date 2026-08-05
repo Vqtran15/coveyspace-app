@@ -9,7 +9,7 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
 
   return (
     <button
-      onClick={() => { haptic(); onClick() }}
+      onClick={() => { haptic(); onClick?.() }}
       style={entranceStyle}
       className={`relative overflow-hidden w-full text-left p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
         days <= 14
