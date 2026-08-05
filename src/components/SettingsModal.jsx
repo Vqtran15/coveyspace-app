@@ -8,6 +8,7 @@ import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
+import InstallBanner from './InstallBanner.jsx'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 function daysInMonth(month) {
@@ -215,6 +216,8 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             <h1 className="text-3xl font-bold text-stone-800">Settings</h1>
           </div>
         </div>
+
+        <InstallBanner />
 
         {/* Admin */}
         {isAdmin && (

@@ -8,7 +8,7 @@ export function getCookie(key) {
 }
 
 export function setCookie(key) {
-  const exp = new Date(Date.now() + 365 * 864e5).toUTCString()
+  const exp = new Date(Date.now() + 14 * 864e5).toUTCString()
   document.cookie = `${key}=1; expires=${exp}; path=/; SameSite=Lax${_secure}`
 }
 
