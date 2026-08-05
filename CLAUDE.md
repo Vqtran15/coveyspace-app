@@ -1,6 +1,6 @@
 # meal-rotation
 
-React PWA for the Covey Space meal rotation feature.
+React PWA for Covey Space — a platform for church community groups.
 
 ## Stack
 - React, Vite 8, vite-plugin-pwa@1.3.0 (peer deps explicitly support Vite ^8.0.0)

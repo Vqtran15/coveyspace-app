@@ -10,7 +10,7 @@ import { haptic } from '../lib/haptic.js'
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 function daysInMonth(m) { return [0,31,29,31,30,31,30,31,31,30,31,30,31][m] ?? 31 }
 
-function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
+function BirthdayModal({ birthday, onClose, onSave, onDelete, memberNames = new Set() }) {
   const [closing, close] = useModalClose(onClose)
   const [name, setName]     = useState(birthday?.name ?? '')
   const [month, setMonth]   = useState(birthday?.birthday ? parseInt(birthday.birthday.split('-')[1]) : '')
@@ -91,6 +91,11 @@ function BirthdayModal({ birthday, onClose, onSave, onDelete }) {
               required
               autoFocus
             />
+            {memberNames.has(name.trim().toLowerCase()) && (
+              <p className="mt-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                This name matches a member who already has a birthday from their profile. Adding a separate entry will create a duplicate.
+              </p>
+            )}
           </div>
 
           <div>
@@ -284,6 +289,7 @@ export default function BirthdayTab({ birthdays, onBirthdaysChange, revealKey, o
           onClose={() => setModal(null)}
           onSave={handleSave}
           onDelete={modal !== 'add' ? handleDelete : undefined}
+          memberNames={new Set(birthdays.filter(b => b.profile_user_id).map(b => b.name.trim().toLowerCase()))}
         />
       )}
     </main>
