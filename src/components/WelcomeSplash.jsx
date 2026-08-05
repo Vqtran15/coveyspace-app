@@ -236,13 +236,12 @@ export default function WelcomeSplash({
 
 
   async function handlePersonalizeNext() {
-    if (bdMonth && bdDay) {
-      const mm = String(bdMonth).padStart(2, '0')
-      const dd = String(bdDay).padStart(2, '0')
-      await supabase.from('profiles')
-        .update({ birthday: `2000-${mm}-${dd}` })
-        .eq('user_id', userId)
-    }
+    if (!bdMonth || !bdDay) return
+    const mm = String(bdMonth).padStart(2, '0')
+    const dd = String(bdDay).padStart(2, '0')
+    await supabase.from('profiles')
+      .update({ birthday: `2000-${mm}-${dd}` })
+      .eq('user_id', userId)
     setStep(isAdmin ? 'features' : 'tour')
   }
 
@@ -412,7 +411,7 @@ export default function WelcomeSplash({
           <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
             <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Make it yours</h1>
             <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-              Pick an avatar and add your birthday.
+              Pick an avatar and add your birthday so the group can celebrate you.
             </p>
 
             <div className="flex justify-center mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
@@ -471,7 +470,8 @@ export default function WelcomeSplash({
 
             <button
               onClick={handlePersonalizeNext}
-              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              disabled={!bdMonth || !bdDay}
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>

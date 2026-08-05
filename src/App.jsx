@@ -656,7 +656,6 @@ export default function App() {
         >
           <BirthdayTab
             birthdays={birthdays}
-            onBirthdaysChange={setBirthdays}
             revealKey="birthdays"
             onClose={closeBirthdays}
             onRefresh={() => supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))}
