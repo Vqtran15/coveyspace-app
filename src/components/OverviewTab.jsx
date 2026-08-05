@@ -392,7 +392,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 <div className="w-full animate-stack-in lg:col-span-2">
                   <div
                     className="w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 animate-announcement-shake"
-                    style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 1050ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 3550ms both' }}
+                    style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 1050ms both' }}
                   >
                     <div className="flex items-start gap-4">
                       <Megaphone size={34} weight="fill" className="text-white/90 shrink-0 mt-0.5" />
