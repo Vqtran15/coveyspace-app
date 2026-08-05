@@ -7,7 +7,7 @@ import {
   MagnifyingGlass, ArrowDown, ArrowUp, Trash, ArrowLeft, Notepad,
   Users, ArrowBendUpLeft, ShieldCheck, PencilSimple, Check, Copy, Smiley,
   ChartBar, Plus as PlusIcon, DotsThreeVertical,
-  CalendarStar, CheckCircle, Minus, MapPin, Camera,
+  CalendarHeart, CheckCircle, Minus, MapPin, Camera,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -1784,7 +1784,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
-                          <CalendarStar size={11} weight="bold" />
+                          <CalendarHeart size={11} weight="bold" />
                           {`Event · ${senderName(msg.user_id, msg.display_name)}`}
                         </div>
                         <p className="text-sm font-bold text-stone-800 leading-snug">{ev.title}</p>

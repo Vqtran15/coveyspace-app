@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion, LayoutGroup } from 'framer-motion'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarStar, BookOpen } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, BookOpen } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
@@ -80,7 +80,7 @@ const SERVICES_CONFIG = {
 const TABS = [
   { path: '/home',     shortLabel: 'Home',     Icon: House },
   { path: '/schedule', shortLabel: 'Sign Up',  Icon: NotePencil },
-  { path: '/events',   shortLabel: 'Events',   Icon: CalendarStar },
+  { path: '/events',   shortLabel: 'Events',   Icon: CalendarHeart },
   { path: '/chat',     shortLabel: 'Chat',     Icon: ChatCircleDots },
   { path: '/prayer',   shortLabel: 'Prayer',   Icon: HandsPraying },
   { path: '/bible',    shortLabel: 'Bible',    Icon: BookOpen },

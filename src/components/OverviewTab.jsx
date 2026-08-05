@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarStar, ChatCircleDots, X } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -421,7 +421,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
                   key: 'events',
                   onClick: () => navigate('/events'),
-                  icon: <CalendarStar size={24} weight="fill" className="text-amber-500" />,
+                  icon: <CalendarHeart size={24} weight="fill" className="text-amber-500" />,
                   iconBg: 'bg-amber-50',
                   label: 'Next Event',
                   primary: nextEvent?.title ?? 'No upcoming events',

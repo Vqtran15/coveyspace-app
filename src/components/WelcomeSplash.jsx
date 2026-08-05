@@ -2,7 +2,7 @@ import {
   Confetti, DeviceMobile, BoxArrowUp, DotsThreeVertical,
   ShieldCheck, Users, ArrowLeft, ChatCircleDots, ForkKnife,
   HandsPraying, Cake, CalendarCheck, Link, ShareNetwork, Bell, Coins,
-  CalendarStar, BookOpen,
+  CalendarHeart, BookOpen,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -50,7 +50,7 @@ const FEATURE_TOGGLES = [
   { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',           Icon: HandsPraying,   color: 'text-sunrise' },
   { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral' },
   { key: 'guide_enabled',     label: 'Community Guide',   desc: 'PDF, link, or written notes',     Icon: Link,           color: 'text-ember' },
-  { key: 'events_enabled',   label: 'Events',            desc: 'One-off events with RSVP',        Icon: CalendarStar,   color: 'text-amber-500' },
+  { key: 'events_enabled',   label: 'Events',            desc: 'One-off events with RSVP',        Icon: CalendarHeart,  color: 'text-amber-500' },
   { key: 'bible_enabled',    label: 'Bible',             desc: 'Bible reader with verse search',  Icon: BookOpen,       color: 'text-ember' },
   { key: 'giving_enabled',   label: 'Giving',            desc: 'Monthly tithing/giving link',     Icon: Coins,          color: 'text-amber-600' },
 ]

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { CalendarStar, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
+import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -696,7 +696,7 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="w-16 h-16 rounded-2xl bg-ember/10 flex items-center justify-center mb-4">
-                <CalendarStar size={32} className="text-ember" weight="duotone" />
+                <CalendarHeart size={32} className="text-ember" weight="duotone" />
               </div>
               <p className="font-semibold text-stone-700 mb-1">No upcoming events</p>
               {isAdmin && (
