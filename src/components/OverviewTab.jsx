@@ -315,7 +315,19 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
 
       <div className="mb-7 flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-stone-800">
-          Hi, {(displayName ?? '').split(' ')[0] || 'there'}!
+          Hi, <span className="relative inline-block">
+            {(displayName ?? '').split(' ')[0] || 'there'}
+            <motion.span
+              className="absolute inset-x-0 bottom-0 h-[2.5px] bg-ember rounded-full"
+              style={{ originX: 0 }}
+              initial={{ scaleX: 0, opacity: 1 }}
+              animate={{ scaleX: 1, opacity: 0 }}
+              transition={{
+                scaleX: { duration: 0.4, delay: 0.15, ease: 'easeOut' },
+                opacity: { duration: 0.3, delay: 0.75, ease: 'easeIn' },
+              }}
+            />
+          </span>!
         </h1>
         <button
           onClick={onOpenSettings}
@@ -380,7 +392,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 <div className="w-full animate-stack-in lg:col-span-2">
                   <div
                     className="w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 animate-announcement-shake"
-                    style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 320ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 2820ms both' }}
+                    style={{ animation: 'announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 1050ms both, announcement-shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) 3550ms both' }}
                   >
                     <div className="flex items-start gap-4">
                       <Megaphone size={34} weight="fill" className="text-white/90 shrink-0 mt-0.5" />
