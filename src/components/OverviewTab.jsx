@@ -339,7 +339,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                 height="13"
                 viewBox="0 0 200 16"
                 preserveAspectRatio="none"
-                className="absolute -bottom-0.5 left-0"
+                className="absolute top-full left-0"
                 style={{ overflow: 'visible' }}
                 initial={{ clipPath: 'inset(0 100% 0 0)', opacity: 1 }}
                 animate={greetingControls}
