@@ -386,7 +386,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                       maxLength={40}
                       required
                       autoComplete="given-name"
-                      className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+                      className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                     />
                     <input
                       type="text"
@@ -395,7 +395,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                       onChange={e => setEditLast(e.target.value)}
                       maxLength={40}
                       autoComplete="family-name"
-                      className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+                      className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
                     />
                   </div>
                   <div className="flex gap-2 pt-1">
@@ -447,7 +447,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     <select
                       value={bdMonth ?? ''}
                       onChange={e => { setBdMonth(Number(e.target.value) || null); setBdDay(null) }}
-                      className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                      className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
                     >
                       <option value="">Month</option>
                       {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
@@ -455,7 +455,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                     <select
                       value={bdDay ?? ''}
                       onChange={e => setBdDay(Number(e.target.value) || null)}
-                      className="w-24 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                      className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
                     >
                       <option value="">Day</option>
                       {Array.from({ length: daysInMonth(bdMonth) }, (_, i) => i + 1).map(d => (
