@@ -331,7 +331,7 @@ export default function WelcomeSplash({
   async function shareCode() {
     if (!inviteCode) return
     const url = `${window.location.origin}/login?code=${inviteCode}`
-    if (navigator.share) await navigator.share({ title: 'Join my group on Covey Space', url }).catch(() => {})
+    if (navigator.share) await navigator.share({ title: 'Join my group on Coveyspace', url }).catch(() => {})
     else copyLink()
   }
 

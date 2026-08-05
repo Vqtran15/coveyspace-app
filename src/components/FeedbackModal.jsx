@@ -97,7 +97,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
               <CheckCircle size={44} weight="fill" className="text-ember" />
               <p className="font-semibold text-stone-800">Thanks for the feedback!</p>
               <p className="text-sm text-stone-400 leading-relaxed">
-                I read every response and use it to make Covey Space better.
+                I read every response and use it to make Coveyspace better.
               </p>
               <button
                 onClick={close}

@@ -155,7 +155,7 @@ export default function AuthPage() {
               <div className="w-11 h-11 rounded-full bg-ember ring-4 ring-ember/20 flex items-center justify-center shrink-0">
                 <UsersThree size={24} weight="fill" className="text-white" />
               </div>
-              <h1 className="font-league-gothic text-5xl tracking-wide text-ember">Covey Space</h1>
+              <h1 className="font-league-gothic text-5xl tracking-wide text-ember">Coveyspace</h1>
             </div>
           </div>
 

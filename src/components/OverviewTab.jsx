@@ -414,7 +414,7 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                       if (!code) return
                       const url = `${window.location.origin}/login?code=${code}`
                       if (navigator.share) {
-                        await navigator.share({ title: 'Join my group on Covey Space', url }).catch(() => {})
+                        await navigator.share({ title: 'Join my group on Coveyspace', url }).catch(() => {})
                       } else {
                         await navigator.clipboard.writeText(url)
                         toast('Invite link copied!', 'success')

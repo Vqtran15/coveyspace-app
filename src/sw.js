@@ -14,7 +14,7 @@ self.addEventListener('push', event => {
   let data = {}
   try { data = event.data?.json() ?? {} } catch {}
 
-  const title      = data.title ?? 'Covey Space'
+  const title      = data.title ?? 'Coveyspace'
   const url        = data.url ?? '/chat'
   const targetPath = new URL(url, self.location.origin).pathname
   const options    = {

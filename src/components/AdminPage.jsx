@@ -144,7 +144,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
   async function handleShareLink() {
     const url = `${window.location.origin}/login?code=${inviteCode}`
     if (navigator.share) {
-      try { await navigator.share({ title: 'Join my group on Covey Space', url }) } catch (_) {}
+      try { await navigator.share({ title: 'Join my group on Coveyspace', url }) } catch (_) {}
     } else {
       await navigator.clipboard.writeText(url)
       toast('Invite link copied!', 'success')
@@ -1017,7 +1017,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
                   <div className="px-4 pb-3 flex items-center gap-3">
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-stone-700">Auto-sync new members here</p>
-                      <p className="text-xs text-stone-400 mt-0.5">New Covey Space members are added to this PCO Group automatically</p>
+                      <p className="text-xs text-stone-400 mt-0.5">New Coveyspace members are added to this PCO Group automatically</p>
                     </div>
                     <button
                       role="switch"
@@ -1127,7 +1127,7 @@ export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSe
             {confirmDisconnect && (
               <div className="border-t border-stone-100 px-4 py-4 bg-red-50/60">
                 <p className="text-sm font-semibold text-stone-800 mb-1">Disconnect Planning Center?</p>
-                <p className="text-xs text-stone-500 mb-3">Your Covey Space group data won't be affected.</p>
+                <p className="text-xs text-stone-500 mb-3">Your Coveyspace group data won't be affected.</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setConfirmDisconnect(false)}

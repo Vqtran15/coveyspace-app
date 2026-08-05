@@ -10,7 +10,7 @@ export default function SplashScreen({ exiting }) {
         className="text-2xl font-bold text-stone-800 tracking-tight animate-fade-up"
         style={{ animationDelay: '180ms' }}
       >
-        Covey Space
+        Coveyspace
       </p>
     </div>
   )
