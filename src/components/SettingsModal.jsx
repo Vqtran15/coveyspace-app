@@ -2,13 +2,19 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart, X } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart, ArrowLeft, Cake } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+function daysInMonth(month) {
+  if (!month) return 31
+  return new Date(2000, month, 0).getDate()
+}
 
 export default function SettingsModal({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
   const [closing, close] = useModalClose(onClose)
@@ -43,12 +49,16 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [bdMonth, setBdMonth] = useState(null)
+  const [bdDay, setBdDay] = useState(null)
+  const [bdOpen, setBdOpen] = useState(false)
+  const [bdSaving, setBdSaving] = useState(false)
 
   useEffect(() => {
     if (!userId) return
     supabase
       .from('profiles')
-      .select('avatar_icon, avatar_color, avatar_image_url, first_name, last_name')
+      .select('avatar_icon, avatar_color, avatar_image_url, first_name, last_name, birthday')
       .eq('user_id', userId)
       .single()
       .then(({ data }) => {
@@ -57,6 +67,11 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
         setAvatarImageUrl(data?.avatar_image_url ?? null)
         setLegalFirst(data?.first_name ?? '')
         setLegalLast(data?.last_name  ?? '')
+        if (data?.birthday) {
+          const [, mm, dd] = data.birthday.split('-')
+          setBdMonth(Number(mm))
+          setBdDay(Number(dd))
+        }
       })
     supabase.auth.getUser().then(({ data: { user } }) => setEmail(user?.email ?? ''))
   }, [userId])
@@ -143,6 +158,24 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     setPwSaving(false)
   }
 
+  async function handleSaveBirthday() {
+    if (!bdMonth || !bdDay) return
+    setBdSaving(true)
+    const mm = String(bdMonth).padStart(2, '0')
+    const dd = String(bdDay).padStart(2, '0')
+    const { error } = await supabase
+      .from('profiles')
+      .update({ birthday: `2000-${mm}-${dd}` })
+      .eq('user_id', userId)
+    if (error) {
+      toast('Failed to save birthday', 'error')
+    } else {
+      toast('Birthday saved', 'success')
+      setBdOpen(false)
+    }
+    setBdSaving(false)
+  }
+
   async function handleDeleteAccount() {
     setDeleting(true)
     setDeleteError(null)
@@ -158,29 +191,25 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
   return (
     <>
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
-      onClick={close}
+      className={`fixed inset-0 lg:left-56 z-50 bg-white overflow-y-auto overscroll-contain ${closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
-        style={{ maxHeight: '85dvh' }}
-        onClick={e => e.stopPropagation()}
+        className="sticky top-0 bg-white border-b border-stone-100 z-10 shrink-0"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
-        <div className="flex items-center justify-between p-5 pb-4 shrink-0">
-          <div className="flex items-center gap-2">
-            <GearSix size={20} weight="fill" className="text-ember" />
-            <h2 className="text-lg font-bold text-stone-800">Settings</h2>
-          </div>
+        <div className="flex items-center gap-1 px-4 py-3">
           <button
             onClick={close}
-            aria-label="Close settings"
-            className="text-stone-400 hover:text-stone-600 w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
+            aria-label="Back"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100 text-stone-500 -ml-1.5 shrink-0"
           >
-            <X size={20} />
+            <ArrowLeft size={20} weight="bold" />
           </button>
+          <h1 className="text-lg font-bold text-stone-800">Settings</h1>
         </div>
+      </div>
 
-        <div className="px-5 pb-6 space-y-2 overflow-y-auto overscroll-contain">
+      <div className="max-w-md mx-auto px-4 pt-4 pb-12 space-y-2">
           {isAdmin && (
             <div className="pt-2 border-t border-stone-100">
               <button
@@ -398,6 +427,72 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
                 >
                   <PencilSimple size={15} weight="bold" className="text-stone-400" />
                   {legalFirst ? `${legalFirst}${legalLast ? ' ' + legalLast : ''}` : 'Add first & last name'}
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Birthday */}
+            <AnimatePresence initial={false}>
+              {bdOpen ? (
+                <motion.div
+                  key="bd-form"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                  className="mb-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 space-y-3"
+                >
+                  <p className="text-xs font-semibold text-stone-500">Birthday</p>
+                  <div className="flex gap-2">
+                    <select
+                      value={bdMonth ?? ''}
+                      onChange={e => { setBdMonth(Number(e.target.value) || null); setBdDay(null) }}
+                      className="flex-1 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                    >
+                      <option value="">Month</option>
+                      {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+                    </select>
+                    <select
+                      value={bdDay ?? ''}
+                      onChange={e => setBdDay(Number(e.target.value) || null)}
+                      className="w-24 text-sm bg-white border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                    >
+                      <option value="">Day</option>
+                      {Array.from({ length: daysInMonth(bdMonth) }, (_, i) => i + 1).map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setBdOpen(false)}
+                      className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveBirthday}
+                      disabled={!bdMonth || !bdDay || bdSaving}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40"
+                    >
+                      {bdSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="bd-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => setBdOpen(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 rounded-xl transition-colors mb-1"
+                >
+                  <Cake size={15} weight="bold" className="text-stone-400" />
+                  {bdMonth && bdDay ? `Birthday: ${MONTHS[bdMonth - 1]} ${bdDay}` : 'Add birthday'}
                 </motion.button>
               )}
             </AnimatePresence>
@@ -642,7 +737,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             </AnimatePresence>
           </div>
         </div>
-      </div>
     </div>
 
     {feedbackOpen && (
