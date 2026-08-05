@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import { Cake } from '@phosphor-icons/react'
 import { formatBirthdayDate } from '../utils/birthdays.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -8,7 +9,7 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation(revealKey, index)
 
   return (
-    <button
+    <motion.button
       onClick={() => { haptic(); onClick?.() }}
       style={entranceStyle}
       className={`relative overflow-hidden w-full text-left p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
@@ -18,6 +19,8 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
           ? 'bg-lagoon-50 border-lagoon-200 hover:border-lagoon'
           : 'bg-white border-stone-200 hover:border-stone-300'
       } ${entranceClass}`}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       {days <= 30 && <ConfettiDots />}
       <div className="relative flex items-center justify-between gap-3">
@@ -46,6 +49,6 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
           </span>
         )}
       </div>
-    </button>
+    </motion.button>
   )
 }

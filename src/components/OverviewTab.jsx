@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
@@ -35,10 +36,12 @@ function shortName(full) {
 
 function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '' }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       style={{ animationDelay: `${delay}ms` }}
       className={`relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in ${className}`}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       {confetti && <ConfettiDots />}
       <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
@@ -50,7 +53,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
       <CaretRight size={16} className="text-stone-300 shrink-0 relative" />
-    </button>
+    </motion.button>
   )
 }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -54,10 +55,12 @@ function MemberCard({ member, index, onClick }) {
   const lastUpdated = formatLastUpdated(member.prayer_requests)
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
       style={entranceStyle}
       className={`w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -69,7 +72,7 @@ function MemberCard({ member, index, onClick }) {
           <CaretRight size={14} weight="bold" className="text-stone-300" />
         </div>
       </div>
-    </button>
+    </motion.button>
   )
 }
 
@@ -86,10 +89,12 @@ function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
   const stackWidth = shown.length * 26 + 10 + (extra > 0 ? 26 : 0)
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
       style={entranceStyle}
       className={`w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -124,7 +129,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
           <CaretRight size={14} weight="bold" className="text-stone-300" />
         </div>
       </div>
-    </button>
+    </motion.button>
   )
 }
 

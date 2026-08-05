@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
@@ -16,9 +17,11 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
   const unread      = isUnread(conv)
   const deletable   = !isMainGroupChat(conv)
   return (
-    <div
+    <motion.div
       className="flex items-stretch bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-up"
       style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       <button
         onClick={() => onSelect(conv)}
@@ -57,7 +60,7 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
           {isDeleting ? <span className="text-xs">…</span> : <DotsThreeVertical size={20} weight="bold" />}
         </button>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -76,9 +79,11 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
       {mainConv && (
         <>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-1 px-1">Group Chat</p>
-          <button
+          <motion.button
             onClick={() => onSelect(mainConv)}
             className="w-full bg-white rounded-2xl border border-ember/20 shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up"
+            whileTap={{ scale: 0.975 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           >
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
@@ -100,7 +105,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
               </div>
               <CaretRight size={16} className="text-stone-300 shrink-0" />
             </div>
-          </button>
+          </motion.button>
         </>
       )}
       {otherConvs.length > 0 && mainConv && (
