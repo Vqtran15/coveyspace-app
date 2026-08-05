@@ -172,6 +172,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const freshLoadRef               = useRef(false)
   const wasAtBottomRef             = useRef(true)
   const initialRevealScrollNeeded  = useRef(false)
+  const initialScrollSettledRef    = useRef(false)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
@@ -404,6 +405,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setConvName(conversation.name)
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
+    initialScrollSettledRef.current = false
     freshLoadRef.current = true
     setTimeout(() => { freshLoadRef.current = false }, 5000)
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
@@ -665,6 +667,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       // fires on initial open, not during normal realtime use where the user may
       // have intentionally scrolled up.
       requestAnimationFrame(() => requestAnimationFrame(() => {
+        // Always mark settled after 2 frames — loadMore() is blocked until this point.
+        // This prevents the race where a message update clears initialRevealScrollNeeded
+        // before iOS Safari has computed the correct scrollHeight.
+        initialScrollSettledRef.current = true
         if (!freshLoadRef.current) return
         preserveScrollRef.current = null   // cancel any stale loadMore() preservation
         isAtBottomRef.current = true
@@ -801,12 +807,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         if (msgRect.top < containerRect.bottom) setFirstUnreadId(null)
       }
     }
-    // Guard with `visible` and `initialRevealScrollNeeded`: during the initial
-    // load, scrollToBottom() may fire before layout stabilises, landing
-    // scrollTop near 0. Without this guard that would trigger loadMore(), set
-    // preserveScrollRef, and subsequently restore scroll to the middle of the
-    // feed instead of the bottom.
-    if (visible && !initialRevealScrollNeeded.current && el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
+    // Gate loadMore on initialScrollSettledRef: the double-rAF in useLayoutEffect([visible])
+    // sets this after 2 frames, ensuring iOS Safari has computed the real scrollHeight.
+    // Using !initialRevealScrollNeeded was insufficient — any message update (fresh fetch,
+    // realtime) would clear that flag before iOS had settled layout, causing loadMore() to
+    // fire with scrollTop=0, setting preserveScrollRef, and restoring scroll to the middle.
+    if (visible && initialScrollSettledRef.current && el.scrollTop < 60 && hasMore && !loadingMore && !atBottom) loadMore()
   }
 
   async function loadMore() {
