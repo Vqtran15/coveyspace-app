@@ -204,7 +204,7 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
     <>
     {/* Page */}
     <div
-      className={`fixed inset-0 lg:left-56 z-50 bg-white overflow-y-auto overscroll-contain ${closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto overscroll-contain ${closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="max-w-md mx-auto px-4 pt-8 pb-16">
@@ -221,14 +221,13 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             </button>
             <h1 className="text-3xl font-bold text-stone-800">Settings</h1>
           </div>
-          {displayName && <p className="text-stone-500 mt-1 text-sm pl-1">{displayName}</p>}
         </div>
 
         {/* Admin */}
         {isAdmin && (
           <div className="mb-4">
             <button
-              onClick={() => { close(); setTimeout(() => navigate('/admin'), 260) }}
+              onClick={() => navigate('/admin')}
               className="w-full flex items-center gap-3 px-4 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] rounded-2xl transition-all"
             >
               <ShieldCheck size={20} weight="fill" className="text-white/80 shrink-0" />
@@ -506,7 +505,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
             <form onSubmit={handleChangeName} className="px-5 pt-6 pb-6 space-y-4">
               <p className="text-base font-semibold text-stone-800">Display Name</p>
               <input
-                autoFocus
                 type="text"
                 placeholder="Your name"
                 value={nameValue}
@@ -529,7 +527,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
               <p className="text-base font-semibold text-stone-800">First &amp; Last Name</p>
               <div className="flex gap-2">
                 <input
-                  autoFocus
                   type="text"
                   placeholder="First"
                   value={editFirst}

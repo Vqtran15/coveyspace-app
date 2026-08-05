@@ -174,7 +174,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
         <span className="text-xs text-stone-400 shrink-0 ml-2">{formatRelativeDate(req.created_at)}</span>
       </div>
       <button onClick={onOpen} className="w-full text-left">
-        <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{req.request}</p>
+        <p className="text-sm text-stone-700 leading-relaxed">{req.request}</p>
       </button>
       {(reactionCount > 0 || !isOwnRequest) && (
         <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
@@ -231,7 +231,7 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
         <span className="text-xs text-stone-400 shrink-0 ml-2">{formatRelativeDate(groupPrayer.created_at)}</span>
       </div>
       <button onClick={onOpen} className="w-full text-left">
-        <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{groupPrayer.request}</p>
+        <p className="text-sm text-stone-700 leading-relaxed">{groupPrayer.request}</p>
       </button>
       <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
         <ReactionAvatars reactions={reactions} />
