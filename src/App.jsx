@@ -5,25 +5,7 @@ import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, N
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { usePushNotifications } from './hooks/usePushNotifications.js'
-import { getUpcomingBirthdays } from './utils/birthdays.js'
-
-// Deduplicate birthday rows by name (case-insensitive):
-// - Profile-linked entries (profile_user_id set) always win over manual ones.
-// - Among manual-only entries with the same name, keep the first occurrence.
-function dedupBirthdays(rows) {
-  const linkedNames = new Set(
-    rows.filter(b => b.profile_user_id).map(b => b.name.trim().toLowerCase())
-  )
-  const seenManual = new Set()
-  return rows.filter(b => {
-    const key = b.name.trim().toLowerCase()
-    if (b.profile_user_id) return true
-    if (linkedNames.has(key)) return false
-    if (seenManual.has(key)) return false
-    seenManual.add(key)
-    return true
-  })
-}
+import { getUpcomingBirthdays, dedupBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
 import SplashScreen from './components/SplashScreen.jsx'
@@ -45,7 +27,7 @@ const BibleTab            = lazy(() => import('./components/BibleTab.jsx'))
 const AuthPage            = lazy(() => import('./components/AuthPage.jsx'))
 const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.jsx'))
 const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
-const SettingsPage        = lazy(() => import('./components/SettingsModal.jsx'))
+const SettingsPage        = lazy(() => import('./components/SettingsPage.jsx'))
 const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
 
 

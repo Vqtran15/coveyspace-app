@@ -1,4 +1,4 @@
-# meal-rotation
+# coveyspace-app
 
 React PWA for Coveyspace — a platform for church community groups.
 

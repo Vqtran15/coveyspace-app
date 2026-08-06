@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { ListBullets } from '@phosphor-icons/react'
-import RotationTab from '../RotationTab.jsx'
+import RotationTab from './RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { mealCutoffDate } from '../utils/dates.js'
 

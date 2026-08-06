@@ -1,3 +1,18 @@
+export function dedupBirthdays(rows) {
+  const linkedNames = new Set(
+    rows.filter(b => b.profile_user_id).map(b => b.name.trim().toLowerCase())
+  )
+  const seenManual = new Set()
+  return rows.filter(b => {
+    const key = b.name.trim().toLowerCase()
+    if (b.profile_user_id) return true
+    if (linkedNames.has(key)) return false
+    if (seenManual.has(key)) return false
+    seenManual.add(key)
+    return true
+  })
+}
+
 function nextOccurrence(dateStr, today) {
   const [, m, d] = dateStr.split('-').map(Number)
   let next = new Date(today.getFullYear(), m - 1, d)

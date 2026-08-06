@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { ListBullets } from '@phosphor-icons/react'
-import { supabase } from './lib/supabase.js'
-import { patchTitleDate, toDateString, mealCutoffDate } from './utils/dates.js'
-import { nextScheduledDate } from './utils/schedule.js'
-import { haptic } from './lib/haptic.js'
-import MealPage from './components/MealPage.jsx'
-import AddPageModal from './components/AddPageModal.jsx'
-import ManagePagesModal from './components/ManagePagesModal.jsx'
+import { supabase } from '../lib/supabase.js'
+import { patchTitleDate, toDateString, mealCutoffDate } from '../utils/dates.js'
+import { nextScheduledDate } from '../utils/schedule.js'
+import { haptic } from '../lib/haptic.js'
+import MealPage from './MealPage.jsx'
+import AddPageModal from './AddPageModal.jsx'
+import ManagePagesModal from './ManagePagesModal.jsx'
 
 const FUTURE_BUFFER = 2  // always keep at least this many pages with dates after today
 const AUTO_FILL_LIMIT = 10 // safety cap per load
