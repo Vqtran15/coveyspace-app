@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, Heart, ArrowLeft, Cake } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -486,26 +486,6 @@ export default function SettingsModal({ displayName, isAdmin, userId, onClose, o
               <span className="flex-1 text-left">Sign out</span>
             </button>
           </div>
-        </div>
-
-        {/* Support */}
-        <div className="rounded-2xl bg-coral/5 border border-coral/20 p-4 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Heart size={15} weight="fill" className="text-coral shrink-0" />
-            <p className="text-sm font-semibold text-stone-700">Support Coveyspace</p>
-          </div>
-          <p className="text-xs text-stone-500 leading-relaxed mb-3">
-            Coveyspace is community-funded. Your support helps cover the costs that keep this app running — data storage, web hosting/development, and email services.
-          </p>
-          <a
-            href="https://ko-fi.com/coveyspace"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-coral text-white text-sm font-semibold rounded-xl hover:bg-coral-600 active:scale-[0.98] transition-all"
-          >
-            <Heart size={14} weight="fill" />
-            Support Coveyspace
-          </a>
         </div>
 
         {/* Danger zone */}
