@@ -350,11 +350,11 @@ export default function App() {
         if (!latestByConv[msg.conversation_id]) latestByConv[msg.conversation_id] = msg.created_at
       }
       const readMap = Object.fromEntries((memberships ?? []).map(m => [m.conversation_id, m.last_read_at]))
-      const hasUnread = (memberships ?? []).some(m => {
-        const latest = latestByConv[m.conversation_id]
-        return latest && (!readMap[m.conversation_id] || latest > readMap[m.conversation_id])
-      })
-      if (hasUnread) setUnreadChatCount(c => Math.max(c, 1))
+      const unreadCount = (msgs ?? []).filter(msg => {
+        const lastRead = readMap[msg.conversation_id]
+        return !lastRead || msg.created_at > lastRead
+      }).length
+      if (unreadCount > 0) setUnreadChatCount(c => Math.max(c, unreadCount))
     }
     loadInitialUnread()
   }, [groupId, session?.user?.id])
