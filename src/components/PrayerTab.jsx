@@ -659,7 +659,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           marginBottom: searchOpen ? 16 : 0,
         }}
         transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ overflow: 'hidden' }}
+        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
       >
         <div className="relative">
           <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />

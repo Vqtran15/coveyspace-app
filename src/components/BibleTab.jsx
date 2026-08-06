@@ -1184,7 +1184,7 @@ export default function BibleTab({ userId }) {
           marginBottom: searchOpen ? 4 : 0,
         }}
         transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ overflow: 'hidden' }}
+        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
       >
         <div className="relative">
           <MagnifyingGlass
