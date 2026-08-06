@@ -354,6 +354,7 @@ export default function App() {
         const lastRead = readMap[msg.conversation_id]
         return !lastRead || msg.created_at > lastRead
       }).length
+      console.log('[unread-debug] memberships:', memberships?.length, 'msgs:', msgs?.length, 'readMap:', readMap, 'unreadCount:', unreadCount)
       if (unreadCount > 0) setUnreadChatCount(c => Math.max(c, unreadCount))
     }
     loadInitialUnread()
