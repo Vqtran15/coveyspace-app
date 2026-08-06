@@ -35,7 +35,7 @@ function shortName(full) {
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] ?? ''
 }
 
-function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '' }) {
+function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '', dot = false }) {
   return (
     <motion.button
       onClick={onClick}
@@ -47,6 +47,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
       {confetti && <ConfettiDots />}
       <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
         {icon}
+        {dot && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ember rounded-full border-2 border-white" />}
       </div>
       <div className="relative flex-1 min-w-0">
         <p className="text-[11px] font-semibold text-stone-500 uppercase tracking-wide mb-0.5">{label}</p>
@@ -155,7 +156,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, chatEnabled = true, givingUrl = null, guideUrl = null, guideType = null, greetingReady = false }) {
+export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, chatEnabled = true, givingUrl = null, guideUrl = null, guideType = null, greetingReady = false, chatUnreadCount = 0 }) {
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -507,8 +508,9 @@ export default function OverviewTab({ displayName, groupName, groupId, isAdmin, 
                   icon: <ChatCircleDots size={24} weight="fill" className="text-ember" />,
                   iconBg: 'bg-ember/10',
                   label: 'Main Chat',
-                  primary: lastGroupMessage.image_url && !lastGroupMessage.body ? '📷 Photo' : lastGroupMessage.body,
+                  primary: lastGroupMessage.image_url && !lastGroupMessage.body ? '📷 Photo' : `“${lastGroupMessage.body}”`,
                   secondary: `${shortName(lastGroupMessage.display_name)} · ${relativeTime(lastGroupMessage.created_at)}`,
+                  dot: chatUnreadCount > 0,
                 },
                 prayerEnabled && prayerCard && {
                   key: 'prayer',
