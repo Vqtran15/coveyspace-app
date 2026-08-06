@@ -425,7 +425,11 @@ export default function App() {
     if (path === '/chat') setUnreadChatCount(0)
     const tabName = path.replace('/', '') || 'home'
     trackEvent('tab_view', { tab_name: tabName })
-    navigate(path)
+    if (path === location.pathname) {
+      navigate(path, { replace: true, state: { tabReset: Date.now() } })
+    } else {
+      navigate(path)
+    }
   }
 
   function navigateToSettings() {

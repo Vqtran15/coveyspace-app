@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
@@ -522,6 +523,8 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
 
 export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpenSettings }) {
   const toast = useToast()
+  const location = useLocation()
+  const tabResetRef = useRef(location.state?.tabReset ?? null)
   const [events,       setEvents]       = useState([])
   const [rsvps,        setRsvps]        = useState({})
   const [loading,      setLoading]      = useState(true)
@@ -535,6 +538,14 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
   const [pickerConvs,    setPickerConvs]    = useState([])
   const [pickerLoading,  setPickerLoading]  = useState(false)
   const [sendingToConv,  setSendingToConv]  = useState(null)
+
+  useEffect(() => {
+    const reset = location.state?.tabReset
+    if (reset && reset !== tabResetRef.current) {
+      tabResetRef.current = reset
+      setSelectedEvent(null)
+    }
+  }, [location.state?.tabReset])
 
   async function openConvPicker() {
     haptic()

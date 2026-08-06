@@ -1,12 +1,14 @@
-import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 
 export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
-  const { state: locationState } = useLocation()
+  const location = useLocation()
+  const locationState = location.state
   const navigateRouter = useNavigate()
+  const tabResetRef = useRef(location.state?.tabReset ?? null)
   const [autoOpenGroupChat, setAutoOpenGroupChat] = useState(!!locationState?.openGroupChat)
   const consumeAutoOpen = useCallback(() => setAutoOpenGroupChat(false), [])
   const [autoOpenMainChat, setAutoOpenMainChat] = useState(!!locationState?.openMainChat)
@@ -80,6 +82,15 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       setTimeout(() => setListClass(''), 250)
     }, 200)
   }
+
+  useEffect(() => {
+    const reset = location.state?.tabReset
+    if (reset && reset !== tabResetRef.current) {
+      tabResetRef.current = reset
+      if (activeConv) goBack()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state?.tabReset])
 
   if (activeConv) {
     return (

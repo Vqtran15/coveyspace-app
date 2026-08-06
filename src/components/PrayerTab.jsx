@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, LayoutGroup, AnimatePresence } from 'framer-motion'
+import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -288,6 +288,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   const hasAutoOpenedRef = useRef(false)
   const viewSwitchRef    = useRef(false)
   const searchInputRef   = useRef(null)
+  const tabResetRef      = useRef(location.state?.tabReset ?? null)
 
   function switchViewMode(newMode) {
     if (newMode === viewMode || viewSwitchRef.current) return
@@ -300,6 +301,15 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       viewSwitchRef.current = false
     }, 180)
   }
+
+  useEffect(() => {
+    const reset = location.state?.tabReset
+    if (reset && reset !== tabResetRef.current) {
+      tabResetRef.current = reset
+      setSelectedMember(null)
+      setSelectedGroupPrayer(null)
+    }
+  }, [location.state?.tabReset])
 
   // Group prayer creation
   const [showCreate, setShowCreate]               = useState(false)
@@ -641,38 +651,37 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       )}
 
       {/* Search */}
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="mb-4"
-          >
-            <div className="relative">
-              <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-              <input
-                ref={searchInputRef}
-                type="search"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder={viewMode === 'members' ? 'Search friends…' : 'Search requests…'}
-                className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-              />
-              {searchQuery && (
-                <button
-                  aria-label="Clear search"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div
+        initial={false}
+        animate={{
+          height: searchOpen ? 'auto' : 0,
+          opacity: searchOpen ? 1 : 0,
+          marginBottom: searchOpen ? 16 : 0,
+        }}
+        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ overflow: 'hidden' }}
+      >
+        <div className="relative">
+          <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          <input
+            ref={searchInputRef}
+            type="search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={viewMode === 'members' ? 'Search friends…' : 'Search requests…'}
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+          />
+          {searchQuery && (
+            <button
+              aria-label="Clear search"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </motion.div>
 
       {/* Content */}
       <div key={viewMode} className={contentAnimClass}>

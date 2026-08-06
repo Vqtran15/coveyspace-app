@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
@@ -703,6 +704,8 @@ const pageVariants = {
 
 export default function BibleTab({ userId }) {
   const toast = useToast()
+  const location = useLocation()
+  const tabResetRef = useRef(location.state?.tabReset ?? null)
 
   // navigation: 'home' | 'chapter'
   const [viewMode, setViewMode] = useState('home')
@@ -1050,6 +1053,15 @@ export default function BibleTab({ userId }) {
     setShowChapterMenu(false)
   }
 
+  useEffect(() => {
+    const reset = location.state?.tabReset
+    if (reset && reset !== tabResetRef.current) {
+      tabResetRef.current = reset
+      if (viewMode === 'chapter') handleBack()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state?.tabReset])
+
   function handleCopySelection() {
     if (!openChapter || !selectionRange) return
     const { start, end } = selectionRange
@@ -1164,59 +1176,58 @@ export default function BibleTab({ userId }) {
       </div>
 
       {/* Search bar */}
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="mb-1"
-          >
-            <div className="relative">
-              <MagnifyingGlass
-                size={16}
-                weight="bold"
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
-              />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={query}
-                onChange={e => handleSearch(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
-                placeholder="John 3:16, Psalm 23…"
-                className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
-              />
-              {query && (
-                <button
-                  onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-            {bookSuggestions.length > 0 && (
-              <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
-                {bookSuggestions.map((book, idx) => (
-                  <button
-                    key={book.id}
-                    onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
-                    className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
-                  >
-                    <span className="font-medium text-stone-700">{book.name}</span>
-                    <span className="text-xs text-stone-500">{book.chapters} ch</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {searchError && (
-              <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
-            )}
-          </motion.div>
+      <motion.div
+        initial={false}
+        animate={{
+          height: searchOpen ? 'auto' : 0,
+          opacity: searchOpen ? 1 : 0,
+          marginBottom: searchOpen ? 4 : 0,
+        }}
+        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ overflow: 'hidden' }}
+      >
+        <div className="relative">
+          <MagnifyingGlass
+            size={16}
+            weight="bold"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
+          />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={query}
+            onChange={e => handleSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
+            placeholder="John 3:16, Psalm 23…"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
+          />
+          {query && (
+            <button
+              onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        {bookSuggestions.length > 0 && (
+          <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+            {bookSuggestions.map((book, idx) => (
+              <button
+                key={book.id}
+                onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
+                className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
+              >
+                <span className="font-medium text-stone-700">{book.name}</span>
+                <span className="text-xs text-stone-500">{book.chapters} ch</span>
+              </button>
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+        {searchError && (
+          <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
+        )}
+      </motion.div>
 
       {/* Home content */}
       <div className="mt-4">
