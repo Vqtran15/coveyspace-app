@@ -185,16 +185,21 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
         <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
           <ReactionAvatars reactions={reactions} />
           {!isOwnRequest && (
-            <button
+            <motion.button
+              key={userReacted}
               onClick={onPray}
               disabled={toggling}
+              initial={userReacted ? { scale: 0.82 } : false}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 520, damping: 15 }}
+              whileTap={{ scale: 0.87 }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
                 userReacted ? 'bg-ember/10 text-ember' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
               }`}
             >
               <HandsPraying size={16} weight={userReacted ? 'fill' : 'regular'} />
               <span>{userReacted ? 'Praying' : 'Pray'}</span>
-            </button>
+            </motion.button>
           )}
         </div>
       )}
@@ -240,16 +245,21 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
       </button>
       <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
         <ReactionAvatars reactions={reactions} />
-        <button
+        <motion.button
+          key={userReacted}
           onClick={onPray}
           disabled={toggling}
+          initial={userReacted ? { scale: 0.82 } : false}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 520, damping: 15 }}
+          whileTap={{ scale: 0.87 }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
             userReacted ? 'bg-ember/10 text-ember' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600'
           }`}
         >
           <HandsPraying size={16} weight={userReacted ? 'fill' : 'regular'} />
           <span>{userReacted ? 'Praying' : 'Pray'}</span>
-        </button>
+        </motion.button>
       </div>
     </div>
   )
