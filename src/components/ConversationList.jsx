@@ -481,8 +481,17 @@ export default function ConversationList({ session, groupId, members, enterClass
       </div>
 
       {/* Search bar */}
-      {searchOpen && (
-        <div className="max-w-3xl mx-auto w-full px-4 pb-3 shrink-0 animate-fade-up">
+      <motion.div
+        initial={false}
+        animate={{
+          height: searchOpen ? 'auto' : 0,
+          opacity: searchOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
+        className="shrink-0"
+      >
+        <div className="max-w-3xl mx-auto w-full px-4 pb-3">
           <div className="relative">
             <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
             <input
@@ -500,7 +509,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             )}
           </div>
         </div>
-      )}
+      </motion.div>
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">

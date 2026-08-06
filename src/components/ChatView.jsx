@@ -1446,8 +1446,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       </div>
 
       {/* Search bar */}
-      {searchOpen && (
-        <div className="max-w-3xl mx-auto w-full px-4 pb-2 shrink-0 animate-overlay-in">
+      <motion.div
+        initial={false}
+        animate={{
+          height: searchOpen ? 'auto' : 0,
+          opacity: searchOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
+        className="shrink-0"
+      >
+        <div className="max-w-3xl mx-auto w-full px-4 pb-2">
           <div className="relative">
             <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
             <input
@@ -1470,7 +1479,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             </p>
           )}
         </div>
-      )}
+      </motion.div>
 
       {/* Unread pill */}
       {firstUnreadId && !searchOpen && (
