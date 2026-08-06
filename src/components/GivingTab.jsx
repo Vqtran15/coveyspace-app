@@ -37,7 +37,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
   }
 
   return (
-    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-24 lg:pb-12">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8">

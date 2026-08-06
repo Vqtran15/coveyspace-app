@@ -292,7 +292,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: type picker ──────────────────────────────────────────────────────
   if (editMode === 'pick') {
     return (
-      <div key="pick" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+      <div key="pick" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(null, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -309,7 +309,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: URL ──────────────────────────────────────────────────────────────
   if (editMode === 'url') {
     return (
-      <div key="url" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+      <div key="url" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -335,7 +335,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: file upload ──────────────────────────────────────────────────────
   if (editMode === 'file') {
     return (
-      <div key="file" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+      <div key="file" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -361,7 +361,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: notes ────────────────────────────────────────────────────────────
   if (editMode === 'notes') {
     return (
-      <div key="notes" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+      <div key="notes" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -386,7 +386,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
 
   // ── Display mode ───────────────────────────────────────────────────────────
   return (
-    <div key="display" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12 ${screenClass()}`}>
+    <div key="display" className={`max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
       <NavHeader
         onBack={onClose}
         showEdit={isAdmin && hasGuide}

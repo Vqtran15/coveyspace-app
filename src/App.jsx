@@ -608,8 +608,8 @@ export default function App() {
 
       {guideOpen && (
         <div
-          className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <GuideTab
             onClose={closeGuide}
@@ -644,8 +644,8 @@ export default function App() {
 
       {birthdayOpen && (
         <div
-          className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${birthdayClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${birthdayClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <BirthdayTab
             birthdays={birthdays}
@@ -658,8 +658,8 @@ export default function App() {
 
       {givingOpen && (
         <div
-          className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 overflow-y-auto ${givingClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${givingClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <GivingTab
             onClose={closeGiving}
