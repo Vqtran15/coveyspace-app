@@ -806,6 +806,35 @@ export default function BibleTab({ userId }) {
     } catch {}
   }, [userId])
 
+  // ── Restore last-viewed chapter when navigating back to this tab ──────
+  useEffect(() => {
+    if (!userId) return
+    try {
+      const saved = localStorage.getItem(`bible_chapter_${userId}`)
+      if (!saved) return
+      const ref = JSON.parse(saved)
+      openPassage(ref)
+    } catch {
+      localStorage.removeItem(`bible_chapter_${userId}`)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
+
+  // ── Persist current chapter so it survives tab navigation ────────────
+  useEffect(() => {
+    if (!userId) return
+    try {
+      if (viewMode === 'chapter' && openChapter) {
+        localStorage.setItem(`bible_chapter_${userId}`, JSON.stringify({
+          bookId: openChapter.bookId,
+          chapter: openChapter.chapterNum,
+          startVerse: openChapter.startVerse ?? null,
+          endVerse: openChapter.endVerse ?? null,
+        }))
+      }
+    } catch {}
+  }, [viewMode, openChapter, userId])
+
   // ── Reset verse-select state when chapter changes ─────────────────────
   useEffect(() => {
     setSelectMode(false)
@@ -1015,6 +1044,7 @@ export default function BibleTab({ userId }) {
     setSearchError(null)
     setSearchOpen(false)
     setSelectMode(false)
+    try { localStorage.removeItem(`bible_chapter_${userId}`) } catch {}
     setVerseSelectAnchor(null)
     setVerseSelectEnd(null)
     setShowChapterMenu(false)
