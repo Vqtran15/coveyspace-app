@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { HandsPraying, Plus, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -528,14 +529,19 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                                 <p className="text-sm text-stone-700 leading-relaxed pr-6">{r.request}</p>
                                 <ReactionAvatars reactions={requestReactions} />
                                 {!isOwnProfile && (
-                                  <button
+                                  <motion.button
+                                    key={requestReactions.some(rx => rx.user_id === currentUserId)}
                                     onClick={e => { e.stopPropagation(); toggleReaction(r.id) }}
                                     disabled={togglingIds.has(r.id)}
+                                    initial={requestReactions.some(rx => rx.user_id === currentUserId) ? { scale: 0.82 } : false}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 520, damping: 15 }}
+                                    whileTap={{ scale: 0.87 }}
                                     className={`mt-2 flex items-center gap-1.5 text-xs font-semibold transition-colors disabled:opacity-40 ${requestReactions.some(rx => rx.user_id === currentUserId) ? 'text-ember' : 'text-stone-400 hover:text-ember'}`}
                                   >
                                     <HandsPraying size={13} weight={requestReactions.some(rx => rx.user_id === currentUserId) ? 'fill' : 'regular'} />
                                     {requestReactions.some(rx => rx.user_id === currentUserId) ? 'Praying' : 'Pray'}
-                                  </button>
+                                  </motion.button>
                                 )}
                                 {celebratingIds.has(r.id) && (
                                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl overflow-hidden">
@@ -576,14 +582,19 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             {/* Action rows */}
             <div className="py-1">
               {!isOwnProfile && (
-                <button
+                <motion.button
+                  key={sheetHasReacted}
                   onClick={() => closeActionSheet(req => toggleReaction(req.id))}
                   disabled={togglingIds.has(actionSheetReq.id)}
+                  initial={sheetHasReacted ? { scale: 0.95 } : false}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 15 }}
+                  whileTap={{ scale: 0.96 }}
                   className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-40"
                 >
                   <HandsPraying size={22} weight={sheetHasReacted ? 'fill' : 'regular'} className={sheetHasReacted ? 'text-ember' : 'text-stone-400'} />
                   <span className="text-base text-stone-800 font-medium">{sheetHasReacted ? 'Undo prayer' : 'Pray for'}</span>
-                </button>
+                </motion.button>
               )}
               <button
                 onClick={() => closeActionSheet(req => handleToggleAnswered(req))}
