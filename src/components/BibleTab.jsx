@@ -366,7 +366,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-[70] flex flex-col justify-end bg-black/30"
+      className="fixed inset-0 z-[25] flex flex-col justify-end bg-black/30"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
@@ -551,7 +551,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
       onAnimationComplete={() => setBooksReady(true)}
-      className="fixed inset-0 z-[60] bg-sunrise-50 flex flex-col"
+      className="fixed inset-0 z-[20] bg-sunrise-50 flex flex-col"
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
         {/* Header */}
@@ -582,7 +582,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
             className="absolute inset-0 overflow-y-auto"
           >
-            <div className="px-4 py-3 pb-6">
+            <div className="px-4 py-3 pb-24 lg:pb-6">
               {booksReady ? (
                 <>
                   {/* Book search */}
@@ -664,7 +664,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
             className="absolute inset-0 overflow-y-auto"
           >
             {selectedBook && (
-              <div className="px-4 py-4 pb-6">
+              <div className="px-4 py-4 pb-24 lg:pb-6">
                 <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map(ch => (
                     <motion.button
@@ -1134,51 +1134,59 @@ export default function BibleTab({ userId }) {
       </div>
 
       {/* Search bar */}
-      {searchOpen && (
-        <div className="mb-1 animate-fade-up">
-          <div className="relative">
-            <MagnifyingGlass
-              size={16}
-              weight="bold"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
-            />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={query}
-              onChange={e => handleSearch(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
-              placeholder="John 3:16, Psalm 23…"
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
-            />
-            {query && (
-              <button
-                onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          {bookSuggestions.length > 0 && (
-            <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
-              {bookSuggestions.map((book, idx) => (
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="mb-1"
+          >
+            <div className="relative">
+              <MagnifyingGlass
+                size={16}
+                weight="bold"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={query}
+                onChange={e => handleSearch(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
+                placeholder="John 3:16, Psalm 23…"
+                className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
+              />
+              {query && (
                 <button
-                  key={book.id}
-                  onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
-                  className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
+                  onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
                 >
-                  <span className="font-medium text-stone-700">{book.name}</span>
-                  <span className="text-xs text-stone-500">{book.chapters} ch</span>
+                  <X size={16} />
                 </button>
-              ))}
+              )}
             </div>
-          )}
-          {searchError && (
-            <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
-          )}
-        </div>
-      )}
+            {bookSuggestions.length > 0 && (
+              <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                {bookSuggestions.map((book, idx) => (
+                  <button
+                    key={book.id}
+                    onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
+                    className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
+                  >
+                    <span className="font-medium text-stone-700">{book.name}</span>
+                    <span className="text-xs text-stone-500">{book.chapters} ch</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {searchError && (
+              <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Home content */}
       <div className="mt-4">
@@ -1288,7 +1296,7 @@ export default function BibleTab({ userId }) {
                         : isTarget ? 'border-ember border-2'
                         : 'border-stone-200',
                       editMode ? 'cursor-grab active:cursor-grabbing' : '',
-                      cardMenuIdx === i ? 'z-[50]' : '',
+                      cardMenuIdx === i ? 'z-[13]' : '',
                     ].join(' ')}
                     style={{ touchAction: editMode ? 'none' : 'auto' }}
                   >
@@ -1323,10 +1331,10 @@ export default function BibleTab({ userId }) {
                         {cardMenuIdx === i && (
                           <>
                             <div
-                              className="fixed inset-0 z-[49]"
+                              className="fixed inset-0 z-[12]"
                               onClick={e => { e.stopPropagation(); setCardMenuIdx(null) }}
                             />
-                            <div className="absolute right-0 top-8 z-[50] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-32">
+                            <div className="absolute right-0 top-8 z-[13] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-32">
                               <button
                                 onClick={e => { e.stopPropagation(); setCardMenuIdx(null); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
                                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
@@ -1365,7 +1373,7 @@ export default function BibleTab({ userId }) {
             animate={{ x: '0%' }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
-            className="fixed inset-0 z-[70] bg-sunrise-50 flex flex-col"
+            className="fixed inset-0 z-[20] bg-sunrise-50 flex flex-col"
             style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Sticky header */}
@@ -1485,7 +1493,7 @@ export default function BibleTab({ userId }) {
                   animate="center"
                   exit="exit"
                   transition={{ type: 'spring', stiffness: 350, damping: 36, mass: 0.8 }}
-                  className="absolute inset-0 overflow-y-auto px-4 pt-4 pb-8"
+                  className="absolute inset-0 overflow-y-auto px-4 pt-4 pb-24 lg:pb-8"
                 >
                   {/* Error */}
                   {chapterError && (
@@ -1610,7 +1618,7 @@ export default function BibleTab({ userId }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/40"
+            className="fixed inset-0 z-[25] flex flex-col justify-end bg-black/40"
             onClick={() => setShowChapterMenu(false)}
           >
             <motion.div
@@ -1687,7 +1695,7 @@ export default function BibleTab({ userId }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[80] flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 z-[25] flex flex-col justify-end bg-black/30"
             onClick={() => setDeleteConfirmIdx(null)}
           >
             <motion.div
