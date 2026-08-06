@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -282,8 +282,22 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   const [selectedGroupPrayer, setSelectedGroupPrayer] = useState(null)
   const [searchQuery, setSearchQuery]       = useState('')
   const [viewMode, setViewMode]             = useState('members')
+  const [contentAnimClass, setContentAnimClass] = useState('animate-slide-in-right')
   const [togglingIds, setTogglingIds]       = useState(new Set())
   const hasAutoOpenedRef = useRef(false)
+  const viewSwitchRef    = useRef(false)
+
+  function switchViewMode(newMode) {
+    if (newMode === viewMode || viewSwitchRef.current) return
+    viewSwitchRef.current = true
+    const goRight = newMode === 'feed'
+    setContentAnimClass(goRight ? 'animate-slide-out-left' : 'animate-slide-out-right')
+    setTimeout(() => {
+      setViewMode(newMode)
+      setContentAnimClass(goRight ? 'animate-slide-in-right' : 'animate-slide-in-left')
+      viewSwitchRef.current = false
+    }, 180)
+  }
 
   // Group prayer creation
   const [showCreate, setShowCreate]               = useState(false)
@@ -578,20 +592,36 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
 
       {/* View toggle */}
       {!loading && members.length > 0 && (
-        <div className="flex bg-stone-100 rounded-xl p-1 mb-4">
-          <button
-            onClick={() => setViewMode('members')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-          >
-            Friends
-          </button>
-          <button
-            onClick={() => setViewMode('feed')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-          >
-            Requests
-          </button>
-        </div>
+        <LayoutGroup id="prayer-tabs">
+          <div className="flex bg-stone-100 rounded-xl p-1 mb-4">
+            <button
+              onClick={() => switchViewMode('members')}
+              className={`flex-1 relative py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'members' ? 'text-white' : 'text-stone-500 hover:text-stone-700'}`}
+            >
+              {viewMode === 'members' && (
+                <motion.span
+                  layoutId="prayer-pill"
+                  className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10">Friends</span>
+            </button>
+            <button
+              onClick={() => switchViewMode('feed')}
+              className={`flex-1 relative py-2 rounded-lg text-sm font-semibold transition-colors ${viewMode === 'feed' ? 'text-white' : 'text-stone-500 hover:text-stone-700'}`}
+            >
+              {viewMode === 'feed' && (
+                <motion.span
+                  layoutId="prayer-pill"
+                  className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative z-10">Requests</span>
+            </button>
+          </div>
+        </LayoutGroup>
       )}
 
       {/* Search */}
@@ -625,6 +655,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       )}
 
       {/* Content */}
+      <div key={viewMode} className={contentAnimClass}>
       {loading ? (
         <div className="space-y-2">
           {[0, 1, 2, 3].map(i => (
@@ -722,6 +753,7 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
           </div>
         )
       )}
+      </div>
 
       {/* Individual member profile */}
       {selectedMember && (

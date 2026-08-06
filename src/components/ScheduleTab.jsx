@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
+import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
-import { ForkKnife, HandHeart, ListBullets } from '@phosphor-icons/react'
+import { ListBullets } from '@phosphor-icons/react'
 import RotationTab from '../RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { mealCutoffDate } from '../utils/dates.js'
@@ -57,30 +58,40 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
           </button>
         </div>
         {mealsEnabled && servicesEnabled && (
-          <div className="flex bg-stone-100 rounded-xl p-1">
-            <button
-              onClick={() => switchTo('meals')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                segment === 'meals'
-                  ? 'bg-ember text-white shadow-sm'
-                  : 'text-stone-500 hover:text-stone-700'
-              }`}
-            >
-              <ForkKnife size={17} weight="fill" />
-              Meals
-            </button>
-            <button
-              onClick={() => switchTo('services')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                segment === 'services'
-                  ? 'bg-ember text-white shadow-sm'
-                  : 'text-stone-500 hover:text-stone-700'
-              }`}
-            >
-              <HandHeart size={17} weight="fill" />
-              Service
-            </button>
-          </div>
+          <LayoutGroup id="schedule-tabs">
+            <div className="flex bg-stone-100 rounded-xl p-1">
+              <button
+                onClick={() => switchTo('meals')}
+                className={`flex-1 relative flex items-center justify-center py-2.5 rounded-lg font-semibold text-sm transition-colors ${
+                  segment === 'meals' ? 'text-white' : 'text-stone-500 hover:text-stone-700'
+                }`}
+              >
+                {segment === 'meals' && (
+                  <motion.span
+                    layoutId="schedule-pill"
+                    className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">Meals</span>
+              </button>
+              <button
+                onClick={() => switchTo('services')}
+                className={`flex-1 relative flex items-center justify-center py-2.5 rounded-lg font-semibold text-sm transition-colors ${
+                  segment === 'services' ? 'text-white' : 'text-stone-500 hover:text-stone-700'
+                }`}
+              >
+                {segment === 'services' && (
+                  <motion.span
+                    layoutId="schedule-pill"
+                    className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">Service</span>
+              </button>
+            </div>
+          </LayoutGroup>
         )}
       </div>
 
