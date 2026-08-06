@@ -87,6 +87,7 @@ const TABS = [
 ]
 
 const PATHS = TABS.map(t => t.path)
+const OFF_NAV_PATHS = ['/settings', '/admin']
 
 export default function App() {
   const navigate = useNavigate()
@@ -428,7 +429,6 @@ export default function App() {
   }
 
   function navigateToSettings() {
-    enterFromRef.current = 'right'
     navigate('/settings')
   }
 
@@ -475,7 +475,13 @@ export default function App() {
 
       <div
         key={location.pathname}
-        className={`${isFullHeight ? '' : 'pb-24 lg:pb-0'} ${enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}
+        className={`${isFullHeight ? '' : 'pb-24 lg:pb-0'} ${
+          OFF_NAV_PATHS.includes(location.pathname)
+            ? 'animate-slide-in-up'
+            : OFF_NAV_PATHS.includes(locationRef.current)
+            ? 'animate-slide-in-left'
+            : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
+        }`}
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
