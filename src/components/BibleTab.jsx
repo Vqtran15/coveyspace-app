@@ -716,6 +716,8 @@ export default function BibleTab({ userId }) {
   // search
   const [query, setQuery] = useState('')
   const [searchError, setSearchError] = useState(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchInputRef = useRef(null)
 
   // user passages
   const [userPassages, setUserPassages] = useState(null)
@@ -1011,6 +1013,7 @@ export default function BibleTab({ userId }) {
     setViewMode('home')
     setQuery('')
     setSearchError(null)
+    setSearchOpen(false)
     setSelectMode(false)
     setVerseSelectAnchor(null)
     setVerseSelectEnd(null)
@@ -1107,55 +1110,74 @@ export default function BibleTab({ userId }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
-        <button
-          onClick={() => setShowBrowser(true)}
-          aria-label="Browse Bible"
-          className="w-11 h-11 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
-        >
-          <Books size={22} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const opening = !searchOpen
+              setSearchOpen(opening)
+              if (!opening) { setQuery(''); setSearchError(null) }
+              else setTimeout(() => searchInputRef.current?.focus(), 50)
+            }}
+            aria-label="Search passages"
+            className={`w-11 h-11 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember'}`}
+          >
+            <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
+          </button>
+          <button
+            onClick={() => setShowBrowser(true)}
+            aria-label="Browse Bible"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
+          >
+            <Books size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Search bar */}
-      <div className="relative mb-1">
-        <MagnifyingGlass
-          size={16}
-          weight="bold"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
-        />
-        <input
-          type="text"
-          value={query}
-          onChange={e => handleSearch(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
-          placeholder="John 3:16, Psalm 23…"
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
-        />
-        {query && (
-          <button
-            onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-          >
-            <X size={16} />
-            </button>
+      {searchOpen && (
+        <div className="mb-1 animate-fade-up">
+          <div className="relative">
+            <MagnifyingGlass
+              size={16}
+              weight="bold"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none"
+            />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={query}
+              onChange={e => handleSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit() }}
+              placeholder="John 3:16, Psalm 23…"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
+            />
+            {query && (
+              <button
+                onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+          {bookSuggestions.length > 0 && (
+            <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+              {bookSuggestions.map((book, idx) => (
+                <button
+                  key={book.id}
+                  onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
+                  className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
+                >
+                  <span className="font-medium text-stone-700">{book.name}</span>
+                  <span className="text-xs text-stone-500">{book.chapters} ch</span>
+                </button>
+              ))}
+            </div>
           )}
-      </div>
-      {bookSuggestions.length > 0 && (
-        <div className="mt-1 mb-3 bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
-          {bookSuggestions.map((book, idx) => (
-            <button
-              key={book.id}
-              onClick={() => { setQuery(''); setSuggestedBook(book); setShowBrowser(true) }}
-              className={['flex items-center justify-between w-full px-3 py-2.5 text-sm text-left hover:bg-stone-50 transition-colors', idx < bookSuggestions.length - 1 ? 'border-b border-stone-100' : ''].join(' ')}
-            >
-              <span className="font-medium text-stone-700">{book.name}</span>
-              <span className="text-xs text-stone-500">{book.chapters} ch</span>
-            </button>
-          ))}
+          {searchError && (
+            <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
+          )}
         </div>
-      )}
-      {searchError && (
-        <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
       )}
 
       {/* Home content */}

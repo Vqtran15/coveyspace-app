@@ -283,9 +283,11 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
   const [searchQuery, setSearchQuery]       = useState('')
   const [viewMode, setViewMode]             = useState('members')
   const [contentAnimClass, setContentAnimClass] = useState('animate-slide-in-right')
+  const [searchOpen, setSearchOpen]         = useState(false)
   const [togglingIds, setTogglingIds]       = useState(new Set())
   const hasAutoOpenedRef = useRef(false)
   const viewSwitchRef    = useRef(false)
+  const searchInputRef   = useRef(null)
 
   function switchViewMode(newMode) {
     if (newMode === viewMode || viewSwitchRef.current) return
@@ -580,13 +582,27 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
         {!loading && members.length > 0 && (
-          <button
-            onClick={openCreate}
-            aria-label="Shared prayer request"
-            className="w-11 h-11 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
-          >
-            <Users size={20} weight="bold" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const opening = !searchOpen
+                setSearchOpen(opening)
+                if (!opening) setSearchQuery('')
+                else setTimeout(() => searchInputRef.current?.focus(), 50)
+              }}
+              aria-label="Search"
+              className={`w-11 h-11 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember'}`}
+            >
+              <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
+            </button>
+            <button
+              onClick={openCreate}
+              aria-label="Shared prayer request"
+              className="w-11 h-11 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
+            >
+              <Users size={20} weight="bold" />
+            </button>
+          </div>
         )}
       </div>
 
@@ -625,11 +641,12 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
       )}
 
       {/* Search */}
-      {!loading && members.length > 0 && (
-        <div className="flex items-center gap-2 mb-4">
-          <div className="relative flex-1">
+      {searchOpen && (
+        <div className="mb-4 animate-fade-up">
+          <div className="relative">
             <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
             <input
+              ref={searchInputRef}
               type="search"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -646,11 +663,6 @@ export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSetting
               </button>
             )}
           </div>
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="text-sm text-ember font-medium shrink-0">
-              Cancel
-            </button>
-          )}
         </div>
       )}
 
