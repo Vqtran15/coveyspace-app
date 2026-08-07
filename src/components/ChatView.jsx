@@ -478,6 +478,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setHasMore((data ?? []).length === PAGE_SIZE)
         setLoading(false)
         setFetchingFresh(false)
+        // Safety net: scroll to the latest message after React commits fresh
+        // data. The ResizeObserver handles the common case (content height
+        // changed), but misses the rare case where fresh and cache happen to
+        // be the same height. This rAF fires after the commit and catches it.
+        if (isAtBottomRef.current) requestAnimationFrame(scrollToBottom)
         if (!msgs.length) return
         const { data: rxData } = await supabase
           .from('reactions')
@@ -686,6 +691,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // predates openedWithLastReadAt, no unread messages are found there and
   // unreadDetectedRef stays false. When the Supabase fetch completes and
   // fetchingFresh becomes false, retry the detection with the fresh messages.
+  //
+  // We ONLY update state here (for the "New Messages" divider) — we do NOT
+  // force a scroll. The ResizeObserver fires before this passive effect and
+  // has already scrolled to the latest message. Scrolling here would override
+  // that correct position and take the user to an older unread message.
   useEffect(() => {
     if (fetchingFresh) return
     if (!openedWithLastReadAt) return
@@ -699,21 +709,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     )
     if (unread.length === 0) return
 
-    const id = unread[0].id
-    pendingUnreadScrollRef.current = true
-    setFirstUnreadId(id)
+    setFirstUnreadId(unread[0].id)
     setOpenUnreadCount(unread.length)
-    initialFirstUnreadRef.current = id
-    isAtBottomRef.current = false
-
-    requestAnimationFrame(() => {
-      const el = document.getElementById(`msg-${id}`)
-      if (el) {
-        el.scrollIntoView({ block: 'start', behavior: 'instant' })
-        if (scrollRef.current) scrollRef.current.scrollTop = Math.max(0, scrollRef.current.scrollTop - 48)
-      }
-      pendingUnreadScrollRef.current = false
-    })
   }, [fetchingFresh, messages, openedWithLastReadAt, myId])
 
   // Reveal messages after scroll-to-bottom to prevent layout-jump disorientation.
@@ -788,7 +785,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   useEffect(() => {
     if (!contentReady || !messagesContainerRef.current) return
     const observer = new ResizeObserver(() => {
-      if (isAtBottomRef.current && !preserveScrollRef.current && !pendingUnreadScrollRef.current) scrollToBottom()
+      if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom()
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
