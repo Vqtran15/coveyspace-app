@@ -185,6 +185,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pendingScrollRef           = useRef(null)
 
   const freshLoadRef               = useRef(false)
+  const freshLoadTimerRef          = useRef(null)
+  const mountedRef                 = useRef(true)
   const wasAtBottomRef             = useRef(true)
   const initialRevealScrollNeeded  = useRef(false)
   const initialScrollSettledRef    = useRef(false)
@@ -196,6 +198,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -396,6 +403,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   useEffect(() => {
     onRead?.()
     setMessages([])
+    setPolls({})
+    setChatEvents({})
     setReplyingTo(null)
     setMemberReadTimes({})
     setUnreadCount(0)
@@ -410,7 +419,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     initialScrollSettledRef.current = false
     initialFirstUnreadRef.current = null
     freshLoadRef.current = true
-    setTimeout(() => { freshLoadRef.current = false }, 5000)
+    clearTimeout(freshLoadTimerRef.current)
+    freshLoadTimerRef.current = setTimeout(() => { freshLoadRef.current = false }, 5000)
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
 
     const cached = loadCache(convId)
@@ -463,7 +473,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev
           const updated = [...prev, { ...msg, _isNew: true }]
-          saveCache(convId, updated)
+          requestIdleCallback
+            ? requestIdleCallback(() => saveCache(convId, updated))
+            : setTimeout(() => saveCache(convId, updated), 0)
           return updated
         })
         if (msg.poll_id) fetchPollsForMessages([msg])
@@ -503,6 +515,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .on('postgres_changes', {
         event: 'DELETE', schema: 'public', table: 'reactions',
+        filter: `community_group_id=eq.${groupId}`,
       }, ({ old: r }) => {
         setReactions(prev => {
           if (!prev[r.message_id]) return prev
@@ -600,6 +613,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .subscribe()
 
     return () => {
+      clearTimeout(freshLoadTimerRef.current)
       supabase.removeChannel(msgCh)
       supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
@@ -1139,12 +1153,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   function closeLightbox() {
     setLightboxClosing(true)
-    setTimeout(() => { setLightboxImg(null); setLightboxClosing(false) }, 250)
+    setTimeout(() => { if (mountedRef.current) { setLightboxImg(null); setLightboxClosing(false) } }, 250)
   }
 
   function closeReactionPicker() {
     setReactionPickerClosing(true)
-    setTimeout(() => { setShowMoreEmojis(false); setReactionPickerClosing(false) }, 250)
+    setTimeout(() => { if (mountedRef.current) { setShowMoreEmojis(false); setReactionPickerClosing(false) } }, 250)
   }
 
   function closeEmojiPicker() {
@@ -1376,27 +1390,34 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  const filteredMsgs = searchQuery.trim()
-    ? messages.filter(m =>
-        m.body?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : messages
+  // ── Derived (all memoized so downstream context consumers only re-render
+  //    when the values they depend on actually change) ───────────────────────
+  const filteredMsgs = useMemo(() =>
+    searchQuery.trim()
+      ? messages.filter(m =>
+          m.body?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          m.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : messages,
+    [messages, searchQuery]
+  )
 
-  const items = []
-  let lastDate = null
-  for (const msg of filteredMsgs) {
-    const d = new Date(msg.created_at).toDateString()
-    if (d !== lastDate) {
-      items.push({ type: 'date', label: dateSeparatorLabel(msg.created_at), key: `date-${msg.created_at}` })
-      lastDate = d
+  const items = useMemo(() => {
+    const result = []
+    let lastDate = null
+    for (const msg of filteredMsgs) {
+      const d = new Date(msg.created_at).toDateString()
+      if (d !== lastDate) {
+        result.push({ type: 'date', label: dateSeparatorLabel(msg.created_at), key: `date-${msg.created_at}` })
+        lastDate = d
+      }
+      if (firstUnreadId && msg.id === firstUnreadId) {
+        result.push({ type: 'unread', key: 'unread-divider' })
+      }
+      result.push({ type: 'msg', msg })
     }
-    if (firstUnreadId && msg.id === firstUnreadId) {
-      items.push({ type: 'unread', key: 'unread-divider' })
-    }
-    items.push({ type: 'msg', msg })
-  }
+    return result
+  }, [filteredMsgs, firstUnreadId])
 
   const readersAtMessage = useMemo(() => {
     const map = {}
@@ -1417,20 +1438,50 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return map
   }, [memberReadTimes, filteredMsgs, members])
 
-  const typing = typingLabel(typingUsers)
-  const title = convTitle()
-  const activeMessage = messages.find(m => m.id === activeMsg)
+  const typing = useMemo(() => typingLabel(typingUsers), [typingUsers])
 
-  const dmOtherMember = conversation.type === 'direct'
-    ? members.find(m => m.user_id !== myId)
-    : null
-  const isMainGroupChat = conversation.type === 'group'
-    && (conversation.conversation_members?.length ?? 0) >= members.length
-  const canEditGroupInfo = conversation.type === 'group' && (isMainGroupChat ? isAdmin : true)
+  const title = useMemo(() => {
+    if (conversation.type === 'direct') {
+      const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
+      return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
+    }
+    if (convName) return convName
+    const otherIds = conversation.conversation_members
+      ?.filter(m => m.user_id !== myId)?.map(m => m.user_id) ?? []
+    const names = otherIds
+      .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
+      .filter(Boolean)
+    if (!names.length) return 'Group Chat'
+    if (names.length <= 3) return names.join(', ')
+    return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
+  }, [conversation, members, myId, convName])
+
+  const activeMessage  = useMemo(() => messages.find(m => m.id === activeMsg), [messages, activeMsg])
+  const dmOtherMember  = useMemo(() =>
+    conversation.type === 'direct' ? members.find(m => m.user_id !== myId) : null,
+    [conversation, members, myId]
+  )
+  const isMainGroupChat = useMemo(() =>
+    conversation.type === 'group' && (conversation.conversation_members?.length ?? 0) >= members.length,
+    [conversation, members]
+  )
+  const canEditGroupInfo = useMemo(() =>
+    conversation.type === 'group' && (isMainGroupChat ? isAdmin : true),
+    [conversation, isMainGroupChat, isAdmin]
+  )
+  // O(1) member lookup used by MessageList to avoid O(n) find() per bubble
+  const memberMap = useMemo(() =>
+    Object.fromEntries(members.map(m => [m.user_id, m])),
+    [members]
+  )
 
   // ── Render ────────────────────────────────────────────────────────────────
-  const ctxValue = {
-    // Refs
+  // Memoized so context consumers don't re-render when unrelated state
+  // (e.g. AppContext refresh) causes ChatView to re-render without changing
+  // any of its own state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const ctxValue = useMemo(() => ({
+    // Refs (stable, not in deps)
     scrollRef, messagesContainerRef, textareaRef, fileInputRef, editTextareaRef,
     presenceChannelRef, typingTimeoutRef, savedSelectionRef,
     pollOptionRefs, justAddedOptionRef, pollQuestionRef, groupIconFileRef,
@@ -1439,7 +1490,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     members, isAdmin,
     // Derived
     filteredMsgs, items, readersAtMessage, typing, title, activeMessage,
-    dmOtherMember, isMainGroupChat, canEditGroupInfo,
+    dmOtherMember, isMainGroupChat, canEditGroupInfo, memberMap,
     // State
     messages, loading, visible, contentReady, fetchingFresh, hasMore, loadingMore,
     text, setText, imagePreviews, setImagePreviews,
@@ -1475,8 +1526,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     editPollOptions, setEditPollOptions,
     savingPoll,
     sending,
-    // Handlers
-    scrollToBottom, senderName, handleScroll, loadMore, toggleSearch,
+    // Handlers (functions close over current state; recreated whenever any
+    // dep below changes, which is the same moment state actually changed)
+    scrollToBottom, handleScroll, loadMore, toggleSearch,
     handleTextInput, handleKeyDown, handleSend, handleFileChange,
     toggleReaction, deleteMessage, openMenuFromEl, exitEdit, openMenu,
     handleDoubleTap, handleLongPressStart, handleLongPressEnd,
@@ -1486,7 +1538,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     castVote, rsvpInChat, createPoll, startEditPoll, savePoll, deletePoll,
     handleRenameGroup, scrollToMessage, formatEventDate,
     handleScrollToBottom, onMessageImageLoad, handleImageTap,
-  }
+    // senderName via memberMap — stable reference, always current
+    senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
+  }), [
+    // Props
+    conversation, session, myId, convId, displayName, groupId, members, isAdmin,
+    // Derived
+    filteredMsgs, items, readersAtMessage, typing, title, activeMessage,
+    dmOtherMember, isMainGroupChat, canEditGroupInfo, memberMap,
+    // State — all must be listed so handlers capture current values
+    messages, loading, visible, contentReady, fetchingFresh, hasMore, loadingMore,
+    text, imagePreviews, searchOpen, searchQuery, isAtBottom, typingUsers,
+    reactions, justReacted, activeMsg, menuPos, menuClosing, showMoreEmojis,
+    reactionPickerClosing, showEmojiPicker, notesOpen, replyingTo,
+    infoOpen, infoClosing, renamingGroup, renameValue, renameSaving, confirmDeleteMsg,
+    editingMsgId, editText, editClosingId, selectedMsgId, confirmDeleteId,
+    convName, memberReadTimes, unreadCount, firstUnreadId, openUnreadCount,
+    lightboxImg, convImageUrl, uploadingGroupIcon, polls, chatEvents,
+    pollCreating, pollQuestion, pollOptions, pollSubmitting, pollMenuOpenId,
+    deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending,
+  ])
 
   return (
     <ChatContext.Provider value={ctxValue}>

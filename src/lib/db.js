@@ -67,7 +67,9 @@ export const db = {
 
   events: {
     fetch: (groupId) =>
-      supabase.from('events').select('*').eq('community_group_id', groupId).order('event_date', { ascending: true }),
+      supabase.from('events').select('id, title, event_date, event_time, location, description').eq('community_group_id', groupId).order('event_date', { ascending: true }),
+    fetchAll: (groupId) =>
+      supabase.from('events').select('id, title, event_date, event_time, location, description, event_rsvps(event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url))').eq('community_group_id', groupId).order('event_date', { ascending: true }),
     fetchWithRsvps: (eventIds) => Promise.all([
       supabase.from('events').select('id, title, event_date, event_time, location').in('id', eventIds),
       supabase.from('event_rsvps').select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)').in('event_id', eventIds),

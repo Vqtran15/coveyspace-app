@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
@@ -181,6 +181,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
+  const realtimeDebounceRef = useRef(null)
   const [shouldAnimate]  = useState(() => !greetingDone)
   const greetingControls = useAnimation()
   const [announceShake, setAnnounceShake] = useState(false)
@@ -228,20 +229,22 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
       setAnnouncement(groupData?.announcement ?? null)
       if (isAdmin) setSoloAdmin(mCount === 1)
 
+      const memberIds = prayerEnabled ? (memberData ?? []).map(m => m.user_id) : []
+      const [{ data: requestData }, { data: latestMsg }] = await Promise.all([
+        prayerEnabled && memberIds.length > 0
+          ? supabase.from('prayer_requests').select('id, member_user_id, request, created_at').in('member_user_id', memberIds).gte('created_at', cutoff).eq('answered', false).order('created_at', { ascending: false })
+          : Promise.resolve({ data: null }),
+        chatEnabled && mainChatId
+          ? supabase.from('messages').select('body, display_name, created_at, image_url').eq('conversation_id', mainChatId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+
       if (prayerEnabled) {
-        const memberIds = (memberData ?? []).map(m => m.user_id)
-        if (memberIds.length > 0) {
-          const { data: requestData } = await supabase
-            .from('prayer_requests')
-            .select('id, member_user_id, request, created_at')
-            .in('member_user_id', memberIds)
-            .gte('created_at', cutoff)
-            .eq('answered', false)
-            .order('created_at', { ascending: false })
+        if (requestData && requestData.length > 0) {
           const profileMap = Object.fromEntries((memberData ?? []).map(p => [p.user_id, p]))
           const seen = new Set()
           const uniqueUsers = []
-          for (const r of requestData ?? []) {
+          for (const r of requestData) {
             if (!seen.has(r.member_user_id)) {
               seen.add(r.member_user_id)
               uniqueUsers.push({ ...r, profile: profileMap[r.member_user_id] })
@@ -258,19 +261,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
           setPrayerCard(null)
         }
       }
-
-      if (chatEnabled && mainChatId) {
-        const { data: latestMsg } = await supabase
-          .from('messages')
-          .select('body, display_name, created_at, image_url')
-          .eq('conversation_id', mainChatId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        setLastGroupMessage(latestMsg ?? null)
-      } else {
-        setLastGroupMessage(null)
-      }
+      setLastGroupMessage(chatEnabled && mainChatId ? (latestMsg ?? null) : null)
     }
     setLoaded(true)
   }
@@ -281,13 +272,17 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
 
   useEffect(() => {
     if (!groupId) return
+    function debouncedLoad() {
+      clearTimeout(realtimeDebounceRef.current)
+      realtimeDebounceRef.current = setTimeout(load, 300)
+    }
     const channel = supabase
       .channel(`overview-pages:${groupId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'meal_pages' }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'serving_pages' }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `community_group_id=eq.${groupId}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meal_pages' }, debouncedLoad)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'serving_pages' }, debouncedLoad)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `community_group_id=eq.${groupId}` }, debouncedLoad)
       .subscribe()
-    return () => supabase.removeChannel(channel)
+    return () => { clearTimeout(realtimeDebounceRef.current); supabase.removeChannel(channel) }
   }, [groupId])
 
   async function handleSaveAnnouncement(text) {

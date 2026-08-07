@@ -524,7 +524,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
 }
 
 export default function EventsTab() {
-  const { groupId, userId, isAdmin, displayName } = useAppContext()
+  const { groupId, userId, isAdmin, displayName, avatarIcon, avatarColorKey, avatarImageUrl } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
@@ -606,22 +606,14 @@ export default function EventsTab() {
 
   async function load() {
     setLoading(true)
-    const { data: evData } = await db.events.fetch(groupId)
-
-    const evList = evData ?? []
+    const { data: evData } = await db.events.fetchAll(groupId)
+    const evList = (evData ?? []).map(({ event_rsvps: _, ...ev }) => ev)
     setEvents(evList)
-
-    if (evList.length > 0) {
-      const ids = evList.map(e => e.id)
-      const { data: rsvpData } = await db.events.fetchRsvps(ids)
-
-      const grouped = {}
-      for (const r of (rsvpData ?? [])) {
-        if (!grouped[r.event_id]) grouped[r.event_id] = []
-        grouped[r.event_id].push({ user_id: r.user_id, status: r.status, profile: r.profiles })
-      }
-      setRsvps(grouped)
+    const grouped = {}
+    for (const ev of evData ?? []) {
+      grouped[ev.id] = (ev.event_rsvps ?? []).map(r => ({ user_id: r.user_id, status: r.status, profile: r.profiles }))
     }
+    setRsvps(grouped)
     setLoading(false)
   }
 
@@ -631,27 +623,19 @@ export default function EventsTab() {
 
   async function handleRsvp(eventId, status, currentStatus) {
     haptic()
-    // Toggle off if clicking current status
     const newStatus = status === currentStatus ? null : status
 
-    // Optimistic update
+    const myProfile = { display_name: displayName, avatar_icon: avatarIcon, avatar_color: avatarColorKey, avatar_image_url: avatarImageUrl }
     setRsvps(prev => {
       const list = (prev[eventId] ?? []).filter(r => r.user_id !== userId)
-      if (newStatus) list.push({ user_id: userId, status: newStatus, profile: null })
+      if (newStatus) list.push({ user_id: userId, status: newStatus, profile: myProfile })
       return { ...prev, [eventId]: list }
     })
 
-    if (newStatus) {
-      const { error } = await db.events.rsvp(eventId, userId, newStatus)
-      if (error) { toast('Failed to update RSVP', 'error'); load() }
-    } else {
-      const { error } = await db.events.removeRsvp(eventId, userId)
-      if (error) { toast('Failed to update RSVP', 'error'); load() }
-    }
-
-    // Reload profiles for the updated RSVP so avatars are correct
-    const { data } = await db.events.fetchRsvps([eventId])
-    setRsvps(prev => ({ ...prev, [eventId]: (data ?? []).map(r => ({ user_id: r.user_id, status: r.status, profile: r.profiles })) }))
+    const { error } = newStatus
+      ? await db.events.rsvp(eventId, userId, newStatus)
+      : await db.events.removeRsvp(eventId, userId)
+    if (error) { toast('Failed to update RSVP', 'error'); load() }
   }
 
   async function handleDelete(event) {

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowDown, MagnifyingGlass, ChartBar,
@@ -81,7 +82,7 @@ export default function MessageList() {
     filteredMsgs, items, searchQuery, searchOpen,
     firstUnreadId, setFirstUnreadId, openUnreadCount,
     isAtBottom, unreadCount, handleScrollToBottom,
-    reactions, justReacted, polls, chatEvents, members, myId,
+    reactions, justReacted, polls, chatEvents, members, memberMap, myId,
     editingMsgId, editText, setEditText, editTextareaRef, editClosingId,
     selectedMsgId, setSelectedMsgId, confirmDeleteId, setConfirmDeleteId,
     deletingPollId, pollMenuOpenId, setPollMenuOpenId,
@@ -101,6 +102,17 @@ export default function MessageList() {
     retryMessage,
     conversation,
   } = useChatContext()
+
+  // Pre-parse every message body so the URL regex doesn't run on every render
+  const renderedBodies = useMemo(() => {
+    const map = {}
+    for (const item of items) {
+      if (item.type === 'msg' && item.msg.body) {
+        map[item.msg.id] = renderMessageBody(item.msg.body, searchQuery)
+      }
+    }
+    return map
+  }, [items, searchQuery])
 
   return (
     <div className="relative flex-1 min-h-0">
@@ -429,9 +441,15 @@ export default function MessageList() {
                   </div>
                 )
                 const myEvRsvp = ev.rsvps.find(r => r.user_id === myId)
-                const goingCount    = ev.rsvps.filter(r => r.status === 'going').length
-                const maybeCount    = ev.rsvps.filter(r => r.status === 'maybe').length
-                const notGoingCount = ev.rsvps.filter(r => r.status === 'not_going').length
+                const { goingCount, maybeCount, notGoingCount, goingRsvps } = ev.rsvps.reduce(
+                  (acc, r) => {
+                    if (r.status === 'going') { acc.goingCount++; if (acc.goingRsvps.length < 4) acc.goingRsvps.push(r) }
+                    else if (r.status === 'maybe') acc.maybeCount++
+                    else acc.notGoingCount++
+                    return acc
+                  },
+                  { goingCount: 0, maybeCount: 0, notGoingCount: 0, goingRsvps: [] }
+                )
                 return (
                   <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
@@ -469,7 +487,7 @@ export default function MessageList() {
                       </div>
                       {/* Count + timestamp */}
                       <div className="px-4 pb-3 flex items-center gap-2">
-                        {ev.rsvps.filter(r => r.status === 'going').slice(0, 4).map((r, i) => (
+                        {goingRsvps.map((r, i) => (
                           <div
                             key={r.user_id}
                             className={`w-5 h-5 rounded-full border-2 border-white shrink-0 overflow-hidden ${r.profile?.avatar_image_url ? 'bg-stone-200' : `${avatarColor(r.user_id, r.profile?.avatar_color)} flex items-center justify-center`}`}
@@ -539,7 +557,7 @@ export default function MessageList() {
                   )}
                   {!isOwn && (
                     <div className="w-8 shrink-0 self-start mt-1">
-                      {isFirstInGroup && (() => { const m = members.find(x => x.user_id === msg.user_id); return <AvatarCircle size="8" name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
+                      {isFirstInGroup && (() => { const m = memberMap[msg.user_id]; return <AvatarCircle size="8" name={senderName(msg.user_id, msg.display_name)} userId={msg.user_id} icon={m?.avatar_icon} colorKey={m?.avatar_color} imageUrl={m?.avatar_image_url} /> })()}
                     </div>
                   )}
 
@@ -634,7 +652,7 @@ export default function MessageList() {
                         </form>
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
-                          {renderMessageBody(msg.body, searchQuery)}
+                          {renderedBodies[msg.id]}
                         </p>
                       )}
                     </div>

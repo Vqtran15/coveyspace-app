@@ -59,7 +59,7 @@ export function AppProvider({ children }) {
   // ── Birthdays ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return
-    supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
+    supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
 
     const channel = supabase
       .channel(`birthdays:${groupId}`)
@@ -145,7 +145,7 @@ export function AppProvider({ children }) {
   }, [userId])
 
   const refreshBirthdays = useCallback(() => {
-    supabase.from('birthdays').select('*').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
+    supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
   }, [])
 
   const existingBirthday = profile?.birthday ?? null

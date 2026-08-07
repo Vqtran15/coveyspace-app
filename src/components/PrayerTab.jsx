@@ -336,7 +336,7 @@ export default function PrayerTab() {
       const [membersRes, reactionsRes, groupPrayersRes] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId).order('display_name'),
         supabase.from('prayer_reactions').select('id, prayer_request_id, user_id, display_name, avatar_icon, avatar_color, avatar_image_url, prayer_request_owner_id, community_group_id').eq('community_group_id', groupId),
-        supabase.from('group_prayer_requests').select('*').eq('community_group_id', groupId).order('created_at', { ascending: false }),
+        supabase.from('group_prayer_requests').select('id, member_user_ids, request, created_at, answered').eq('community_group_id', groupId).order('created_at', { ascending: false }),
       ])
 
       const profileList  = membersRes.data  ?? []
@@ -352,7 +352,7 @@ export default function PrayerTab() {
       // Fetch group prayer reactions if there are any
       const gpIds = gpList.map(gp => gp.id)
       const gpReactionsRes = gpIds.length
-        ? await supabase.from('group_prayer_reactions').select('*').in('group_prayer_request_id', gpIds)
+        ? await supabase.from('group_prayer_reactions').select('id, group_prayer_request_id, community_group_id, user_id, display_name, avatar_icon, avatar_color, avatar_image_url').in('group_prayer_request_id', gpIds)
         : { data: [] }
 
       const reactionMap = {}
