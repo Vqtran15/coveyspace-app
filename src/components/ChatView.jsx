@@ -198,17 +198,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
-  const chatHeightRef         = useRef(null)
+  const inputBarRef           = useRef(null)
 
   useEffect(() => {
     mountedRef.current = true
     return () => { mountedRef.current = false }
   }, [])
 
-  // iOS keyboard fix: lock body so WebKit can't pan the visual viewport, then
-  // shrink the chat container height to match visualViewport.height. Changing
-  // height triggers a full layout reflow that WebKit must repaint; transforms
-  // are silently ignored on frozen compositing layers during keyboard animation.
+  // iOS keyboard fix: lock body so WebKit can't pan the visual viewport when
+  // the textarea is focused. Re-enable scroll only on the messages container.
+  // Use transform (not bottom/height) on the input bar to avoid layout recalcs
+  // that trigger WebKit's auto-scroll routine.
   useEffect(() => {
     const html = document.documentElement
     const body = document.body
@@ -227,24 +227,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (scrollRef.current) scrollRef.current.style.touchAction = 'pan-y'
 
     const vv = window.visualViewport
-    const containerEl = chatHeightRef.current
-    // How far the chat container starts from the top of the viewport (= safe-area-inset-top)
-    const containerTop = containerEl?.getBoundingClientRect().top ?? 0
-    // What React initially set as the inline height — restored when keyboard closes
-    const originalHeight = containerEl?.style.height ?? ''
 
-    function syncHeight() {
-      if (!vv) return
-      window.scrollTo(0, 0)
-      const kh = Math.max(0, window.innerHeight - vv.height)
-      if (kh > 50) {
-        // Keyboard open: shrink container so its bottom edge = keyboard top.
-        // Flexbox naturally pushes the input bar to the new bottom edge.
-        if (containerEl) containerEl.style.height = `${vv.height - containerTop}px`
-        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-      } else {
-        // Keyboard closed: restore the CSS-calc height React originally set.
-        if (containerEl) containerEl.style.height = originalHeight
+    // Measure how much the input bar bottom actually overlaps the keyboard, then
+    // translate by exactly that amount — not the full keyboard height. The input
+    // bar is already positioned above the nav, so over-translating creates a gap.
+    function applyOffset(autoScroll) {
+      if (!vv || !inputBarRef.current) return
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      inputBarRef.current.style.transform = ''  // reset so getBCR returns natural position
+      if (kh <= 50) {
+        if (scrollRef.current) scrollRef.current.style.paddingBottom = ''
+        return
+      }
+      const rect = inputBarRef.current.getBoundingClientRect()
+      const overlap = Math.max(0, rect.bottom - vv.height)
+      if (overlap > 0) {
+        inputBarRef.current.style.transform = `translate3d(0, -${overlap}px, 0)`
+        if (scrollRef.current) {
+          scrollRef.current.style.paddingBottom = `${overlap}px`
+          if (autoScroll) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
       }
     }
 
@@ -252,16 +254,23 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     function onFocus() {
       clearTimeout(blurTimer)
       cancelAnimationFrame(rafId)
-      // Double rAF: lets iOS start the keyboard animation before we measure
-      rafId = requestAnimationFrame(() => { rafId = requestAnimationFrame(() => syncHeight()) })
+      // Double rAF: waits for keyboard to finish appearing before measuring
+      rafId = requestAnimationFrame(() => { rafId = requestAnimationFrame(() => applyOffset(true)) })
     }
     function onBlur() {
       clearTimeout(blurTimer)
       cancelAnimationFrame(rafId)
-      blurTimer = setTimeout(() => syncHeight(), 50)
+      // Short delay so focus→focus transfers don't flash (onFocus cancels this)
+      blurTimer = setTimeout(() => applyOffset(false), 50)
     }
 
-    function onVVResize() { syncHeight() }
+    // Track direction so we auto-scroll on open but not on close (preserves user position)
+    let prevVVHeight = vv?.height ?? window.innerHeight
+    function onVVResize() {
+      const opening = vv.height < prevVVHeight
+      prevVVHeight = vv.height
+      applyOffset(opening)
+    }
     function onVVScroll() { window.scrollTo(0, 0) }
     function onWindowScroll() { window.scrollTo(0, 0) }
 
@@ -289,8 +298,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         el.style.overflow = saved.overflow
         el.style.touchAction = saved.touchAction
       }
-      if (containerEl) containerEl.style.height = originalHeight
-      if (scrollRef.current) scrollRef.current.style.touchAction = ''
+      if (inputBarRef.current) inputBarRef.current.style.transform = ''
+      if (scrollRef.current) { scrollRef.current.style.paddingBottom = ''; scrollRef.current.style.touchAction = '' }
     }
   }, [])
 
@@ -1652,7 +1661,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   return (
     <ChatContext.Provider value={ctxValue}>
     <div
-      ref={chatHeightRef}
       className={`flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px)' }}
     >
@@ -1773,8 +1781,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </div>
       )}
 
-      {/* Input bar */}
-      <MessageInput />
+      {/* Input bar — ref used by keyboard useEffect for transform */}
+      <div ref={inputBarRef} className="shrink-0">
+        <MessageInput />
+      </div>
 
       {/* Action menu */}
       {activeMsg && menuPos && (
