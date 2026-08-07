@@ -1630,8 +1630,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     <div
       className={`chat-container flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
     >
+      {/* Header + search wrapper — relative so the fade overlay can bleed below */}
+      <div className="relative z-10 shrink-0">
       {/* Header */}
-      <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2">
+      <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 flex items-center gap-2">
         <button
           onClick={onBack}
           className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
@@ -1711,6 +1713,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           )}
         </div>
       </motion.div>
+
+      {/* Fade messages into header */}
+      <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none translate-y-full bg-gradient-to-b from-sunrise-50 to-transparent" />
+      </div>{/* end header wrapper */}
 
       {/* Unread pill */}
       {firstUnreadId && !searchOpen && (
