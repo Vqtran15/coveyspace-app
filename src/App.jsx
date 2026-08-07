@@ -98,6 +98,7 @@ function AppContent() {
   const [splashMinDone, setSplashMinDone] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
 
   const guide    = useAnimatedOverlay()
   const giving   = useAnimatedOverlay()
@@ -130,6 +131,22 @@ function AppContent() {
     window.addEventListener('online',  up)
     window.addEventListener('offline', down)
     return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
+  }, [])
+
+  // ── Keyboard height tracking ───────────────────────────────────────────────
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function update() {
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      document.documentElement.style.setProperty('--keyboard-height', `${kh}px`)
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
   }, [])
 
   // ── Welcome check (runs after profile loads) ───────────────────────────────
@@ -454,8 +471,12 @@ function AppContent() {
 
       <LayoutGroup id="bottom-nav">
         <nav
-          className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className="fixed inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
+          style={{
+            paddingBottom: 'env(safe-area-inset-bottom)',
+            bottom: isIOS ? 'calc(-1 * var(--keyboard-height, 0px))' : 0,
+            transition: isIOS ? 'bottom 0.25s ease' : undefined,
+          }}
         >
           {visibleTabs.map(t => {
             const active = location.pathname === t.path
