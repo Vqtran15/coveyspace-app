@@ -191,6 +191,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialRevealScrollNeeded  = useRef(false)
   const initialScrollSettledRef    = useRef(false)
   const initialFirstUnreadRef      = useRef(null)
+  const unreadDetectedRef          = useRef(false)
+  const pendingUnreadScrollRef     = useRef(false)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
@@ -444,6 +446,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     pendingScrollRef.current = null
     initialScrollSettledRef.current = false
     initialFirstUnreadRef.current = null
+    unreadDetectedRef.current = false
+    pendingUnreadScrollRef.current = false
     freshLoadRef.current = true
     clearTimeout(freshLoadTimerRef.current)
     freshLoadTimerRef.current = setTimeout(() => { freshLoadRef.current = false }, 5000)
@@ -667,10 +671,50 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setFirstUnreadId(id)
         setOpenUnreadCount(unread.length)
         initialFirstUnreadRef.current = id
+        unreadDetectedRef.current = true
       }
+      // If no unread found in cache, leave unreadDetectedRef false so the
+      // fresh-data effect can retry once Supabase data arrives.
+    } else {
+      unreadDetectedRef.current = true
     }
     setContentReady(true)
   }, [loading, messages])
+
+  // ── Fresh-data unread re-detection ────────────────────────────────────────
+  // The initial scroll useEffect runs with cached messages. If the cache
+  // predates openedWithLastReadAt, no unread messages are found there and
+  // unreadDetectedRef stays false. When the Supabase fetch completes and
+  // fetchingFresh becomes false, retry the detection with the fresh messages.
+  useEffect(() => {
+    if (fetchingFresh) return
+    if (!openedWithLastReadAt) return
+    if (unreadDetectedRef.current) return
+    if (!initialScrollDoneRef.current) return
+
+    unreadDetectedRef.current = true
+
+    const unread = messages.filter(
+      m => m.created_at > openedWithLastReadAt && m.user_id !== myId
+    )
+    if (unread.length === 0) return
+
+    const id = unread[0].id
+    pendingUnreadScrollRef.current = true
+    setFirstUnreadId(id)
+    setOpenUnreadCount(unread.length)
+    initialFirstUnreadRef.current = id
+    isAtBottomRef.current = false
+
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`msg-${id}`)
+      if (el) {
+        el.scrollIntoView({ block: 'start', behavior: 'instant' })
+        if (scrollRef.current) scrollRef.current.scrollTop = Math.max(0, scrollRef.current.scrollTop - 48)
+      }
+      pendingUnreadScrollRef.current = false
+    })
+  }, [fetchingFresh, messages, openedWithLastReadAt, myId])
 
   // Reveal messages after scroll-to-bottom to prevent layout-jump disorientation.
   //
@@ -744,23 +788,61 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   useEffect(() => {
     if (!contentReady || !messagesContainerRef.current) return
     const observer = new ResizeObserver(() => {
-      if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom()
+      if (isAtBottomRef.current && !preserveScrollRef.current && !pendingUnreadScrollRef.current) scrollToBottom()
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
   }, [contentReady])
 
   // Re-pin to bottom when returning from background if we were at the bottom.
+  //
+  // iOS WebKit restores inner-div scrollTop asynchronously via the compositor
+  // after JS runs, so a single rAF is not enough. We apply the scroll
+  // immediately, then watch for a WebKit restoration scroll that overrides it
+  // and correct once more. The listener is cleaned up after 1500 ms.
   useEffect(() => {
+    function applyBottomScroll() {
+      const el = scrollRef.current
+      if (!el) return
+      scrollToBottom()
+      let corrected = false
+      let cleanup
+      function onRestorationScroll() {
+        if (corrected) return
+        const dist = el.scrollHeight - el.scrollTop - el.clientHeight
+        if (dist > 20) {
+          corrected = true
+          el.removeEventListener('scroll', onRestorationScroll)
+          clearTimeout(cleanup)
+          requestAnimationFrame(scrollToBottom)
+        }
+      }
+      el.addEventListener('scroll', onRestorationScroll, { passive: true })
+      cleanup = setTimeout(() => el.removeEventListener('scroll', onRestorationScroll), 1500)
+    }
+
     function onVisibilityChange() {
       if (document.visibilityState === 'hidden') {
         wasAtBottomRef.current = isAtBottomRef.current
       } else if (document.visibilityState === 'visible' && wasAtBottomRef.current) {
-        requestAnimationFrame(scrollToBottom)
+        requestAnimationFrame(applyBottomScroll)
       }
     }
+
+    // pageshow with persisted=true fires when iOS restores the app from a
+    // process-kill snapshot — visibilitychange alone doesn't cover this case.
+    function onPageShow(e) {
+      if (e.persisted && wasAtBottomRef.current) {
+        requestAnimationFrame(applyBottomScroll)
+      }
+    }
+
     document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('pageshow', onPageShow)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('pageshow', onPageShow)
+    }
   }, [])
 
   // ── Typing presence ───────────────────────────────────────────────────────
