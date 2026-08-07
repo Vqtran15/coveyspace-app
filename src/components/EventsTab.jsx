@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom'
 import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
+import { db } from '../lib/db.js'
+import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
 import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -49,7 +51,7 @@ function formatDateShort(dateStr, timeStr) {
 // Animated slot-machine counter — flips vertically when value changes
 function AnimatedCount({ value }) {
   return (
-    <span className="relative inline-flex overflow-hidden leading-none align-bottom">
+    <span className="relative inline-flex overflow-hidden leading-none align-baseline">
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
           key={value}
@@ -135,9 +137,9 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
     }
     let error
     if (event?.id) {
-      ;({ error } = await supabase.from('events').update(payload).eq('id', event.id))
+      ;({ error } = await db.events.update(event.id, payload))
     } else {
-      ;({ error } = await supabase.from('events').insert(payload))
+      ;({ error } = await db.events.insert(payload))
     }
     setSaving(false)
     if (error) { toast('Failed to save event', 'error'); return }
@@ -521,7 +523,8 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
   )
 }
 
-export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpenSettings }) {
+export default function EventsTab() {
+  const { groupId, userId, isAdmin, displayName } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
@@ -603,21 +606,14 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
 
   async function load() {
     setLoading(true)
-    const { data: evData } = await supabase
-      .from('events')
-      .select('*')
-      .eq('community_group_id', groupId)
-      .order('event_date', { ascending: true })
+    const { data: evData } = await db.events.fetch(groupId)
 
     const evList = evData ?? []
     setEvents(evList)
 
     if (evList.length > 0) {
       const ids = evList.map(e => e.id)
-      const { data: rsvpData } = await supabase
-        .from('event_rsvps')
-        .select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)')
-        .in('event_id', ids)
+      const { data: rsvpData } = await db.events.fetchRsvps(ids)
 
       const grouped = {}
       for (const r of (rsvpData ?? [])) {
@@ -646,26 +642,21 @@ export default function EventsTab({ groupId, userId, isAdmin, displayName, onOpe
     })
 
     if (newStatus) {
-      const { error } = await supabase.from('event_rsvps')
-        .upsert({ event_id: eventId, user_id: userId, status: newStatus }, { onConflict: 'event_id,user_id' })
+      const { error } = await db.events.rsvp(eventId, userId, newStatus)
       if (error) { toast('Failed to update RSVP', 'error'); load() }
     } else {
-      const { error } = await supabase.from('event_rsvps')
-        .delete().eq('event_id', eventId).eq('user_id', userId)
+      const { error } = await db.events.removeRsvp(eventId, userId)
       if (error) { toast('Failed to update RSVP', 'error'); load() }
     }
 
     // Reload profiles for the updated RSVP so avatars are correct
-    const { data } = await supabase
-      .from('event_rsvps')
-      .select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)')
-      .eq('event_id', eventId)
+    const { data } = await db.events.fetchRsvps([eventId])
     setRsvps(prev => ({ ...prev, [eventId]: (data ?? []).map(r => ({ user_id: r.user_id, status: r.status, profile: r.profiles })) }))
   }
 
   async function handleDelete(event) {
     setDeleting(true)
-    const { error } = await supabase.from('events').delete().eq('id', event.id)
+    const { error } = await db.events.delete(event.id)
     setDeleting(false)
     if (error) { toast('Failed to delete event', 'error'); return }
     haptic()
