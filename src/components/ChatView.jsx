@@ -198,10 +198,64 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
+  const inputBarRef           = useRef(null)
 
   useEffect(() => {
     mountedRef.current = true
     return () => { mountedRef.current = false }
+  }, [])
+
+  // iOS keyboard fix: lock body so WebKit can't pan the visual viewport when
+  // the textarea is focused. Re-enable scroll only on the messages container.
+  // Use transform (not bottom/height) on the input bar to avoid layout recalcs
+  // that trigger WebKit's auto-scroll routine.
+  useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+    const savedHtml = { position: html.style.position, top: html.style.top, left: html.style.left, width: html.style.width, height: html.style.height, overflow: html.style.overflow, touchAction: html.style.touchAction }
+    const savedBody = { position: body.style.position, top: body.style.top, left: body.style.left, width: body.style.width, height: body.style.height, overflow: body.style.overflow, touchAction: body.style.touchAction }
+
+    for (const el of [html, body]) {
+      el.style.position = 'fixed'
+      el.style.top = '0'
+      el.style.left = '0'
+      el.style.width = '100%'
+      el.style.height = '100%'
+      el.style.overflow = 'hidden'
+      el.style.touchAction = 'none'
+    }
+    if (scrollRef.current) scrollRef.current.style.touchAction = 'pan-y'
+
+    const vv = window.visualViewport
+    function update() {
+      window.scrollTo(0, 0)
+      const kh = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0
+      const open = kh > 50
+      if (inputBarRef.current) inputBarRef.current.style.transform = open ? `translate3d(0, -${kh}px, 0)` : ''
+      if (scrollRef.current) scrollRef.current.style.paddingBottom = open ? `${kh}px` : ''
+    }
+
+    if (vv) {
+      vv.addEventListener('resize', update)
+      vv.addEventListener('scroll', update)
+    }
+    window.addEventListener('scroll', update)
+
+    return () => {
+      if (vv) { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+      window.removeEventListener('scroll', update)
+      for (const [el, saved] of [[html, savedHtml], [body, savedBody]]) {
+        el.style.position = saved.position
+        el.style.top = saved.top
+        el.style.left = saved.left
+        el.style.width = saved.width
+        el.style.height = saved.height
+        el.style.overflow = saved.overflow
+        el.style.touchAction = saved.touchAction
+      }
+      if (inputBarRef.current) inputBarRef.current.style.transform = ''
+      if (scrollRef.current) { scrollRef.current.style.paddingBottom = ''; scrollRef.current.style.touchAction = '' }
+    }
   }, [])
 
   function scrollToBottom() {
@@ -1682,8 +1736,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </div>
       )}
 
-      {/* Input bar */}
-      <MessageInput />
+      {/* Input bar — ref used by keyboard useEffect for transform */}
+      <div ref={inputBarRef} className="shrink-0">
+        <MessageInput />
+      </div>
 
       {/* Action menu */}
       {activeMsg && menuPos && (
