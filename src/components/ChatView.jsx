@@ -198,10 +198,34 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
+  const chatContainerRef      = useRef(null)
 
   useEffect(() => {
     mountedRef.current = true
     return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const containerTop = chatContainerRef.current?.getBoundingClientRect().top ?? 0
+    function update() {
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      document.documentElement.style.setProperty('--keyboard-height', `${kh}px`)
+      const el = chatContainerRef.current
+      if (!el) return
+      el.style.height = kh > 50
+        ? `${vv.height - containerTop}px`
+        : ''
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      document.documentElement.style.setProperty('--keyboard-height', '0px')
+      if (chatContainerRef.current) chatContainerRef.current.style.height = ''
+    }
   }, [])
 
   function scrollToBottom() {
@@ -1562,8 +1586,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   return (
     <ChatContext.Provider value={ctxValue}>
     <div
+      ref={chatContainerRef}
       className={`flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ height: 'calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px)' }}
+      style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px)' }}
     >
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2">
