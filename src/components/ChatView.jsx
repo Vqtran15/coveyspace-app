@@ -152,6 +152,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [firstUnreadId, setFirstUnreadId]     = useState(null)
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
+  const [lightboxClosing, setLightboxClosing] = useState(false)
   const [convImageUrl, setConvImageUrl]       = useState(conversation.image_url ?? null)
   const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false)
   const [polls, setPolls]                     = useState({})
@@ -1117,6 +1118,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     sendImage(tempId, msg._file, msg.image_url, msg.reply_to_id, msg._textBody ?? null)
   }
 
+  function closeLightbox() {
+    setLightboxClosing(true)
+    setTimeout(() => { setLightboxImg(null); setLightboxClosing(false) }, 250)
+  }
+
   function closeReactionPicker() {
     setReactionPickerClosing(true)
     setTimeout(() => { setShowMoreEmojis(false); setReactionPickerClosing(false) }, 250)
@@ -1702,13 +1708,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}
 
       {/* Image lightbox */}
-      {lightboxImg && (
+      {(lightboxImg || lightboxClosing) && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center animate-overlay-in"
-          onClick={() => setLightboxImg(null)}
+          className={`fixed inset-0 z-50 bg-black/90 flex items-center justify-center ${lightboxClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          onClick={closeLightbox}
         >
           <button
-            onClick={() => setLightboxImg(null)}
+            onClick={closeLightbox}
             className="absolute top-4 right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
           >
             <X size={20} weight="bold" />
@@ -1716,7 +1722,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <img
             src={lightboxImg}
             alt="Full size"
-            className="max-w-full max-h-full object-contain rounded-lg"
+            className={`max-w-full max-h-full object-contain rounded-lg transition-transform duration-[250ms] ease-in ${lightboxClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
             style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
             onClick={e => e.stopPropagation()}
           />
