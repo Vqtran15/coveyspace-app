@@ -188,6 +188,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const wasAtBottomRef             = useRef(true)
   const initialRevealScrollNeeded  = useRef(false)
   const initialScrollSettledRef    = useRef(false)
+  const initialFirstUnreadRef      = useRef(null)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
@@ -407,6 +408,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
     initialScrollSettledRef.current = false
+    initialFirstUnreadRef.current = null
     freshLoadRef.current = true
     setTimeout(() => { freshLoadRef.current = false }, 5000)
     setText(localStorage.getItem(DRAFT_KEY(convId)) ?? '')
@@ -621,8 +623,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (openedWithLastReadAt) {
       const unread = messages.filter(m => m.created_at > openedWithLastReadAt && m.user_id !== myId)
       if (unread.length > 0) {
-        setFirstUnreadId(unread[0].id)
+        const id = unread[0].id
+        setFirstUnreadId(id)
         setOpenUnreadCount(unread.length)
+        initialFirstUnreadRef.current = id
       }
     }
     setContentReady(true)
@@ -652,44 +656,59 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => { cancelled = true; clearTimeout(fallback) }
   }, [contentReady])
 
-  // Scroll to bottom synchronously before the first paint of the revealed messages.
-  // Also sync isAtBottomRef so the ResizeObserver re-pins correctly if slow images
-  // finish loading after the reveal (fallback timer or very late network responses).
+  // On reveal: scroll to the first unread message if there are unread messages,
+  // otherwise scroll to the bottom. Uses scrollIntoView rather than
+  // scrollTop=scrollHeight so the browser computes geometry itself (avoids
+  // stale-scrollHeight issues on iOS Safari when the container just became visible).
   useLayoutEffect(() => {
-    if (visible) {
+    if (!visible) return
+
+    const targetId = initialFirstUnreadRef.current
+    const targetEl = targetId ? document.getElementById(`msg-${targetId}`) : null
+
+    if (targetEl) {
+      // Scroll the first unread message near the top, with a little breathing room
+      // so the "New Messages" divider above it is also visible.
+      targetEl.scrollIntoView({ block: 'start', behavior: 'instant' })
+      if (scrollRef.current) scrollRef.current.scrollTop = Math.max(0, scrollRef.current.scrollTop - 48)
+      isAtBottomRef.current = false
+      setIsAtBottom(false)
+    } else {
       isAtBottomRef.current = true
       setIsAtBottom(true)
       scrollToBottom()
       initialRevealScrollNeeded.current = true
-      // Rescue: iOS Safari may return a stale scrollHeight immediately after the
-      // messages container transitions from height:0 to full height, causing the
-      // call above to land at the wrong position. After 2 frames the layout has
-      // settled and scrollHeight is accurate. Guard with freshLoadRef so this only
-      // fires on initial open, not during normal realtime use where the user may
-      // have intentionally scrolled up.
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        // Always mark settled after 2 frames — loadMore() is blocked until this point.
-        // This prevents the race where a message update clears initialRevealScrollNeeded
-        // before iOS Safari has computed the correct scrollHeight.
-        initialScrollSettledRef.current = true
-        if (!freshLoadRef.current) return
-        preserveScrollRef.current = null   // cancel any stale loadMore() preservation
-        isAtBottomRef.current = true
-        initialRevealScrollNeeded.current = false  // no longer need the flag after rescue
-        scrollToBottom()
-      }))
     }
+
+    // After 2 frames the layout is settled. Re-apply the target scroll to correct
+    // any stale geometry iOS Safari computed on the first pass.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      initialScrollSettledRef.current = true
+      if (!freshLoadRef.current) return
+      preserveScrollRef.current = null
+      const el = targetId ? document.getElementById(`msg-${targetId}`) : null
+      if (el) {
+        el.scrollIntoView({ block: 'start', behavior: 'instant' })
+        if (scrollRef.current) scrollRef.current.scrollTop = Math.max(0, scrollRef.current.scrollTop - 48)
+      } else {
+        isAtBottomRef.current = true
+        initialRevealScrollNeeded.current = false
+        scrollToBottom()
+      }
+    }))
   }, [visible])
 
-  // Re-pin to bottom as images in new realtime messages load after initial reveal.
+  // Re-pin to bottom as the message container grows — both on the initial reveal
+  // (height:0 → full, where useEffect([visible]) would attach too late) and as
+  // realtime messages or images expand the container afterward.
   useEffect(() => {
-    if (!visible || !messagesContainerRef.current) return
+    if (!contentReady || !messagesContainerRef.current) return
     const observer = new ResizeObserver(() => {
       if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom()
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
-  }, [visible])
+  }, [contentReady])
 
   // Re-pin to bottom when returning from background if we were at the bottom.
   useEffect(() => {
@@ -1372,6 +1391,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (d !== lastDate) {
       items.push({ type: 'date', label: dateSeparatorLabel(msg.created_at), key: `date-${msg.created_at}` })
       lastDate = d
+    }
+    if (firstUnreadId && msg.id === firstUnreadId) {
+      items.push({ type: 'unread', key: 'unread-divider' })
     }
     items.push({ type: 'msg', msg })
   }

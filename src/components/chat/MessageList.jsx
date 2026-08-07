@@ -217,6 +217,16 @@ export default function MessageList() {
                 )
               }
 
+              if (item.type === 'unread') {
+                return (
+                  <div key="unread-divider" className="flex items-center gap-3 py-2 mx-1">
+                    <div className="flex-1 h-px bg-ember/30" />
+                    <span className="text-xs font-semibold text-ember/80 shrink-0 tracking-wide">New Messages</span>
+                    <div className="flex-1 h-px bg-ember/30" />
+                  </div>
+                )
+              }
+
               const { msg } = item
               const isOwn = msg.user_id === myId
               const nextItem = items[i + 1]
