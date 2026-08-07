@@ -199,52 +199,53 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
   const inputBarRef           = useRef(null)
-  const chatHeightRef         = useRef(null)
 
   useEffect(() => {
     mountedRef.current = true
     return () => { mountedRef.current = false }
   }, [])
 
-  // iOS keyboard fix: shrink the chat container to the visual viewport height when the
-  // keyboard opens. CRITICAL: do NOT use position:fixed on html/body — in iOS PWA
-  // standalone mode it silently prevents visualViewport.resize from firing and vv.height
-  // from updating, so keyboard detection always returns 0 and nothing moves.
+  // iOS keyboard fix: lock body so WebKit can't pan the visual viewport when
+  // the textarea is focused. Re-enable scroll only on the messages container.
+  // Use transform (not bottom/height) on the input bar to avoid layout recalcs
+  // that trigger WebKit's auto-scroll routine.
   useEffect(() => {
     const html = document.documentElement
     const body = document.body
-    const savedHtml = { height: html.style.height, overflow: html.style.overflow, overscrollBehavior: html.style.overscrollBehavior, touchAction: html.style.touchAction }
-    const savedBody = { height: body.style.height, overflow: body.style.overflow, overscrollBehavior: body.style.overscrollBehavior, touchAction: body.style.touchAction }
+    const savedHtml = { position: html.style.position, top: html.style.top, left: html.style.left, width: html.style.width, height: html.style.height, overflow: html.style.overflow, touchAction: html.style.touchAction }
+    const savedBody = { position: body.style.position, top: body.style.top, left: body.style.left, width: body.style.width, height: body.style.height, overflow: body.style.overflow, touchAction: body.style.touchAction }
 
     for (const el of [html, body]) {
+      el.style.position = 'fixed'
+      el.style.top = '0'
+      el.style.left = '0'
+      el.style.width = '100%'
       el.style.height = '100%'
       el.style.overflow = 'hidden'
-      el.style.overscrollBehavior = 'none'
       el.style.touchAction = 'none'
     }
     if (scrollRef.current) scrollRef.current.style.touchAction = 'pan-y'
 
     const vv = window.visualViewport
-    const containerEl = chatHeightRef.current
-    const containerTop = containerEl?.getBoundingClientRect().top ?? 0
-    const originalHeight = containerEl?.style.height ?? ''
 
-    function syncHeight() {
-      if (!vv) return
-      window.scrollTo(0, 0)
-      document.body.scrollTop = 0
-      document.documentElement.scrollTop = 0
-      const kh = Math.max(0, window.innerHeight - vv.height)
-      if (kh > 50) {
-        if (containerEl) {
-          containerEl.style.height = `${vv.height - containerTop}px`
-          void containerEl.offsetHeight
-        }
-        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-      } else {
-        if (containerEl) {
-          containerEl.style.height = originalHeight
-          void containerEl.offsetHeight
+    // Measure how much the input bar bottom actually overlaps the keyboard, then
+    // translate by exactly that amount — not the full keyboard height. The input
+    // bar is already positioned above the nav, so over-translating creates a gap.
+    function applyOffset(autoScroll) {
+      if (!vv || !inputBarRef.current) return
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      inputBarRef.current.style.transform = ''  // reset so getBCR returns natural position
+      if (kh <= 50) {
+        if (scrollRef.current) scrollRef.current.style.paddingBottom = ''
+        return
+      }
+      const rect = inputBarRef.current.getBoundingClientRect()
+      const overlap = Math.max(0, rect.bottom - vv.height)
+      if (overlap > 0) {
+        inputBarRef.current.style.transform = `translate3d(0, -${overlap}px, 0)`
+        if (scrollRef.current) {
+          scrollRef.current.style.paddingBottom = `${overlap}px`
+          if (autoScroll) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
         }
       }
     }
@@ -253,22 +254,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     function onFocus() {
       clearTimeout(blurTimer)
       cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => { rafId = requestAnimationFrame(() => syncHeight()) })
+      // Double rAF: waits for keyboard to finish appearing before measuring
+      rafId = requestAnimationFrame(() => { rafId = requestAnimationFrame(() => applyOffset(true)) })
     }
     function onBlur() {
       clearTimeout(blurTimer)
       cancelAnimationFrame(rafId)
-      blurTimer = setTimeout(() => syncHeight(), 50)
+      // Short delay so focus→focus transfers don't flash (onFocus cancels this)
+      blurTimer = setTimeout(() => applyOffset(false), 50)
     }
 
+    // Track direction so we auto-scroll on open but not on close (preserves user position)
     let prevVVHeight = vv?.height ?? window.innerHeight
     function onVVResize() {
       const opening = vv.height < prevVVHeight
       prevVVHeight = vv.height
-      syncHeight()
-      if (opening && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      applyOffset(opening)
     }
-    function onVVScroll() { window.scrollTo(0, 0); document.body.scrollTop = 0 }
+    function onVVScroll() { window.scrollTo(0, 0) }
     function onWindowScroll() { window.scrollTo(0, 0) }
 
     if (vv) {
@@ -287,13 +290,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       document.removeEventListener('focusin', onFocus)
       document.removeEventListener('focusout', onBlur)
       for (const [el, saved] of [[html, savedHtml], [body, savedBody]]) {
+        el.style.position = saved.position
+        el.style.top = saved.top
+        el.style.left = saved.left
+        el.style.width = saved.width
         el.style.height = saved.height
         el.style.overflow = saved.overflow
-        el.style.overscrollBehavior = saved.overscrollBehavior
         el.style.touchAction = saved.touchAction
       }
-      if (containerEl) containerEl.style.height = originalHeight
-      if (scrollRef.current) scrollRef.current.style.touchAction = ''
+      if (inputBarRef.current) inputBarRef.current.style.transform = ''
+      if (scrollRef.current) { scrollRef.current.style.paddingBottom = ''; scrollRef.current.style.touchAction = '' }
     }
   }, [])
 
@@ -1655,7 +1661,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   return (
     <ChatContext.Provider value={ctxValue}>
     <div
-      ref={chatHeightRef}
       className={`flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px)' }}
     >
