@@ -182,6 +182,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
   const [loaded, setLoaded] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
   const realtimeDebounceRef = useRef(null)
+  const [phase1Done, setPhase1Done] = useState(false)
   const [shouldAnimate]  = useState(() => !greetingDone)
   const greetingControls = useAnimation()
   const [announceShake, setAnnounceShake] = useState(false)
@@ -197,7 +198,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
   }, [greetingReady])
 
   async function load() {
-    setLoaded(false)
     const today = toDateString(new Date())
 
     const [mealRes, serviceRes, eventRes, mainChatConvRes] = await Promise.all([
@@ -214,6 +214,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
     setNextService(serviceRes.data ?? null)
     setNextEvent(eventRes.data ?? null)
     const mainChatId = mainChatConvRes.data?.id ?? null
+    setPhase1Done(true)
 
     if (groupId) {
       const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
@@ -394,22 +395,22 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
       <InstallBanner />
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
-        {!loaded ? (
+        {!phase1Done ? (
           <>
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
-            {mealsEnabled     && <CardSkeleton delay={isAdmin ? 80  : 0}   />}
-            {servicesEnabled  && <CardSkeleton delay={isAdmin ? 160 : 80}  />}
-            {eventsEnabled    && <CardSkeleton delay={isAdmin ? 240 : 160} />}
-            {chatEnabled      && <CardSkeleton delay={isAdmin ? 320 : 240} />}
-            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 400 : 320} />}
-            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 480 : 400} />}
-            {guideEnabled     && <CardSkeleton delay={isAdmin ? 560 : 480} />}
-            {givingEnabled    && <CardSkeleton delay={isAdmin ? 640 : 560} />}
+            {mealsEnabled     && <CardSkeleton delay={isAdmin ? 40  : 0}   />}
+            {servicesEnabled  && <CardSkeleton delay={isAdmin ? 80  : 40}  />}
+            {eventsEnabled    && <CardSkeleton delay={isAdmin ? 120 : 80}  />}
+            {chatEnabled      && <CardSkeleton delay={isAdmin ? 160 : 120} />}
+            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 200 : 160} />}
+            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 240 : 200} />}
+            {guideEnabled     && <CardSkeleton delay={isAdmin ? 280 : 240} />}
+            {givingEnabled    && <CardSkeleton delay={isAdmin ? 320 : 280} />}
           </>
         ) : (
           <>
-            {/* Solo-admin nudge — shown until someone joins */}
-            {soloAdmin && (
+            {/* Solo-admin nudge — gated on loaded to avoid layout shift before batch 2 */}
+            {loaded && soloAdmin && (
               <div className="w-full animate-stack-in lg:col-span-2">
                 <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
@@ -437,8 +438,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
               </div>
             )}
 
-            {/* Announcement — always first */}
-            {showAnnouncement && (
+            {/* Announcement — gated on loaded to avoid layout shift before batch 2 */}
+            {loaded && showAnnouncement && (
               announcement ? (
                 <div className="w-full animate-stack-in lg:col-span-2">
                   <div
@@ -481,7 +482,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
             )}
 
             {(() => {
-              const baseDelay = showAnnouncement ? 80 : 0
+              const baseDelay = loaded && showAnnouncement ? 80 : 0
               const cards = [
                 eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
                   key: 'events',
@@ -562,7 +563,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                 <Card
                   key={key}
                   {...rest}
-                  delay={baseDelay + i * 80}
+                  delay={baseDelay + i * 40}
                   className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'lg:col-span-2' : ''}
                 />
               ))
