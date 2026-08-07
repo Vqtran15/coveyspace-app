@@ -30,14 +30,3 @@ a:focus:not(:focus-visible),
 #epr-category-nav-id {
   display: none !important;
 }
-
-/* Chat input bar: pre-promoted GPU layer so WebKit's native input compositing
-   layer doesn't race with the transform applied on keyboard open. The
-   --kb-overlap custom property is set via JS on the element itself. */
-.chat-input-bar {
-  will-change: transform;
-  position: relative;
-  z-index: 9999;
-  transform: translate3d(0, calc(-1 * var(--kb-overlap, 0px)), 0);
-  transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1);
-}
