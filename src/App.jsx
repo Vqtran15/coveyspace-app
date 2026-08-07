@@ -322,7 +322,7 @@ function AppContent() {
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
     ) : (
-    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'env(safe-area-inset-top)' }}>
       {!isOnline && (
         <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
           <WifiSlash size={14} weight="bold" />

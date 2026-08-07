@@ -11,10 +11,9 @@ body {
   background-color: #EDE8DF;
 }
 
-/* Chat container — pulled up into the safe-area so the frosted header covers the
-   status bar zone. Height excludes only the bottom safe-area and the nav bar. */
+/* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
+   and fills the screen down to the nav bar. */
 .chat-container {
-  margin-top: calc(-1 * env(safe-area-inset-top));
   height: calc(100svh - env(safe-area-inset-bottom) - 68px);
 }
 

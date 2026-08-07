@@ -468,7 +468,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                         {/* Content bubble */}
                         <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-4' : 'pb-5'}`}>
                           <div
-                            className={`relative rounded-xl border shadow-sm px-3 py-2.5 select-none ${r.answered ? 'bg-sage/8 border-sage/20' : 'bg-ember/8 border-ember/20'}`}
+                            className={`relative rounded-xl border border-stone-100 shadow-sm px-3 py-2.5 bg-white select-none`}
                             onClick={() => !isOwnProfile && handleBubbleTap(r.id)}
                             role={!isOwnProfile && editingId !== r.id ? 'button' : undefined}
                             tabIndex={!isOwnProfile && editingId !== r.id ? 0 : undefined}
