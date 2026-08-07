@@ -50,6 +50,15 @@ Next.js 16 admin dashboard at `admin.coveyspace.com`. Reads from the same Supaba
 ## Unrelated Projects — Do Not Reference
 - `~/Desktop/claude/mens-group-pwa` (and its memory file `project_mensgrouppwa.md`) is a **completely separate project** with a different codebase, stack, and Supabase instance. Never pull context, file paths, architecture decisions, or features from it when working on this repo. If a memory file about it appears in context, ignore it entirely.
 
+## Architecture Rule
+Before implementing any non-trivial change, consider the best architectural placement first:
+- **Where does this code belong?** Put logic in the layer closest to where it's needed — component state for local UI, context for shared cross-component state, a hook for reusable behavior, a utility for pure functions.
+- **Does this already exist?** Search for an existing hook, helper, or context before adding a new one. Duplication is the most common source of hard-to-read codebases.
+- **Will a developer be able to find this?** Name files, functions, and variables after what they do, not how they do it. A new hook goes in `src/hooks/`, a data utility in `src/lib/`, a sub-component in the relevant feature folder.
+- **Is this the right size?** A component or hook that does two unrelated things should be two. A helper that's only called once in one place should probably be inline.
+
+Apply this before writing the first line of code. A clean placement decision prevents the majority of refactors.
+
 ## Editing Code
 Always use the Edit tool directly to make code changes. Do not write Python scripts to apply string replacements — it is slower, more error-prone, and harder to review. The only exception is if the Edit tool is actively mangling the file (e.g., converting ASCII quotes to smart quotes), in which case flag the issue explicitly rather than silently defaulting to Python.
 
