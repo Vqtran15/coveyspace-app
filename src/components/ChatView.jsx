@@ -228,25 +228,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
     const vv = window.visualViewport
 
-    // Measure how much the input bar bottom actually overlaps the keyboard, then
-    // translate by exactly that amount — not the full keyboard height. The input
-    // bar is already positioned above the nav, so over-translating creates a gap.
+    // Set --kb-overlap on the element so the pre-declared CSS rule picks it up.
+    // Resetting to 0px before measuring ensures getBCR reads the natural position,
+    // avoiding layout feedback loops. Using a CSS custom property (not style.transform)
+    // sidesteps WebKit's compositing-layer race with the focused <textarea>.
     function applyOffset(autoScroll) {
       if (!vv || !inputBarRef.current) return
       const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
-      inputBarRef.current.style.transform = ''  // reset so getBCR returns natural position
+      inputBarRef.current.style.setProperty('--kb-overlap', '0px')  // reset for natural measurement
       if (kh <= 50) {
         if (scrollRef.current) scrollRef.current.style.paddingBottom = ''
         return
       }
       const rect = inputBarRef.current.getBoundingClientRect()
       const overlap = Math.max(0, rect.bottom - vv.height)
-      if (overlap > 0) {
-        inputBarRef.current.style.transform = `translate3d(0, -${overlap}px, 0)`
-        if (scrollRef.current) {
-          scrollRef.current.style.paddingBottom = `${overlap}px`
-          if (autoScroll) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        }
+      inputBarRef.current.style.setProperty('--kb-overlap', `${overlap}px`)
+      if (scrollRef.current) {
+        scrollRef.current.style.paddingBottom = `${overlap}px`
+        if (autoScroll) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
       }
     }
 
@@ -298,7 +297,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         el.style.overflow = saved.overflow
         el.style.touchAction = saved.touchAction
       }
-      if (inputBarRef.current) inputBarRef.current.style.transform = ''
+      if (inputBarRef.current) inputBarRef.current.style.setProperty('--kb-overlap', '0px')
       if (scrollRef.current) { scrollRef.current.style.paddingBottom = ''; scrollRef.current.style.touchAction = '' }
     }
   }, [])
@@ -1782,7 +1781,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       {/* Input bar — ref used by keyboard useEffect for transform */}
-      <div ref={inputBarRef} className="shrink-0">
+      <div ref={inputBarRef} className="chat-input-bar shrink-0">
         <MessageInput />
       </div>
 
