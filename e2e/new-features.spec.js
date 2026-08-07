@@ -23,6 +23,8 @@ const ROOT = path.resolve(__dirname, '..')
 const MANAGE_PAGES_MODAL_PATH = path.resolve(ROOT, 'src/components/ManagePagesModal.jsx')
 const APP_PATH                = path.resolve(ROOT, 'src/App.jsx')
 const CHAT_VIEW_PATH          = path.resolve(ROOT, 'src/components/ChatView.jsx')
+const MESSAGE_LIST_PATH       = path.resolve(ROOT, 'src/components/chat/MessageList.jsx')
+const MESSAGE_INPUT_PATH      = path.resolve(ROOT, 'src/components/chat/MessageInput.jsx')
 const PACKAGE_JSON_PATH       = path.resolve(ROOT, 'package.json')
 const MIGRATION_SQL_PATH      = path.resolve(ROOT, 'supabase/migration_54_polls.sql')
 
@@ -136,8 +138,9 @@ test.describe('Feature 3 — Poll feature in ChatView (source checks)', () => {
     source = fs.readFileSync(CHAT_VIEW_PATH, 'utf8')
   })
 
-  test('ChartBar is imported from @phosphor-icons/react', () => {
-    expect(source).toMatch(/import\s*\{[^}]*\bChartBar\b[^}]*\}\s*from\s*['"]@phosphor-icons\/react['"]/)
+  test('ChartBar is imported from @phosphor-icons/react (in MessageInput)', () => {
+    const inputSource = fs.readFileSync(MESSAGE_INPUT_PATH, 'utf8')
+    expect(inputSource).toMatch(/import\s*\{[^}]*\bChartBar\b[^}]*\}\s*from\s*['"]@phosphor-icons\/react['"]/)
   })
 
   test('polls state variable is declared', () => {
@@ -198,8 +201,9 @@ test.describe('Feature 3 — Poll feature in ChatView (source checks)', () => {
     expect(source).toContain('if (msg.poll_id)')
   })
 
-  test('poll option buttons call castVote on click', () => {
-    expect(source).toContain('castVote(msg.poll_id,')
+  test('poll option buttons call castVote on click (in MessageList)', () => {
+    const listSource = fs.readFileSync(MESSAGE_LIST_PATH, 'utf8')
+    expect(listSource).toContain('castVote(msg.poll_id,')
   })
 
   test('createPoll returns early if question is blank', () => {
@@ -213,8 +217,9 @@ test.describe('Feature 3 — Poll feature in ChatView (source checks)', () => {
   })
 
   test('remove-option (X) button is hidden when only 2 options remain (pollOptions.length > 2 guard)', () => {
-    // The remove button is shown only when pollOptions.length > 2
-    expect(source).toContain('pollOptions.length > 2')
+    // Poll creator UI is in MessageInput; the remove button is shown only when pollOptions.length > 2
+    const inputSource = fs.readFileSync(MESSAGE_INPUT_PATH, 'utf8')
+    expect(inputSource).toContain('pollOptions.length > 2')
   })
 })
 
@@ -292,9 +297,11 @@ test.describe('Regression — ChatView internals', () => {
     expect(source).toContain('img.decode')
   })
 
-  test('unsized image filter logic is still present (hasAttribute width/height check)', () => {
-    expect(source).toContain("img.hasAttribute('width')")
-    expect(source).toContain("img.hasAttribute('height')")
+  test('all images decoded before reveal (not just unsized ones)', () => {
+    // commit 42e5e0b changed from filtering unsized images to decoding all images,
+    // because iOS Safari ignores width/height hints when CSS overrides them
+    expect(source).toContain('allImgs.map(img => img.decode')
+    expect(source).not.toContain("img.hasAttribute('width')")
   })
 })
 

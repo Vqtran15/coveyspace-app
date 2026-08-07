@@ -234,7 +234,9 @@ test.describe('ChatView — scroll guards', () => {
   })
 
   test('image onLoad scrolls only when at bottom and not preserving scroll', () => {
-    expect(src).toContain('onLoad={() => { if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom() }}')
+    // After ChatView split, logic is in named handler onMessageImageLoad (ChatView) called via context from MessageList
+    expect(src).toContain('function onMessageImageLoad()')
+    expect(src).toContain('isAtBottomRef.current && !preserveScrollRef.current')
   })
 
   test('isAtBottomRef is initialized to true', () => {

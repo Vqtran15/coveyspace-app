@@ -100,9 +100,9 @@ test('img element with width and height props renders those attributes in DOM', 
   expect(result.heightVal).toBe('600')
 })
 
-// ── Test D: Code review — height: 'auto' is present in ChatView.jsx ──────────
-test("ChatView.jsx contains height: 'auto' in the image render block", () => {
-  const source = fs.readFileSync(CHAT_VIEW_PATH, 'utf8')
+// ── Test D: Code review — height: 'auto' is present in MessageList.jsx ──────
+test("MessageList.jsx contains height: 'auto' in the image render block", () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/components/chat/MessageList.jsx'), 'utf8')
   expect(source).toContain("height: 'auto'")
 })
 
@@ -158,10 +158,6 @@ test('ChatView.jsx sendImage inserts image_width and image_height into Supabase'
 
   // compressImage destructuring returns { file, width, height } shape
   expect(source).toContain('{ file: compressed, width: imgWidth, height: imgHeight }')
-
-  // img.hasAttribute check for the selective decode logic
-  expect(source).toContain("img.hasAttribute('width')")
-  expect(source).toContain("img.hasAttribute('height')")
 })
 
 // ── Test H: compressImage returns { file, width, height } for a JPEG ─────────
@@ -248,13 +244,13 @@ test('compressImage-equivalent scales down large images to fit within 1200px', a
   expect(result.h).toBe(900)
 })
 
-// ── Test J: Decode effect only waits on unsized images ───────────────────────
-test('ChatView.jsx decode effect filters to images missing width or height attribute', () => {
+// ── Test J: Decode effect waits on ALL images ────────────────────────────────
+test('ChatView.jsx decode effect waits for all images (not filtered by size)', () => {
   const source = fs.readFileSync(CHAT_VIEW_PATH, 'utf8')
 
-  // Verify the unsized filter logic is present
-  expect(source).toContain("!img.hasAttribute('width') || !img.hasAttribute('height')")
-
-  // Verify the early return for zero unsized images
-  expect(source).toContain("if (!unsized.length) { setVisible(true); return }")
+  // commit 42e5e0b: decode all images because iOS Safari ignores width/height
+  // hints when CSS overrides them with auto, causing scroll-to-bottom to land
+  // at the second-to-last message instead of the actual bottom
+  expect(source).toContain('allImgs.map(img => img.decode')
+  expect(source).not.toContain("!img.hasAttribute('width') || !img.hasAttribute('height')")
 })
