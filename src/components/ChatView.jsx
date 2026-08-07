@@ -227,23 +227,68 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (scrollRef.current) scrollRef.current.style.touchAction = 'pan-y'
 
     const vv = window.visualViewport
-    function update() {
-      window.scrollTo(0, 0)
-      const kh = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0
-      const open = kh > 50
-      if (inputBarRef.current) inputBarRef.current.style.transform = open ? `translate3d(0, -${kh}px, 0)` : ''
-      if (scrollRef.current) scrollRef.current.style.paddingBottom = open ? `${kh}px` : ''
+
+    // Measure how much the input bar bottom actually overlaps the keyboard, then
+    // translate by exactly that amount — not the full keyboard height. The input
+    // bar is already positioned above the nav, so over-translating creates a gap.
+    function applyOffset(autoScroll) {
+      if (!vv || !inputBarRef.current) return
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      inputBarRef.current.style.transform = ''  // reset so getBCR returns natural position
+      if (kh <= 50) {
+        if (scrollRef.current) scrollRef.current.style.paddingBottom = ''
+        return
+      }
+      const rect = inputBarRef.current.getBoundingClientRect()
+      const overlap = Math.max(0, rect.bottom - vv.height)
+      if (overlap > 0) {
+        inputBarRef.current.style.transform = `translate3d(0, -${overlap}px, 0)`
+        if (scrollRef.current) {
+          scrollRef.current.style.paddingBottom = `${overlap}px`
+          if (autoScroll) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+      }
     }
+
+    let rafId, blurTimer
+    function onFocus() {
+      clearTimeout(blurTimer)
+      cancelAnimationFrame(rafId)
+      // Double rAF: waits for keyboard to finish appearing before measuring
+      rafId = requestAnimationFrame(() => { rafId = requestAnimationFrame(() => applyOffset(true)) })
+    }
+    function onBlur() {
+      clearTimeout(blurTimer)
+      cancelAnimationFrame(rafId)
+      // Short delay so focus→focus transfers don't flash (onFocus cancels this)
+      blurTimer = setTimeout(() => applyOffset(false), 50)
+    }
+
+    // Track direction so we auto-scroll on open but not on close (preserves user position)
+    let prevVVHeight = vv?.height ?? window.innerHeight
+    function onVVResize() {
+      const opening = vv.height < prevVVHeight
+      prevVVHeight = vv.height
+      applyOffset(opening)
+    }
+    function onVVScroll() { window.scrollTo(0, 0) }
+    function onWindowScroll() { window.scrollTo(0, 0) }
 
     if (vv) {
-      vv.addEventListener('resize', update)
-      vv.addEventListener('scroll', update)
+      vv.addEventListener('resize', onVVResize)
+      vv.addEventListener('scroll', onVVScroll)
     }
-    window.addEventListener('scroll', update)
+    window.addEventListener('scroll', onWindowScroll)
+    document.addEventListener('focusin', onFocus)
+    document.addEventListener('focusout', onBlur)
 
     return () => {
-      if (vv) { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
-      window.removeEventListener('scroll', update)
+      cancelAnimationFrame(rafId)
+      clearTimeout(blurTimer)
+      if (vv) { vv.removeEventListener('resize', onVVResize); vv.removeEventListener('scroll', onVVScroll) }
+      window.removeEventListener('scroll', onWindowScroll)
+      document.removeEventListener('focusin', onFocus)
+      document.removeEventListener('focusout', onBlur)
       for (const [el, saved] of [[html, savedHtml], [body, savedBody]]) {
         el.style.position = saved.position
         el.style.top = saved.top
