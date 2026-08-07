@@ -11,9 +11,11 @@ body {
   background-color: #EDE8DF;
 }
 
-/* Chat container height — leaves 68px for the bottom nav */
+/* Chat container — pulled up into the safe-area so the frosted header covers the
+   status bar zone. Height excludes only the bottom safe-area and the nav bar. */
 .chat-container {
-  height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px);
+  margin-top: calc(-1 * env(safe-area-inset-top));
+  height: calc(100svh - env(safe-area-inset-bottom) - 68px);
 }
 
 /* When keyboard opens: hide the nav and reclaim its 68px so the input
@@ -26,7 +28,7 @@ body.chat-keyboard-open nav.fixed {
   pointer-events: none;
 }
 body.chat-keyboard-open .chat-container {
-  height: calc(100svh - env(safe-area-inset-top));
+  height: 100svh;
 }
 
 /* Prevent iOS Safari double-tap-to-click on hover-styled elements */

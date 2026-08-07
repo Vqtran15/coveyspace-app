@@ -1642,10 +1642,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     <div
       className={`chat-container relative flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
     >
-      {/* Header — extends into safe-area so the frost is seamless with the status bar */}
+      {/* Header — container starts at y:0 (safe-area included), so top:0 + padding reaches screen top */}
       <div
-        className="absolute left-0 right-0 z-10 bg-sunrise-50/85 backdrop-blur-md"
-        style={{ top: 'calc(-1 * env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}
+        className="absolute top-0 left-0 right-0 z-10 bg-sunrise-50/85 backdrop-blur-md"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
       {/* Inner wrapper — measured by ResizeObserver; height = visible portion in chat-container */}
       <div ref={headerWrapperRef}>

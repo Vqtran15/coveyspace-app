@@ -183,7 +183,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
     <div className={`fixed inset-0 z-50 bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}>
 
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between px-4 pt-safe-or-4 pb-3 pt-4 border-b border-stone-100 bg-white">
+      <div className="shrink-0 flex items-center justify-between px-4 pt-safe-or-4 pb-3 pt-4 border-b border-stone-100">
         <button onClick={handleClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors">
           <ArrowLeft size={22} weight="bold" className="text-stone-600" />
         </button>
