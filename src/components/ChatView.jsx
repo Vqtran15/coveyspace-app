@@ -478,11 +478,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setHasMore((data ?? []).length === PAGE_SIZE)
         setLoading(false)
         setFetchingFresh(false)
-        // Safety net: scroll to the latest message after React commits fresh
-        // data. The ResizeObserver handles the common case (content height
-        // changed), but misses the rare case where fresh and cache happen to
-        // be the same height. This rAF fires after the commit and catches it.
-        if (isAtBottomRef.current) requestAnimationFrame(scrollToBottom)
+        // Safety net: always scroll to the latest message after fresh data
+        // loads, as long as no specific unread scroll target was found in the
+        // cache. Using freshLoadRef + initialFirstUnreadRef instead of
+        // isAtBottomRef means iOS scroll restoration can't interfere —
+        // isAtBottomRef may have been set to false by handleScroll firing
+        // after a restoration write, but we know the user hasn't manually
+        // scrolled up at this point so snapping to the bottom is correct.
+        if (freshLoadRef.current && !initialFirstUnreadRef.current) requestAnimationFrame(scrollToBottom)
         if (!msgs.length) return
         const { data: rxData } = await supabase
           .from('reactions')
