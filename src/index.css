@@ -26,7 +26,7 @@ body.chat-keyboard-open nav.fixed {
   pointer-events: none;
 }
 body.chat-keyboard-open .chat-container {
-  height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100svh - env(safe-area-inset-top));
 }
 
 /* Prevent iOS Safari double-tap-to-click on hover-styled elements */
