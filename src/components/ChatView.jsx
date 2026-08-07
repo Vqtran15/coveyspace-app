@@ -478,14 +478,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setHasMore((data ?? []).length === PAGE_SIZE)
         setLoading(false)
         setFetchingFresh(false)
-        // Safety net: always scroll to the latest message after fresh data
-        // loads, as long as no specific unread scroll target was found in the
-        // cache. Using freshLoadRef + initialFirstUnreadRef instead of
-        // isAtBottomRef means iOS scroll restoration can't interfere —
-        // isAtBottomRef may have been set to false by handleScroll firing
-        // after a restoration write, but we know the user hasn't manually
-        // scrolled up at this point so snapping to the bottom is correct.
-        if (freshLoadRef.current && !initialFirstUnreadRef.current) requestAnimationFrame(scrollToBottom)
+        // After fresh messages commit, ensure scroll stays at the bottom.
+        // A single rAF isn't enough: iOS WebKit can restore the inner div's
+        // scrollTop asynchronously and override it. We apply scrollToBottom
+        // immediately, then watch for any restoration scroll event within
+        // 1500ms and correct once more — same pattern as the visibilitychange
+        // fix. freshLoadRef guards against firing on paginated loads;
+        // initialFirstUnreadRef guards against overriding a deliberate
+        // scroll-to-first-unread from the cache path.
+        if (freshLoadRef.current && !initialFirstUnreadRef.current) {
+          requestAnimationFrame(() => {
+            scrollToBottom()
+            const el = scrollRef.current
+            if (!el) return
+            let cleanup
+            function onRestorationScroll() {
+              const dist = el.scrollHeight - el.scrollTop - el.clientHeight
+              if (dist > 20) {
+                el.removeEventListener('scroll', onRestorationScroll)
+                clearTimeout(cleanup)
+                requestAnimationFrame(() => { if (mountedRef.current) scrollToBottom() })
+              }
+            }
+            el.addEventListener('scroll', onRestorationScroll, { passive: true })
+            cleanup = setTimeout(() => el.removeEventListener('scroll', onRestorationScroll), 1500)
+          })
+        }
         if (!msgs.length) return
         const { data: rxData } = await supabase
           .from('reactions')
