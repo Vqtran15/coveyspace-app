@@ -161,10 +161,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
+  const headerWrapperRef      = useRef(null)
+  const [headerH, setHeaderH] = useState(80)
 
   useEffect(() => {
     mountedRef.current = true
     return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    const el = headerWrapperRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setHeaderH(entry.contentRect.height))
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
   // Hide the bottom nav when the keyboard is open so it doesn't appear
@@ -1606,6 +1616,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     handleScrollToBottom, onMessageImageLoad, handleImageTap,
     // senderName via memberMap — stable reference, always current
     senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
+    headerH,
   }), [
     // Props
     conversation, session, myId, convId, displayName, groupId, members, isAdmin,
@@ -1623,15 +1634,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     lightboxImg, convImageUrl, uploadingGroupIcon, polls, chatEvents,
     pollCreating, pollQuestion, pollOptions, pollSubmitting, pollMenuOpenId,
     deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending,
+    headerH,
   ])
 
   return (
     <ChatContext.Provider value={ctxValue}>
     <div
-      className={`chat-container flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      className={`chat-container relative flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
     >
-      {/* Header + search wrapper — relative so the fade overlay can bleed below */}
-      <div className="relative z-10 shrink-0">
+      {/* Header — absolute so messages scroll behind it for the frosted-glass effect */}
+      <div ref={headerWrapperRef} className="absolute top-0 left-0 right-0 z-10 bg-sunrise-50/85 backdrop-blur-md">
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 flex items-center gap-2">
         <button
@@ -1714,13 +1726,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </div>
       </motion.div>
 
-      {/* Fade messages into header */}
-      <div className="absolute bottom-0 left-0 right-0 h-4 pointer-events-none translate-y-full bg-gradient-to-b from-sunrise-50 to-transparent" />
       </div>{/* end header wrapper */}
 
-      {/* Unread pill */}
+      {/* Unread pill — positioned just below the floating header */}
       {firstUnreadId && !searchOpen && (
-        <div className="shrink-0 flex justify-center py-1.5 animate-overlay-in">
+        <div className="absolute left-0 right-0 flex justify-center py-1.5 z-[9] animate-overlay-in" style={{ top: headerH }}>
           <button
             onClick={() => {
               document.getElementById(`msg-${firstUnreadId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
