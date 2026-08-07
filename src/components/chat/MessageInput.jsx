@@ -26,7 +26,8 @@ export default function MessageInput() {
   } = useChatContext()
 
   return (
-    <div className="shrink-0 border-t border-stone-200 bg-white px-4 pt-3 pb-4 max-w-3xl mx-auto w-full relative">
+    <div className="shrink-0 max-w-3xl mx-auto w-full px-3 pb-2">
+    <div className="bg-white rounded-2xl shadow-md px-3 pt-3 pb-3 relative">
       {/* Reply preview */}
       {replyingTo && (
         <div className="flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2">
@@ -197,7 +198,7 @@ export default function MessageInput() {
           onKeyDown={handleKeyDown}
           placeholder="Message…"
           rows={1}
-          className="flex-1 resize-none border border-stone-200 rounded-2xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-stone-50"
+          className="flex-1 resize-none bg-stone-100 border-0 rounded-2xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember"
           style={{ maxHeight: 120, overflowY: 'auto' }}
         />
         <button
@@ -226,6 +227,7 @@ export default function MessageInput() {
           <PaperPlaneTilt size={18} weight="fill" />
         </button>
       </div>
+    </div>
     </div>
   )
 }
