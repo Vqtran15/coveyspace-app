@@ -290,7 +290,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
     setAnnouncement(text.trim() || null)
   }
 
-  const { sortedBirthdays, nextBirthday, sameDayGroup, birthdayPrimary } = useMemo(() => {
+  const { nextBirthday, birthdayPrimary } = useMemo(() => {
     function joinNames(names) {
       if (names.length === 1) return names[0]
       if (names.length === 2) return `${names[0]} & ${names[1]}`
@@ -317,7 +317,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
         else primary = `${who}'s birthday in ${next.days} days`
       }
     }
-    return { sortedBirthdays: sorted, nextBirthday: next, sameDayGroup: sameDay, birthdayPrimary: primary }
+    return { nextBirthday: next, birthdayPrimary: primary }
   }, [birthdays])
 
   const showAnnouncement = isAdmin || !!announcement
@@ -382,6 +382,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
         </h1>
         <button
           onClick={onOpenSettings}
+          aria-label="Open settings"
           className="relative active:opacity-70 transition-opacity shrink-0"
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
@@ -453,6 +454,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                       {isAdmin && (
                         <button
                           onClick={() => setEditingAnnouncement(true)}
+                          aria-label="Edit announcement"
                           className="text-white/50 hover:text-white transition-colors shrink-0 mt-0.5 p-1"
                         >
                           <PencilSimple size={15} />

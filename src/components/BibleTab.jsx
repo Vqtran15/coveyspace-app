@@ -1165,7 +1165,7 @@ export default function BibleTab() {
             aria-label="Search passages"
             className={`w-11 h-11 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember'}`}
           >
-            <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
+            <MagnifyingGlass size={22} weight={searchOpen ? 'fill' : 'regular'} />
           </button>
           <button
             onClick={() => setShowBrowser(true)}

@@ -49,44 +49,6 @@ function dateSeparatorLabel(iso) {
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 }
 
-function highlightText(text, query) {
-  if (!query.trim() || !text) return text
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
-  return (
-    <>
-      {parts.map((part, i) =>
-        i % 2 === 1
-          ? <mark key={i} className="bg-yellow-200 text-stone-900 rounded-sm">{part}</mark>
-          : part
-      )}
-    </>
-  )
-}
-
-function renderMessageBody(body, query) {
-  // eslint-disable-next-line no-useless-escape
-  const URL_RE = /https?:\/\/[^\s<>'"]+[^\s<>'".,!?;:)\]']*/g
-  const parts = []
-  let last = 0, m
-  while ((m = URL_RE.exec(body)) !== null) {
-    if (m.index > last) parts.push({ type: 'text', value: body.slice(last, m.index) })
-    parts.push({ type: 'url', value: m[0] })
-    last = m.index + m[0].length
-  }
-  if (last < body.length) parts.push({ type: 'text', value: body.slice(last) })
-  if (!parts.length) return query ? highlightText(body, query) : body
-  return parts.map((part, i) =>
-    part.type === 'url'
-      ? <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
-            onClick={e => e.stopPropagation()}
-            className="underline break-all text-inherit opacity-80 active:opacity-60">
-            {part.value}
-          </a>
-      : <span key={i}>{query ? highlightText(part.value, query) : part.value}</span>
-  )
-}
-
 function typingLabel(users) {
   if (!users.length) return ''
   if (users.length === 1) return `${users[0]} is typing…`
@@ -192,7 +154,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialScrollSettledRef    = useRef(false)
   const initialFirstUnreadRef      = useRef(null)
   const unreadDetectedRef          = useRef(false)
-  const pendingUnreadScrollRef     = useRef(false)
   const messagesContainerRef  = useRef(null)
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
@@ -243,24 +204,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // Falls back to the stored name for users who've left the group.
   function senderName(userId, storedName) {
     return members.find(m => m.user_id === userId)?.display_name || storedName
-  }
-
-  function convTitle() {
-    if (conversation.type === 'direct') {
-      const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
-      return members.find(m => m.user_id === otherId)?.display_name || 'Direct Message'
-    }
-    // Custom name always wins for group chats (set by admin rename)
-    if (convName) return convName
-    const otherIds = conversation.conversation_members
-      ?.filter(m => m.user_id !== myId)
-      ?.map(m => m.user_id) ?? []
-    const names = otherIds
-      .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
-      .filter(Boolean)
-    if (!names.length) return 'Group Chat'
-    if (names.length <= 3) return names.join(', ')
-    return `${names.slice(0, 3).join(', ')} +${names.length - 3}`
   }
 
   // ── Poll helpers ─────────────────────────────────────────────────────────
@@ -447,7 +390,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     initialScrollSettledRef.current = false
     initialFirstUnreadRef.current = null
     unreadDetectedRef.current = false
-    pendingUnreadScrollRef.current = false
     freshLoadRef.current = true
     clearTimeout(freshLoadTimerRef.current)
     freshLoadTimerRef.current = setTimeout(() => { freshLoadRef.current = false }, 5000)
@@ -550,6 +492,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .on('postgres_changes', {
         event: 'DELETE', schema: 'public', table: 'messages',
+        filter: `conversation_id=eq.${convId}`,
       }, ({ old: msg }) => {
         setMessages(prev => prev.filter(m => m.id !== msg.id))
       })
@@ -929,9 +872,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       pollOptionRefs.current[pollOptions.length - 1]?.focus()
     }
   }, [pollOptions.length])
-
-
-
 
   useEffect(() => {
     if (!selectedMsgId && !confirmDeleteId) return
@@ -1474,7 +1414,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .update({ name: renameValue.trim() })
       .eq('id', convId)
     if (error) {
-      toast.show('Failed to save name', 'error')
+      toast('Failed to save name', 'error')
     } else {
       setConvName(renameValue.trim())
     }

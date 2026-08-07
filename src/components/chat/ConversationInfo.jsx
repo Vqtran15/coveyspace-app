@@ -33,9 +33,10 @@ export default function ConversationInfo() {
           </h2>
           <button
             onClick={closeInfo}
-            className="text-stone-400 hover:text-stone-600 text-2xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            aria-label="Close"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100"
           >
-            &times;
+            <X size={20} />
           </button>
         </div>
 
@@ -62,6 +63,7 @@ export default function ConversationInfo() {
             {canEditGroupInfo && (
               <button
                 onClick={() => groupIconFileRef.current?.click()}
+                aria-label="Upload group photo"
                 className="absolute bottom-0 right-0 w-7 h-7 bg-ember rounded-full flex items-center justify-center shadow-md border-2 border-white"
               >
                 <Camera size={14} className="text-white" weight="fill" />
@@ -70,6 +72,7 @@ export default function ConversationInfo() {
             {canEditGroupInfo && convImageUrl && (
               <button
                 onClick={removeGroupIcon}
+                aria-label="Remove group photo"
                 className="absolute bottom-0 left-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-white"
               >
                 <Trash size={14} className="text-red-500" weight="fill" />
@@ -104,6 +107,7 @@ export default function ConversationInfo() {
               {canEditGroupInfo && (
                 <button
                   onClick={() => { setRenameValue(title); setRenamingGroup(true) }}
+                  aria-label="Rename group"
                   className="text-stone-400 hover:text-stone-600 transition-colors"
                 >
                   <PencilSimple size={15} />

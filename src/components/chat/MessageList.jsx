@@ -472,7 +472,7 @@ export default function MessageList() {
                       <div className="px-4 py-3 flex gap-2">
                         {[
                           { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',      inactive: 'bg-stone-100 text-stone-600' },
-                          { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-amber-400 text-white', inactive: 'bg-stone-100 text-stone-600' },
+                          { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-600' },
                           { status: 'not_going', label: "Can't go", Icon: X,           active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-600' },
                         ].map(({ status, label, Icon, active, inactive }) => (
                           <button
