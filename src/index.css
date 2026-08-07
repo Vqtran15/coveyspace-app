@@ -11,6 +11,15 @@ body {
   background-color: #EDE8DF;
 }
 
+/* Slide the mobile bottom nav out of view when the keyboard is open */
+nav.fixed {
+  transition: transform 0.2s ease;
+}
+body.chat-keyboard-open nav.fixed {
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
 /* Prevent iOS Safari double-tap-to-click on hover-styled elements */
 button, a, [role="button"] {
   touch-action: manipulation;

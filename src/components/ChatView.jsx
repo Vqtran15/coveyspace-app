@@ -204,6 +204,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => { mountedRef.current = false }
   }, [])
 
+  // Hide the bottom nav when the keyboard is open so it doesn't appear
+  // pushed above the keyboard. iOS native behavior already scrolls the
+  // focused input into view — we just need the nav out of the way.
+  useEffect(() => {
+    function onFocusIn(e) {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+        document.body.classList.add('chat-keyboard-open')
+      }
+    }
+    function onFocusOut() {
+      setTimeout(() => {
+        const active = document.activeElement
+        if (!active || !['TEXTAREA', 'INPUT'].includes(active.tagName)) {
+          document.body.classList.remove('chat-keyboard-open')
+        }
+      }, 50)
+    }
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+      document.body.classList.remove('chat-keyboard-open')
+    }
+  }, [])
+
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }
