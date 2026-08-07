@@ -182,7 +182,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
   const [loaded, setLoaded] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
   const realtimeDebounceRef = useRef(null)
-  const [phase1Done, setPhase1Done] = useState(false)
   const [shouldAnimate]  = useState(() => !greetingDone)
   const greetingControls = useAnimation()
   const [announceShake, setAnnounceShake] = useState(false)
@@ -199,8 +198,10 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
 
   async function load() {
     const today = toDateString(new Date())
+    const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
 
-    const [mealRes, serviceRes, eventRes, mainChatConvRes] = await Promise.all([
+    // Round 1: all queries that only need groupId — run fully in parallel
+    const [mealRes, serviceRes, eventRes, mainChatConvRes, groupRes, memberRes, countRes] = await Promise.all([
       supabase.from('meal_pages').select('id, title, week_date, is_paused').gte('week_date', mealCutoffDate()).order('week_date').limit(1).maybeSingle(),
       supabase.from('serving_pages').select('title, week_date, is_paused').gte('week_date', today).order('week_date').limit(1).maybeSingle(),
       eventsEnabled && groupId
@@ -209,61 +210,59 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
       chatEnabled
         ? supabase.from('conversations').select('id').eq('name', 'Main Group Chat').maybeSingle()
         : Promise.resolve({ data: null }),
+      groupId
+        ? supabase.from('community_groups').select('announcement').eq('id', groupId).single()
+        : Promise.resolve({ data: null }),
+      prayerEnabled && groupId
+        ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId)
+        : Promise.resolve({ data: [] }),
+      isAdmin && groupId
+        ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('community_group_id', groupId)
+        : Promise.resolve({ count: null }),
     ])
+
     setNextMeal(mealRes.data ?? null)
     setNextService(serviceRes.data ?? null)
     setNextEvent(eventRes.data ?? null)
+    setAnnouncement(groupRes.data?.announcement ?? null)
+    if (isAdmin) setSoloAdmin(countRes.count === 1)
     const mainChatId = mainChatConvRes.data?.id ?? null
-    setPhase1Done(true)
+    const memberData = memberRes.data ?? []
 
-    if (groupId) {
-      const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
-      const [{ data: groupData }, { data: memberData }, { count: mCount }] = await Promise.all([
-        supabase.from('community_groups').select('announcement').eq('id', groupId).single(),
-        prayerEnabled
-          ? supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId)
-          : Promise.resolve({ data: [] }),
-        isAdmin
-          ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('community_group_id', groupId)
-          : Promise.resolve({ count: null }),
-      ])
-      setAnnouncement(groupData?.announcement ?? null)
-      if (isAdmin) setSoloAdmin(mCount === 1)
+    // Round 2: queries that depend on round-1 results
+    const memberIds = prayerEnabled ? memberData.map(m => m.user_id) : []
+    const [{ data: requestData }, { data: latestMsg }] = await Promise.all([
+      prayerEnabled && memberIds.length > 0
+        ? supabase.from('prayer_requests').select('id, member_user_id, request, created_at').in('member_user_id', memberIds).gte('created_at', cutoff).eq('answered', false).order('created_at', { ascending: false })
+        : Promise.resolve({ data: null }),
+      chatEnabled && mainChatId
+        ? supabase.from('messages').select('body, display_name, created_at, image_url').eq('conversation_id', mainChatId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ])
 
-      const memberIds = prayerEnabled ? (memberData ?? []).map(m => m.user_id) : []
-      const [{ data: requestData }, { data: latestMsg }] = await Promise.all([
-        prayerEnabled && memberIds.length > 0
-          ? supabase.from('prayer_requests').select('id, member_user_id, request, created_at').in('member_user_id', memberIds).gte('created_at', cutoff).eq('answered', false).order('created_at', { ascending: false })
-          : Promise.resolve({ data: null }),
-        chatEnabled && mainChatId
-          ? supabase.from('messages').select('body, display_name, created_at, image_url').eq('conversation_id', mainChatId).order('created_at', { ascending: false }).limit(1).maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-
-      if (prayerEnabled) {
-        if (requestData && requestData.length > 0) {
-          const profileMap = Object.fromEntries((memberData ?? []).map(p => [p.user_id, p]))
-          const seen = new Set()
-          const uniqueUsers = []
-          for (const r of requestData) {
-            if (!seen.has(r.member_user_id)) {
-              seen.add(r.member_user_id)
-              uniqueUsers.push({ ...r, profile: profileMap[r.member_user_id] })
-            }
+    if (prayerEnabled) {
+      if (requestData?.length > 0) {
+        const profileMap = Object.fromEntries(memberData.map(p => [p.user_id, p]))
+        const seen = new Set()
+        const uniqueUsers = []
+        for (const r of requestData) {
+          if (!seen.has(r.member_user_id)) {
+            seen.add(r.member_user_id)
+            uniqueUsers.push({ ...r, profile: profileMap[r.member_user_id] })
           }
-          if (uniqueUsers.length > 0) {
-            const d = new Date()
-            const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
-            setPrayerCard(uniqueUsers[seed % uniqueUsers.length])
-          } else {
-            setPrayerCard(null)
-          }
+        }
+        if (uniqueUsers.length > 0) {
+          const d = new Date()
+          const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
+          setPrayerCard(uniqueUsers[seed % uniqueUsers.length])
         } else {
           setPrayerCard(null)
         }
+      } else {
+        setPrayerCard(null)
       }
-      setLastGroupMessage(chatEnabled && mainChatId ? (latestMsg ?? null) : null)
     }
+    setLastGroupMessage(chatEnabled && mainChatId ? (latestMsg ?? null) : null)
     setLoaded(true)
   }
 
@@ -395,7 +394,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
       <InstallBanner />
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
-        {!phase1Done ? (
+        {!loaded ? (
           <>
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
             {mealsEnabled     && <CardSkeleton delay={isAdmin ? 40  : 0}   />}
@@ -409,8 +408,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
           </>
         ) : (
           <>
-            {/* Solo-admin nudge — gated on loaded to avoid layout shift before batch 2 */}
-            {loaded && soloAdmin && (
+            {/* Solo-admin nudge — shown until someone joins */}
+            {soloAdmin && (
               <div className="w-full animate-stack-in lg:col-span-2">
                 <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
@@ -438,8 +437,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
               </div>
             )}
 
-            {/* Announcement — gated on loaded to avoid layout shift before batch 2 */}
-            {loaded && showAnnouncement && (
+            {/* Announcement — always first */}
+            {showAnnouncement && (
               announcement ? (
                 <div className="w-full animate-stack-in lg:col-span-2">
                   <div
@@ -482,7 +481,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
             )}
 
             {(() => {
-              const baseDelay = loaded && showAnnouncement ? 80 : 0
+              const baseDelay = showAnnouncement ? 80 : 0
               const cards = [
                 eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
                   key: 'events',
