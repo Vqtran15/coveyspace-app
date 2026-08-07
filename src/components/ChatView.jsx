@@ -1715,7 +1715,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       </motion.div>
 
       {/* Fade messages into header */}
-      <div className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none translate-y-full bg-gradient-to-b from-sunrise-50 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-4 pointer-events-none translate-y-full bg-gradient-to-b from-sunrise-50 to-transparent" />
       </div>{/* end header wrapper */}
 
       {/* Unread pill */}
