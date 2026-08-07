@@ -1563,7 +1563,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     <ChatContext.Provider value={ctxValue}>
     <div
       className={`flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px - var(--keyboard-height, 0px))' }}
+      style={{ height: 'calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px)' }}
     >
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 shrink-0 flex items-center gap-2">
