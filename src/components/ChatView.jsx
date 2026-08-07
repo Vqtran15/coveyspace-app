@@ -1642,8 +1642,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     <div
       className={`chat-container relative flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
     >
-      {/* Header — absolute so messages scroll behind it for the frosted-glass effect */}
-      <div ref={headerWrapperRef} className="absolute top-0 left-0 right-0 z-10 bg-sunrise-50/85 backdrop-blur-md">
+      {/* Header — extends into safe-area so the frost is seamless with the status bar */}
+      <div
+        className="absolute left-0 right-0 z-10 bg-sunrise-50/85 backdrop-blur-md"
+        style={{ top: 'calc(-1 * env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}
+      >
+      {/* Inner wrapper — measured by ResizeObserver; height = visible portion in chat-container */}
+      <div ref={headerWrapperRef}>
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 flex items-center gap-2">
         <button
@@ -1726,7 +1731,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </div>
       </motion.div>
 
-      </div>{/* end header wrapper */}
+      </div>{/* end inner measured wrapper */}
+      </div>{/* end header outer (safe-area extension) */}
 
       {/* Unread pill — positioned just below the floating header */}
       {firstUnreadId && !searchOpen && (
