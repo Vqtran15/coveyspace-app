@@ -5,8 +5,10 @@ import { ListBullets } from '@phosphor-icons/react'
 import RotationTab from './RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { mealCutoffDate } from '../utils/dates.js'
+import { useAppContext } from '../contexts/AppContext.jsx'
 
-export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, displayName, onOpenSettings, isAdmin, groupSettings, refreshKey = 0 }) {
+export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 0 }) {
+  const { groupName, displayName, isAdmin, groupSettings } = useAppContext()
   const location = useLocation()
   const mealsEnabled    = groupSettings?.meals_enabled !== false
   const servicesEnabled = groupSettings?.services_enabled !== false
@@ -107,7 +109,6 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, groupName, di
           revealKey={segment}
           groupName={groupName}
           displayName={displayName}
-          onOpenSettings={onOpenSettings}
           isAdmin={isAdmin}
           compact
         />

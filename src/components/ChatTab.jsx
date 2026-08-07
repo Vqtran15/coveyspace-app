@@ -3,11 +3,15 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
+import { useAppContext } from '../contexts/AppContext.jsx'
 
-export default function ChatTab({ session, displayName, groupId, isAdmin, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle }) {
+export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays }) {
+  const { session, displayName, groupId, isAdmin, push, setUnreadChatCount } = useAppContext()
+  const onRead = () => setUnreadChatCount(0)
   const location = useLocation()
   const locationState = location.state
   const navigateRouter = useNavigate()
+  function onOpenSettings() { navigateRouter('/settings') }
   const tabResetRef = useRef(location.state?.tabReset ?? null)
   const [autoOpenGroupChat, setAutoOpenGroupChat] = useState(!!locationState?.openGroupChat)
   const consumeAutoOpen = useCallback(() => setAutoOpenGroupChat(false), [])
@@ -127,11 +131,11 @@ export default function ChatTab({ session, displayName, groupId, isAdmin, onRead
       birthdayBannerClosing={birthdayBannerClosing}
       onDismissBirthdayBanner={onDismissBirthdayBanner}
       onOpenBirthdays={onOpenBirthdays}
-      pushSupported={pushSupported}
-      pushSubscribed={pushSubscribed}
-      pushPermission={pushPermission}
-      pushToggling={pushToggling}
-      onPushToggle={onPushToggle}
+      pushSupported={push.supported}
+      pushSubscribed={push.subscribed}
+      pushPermission={push.permission}
+      pushToggling={push.toggling}
+      onPushToggle={push.toggle}
       pinnedGroupId={pinnedGroupId}
       onPinGroup={setPinnedGroupId}
     />

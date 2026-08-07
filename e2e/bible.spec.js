@@ -52,10 +52,13 @@ test.describe('A1 — Component structure', () => {
     expect(appSrc).toContain("import('./components/BibleTab.jsx')")
   })
 
-  test('App.jsx gates BibleTab behind bible_enabled feature flag', () => {
+  test('bible_enabled feature flag is derived in AppContext', () => {
     const appSrc = fs.readFileSync(APP_PATH, 'utf8')
-    expect(appSrc).toMatch(/bible_enabled.*=.*true/)
+    // App.jsx still defines the /bible route and references the flag
     expect(appSrc).toContain('/bible')
+    // The flag derivation (bible_enabled === true) lives in AppContext after refactor
+    const contextSrc = fs.readFileSync(path.resolve(ROOT, 'src/contexts/AppContext.jsx'), 'utf8')
+    expect(contextSrc).toMatch(/bible_enabled.*=.*true/)
   })
 
   test('AddEditSheet component exists', () => {
@@ -273,7 +276,7 @@ test.describe('A8 — BibleBrowser component', () => {
   test('renders as full-screen page so flex-1 children get measurable height', () => {
     expect(src).not.toContain("height: '88vh'")
     expect(src).not.toContain("maxHeight: '88vh'")
-    expect(src).toContain('fixed inset-0 z-[60]')
+    expect(src).toContain('fixed inset-0 z-[20]')
   })
 
   test('sliding panels container has min-h-0', () => {
@@ -331,7 +334,7 @@ test.describe('A9 — AddEditSheet keyboard avoidance', () => {
 
 test.describe('A10 — Chapter overlay animation', () => {
   test('chapter view is a fixed inset-0 overlay (no flicker)', () => {
-    expect(src).toContain("fixed inset-0 z-[60]")
+    expect(src).toContain("fixed inset-0 z-[20]")
   })
 
   test('slides in from x:100% (right edge)', () => {

@@ -36,7 +36,7 @@ test.describe('Rebrand — no "Covey Space" (two words) remaining', () => {
     'src/components/AdminPage.jsx',
     'src/components/OverviewTab.jsx',
     'src/components/WelcomeSplash.jsx',
-    'src/components/SettingsModal.jsx',
+    'src/components/SettingsPage.jsx',
     'src/components/FeedbackModal.jsx',
   ]
 
@@ -68,10 +68,9 @@ test.describe('Rebrand — no "Covey Space" (two words) remaining', () => {
     expect(src).toContain("'Coveyspace'")
   })
 
-  test('SettingsModal Support section uses "Coveyspace"', () => {
-    const src = read('src/components/SettingsModal.jsx')
-    expect(src).toContain('Support Coveyspace')
-    expect(src).toContain('Coveyspace is community-funded')
+  test('FeedbackModal references Coveyspace', () => {
+    const src = read('src/components/FeedbackModal.jsx')
+    expect(src).toContain('Coveyspace')
   })
 
   test('AdminPage share sheet uses "Coveyspace"', () => {

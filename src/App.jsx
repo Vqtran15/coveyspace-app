@@ -4,32 +4,32 @@ import { motion, LayoutGroup } from 'framer-motion'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, BookOpen } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
-import { usePushNotifications } from './hooks/usePushNotifications.js'
-import { getUpcomingBirthdays, dedupBirthdays } from './utils/birthdays.js'
+import { useAnimatedOverlay } from './hooks/useAnimatedOverlay.js'
+import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
+import { AppProvider, useAppContext } from './contexts/AppContext.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 
-import BirthdayBanner      from './components/BirthdayBanner.jsx'
+import BirthdayBanner       from './components/BirthdayBanner.jsx'
 import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 import UpdatePrompt         from './components/UpdatePrompt.jsx'
 import AnnouncementBanner   from './components/AnnouncementBanner.jsx'
 
-const ScheduleTab         = lazy(() => import('./components/ScheduleTab.jsx'))
-const BirthdayTab         = lazy(() => import('./components/BirthdayTab.jsx'))
-const PrayerTab           = lazy(() => import('./components/PrayerTab.jsx'))
-const ChatTab             = lazy(() => import('./components/ChatTab.jsx'))
-const GuideTab            = lazy(() => import('./components/GuideTab.jsx'))
-const GivingTab           = lazy(() => import('./components/GivingTab.jsx'))
-const OverviewTab         = lazy(() => import('./components/OverviewTab.jsx'))
-const EventsTab           = lazy(() => import('./components/EventsTab.jsx'))
-const BibleTab            = lazy(() => import('./components/BibleTab.jsx'))
-const AuthPage            = lazy(() => import('./components/AuthPage.jsx'))
-const ResetPasswordPage   = lazy(() => import('./components/ResetPasswordPage.jsx'))
-const WelcomeSplash       = lazy(() => import('./components/WelcomeSplash.jsx'))
-const SettingsPage        = lazy(() => import('./components/SettingsPage.jsx'))
-const AdminPage           = lazy(() => import('./components/AdminPage.jsx'))
-
+const ScheduleTab       = lazy(() => import('./components/ScheduleTab.jsx'))
+const BirthdayTab       = lazy(() => import('./components/BirthdayTab.jsx'))
+const PrayerTab         = lazy(() => import('./components/PrayerTab.jsx'))
+const ChatTab           = lazy(() => import('./components/ChatTab.jsx'))
+const GuideTab          = lazy(() => import('./components/GuideTab.jsx'))
+const GivingTab         = lazy(() => import('./components/GivingTab.jsx'))
+const OverviewTab       = lazy(() => import('./components/OverviewTab.jsx'))
+const EventsTab         = lazy(() => import('./components/EventsTab.jsx'))
+const BibleTab          = lazy(() => import('./components/BibleTab.jsx'))
+const AuthPage          = lazy(() => import('./components/AuthPage.jsx'))
+const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'))
+const WelcomeSplash     = lazy(() => import('./components/WelcomeSplash.jsx'))
+const SettingsPage      = lazy(() => import('./components/SettingsPage.jsx'))
+const AdminPage         = lazy(() => import('./components/AdminPage.jsx'))
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -71,54 +71,210 @@ const TABS = [
 const PATHS = TABS.map(t => t.path)
 const OFF_NAV_PATHS = ['/settings', '/admin']
 
-export default function App() {
+function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
-  const prevIndexRef  = useRef(PATHS.indexOf(location.pathname))
-  const locationRef   = useRef(location.pathname)
+  const {
+    session, userId, authLoading, isRecovery, clearRecovery,
+    displayName, groupId, groupName, isAdmin,
+    avatarIcon, avatarColorKey, avatarImageUrl,
+    groupSettings, setGroupSettings,
+    mealsEnabled, servicesEnabled, chatEnabled, prayerEnabled,
+    birthdaysEnabled, guideEnabled, givingEnabled, eventsEnabled, bibleEnabled,
+    showScheduleTab,
+    birthdays, refreshBirthdays,
+    unreadChatCount, setUnreadChatCount,
+    push,
+    onDisplayNameChange, onAvatarChange, onGroupSettingsChange, onGroupNameChange,
+    setProfile, refreshProfile,
+  } = useAppContext()
+
+  const prevIndexRef = useRef(PATHS.indexOf(location.pathname))
+  const locationRef  = useRef(location.pathname)
   const enterFromRef = useRef('right')
-  const [birthdays, setBirthdays]       = useState([])
-  const [session, setSession]           = useState(null)
-  const [authLoading, setAuthLoading]   = useState(true)
+
   const [splashVisible, setSplashVisible] = useState(true)
   const [splashExiting, setSplashExiting] = useState(false)
   const [splashMinDone, setSplashMinDone] = useState(false)
-  const [profile, setProfile]           = useState(null)
-  const [unreadChatCount, setUnreadChatCount] = useState(0)
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [isRecovery, setIsRecovery] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
-  const [groupSettings, setGroupSettings] = useState(null)
-  const [guideOpen, setGuideOpen] = useState(false)
-  const [guideClosing, setGuideClosing] = useState(false)
-  const [givingOpen, setGivingOpen] = useState(false)
-  const [givingClosing, setGivingClosing] = useState(false)
-  const [prayerBanner, setPrayerBanner] = useState(null) // { reactorName }
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
 
-  function closeGuide() {
-    setGuideClosing(true)
-    setTimeout(() => { setGuideOpen(false); setGuideClosing(false) }, 200)
-  }
-
-  function closeGiving() {
-    setGivingClosing(true)
-    setTimeout(() => { setGivingOpen(false); setGivingClosing(false) }, 200)
-  }
-
-  const [birthdayOpen, setBirthdayOpen] = useState(false)
-  const [birthdayClosing, setBirthdayClosing] = useState(false)
-
-  function closeBirthdays() {
-    setBirthdayClosing(true)
-    setTimeout(() => { setBirthdayOpen(false); setBirthdayClosing(false) }, 200)
-  }
+  const guide    = useAnimatedOverlay()
+  const giving   = useAnimatedOverlay()
+  const birthday = useAnimatedOverlay()
 
   const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
   const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
-  const [announcement, setAnnouncement]         = useState(null)
+  const [announcement, setAnnouncement]           = useState(null)
   const [announcementClosing, setAnnouncementClosing] = useState(false)
+  const [prayerBanner, setPrayerBanner]           = useState(null)
   const [prayerBannerClosing, setPrayerBannerClosing] = useState(false)
 
+  // ── Splash screen ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    const t = setTimeout(() => setSplashMinDone(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (authLoading || !splashMinDone) return
+    setSplashExiting(true)
+    const t = setTimeout(() => setSplashVisible(false), 350)
+    return () => clearTimeout(t)
+  }, [authLoading, splashMinDone])
+
+  // ── Network status ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const up   = () => setIsOnline(true)
+    const down = () => setIsOnline(false)
+    window.addEventListener('online',  up)
+    window.addEventListener('offline', down)
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
+  }, [])
+
+  // ── Welcome check (runs after profile loads) ───────────────────────────────
+  useEffect(() => {
+    if (!session || !groupId) return
+    const key = `cg_welcomed_${userId}_${groupId}`
+    if (!getCookie(key) && !localStorage.getItem(key)) {
+      setCookie(key)
+      setShowWelcome(true)
+    } else {
+      setCookie(key) // migrate existing localStorage users to cookie
+    }
+  }, [groupId])
+
+  // ── Announcement banner ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!session) return
+    supabase
+      .from('announcements')
+      .select('id, message')
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        const a = data?.[0]
+        if (!a || getCookie(`dismissed_announcement_${a.id}`)) return
+        setAnnouncement(a)
+      })
+  }, [session])
+
+  // ── Close overlays when welcome splash opens ───────────────────────────────
+  useEffect(() => {
+    if (showWelcome) {
+      guide.setOpen(false)
+      giving.setOpen(false)
+      birthday.setOpen(false)
+    }
+  }, [showWelcome])
+
+  // ── SW postMessage navigation + prayer banner ──────────────────────────────
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    function onMessage(e) {
+      if (e.data?.type !== 'NAVIGATE') return
+      const url = e.data.url
+      if (url === '/prayer' && userId) {
+        if (e.data.notifTitle) setPrayerBanner({ reactorName: e.data.notifTitle })
+        navigate('/prayer', { state: { featuredUserId: userId } })
+      } else {
+        navigate(url)
+      }
+    }
+    navigator.serviceWorker.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
+  }, [userId])
+
+  // ── Initial unread count ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (!groupId || !userId || locationRef.current === '/chat') return
+    async function loadInitialUnread() {
+      const { data: memberships } = await supabase
+        .from('conversation_members')
+        .select('conversation_id, last_read_at')
+        .eq('user_id', userId)
+
+      const convIds = (memberships ?? []).map(m => m.conversation_id)
+      if (!convIds.length) return
+
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('conversation_id, created_at')
+        .in('conversation_id', convIds)
+        .neq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      const readMap = Object.fromEntries((memberships ?? []).map(m => [m.conversation_id, m.last_read_at]))
+      const count = (msgs ?? []).filter(msg => {
+        const lastRead = readMap[msg.conversation_id]
+        return !lastRead || msg.created_at > lastRead
+      }).length
+      if (count > 0) setUnreadChatCount(c => Math.max(c, count))
+    }
+    loadInitialUnread()
+  }, [groupId, userId])
+
+  // ── Prayer reaction banner ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!userId || !groupId) return
+    const channel = supabase
+      .channel(`prayer-reactions:${groupId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'prayer_reactions',
+        filter: `community_group_id=eq.${groupId}`,
+      }, ({ new: reaction }) => {
+        if (reaction.prayer_request_owner_id !== userId) return
+        if (reaction.user_id === userId) return
+        setPrayerBanner({ reactorName: reaction.display_name ?? 'Someone' })
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [userId, groupId])
+
+  // ── Chat unread realtime ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (!groupId) return
+    const channel = supabase
+      .channel(`chat-unread:${groupId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `community_group_id=eq.${groupId}`,
+      }, ({ new: msg }) => {
+        if (locationRef.current !== '/chat' && msg.user_id !== userId)
+          setUnreadChatCount(c => c + 1)
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [groupId])
+
+  // ── Location tracking + page view ─────────────────────────────────────────
+  useEffect(() => {
+    locationRef.current = location.pathname
+    if (location.pathname === '/chat') {
+      setUnreadChatCount(0)
+      navigator.clearAppBadge?.().catch(() => {})
+    }
+    window.scrollTo(0, 0)
+    trackPageView(location.pathname)
+  }, [location.pathname])
+
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
+  const isChat = location.pathname === '/chat'
+  const isFullHeight = isChat
+
+  const visibleTabs = TABS.filter(t => {
+    if (t.path === '/schedule') return showScheduleTab
+    if (t.path === '/events')   return eventsEnabled
+    if (t.path === '/chat')     return chatEnabled
+    if (t.path === '/prayer')   return prayerEnabled
+    if (t.path === '/bible')    return bibleEnabled
+    return true
+  })
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function dismissBirthdayBanner() {
     setBirthdayBannerClosing(true)
     setTimeout(() => { setBirthdayBannerDismissed(true); setBirthdayBannerClosing(false) }, 260)
@@ -138,275 +294,13 @@ export default function App() {
     setTimeout(() => { setPrayerBanner(null); setPrayerBannerClosing(false) }, 260)
   }
 
-  useEffect(() => { locationRef.current = location.pathname }, [location.pathname])
-
-  useEffect(() => {
-    const up   = () => setIsOnline(true)
-    const down = () => setIsOnline(false)
-    window.addEventListener('online',  up)
-    window.addEventListener('offline', down)
-    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down) }
-  }, [])
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      if (event === 'INITIAL_SESSION') setAuthLoading(false)
-      if (event === 'SIGNED_IN' && !PATHS.includes(window.location.pathname)) navigate('/home')
-      if (event === 'PASSWORD_RECOVERY') setIsRecovery(true)
-      if (!session) { setProfile(null); setIsRecovery(false) }
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  useEffect(() => {
-    const t = setTimeout(() => setSplashMinDone(true), 1200)
-    return () => clearTimeout(t)
-  }, [])
-
-  useEffect(() => {
-    if (authLoading || !splashMinDone) return
-    setSplashExiting(true)
-    const t = setTimeout(() => setSplashVisible(false), 350)
-    return () => clearTimeout(t)
-  }, [authLoading, splashMinDone])
-
-  useEffect(() => {
-    if (!session?.user?.id) return
-    const userId = session.user.id
-    const ping = () =>
-      supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('user_id', userId).then()
-    ping()
-    const onVisible = () => { if (document.visibilityState === 'visible') ping() }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [session?.user?.id])
-
-  useEffect(() => {
-    if (!session?.user?.id) return
-    const isStandalone =
-      window.matchMedia?.('(display-mode: standalone)').matches ||
-      ('standalone' in window.navigator && window.navigator.standalone === true)
-    if (!isStandalone) return
-    supabase.from('profiles').update({ is_pwa: true }).eq('user_id', session.user.id).then()
-  }, [session?.user?.id])
-
-  useEffect(() => {
-    if (!session) return
-    supabase
-      .from('announcements')
-      .select('id, message')
-      .eq('active', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        const a = data?.[0]
-        if (!a) return
-        if (getCookie(`dismissed_announcement_${a.id}`)) return
-        setAnnouncement(a)
-      })
-  }, [session])
-
-  useEffect(() => {
-    if (!session) return
-    supabase
-      .from('profiles')
-      .select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, birthday, community_groups(name)')
-      .eq('user_id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (!data) return
-        setProfile(data)
-        const key = `cg_welcomed_${session.user.id}_${data.community_group_id}`
-        if (!getCookie(key) && !localStorage.getItem(key)) {
-          setCookie(key)
-          setShowWelcome(true)
-        } else {
-          setCookie(key) // migrate existing localStorage users to cookie
-        }
-      })
-  }, [session])
-
-  const displayName    = profile?.display_name ?? ''
-  const groupName      = profile?.community_groups?.name ?? session?.user?.user_metadata?.community_group_name ?? ''
-  const groupId        = profile?.community_group_id ?? null
-  const isAdmin        = profile?.role === 'admin'
-  const avatarIcon     = profile?.avatar_icon ?? null
-  const avatarColorKey = profile?.avatar_color ?? null
-  const avatarImageUrl = profile?.avatar_image_url ?? null
-  const push = usePushNotifications(session?.user?.id, groupId)
-
-  const mealsEnabled     = groupSettings?.meals_enabled !== false
-  const servicesEnabled  = groupSettings?.services_enabled !== false
-  const chatEnabled      = groupSettings?.chat_enabled !== false
-  const prayerEnabled    = groupSettings?.prayer_enabled !== false
-  const birthdaysEnabled = groupSettings?.birthdays_enabled !== false
-  const guideEnabled     = groupSettings?.guide_enabled !== false
-  const givingEnabled    = groupSettings?.giving_enabled === true
-  const eventsEnabled    = groupSettings?.events_enabled === true
-  const bibleEnabled     = groupSettings?.bible_enabled === true
-  const showScheduleTab  = mealsEnabled || servicesEnabled
-  const visibleTabs      = TABS.filter(t => {
-    if (t.path === '/schedule') return showScheduleTab
-    if (t.path === '/events')   return eventsEnabled
-    if (t.path === '/chat')     return chatEnabled
-    if (t.path === '/prayer')   return prayerEnabled
-    if (t.path === '/bible')    return bibleEnabled
-    return true
-  })
-
-  useEffect(() => {
-    if (!session) return
-    supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
-
-    const channel = supabase
-      .channel(`birthdays:${groupId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'birthdays', filter: `community_group_id=eq.${groupId}` },
-        ({ eventType, new: next, old: prev }) => {
-          if (eventType === 'INSERT') setBirthdays(b => dedupBirthdays(b.some(r => r.id === next.id) ? b : [...b, next]))
-          else if (eventType === 'UPDATE') setBirthdays(b => dedupBirthdays(b.map(r => r.id === next.id ? next : r)))
-          else if (eventType === 'DELETE') setBirthdays(b => b.filter(r => r.id !== prev.id))
-        },
-      )
-      .subscribe()
-
-    return () => supabase.removeChannel(channel)
-  }, [session])
-
-  useEffect(() => {
-    if (showWelcome) {
-      setGuideOpen(false)
-      setGivingOpen(false)
-      setBirthdayOpen(false)
-    }
-  }, [showWelcome])
-
-  useEffect(() => {
-    if (!groupId) return
-    supabase
-      .from('group_settings')
-      .select('*')
-      .eq('group_id', groupId)
-      .maybeSingle()
-      .then(({ data }) => setGroupSettings(data ?? {}))
-  }, [groupId])
-
-  // Navigate when a push notification is clicked (SW sends postMessage)
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return
-    function onMessage(e) {
-      if (e.data?.type !== 'NAVIGATE') return
-      const url = e.data.url
-      if (url === '/prayer' && session?.user?.id) {
-        if (e.data.notifTitle) setPrayerBanner({ reactorName: e.data.notifTitle })
-        navigate('/prayer', { state: { featuredUserId: session.user.id } })
-      } else {
-        navigate(url)
-      }
-    }
-    navigator.serviceWorker.addEventListener('message', onMessage)
-    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
-  }, [session?.user?.id])
-
-  // Load initial unread state from DB on mount
-  useEffect(() => {
-    if (!groupId || !session?.user?.id || locationRef.current === '/chat') return
-    async function loadInitialUnread() {
-      const { data: memberships } = await supabase
-        .from('conversation_members')
-        .select('conversation_id, last_read_at')
-        .eq('user_id', session.user.id)
-
-      const convIds = (memberships ?? []).map(m => m.conversation_id)
-      if (!convIds.length) return
-
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('conversation_id, created_at')
-        .in('conversation_id', convIds)
-        .neq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(200)
-
-      const latestByConv = {}
-      for (const msg of msgs ?? []) {
-        if (!latestByConv[msg.conversation_id]) latestByConv[msg.conversation_id] = msg.created_at
-      }
-      const readMap = Object.fromEntries((memberships ?? []).map(m => [m.conversation_id, m.last_read_at]))
-      const unreadCount = (msgs ?? []).filter(msg => {
-        const lastRead = readMap[msg.conversation_id]
-        return !lastRead || msg.created_at > lastRead
-      }).length
-      if (unreadCount > 0) setUnreadChatCount(c => Math.max(c, unreadCount))
-    }
-    loadInitialUnread()
-  }, [groupId, session?.user?.id])
-
-  // Prayer reaction banner — fires when someone prays for your request
-  useEffect(() => {
-    if (!session?.user?.id || !groupId) return
-    const userId = session.user.id
-    const channel = supabase
-      .channel(`prayer-reactions:${groupId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'prayer_reactions',
-        filter: `community_group_id=eq.${groupId}`,
-      }, ({ new: reaction }) => {
-        if (reaction.prayer_request_owner_id !== userId) return
-        if (reaction.user_id === userId) return
-        setPrayerBanner({ reactorName: reaction.display_name ?? 'Someone' })
-      })
-      .subscribe()
-    return () => supabase.removeChannel(channel)
-  }, [session?.user?.id, groupId])
-
-  // Unread chat tracking — fires for any new message while not on /chat
-  useEffect(() => {
-    if (!groupId) return
-    const channel = supabase
-      .channel(`chat-unread:${groupId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages',
-        filter: `community_group_id=eq.${groupId}`,
-      }, ({ new: msg }) => {
-        if (locationRef.current !== '/chat' && msg.user_id !== session?.user?.id)
-          setUnreadChatCount(c => c + 1)
-      })
-      .subscribe()
-    return () => supabase.removeChannel(channel)
-  }, [groupId])
-
-  useEffect(() => {
-    if (location.pathname === '/chat') {
-      setUnreadChatCount(0)
-      navigator.clearAppBadge?.().catch(() => {})
-    }
-    window.scrollTo(0, 0)
-    trackPageView(location.pathname)
-  }, [location.pathname])
-
-  // Sync unread count to the OS app icon badge
-  useEffect(() => {
-    if (!('setAppBadge' in navigator)) return
-    if (unreadChatCount > 0) {
-      navigator.setAppBadge(unreadChatCount).catch(() => {})
-    } else {
-      navigator.clearAppBadge().catch(() => {})
-    }
-  }, [unreadChatCount])
-
-  const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
-  const isChat = location.pathname === '/chat'
-  const isFullHeight = isChat
-
   function handleTabChange(path) {
     haptic()
     const newIndex = PATHS.indexOf(path)
     enterFromRef.current = newIndex > prevIndexRef.current ? 'right' : 'left'
     prevIndexRef.current = newIndex
     if (path === '/chat') setUnreadChatCount(0)
-    const tabName = path.replace('/', '') || 'home'
-    trackEvent('tab_view', { tab_name: tabName })
+    trackEvent('tab_view', { tab_name: path.replace('/', '') || 'home' })
     if (path === location.pathname) {
       navigate(path, { replace: true, state: { tabReset: Date.now() } })
     } else {
@@ -414,10 +308,9 @@ export default function App() {
     }
   }
 
-  function navigateToSettings() {
-    navigate('/settings')
-  }
+  function navigateToSettings() { navigate('/settings') }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
     <Suspense fallback={null}>
@@ -427,7 +320,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     ) : isRecovery ? (
-      <ResetPasswordPage onDone={() => setIsRecovery(false)} />
+      <ResetPasswordPage onDone={clearRecovery} />
     ) : (
     <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {!isOnline && (
@@ -444,7 +337,7 @@ export default function App() {
           upcoming={upcoming}
           closing={birthdayBannerClosing}
           onDismiss={dismissBirthdayBanner}
-          onTap={() => { dismissBirthdayBanner(); setBirthdayOpen(true) }}
+          onTap={() => { dismissBirthdayBanner(); birthday.setOpen(true) }}
         />
       )}
       {(prayerBanner || prayerBannerClosing) && prayerEnabled && (
@@ -454,7 +347,7 @@ export default function App() {
           onDismiss={dismissPrayerBanner}
           onTap={() => {
             dismissPrayerBanner()
-            navigate('/prayer', { state: { featuredUserId: session.user.id } })
+            navigate('/prayer', { state: { featuredUserId: userId } })
           }}
         />
       )}
@@ -471,38 +364,50 @@ export default function App() {
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"      element={<OverviewTab displayName={displayName} groupName={groupName} groupId={groupId} isAdmin={isAdmin} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} birthdays={birthdays} onOpenBirthdays={() => setBirthdayOpen(true)} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={navigateToSettings} onOpenGiving={() => setGivingOpen(true)} mealsEnabled={mealsEnabled} servicesEnabled={servicesEnabled} guideEnabled={guideEnabled} birthdaysEnabled={birthdaysEnabled} prayerEnabled={prayerEnabled} givingEnabled={givingEnabled} eventsEnabled={eventsEnabled} chatEnabled={chatEnabled} chatUnreadCount={unreadChatCount} givingUrl={groupSettings?.giving_url ?? null} guideUrl={groupSettings?.guide_url ?? null} guideType={groupSettings?.guide_type ?? null} greetingReady={!splashVisible && !showWelcome} />} />
-          <Route path="/schedule"  element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} groupName={groupName} displayName={displayName} onOpenSettings={navigateToSettings} isAdmin={isAdmin} groupSettings={groupSettings} />} />
-          <Route path="/events"    element={<EventsTab groupId={groupId} userId={session.user.id} isAdmin={isAdmin} displayName={displayName} onOpenSettings={navigateToSettings} />} />
-          <Route path="/chat"      element={<ChatTab session={session} displayName={displayName} groupId={groupId} isAdmin={isAdmin} onRead={() => setUnreadChatCount(0)} onOpenSettings={navigateToSettings} upcoming={upcoming} birthdayBannerDismissed={birthdayBannerDismissed} birthdayBannerClosing={birthdayBannerClosing} onDismissBirthdayBanner={dismissBirthdayBanner} onOpenBirthdays={() => setBirthdayOpen(true)} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} />} />
-          <Route path="/prayer"    element={<PrayerTab displayName={displayName} groupId={groupId} isAdmin={isAdmin} onOpenSettings={navigateToSettings} userId={session.user.id} avatarIcon={avatarIcon} avatarColorKey={avatarColorKey} avatarImageUrl={avatarImageUrl} />} />
-          <Route path="/bible"     element={<BibleTab userId={session.user.id} onOpenSettings={navigateToSettings} />} />
-          <Route path="/admin"     element={<AdminPage groupId={groupId} isAdmin={isAdmin} groupName={groupName} userId={session.user.id} groupSettings={groupSettings} onGroupSettingsChange={setGroupSettings} onGroupNameChange={name => setProfile(p => ({ ...p, community_groups: { ...p.community_groups, name } }))} />} />
-          <Route path="/settings"  element={<SettingsPage displayName={displayName} isAdmin={isAdmin} userId={session.user.id} onClose={() => navigate(-1)} onDisplayNameChange={name => setProfile(p => ({ ...p, display_name: name }))} onAvatarChange={({ icon, color, imageUrl }) => setProfile(p => ({ ...p, avatar_icon: icon, avatar_color: color, avatar_image_url: imageUrl }))} pushSupported={push.supported} pushSubscribed={push.subscribed} pushPermission={push.permission} pushToggling={push.toggling} onPushToggle={push.toggle} onRevisitGuide={() => { const key = `cg_welcomed_${session.user.id}_${groupId}`; removeCookie(key); navigate('/home'); setShowWelcome(true) }} />} />
-          <Route path="*"          element={<Navigate to="/home" replace />} />
+          <Route path="/home"     element={
+            <OverviewTab
+              onOpenBirthdays={() => birthday.setOpen(true)}
+              onOpenGuide={() => guide.setOpen(true)}
+              onOpenGiving={() => giving.setOpen(true)}
+              greetingReady={!splashVisible && !showWelcome}
+            />
+          } />
+          <Route path="/schedule" element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} />} />
+          <Route path="/events"   element={<EventsTab />} />
+          <Route path="/chat"     element={
+            <ChatTab
+              upcoming={upcoming}
+              birthdayBannerDismissed={birthdayBannerDismissed}
+              birthdayBannerClosing={birthdayBannerClosing}
+              onDismissBirthdayBanner={dismissBirthdayBanner}
+              onOpenBirthdays={() => birthday.setOpen(true)}
+            />
+          } />
+          <Route path="/prayer"   element={<PrayerTab />} />
+          <Route path="/bible"    element={<BibleTab />} />
+          <Route path="/admin"    element={<AdminPage />} />
+          <Route path="/settings" element={
+            <SettingsPage
+              onClose={() => navigate(-1)}
+              onRevisitGuide={() => {
+                const key = `cg_welcomed_${userId}_${groupId}`
+                removeCookie(key)
+                navigate('/home')
+                setShowWelcome(true)
+              }}
+            />
+          } />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </div>
 
       {showWelcome && (
         <WelcomeSplash
-          groupName={groupName}
           onDone={() => {
             setShowWelcome(false)
-            supabase.from('profiles')
-              .select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, birthday, community_groups(name)')
-              .eq('user_id', session.user.id)
-              .single()
-              .then(({ data }) => { if (data) setProfile(data) })
-            supabase.from('birthdays').select('*').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data)) })
+            refreshProfile()
+            refreshBirthdays()
           }}
-          isAdmin={isAdmin}
-          userId={session.user.id}
-          displayName={displayName}
-          groupId={groupId}
-          groupSettings={groupSettings}
-          onGroupSettingsChange={setGroupSettings}
-          existingBirthday={profile?.birthday ?? null}
-          onAvatarChange={({ icon, color, imageUrl }) => setProfile(p => ({ ...p, avatar_icon: icon, avatar_color: color, avatar_image_url: imageUrl }))}
         />
       )}
 
@@ -587,14 +492,13 @@ export default function App() {
         </nav>
       </LayoutGroup>
 
-
-      {guideOpen && (
+      {guide.open && (
         <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${guideClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${guide.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <GuideTab
-            onClose={closeGuide}
+            onClose={guide.close}
             guideUrl={groupSettings?.guide_url}
             guideType={groupSettings?.guide_type}
             guideContent={groupSettings?.guide_content}
@@ -606,45 +510,35 @@ export default function App() {
                 : (url ?? null)
               const { error } = await supabase
                 .from('group_settings')
-                .upsert({
-                  group_id: groupId,
-                  guide_type: type,
-                  guide_url: normalized,
-                  guide_content: content ?? null,
-                }, { onConflict: 'group_id' })
-              if (!error) setGroupSettings(prev => ({
-                ...prev,
-                guide_type: type,
-                guide_url: normalized,
-                guide_content: content ?? null,
-              }))
+                .upsert({ group_id: groupId, guide_type: type, guide_url: normalized, guide_content: content ?? null }, { onConflict: 'group_id' })
+              if (!error) setGroupSettings(prev => ({ ...prev, guide_type: type, guide_url: normalized, guide_content: content ?? null }))
               return { error }
             }}
           />
         </div>
       )}
 
-      {birthdayOpen && (
+      {birthday.open && (
         <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${birthdayClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${birthday.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <BirthdayTab
             birthdays={birthdays}
             revealKey="birthdays"
-            onClose={closeBirthdays}
-            onRefresh={() => supabase.from('birthdays').select('*').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))}
+            onClose={birthday.close}
+            onRefresh={refreshBirthdays}
           />
         </div>
       )}
 
-      {givingOpen && (
+      {giving.open && (
         <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${givingClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${giving.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <GivingTab
-            onClose={closeGiving}
+            onClose={giving.close}
             givingUrl={groupSettings?.giving_url}
             isAdmin={isAdmin}
             onGivingSave={async (url) => {
@@ -664,5 +558,13 @@ export default function App() {
     </Suspense>
     {splashVisible && <SplashScreen exiting={splashExiting} />}
     </>
+  )
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   )
 }

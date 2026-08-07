@@ -11,6 +11,7 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { useToast } from '../lib/toast.jsx'
 import ConfettiDots from './ConfettiDots.jsx'
 import InstallBanner from './InstallBanner.jsx'
+import { useAppContext } from '../contexts/AppContext.jsx'
 
 let greetingDone = false
 
@@ -156,7 +157,19 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ displayName, groupName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl, birthdays, onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, mealsEnabled = true, servicesEnabled = true, guideEnabled = true, birthdaysEnabled = true, prayerEnabled = true, givingEnabled = false, eventsEnabled = false, chatEnabled = true, givingUrl = null, guideUrl = null, guideType = null, greetingReady = false, chatUnreadCount = 0 }) {
+export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, greetingReady = false }) {
+  const {
+    displayName, groupName, groupId, isAdmin, userId,
+    avatarIcon, avatarColorKey, avatarImageUrl,
+    birthdays,
+    mealsEnabled, servicesEnabled, guideEnabled, birthdaysEnabled,
+    prayerEnabled, givingEnabled, eventsEnabled, chatEnabled,
+    groupSettings,
+    unreadChatCount: chatUnreadCount,
+  } = useAppContext()
+  const givingUrl = groupSettings?.giving_url ?? null
+  const guideUrl  = groupSettings?.guide_url  ?? null
+  const guideType = groupSettings?.guide_type ?? null
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)

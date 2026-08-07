@@ -5,8 +5,10 @@ import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import { weekOccToMode } from '../utils/schedule.js'
+import { useAppContext } from '../contexts/AppContext.jsx'
 
-export default function AdminPage({ groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange }) {
+export default function AdminPage() {
+  const { groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange } = useAppContext()
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()

@@ -3,6 +3,7 @@ import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
@@ -267,7 +268,8 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
 
 // ─── Main tab ─────────────────────────────────────────────────────────────────
 
-export default function PrayerTab({ displayName, groupId, isAdmin, onOpenSettings, userId, avatarIcon, avatarColorKey, avatarImageUrl }) {
+export default function PrayerTab() {
+  const { displayName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl } = useAppContext()
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
   const toast = useToast()

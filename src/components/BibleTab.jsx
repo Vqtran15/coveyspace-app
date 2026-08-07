@@ -9,6 +9,7 @@ import {
 import { supabase } from '../lib/supabase.js'
 import { haptic } from '../lib/haptic.js'
 import { useToast } from '../lib/toast.jsx'
+import { useAppContext } from '../contexts/AppContext.jsx'
 
 const BIBLE_API = 'https://bible.helloao.org/api'
 const TRANSLATION = 'BSB'
@@ -702,7 +703,8 @@ const pageVariants = {
 
 // ─── Main BibleTab ────────────────────────────────────────────────────────
 
-export default function BibleTab({ userId }) {
+export default function BibleTab() {
+  const { userId } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)

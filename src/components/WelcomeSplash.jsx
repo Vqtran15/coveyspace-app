@@ -11,6 +11,7 @@ import { useModalClose } from '../hooks/useModalClose.js'
 import { nextScheduledDate, weekOccToMode } from '../utils/schedule.js'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
+import { useAppContext } from '../contexts/AppContext.jsx'
 
 const MONTHS    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS      = Array.from({ length: 31 }, (_, i) => i + 1)
@@ -64,13 +65,12 @@ function modeToWeekOcc(mode, pat, customWeeks) {
   return customWeeks
 }
 
-export default function WelcomeSplash({
-  groupName, onDone, isAdmin,
-  userId, displayName, groupId,
-  groupSettings, onGroupSettingsChange,
-  existingBirthday,
-  onAvatarChange,
-}) {
+export default function WelcomeSplash({ onDone }) {
+  const {
+    groupName, isAdmin, userId, displayName, groupId,
+    existingBirthday,
+    groupSettings, onGroupSettingsChange, onAvatarChange,
+  } = useAppContext()
   const [closing, close] = useModalClose(onDone)
   const navigate = useNavigate()
 

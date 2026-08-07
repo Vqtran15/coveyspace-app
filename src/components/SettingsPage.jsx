@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { db } from '../lib/db.js'
+import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
@@ -118,7 +120,8 @@ function useSheetDrag(onClose) {
   }
 }
 
-export default function SettingsPage({ displayName, isAdmin, userId, onClose, onDisplayNameChange, onAvatarChange, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, onRevisitGuide }) {
+export default function SettingsPage({ onClose, onRevisitGuide }) {
+  const { displayName, isAdmin, userId, push, onDisplayNameChange, onAvatarChange } = useAppContext()
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -207,10 +210,7 @@ export default function SettingsPage({ displayName, isAdmin, userId, onClose, on
     const trimmed = nameValue.trim()
     if (!trimmed) return
     setNameSaving(true)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ display_name: trimmed })
-      .eq('user_id', userId)
+    const { error } = await db.profiles.updateDisplayName(userId, trimmed)
     if (error) {
       toast('Failed to update name', 'error')
     } else {
@@ -334,26 +334,26 @@ export default function SettingsPage({ displayName, isAdmin, userId, onClose, on
         )}
 
         {/* Notifications */}
-        {pushSupported && (
+        {push.supported && (
           <div className="mb-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Notifications</p>
             <div className="bg-white border border-stone-100 rounded-2xl shadow-sm px-4">
-              {pushPermission === 'denied' ? (
+              {push.permission === 'denied' ? (
                 <p className="text-xs text-stone-500 py-3.5">
                   Notifications are blocked. Enable them in your browser settings.
                 </p>
               ) : (
                 <button
-                  onClick={onPushToggle}
-                  disabled={pushToggling}
+                  onClick={push.toggle}
+                  disabled={push.toggling}
                   className="w-full flex items-center gap-3 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
                 >
-                  {pushSubscribed
+                  {push.subscribed
                     ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
                     : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
                   }
                   <span className="flex-1 text-left font-medium">
-                    {pushToggling ? 'Updating…' : pushSubscribed ? 'Chat notifications on' : 'Chat notifications off'}
+                    {push.toggling ? 'Updating…' : push.subscribed ? 'Chat notifications on' : 'Chat notifications off'}
                   </span>
                 </button>
               )}
