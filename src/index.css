@@ -12,11 +12,7 @@
   --sat: env(safe-area-inset-top, 0px);
 }
 
-html {
-  height: 100%;
-}
 body {
-  min-height: 100%;
   overflow-x: hidden;
   overscroll-behavior-y: none;
   background-color: #FBF8F4;
@@ -28,13 +24,17 @@ body {
   height: calc(var(--dvh) - var(--sab) - 68px);
 }
 
-/* When keyboard opens: hide the nav and reclaim its 68px so the input
-   pill sits right above the keyboard with no gap */
-nav.fixed {
+/* Nav bar: use top+translateY instead of bottom:0 to bypass iOS PWA bug where
+   position:fixed;bottom:0 anchors to document bottom (not viewport) on
+   non-scrollable pages. top:0 always anchors to viewport top reliably. */
+nav.bottom-nav {
+  top: 0;
+  transform: translateY(calc(var(--dvh) - 100%));
   transition: transform 0.2s ease;
 }
-body.chat-keyboard-open nav.fixed {
-  transform: translateY(100%);
+/* When keyboard opens: slide nav fully off-screen */
+body.chat-keyboard-open nav.bottom-nav {
+  transform: translateY(var(--dvh));
   pointer-events: none;
 }
 body.chat-keyboard-open .chat-container {

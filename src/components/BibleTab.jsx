@@ -368,7 +368,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-[25] flex flex-col justify-end bg-black/30"
+      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
@@ -1661,7 +1661,7 @@ export default function BibleTab() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[25] flex flex-col justify-end bg-black/40"
+            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40"
             onClick={() => setShowChapterMenu(false)}
           >
             <motion.div
@@ -1738,7 +1738,7 @@ export default function BibleTab() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[25] flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
             onClick={() => setDeleteConfirmIdx(null)}
           >
             <motion.div

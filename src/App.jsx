@@ -479,7 +479,7 @@ function AppContent() {
 
       <LayoutGroup id="bottom-nav">
         <nav
-          className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
+          className="fixed bottom-nav inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
           style={{ paddingBottom: 'var(--sab)' }}
         >
           {visibleTabs.map(t => {
