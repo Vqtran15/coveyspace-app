@@ -29,12 +29,15 @@ body {
    non-scrollable pages. top:0 always anchors to viewport top reliably. */
 nav.bottom-nav {
   top: 0;
-  transform: translateY(calc(var(--dvh) - 100%));
+  /* window.innerHeight excludes the status bar in iOS PWA standalone mode,
+     so --dvh alone undershoots. Adding --sat (status bar height) gives the
+     true screen height: top_of_status_bar + dvh + sat = screen_bottom. */
+  transform: translateY(calc(var(--dvh) + var(--sat) - 100%));
   transition: transform 0.2s ease;
 }
 /* When keyboard opens: slide nav fully off-screen */
 body.chat-keyboard-open nav.bottom-nav {
-  transform: translateY(var(--dvh));
+  transform: translateY(calc(var(--dvh) + var(--sat)));
   pointer-events: none;
 }
 body.chat-keyboard-open .chat-container {
