@@ -34,16 +34,14 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   // Without this, tapping the message input causes window.scrollY to drift,
   // leaving a gap between the input bar and the nav bar after sending.
   useEffect(() => {
-    const prev = { position: document.body.style.position, top: document.body.style.top, width: document.body.style.width, overflow: document.body.style.overflow }
+    const prev = { position: document.body.style.position, top: document.body.style.top, width: document.body.style.width }
     document.body.style.top      = ''
     document.body.style.position = 'fixed'
     document.body.style.width    = '100%'
-    document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.position = prev.position
       document.body.style.top      = prev.top
       document.body.style.width    = prev.width
-      document.body.style.overflow = prev.overflow
     }
   }, [])
 
