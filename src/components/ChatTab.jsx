@@ -30,19 +30,16 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   // and leaving the input bar floating mid-screen with empty space around it.
   useLayoutEffect(() => { window.scrollTo(0, 0) }, [])
 
-  // Prevent iOS from scrolling the window when the keyboard appears.
-  // Without this, tapping the message input causes window.scrollY to drift,
-  // leaving a gap between the input bar and the nav bar after sending.
+  // Prevent window.scrollY from drifting when iOS keyboard appears.
+  // body { position: fixed } was the old approach but it collapses the document
+  // height, causing iOS to use window.innerHeight (not the full screen) as the
+  // fixed-position reference — which clips the nav bar. A scroll listener that
+  // immediately resets scrollY to 0 achieves the same drift prevention without
+  // changing any layout properties.
   useEffect(() => {
-    const prev = { position: document.body.style.position, top: document.body.style.top, width: document.body.style.width }
-    document.body.style.top      = ''
-    document.body.style.position = 'fixed'
-    document.body.style.width    = '100%'
-    return () => {
-      document.body.style.position = prev.position
-      document.body.style.top      = prev.top
-      document.body.style.width    = prev.width
-    }
+    function resetScroll() { if (window.scrollY > 0) window.scrollTo(0, 0) }
+    window.addEventListener('scroll', resetScroll, { passive: true })
+    return () => window.removeEventListener('scroll', resetScroll)
   }, [])
 
   useEffect(() => {
