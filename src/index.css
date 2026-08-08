@@ -5,10 +5,15 @@
 /* Prevent horizontal overflow from slide animations without creating a scroll
    container. overflow-x:hidden on a non-root div computes overflow-y to auto,
    turning it into a scroll container that breaks position:fixed on iOS Safari. */
+html {
+  height: 100%;
+}
 body {
+  min-height: 100%;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  background-color: #EDE8DF;
+  /* Match app bg so any iOS PWA gaps between content and nav are invisible */
+  background-color: #FBF8F4;
 }
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0

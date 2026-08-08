@@ -373,6 +373,7 @@ function AppContent() {
               onOpenBirthdays={() => birthday.setOpen(true)}
               onOpenGuide={() => guide.setOpen(true)}
               onOpenGiving={() => giving.setOpen(true)}
+              onOpenSettings={navigateToSettings}
               greetingReady={!splashVisible && !showWelcome}
             />
           } />
