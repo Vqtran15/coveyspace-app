@@ -322,7 +322,7 @@ function AppContent() {
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
     ) : (
-    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'env(safe-area-inset-top)' }}>
+    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'env(safe-area-inset-top)', minHeight: '100svh' }}>
       {!isOnline && (
         <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
           <WifiSlash size={14} weight="bold" />
@@ -354,13 +354,17 @@ function AppContent() {
 
       <div
         key={location.pathname}
-        className={`${isFullHeight ? '' : 'pb-24 lg:pb-0'} ${
+        className={`${isFullHeight ? '' : 'lg:pb-0'} ${
           OFF_NAV_PATHS.includes(location.pathname)
             ? 'animate-slide-in-up'
             : OFF_NAV_PATHS.includes(locationRef.current)
             ? 'animate-slide-in-left'
             : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
         }`}
+        style={isFullHeight ? undefined : {
+          paddingBottom: 'calc(68px + env(safe-area-inset-bottom))',
+          minHeight: 'calc(100svh - env(safe-area-inset-top))',
+        }}
       >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
