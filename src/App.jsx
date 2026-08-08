@@ -144,6 +144,26 @@ function AppContent() {
     }
   }, [groupId])
 
+  // ── iOS PWA safe-area fix ──────────────────────────────────────────────────
+  // env(safe-area-inset-bottom) returns 0 until native scroll occurs on a
+  // scrollable page. Scroll 1px (the root div is 1px taller than the viewport),
+  // wait for iOS native layer to process, then read via probe and cache as a
+  // JS inline style so it persists across SPA navigation without re-querying.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      window.scrollTo(0, 1)
+      setTimeout(() => {
+        const probe = document.createElement('div')
+        probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;opacity:0'
+        document.body.appendChild(probe)
+        const sab = probe.getBoundingClientRect().height
+        document.body.removeChild(probe)
+        if (sab > 0) document.documentElement.style.setProperty('--sab', sab + 'px')
+      }, 100)
+    }, 50)
+    return () => clearTimeout(t)
+  }, [])
+
   // ── Announcement banner ────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return
