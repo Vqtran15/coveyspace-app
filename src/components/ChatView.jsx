@@ -1639,6 +1639,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   return (
     <ChatContext.Provider value={ctxValue}>
+    {/* Fixed frosted overlay for the iOS status bar zone — same styling as the header, ensures visual continuity */}
+    <div
+      className="fixed top-0 left-0 right-0 lg:left-56 pointer-events-none z-[11] bg-sunrise-50/85 backdrop-blur-md"
+      style={{ height: 'env(safe-area-inset-top)' }}
+    />
     <div
       className={`chat-container relative flex flex-col bg-sunrise-50 ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
     >

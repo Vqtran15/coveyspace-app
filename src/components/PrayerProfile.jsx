@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { HandsPraying, Plus, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell } from '@phosphor-icons/react'
+import { HandsPraying, Plus, X, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
@@ -67,8 +67,15 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
   const [sheetClosing, setSheetClosing]     = useState(false)
   const [addFormExiting, setAddFormExiting] = useState(false)
   const [notifyGroup, setNotifyGroup]       = useState(true)
+  const [searchOpen, setSearchOpen]         = useState(false)
+  const searchInputRef                       = useRef(null)
 
   const isOwnProfile = member.user_id === currentUserId
+
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
+    else setSearchQuery('')
+  }, [searchOpen])
 
   function handleClose() {
     setExiting(true)
@@ -337,15 +344,54 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
               Cancel
             </button>
           ) : (
-            <button
-              onClick={() => { setAddFormExiting(false); setAddingRequest(true) }}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-ember/10 hover:bg-ember/20 text-ember transition-colors"
-              aria-label={isOwnProfile ? 'Add prayer request' : `Add request for ${member.display_name}`}
-            >
-              <Plus size={18} weight="bold" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {!loading && requests.length > 1 && (
+                <button
+                  onClick={() => setSearchOpen(o => !o)}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember'}`}
+                  aria-label="Search requests"
+                >
+                  <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
+                </button>
+              )}
+              <button
+                onClick={() => { setAddFormExiting(false); setAddingRequest(true) }}
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
+                aria-label={isOwnProfile ? 'Add prayer request' : `Add request for ${member.display_name}`}
+              >
+                <Plus size={20} weight="bold" />
+              </button>
+            </div>
           )}
         </div>
+
+        {/* Animated search bar */}
+        <motion.div
+          initial={false}
+          animate={{ height: searchOpen ? 'auto' : 0, opacity: searchOpen ? 1 : 0 }}
+          transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
+          className="shrink-0"
+        >
+          <div className="px-4 pb-2 pt-1">
+            <div className="relative">
+              <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="search"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search requests…"
+                className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                  <X size={14} weight="bold" />
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: 'max(5rem, env(safe-area-inset-bottom))' }}>
@@ -405,32 +451,18 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             </form>
           ) : (
             <div className="px-4 pt-4 space-y-3">
-              {/* Search */}
-              {!loading && requests.length > 1 && (
-                <div className="relative">
-                  <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search requests…"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                  />
-                </div>
-              )}
-
               {/* Request list */}
               {loading || !animDone ? (
                 <div>
                   {[0, 1, 2].map(i => (
                     <div key={i} className="flex animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
-                      <div className="w-14 shrink-0 pr-3 pt-0.5 flex flex-col items-end gap-1">
+                      <div className="w-14 shrink-0 pr-3 pt-2.5 flex flex-col items-end gap-1">
                         <div className="h-2 bg-stone-200 rounded w-7" />
                         <div className="h-6 bg-stone-200 rounded w-9" />
                         <div className="h-2 bg-stone-200 rounded w-10" />
                       </div>
-                      <div className="flex flex-col items-center w-5 shrink-0">
-                        <div className="w-2.5 h-2.5 rounded-full bg-stone-200 mt-1.5 shrink-0" />
+                      <div className="flex flex-col items-center w-5 shrink-0 pt-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-stone-200 shrink-0" />
                         {i < 2 && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                       </div>
                       <div className="flex-1 pl-2 pb-6">
@@ -455,14 +487,14 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                     return (
                       <div key={r.id} className={`flex ${newId === r.id ? 'animate-fade-up' : ''}`}>
                         {/* Date column */}
-                        <div className="w-14 shrink-0 text-right pr-3 pt-0.5">
+                        <div className="w-14 shrink-0 text-right pr-3 pt-2.5">
                           <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider leading-none">{mon}</p>
                           <p className="text-2xl font-bold text-stone-700 leading-none mt-0.5">{dy}</p>
                           <p className="text-[10px] text-stone-400 leading-none mt-0.5">{yr}</p>
                         </div>
                         {/* Spine */}
-                        <div className="flex flex-col items-center w-5 shrink-0">
-                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 ${r.answered ? 'bg-sage-700' : 'bg-ember'}`} />
+                        <div className="flex flex-col items-center w-5 shrink-0 pt-2.5">
+                          <div className={`w-2.5 h-2.5 rounded-full shrink-0 z-10 ${r.answered ? 'bg-sage-700' : 'bg-ember'}`} />
                           {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
                         </div>
                         {/* Content bubble */}
