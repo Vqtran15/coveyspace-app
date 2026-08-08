@@ -5,6 +5,13 @@
 /* Prevent horizontal overflow from slide animations without creating a scroll
    container. overflow-x:hidden on a non-root div computes overflow-y to auto,
    turning it into a scroll container that breaks position:fixed on iOS Safari. */
+/* CSS fallbacks for safe-area custom properties — overridden by JS in main.jsx */
+:root {
+  --dvh: 100svh;
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sat: env(safe-area-inset-top, 0px);
+}
+
 html {
   height: 100%;
 }
@@ -12,14 +19,13 @@ body {
   min-height: 100%;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  /* Match app bg so any iOS PWA gaps between content and nav are invisible */
   background-color: #FBF8F4;
 }
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
    and fills the screen down to the nav bar. */
 .chat-container {
-  height: calc(100svh - env(safe-area-inset-bottom) - 68px);
+  height: calc(var(--dvh) - var(--sab) - 68px);
 }
 
 /* When keyboard opens: hide the nav and reclaim its 68px so the input

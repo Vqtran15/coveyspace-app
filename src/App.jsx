@@ -322,9 +322,9 @@ function AppContent() {
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
     ) : (
-    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'env(safe-area-inset-top)', minHeight: '100svh' }}>
+    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'var(--sat)', minHeight: 'var(--dvh)' }}>
       {!isOnline && (
-        <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'env(safe-area-inset-top)' }}>
+        <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'var(--sat)' }}>
           <WifiSlash size={14} weight="bold" />
           You're offline
         </div>
@@ -362,8 +362,8 @@ function AppContent() {
             : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
         }`}
         style={isFullHeight ? undefined : {
-          paddingBottom: 'calc(68px + env(safe-area-inset-bottom))',
-          minHeight: 'calc(100svh - env(safe-area-inset-top))',
+          paddingBottom: 'calc(68px + var(--sab))',
+          minHeight: 'calc(var(--dvh) - var(--sat))',
         }}
       >
         <Routes>
@@ -460,7 +460,7 @@ function AppContent() {
       <LayoutGroup id="bottom-nav">
         <nav
           className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ paddingBottom: 'var(--sab)' }}
         >
           {visibleTabs.map(t => {
             const active = location.pathname === t.path
@@ -500,7 +500,7 @@ function AppContent() {
       {guide.open && (
         <div
           className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${guide.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+          style={{ paddingTop: 'var(--sat)' }}
         >
           <GuideTab
             onClose={guide.close}
@@ -526,7 +526,7 @@ function AppContent() {
       {birthday.open && (
         <div
           className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${birthday.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+          style={{ paddingTop: 'var(--sat)' }}
         >
           <BirthdayTab
             birthdays={birthdays}
@@ -540,7 +540,7 @@ function AppContent() {
       {giving.open && (
         <div
           className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${giving.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+          style={{ paddingTop: 'var(--sat)' }}
         >
           <GivingTab
             onClose={giving.close}
