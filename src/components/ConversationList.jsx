@@ -407,7 +407,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   return (
     <div
       className={`flex flex-col bg-sunrise-50 ${enterClass ?? ''}`}
-      style={{ height: 'calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 62px)' }}
+      style={{ height: 'calc(100svh - env(safe-area-inset-bottom) - 62px)', paddingTop: 'env(safe-area-inset-top)' }}
     >
       {upcoming.length > 0 && !birthdayBannerDismissed && (
         <div className="shrink-0">
