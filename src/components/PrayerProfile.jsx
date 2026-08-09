@@ -409,46 +409,44 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   className="w-full border border-stone-200 rounded-xl px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent text-sm resize-none"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="w-full appearance-none border border-stone-200 rounded-xl px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent text-sm"
-                />
-              </div>
-              {/* Notify toggle */}
-              <div className="flex items-center justify-between gap-3 py-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Bell size={16} className={notifyGroup ? 'text-ember shrink-0' : 'text-stone-300 shrink-0'} weight={notifyGroup ? 'fill' : 'regular'} />
-                  <div>
-                    <p className="text-sm font-medium text-stone-700">Notify group</p>
-                    <p className="text-xs text-stone-400">Skip during in-person meetings</p>
-                  </div>
+              {/* Date + Notify on one row */}
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    className="w-full appearance-none border border-stone-200 rounded-xl px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent text-sm"
+                  />
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={notifyGroup}
-                  aria-label="Notify group"
-                  onClick={() => setNotifyGroup(v => !v)}
-                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${notifyGroup ? 'bg-ember' : 'bg-stone-200'}`}
-                >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${notifyGroup ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
+                <div className="flex flex-col items-end gap-1 pb-0.5 shrink-0">
+                  <span className="text-xs font-medium text-stone-500">Notify group</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={notifyGroup}
+                    aria-label="Notify group"
+                    onClick={() => setNotifyGroup(v => !v)}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${notifyGroup ? 'bg-ember' : 'bg-stone-200'}`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${notifyGroup ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
               </div>
               {error && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
               )}
-              <button
-                type="submit"
-                disabled={saving || !requestText.trim()}
-                className={`w-full py-2.5 text-white rounded-xl font-medium transition-all text-sm flex items-center justify-center gap-2 ${requestText.trim() ? 'bg-ember hover:bg-ember-700 shadow-sm' : 'bg-ember/40 cursor-not-allowed'}`}
-              >
-                <Plus size={16} weight="bold" />
-                {saving ? 'Adding…' : 'Add Request'}
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={saving || !requestText.trim()}
+                  className={`py-2.5 px-6 text-white rounded-xl font-medium transition-all text-sm flex items-center gap-2 ${requestText.trim() ? 'bg-ember hover:bg-ember-700 shadow-sm' : 'bg-ember/40 cursor-not-allowed'}`}
+                >
+                  <Plus size={16} weight="bold" />
+                  {saving ? 'Adding…' : 'Add Request'}
+                </button>
+              </div>
             </form>
           ) : (
             <div className="px-4 pt-4 space-y-3">

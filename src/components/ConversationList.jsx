@@ -81,13 +81,13 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-1 px-1">Group Chat</p>
           <motion.button
             onClick={() => onSelect(mainConv)}
-            className={`w-full rounded-2xl border shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up ${mainConv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-ember/20'}`}
+            className={`w-full rounded-2xl border shadow p-5 lg:p-3 text-left active:bg-stone-50 transition-colors animate-fade-up ${mainConv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-ember/20'}`}
             whileTap={{ scale: 0.975 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 lg:gap-3">
               <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-ember">
+                <div className="w-14 h-14 lg:w-10 lg:h-10 rounded-full overflow-hidden flex items-center justify-center bg-ember">
                   {mainConv.image_url
                     ? <img src={mainConv.image_url} alt="" className="w-full h-full object-cover" />
                     : <Users size={28} weight="fill" className="text-white" />
@@ -97,11 +97,11 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                  <span className={`text-base truncate ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
-                  <span className={`text-xs shrink-0 ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
+                  <span className={`text-base lg:text-sm truncate min-w-0 ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
+                  <span className={`text-xs shrink-0 lg:hidden ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
                 </div>
                 <p className={`text-xs truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
-                <p className="text-xs text-stone-400">{members.length} members</p>
+                <p className="text-xs text-stone-400 lg:hidden">{members.length} members</p>
               </div>
               <CaretRight size={16} className="text-stone-300 shrink-0" />
             </div>

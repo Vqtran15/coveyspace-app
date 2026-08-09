@@ -543,6 +543,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                   iconBg: 'bg-coral/10',
                   label: 'Upcoming Birthdays',
                   primary: birthdayPrimary,
+                  secondary: nextBirthday ? shortDate(nextBirthday.birthday) : 'Tap to view all',
                   confetti: !!nextBirthday && nextBirthday.days <= 30,
                 },
                 guideEnabled && {
@@ -570,7 +571,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                   key={key}
                   {...rest}
                   delay={baseDelay + i * 40}
-                  className={i === cards.length - 1 && cards.length % 2 !== 0 ? 'lg:col-span-2' : ''}
                 />
               ))
             })()}
