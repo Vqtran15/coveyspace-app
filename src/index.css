@@ -28,7 +28,7 @@ html.is-pwa .chat-container {
   height: calc(var(--dvh) + var(--sat) - var(--sab) - 68px);
 }
 html:not(.is-pwa) .chat-container {
-  height: calc(var(--dvh) - 104px);
+  height: calc(var(--dvh) - 94px);
 }
 
 /* Nav bar: use top+translateY instead of bottom:0 to bypass iOS PWA bug where
