@@ -190,9 +190,9 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
     if (!shouldAnimate || !greetingReady) return
     greetingDone = true
     greetingControls.start({ clipPath: 'inset(0 0% 0 0)', transition: { duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] } })
-    const fadeId   = setTimeout(() => greetingControls.start({ opacity: 0, transition: { duration: 0.3, ease: 'easeIn' } }), 650)
-    const shakeId  = setTimeout(() => setAnnounceShake(true),  1100)
-    const clearId  = setTimeout(() => setAnnounceShake(false), 1700)
+    const fadeId   = setTimeout(() => greetingControls.start({ opacity: 0, transition: { duration: 0.3, ease: 'easeIn' } }), 1150)
+    const shakeId  = setTimeout(() => setAnnounceShake(true),  1600)
+    const clearId  = setTimeout(() => setAnnounceShake(false), 2200)
     return () => { clearTimeout(fadeId); clearTimeout(shakeId); clearTimeout(clearId) }
   }, [greetingReady])
 
