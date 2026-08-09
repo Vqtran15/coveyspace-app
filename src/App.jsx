@@ -149,6 +149,11 @@ function AppContent() {
     }
   }, [groupId])
 
+  // ── PWA class on <html> for CSS branching ─────────────────────────────────
+  useEffect(() => {
+    if (IS_PWA) document.documentElement.classList.add('is-pwa')
+  }, [])
+
   // ── iOS PWA safe-area fix ──────────────────────────────────────────────────
   // env(safe-area-inset-bottom) returns 0 until native scroll occurs on a
   // scrollable page. Scroll 1px (the root div is 1px taller than the viewport),

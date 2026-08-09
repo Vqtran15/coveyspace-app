@@ -20,11 +20,15 @@ body {
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
    (above the status bar) and fills to the nav bar top.
-   --dvh = window.innerHeight excludes the status bar on iOS PWA; adding --sat
-   gives the true screen height so the bottom aligns with the nav bar top.
-   68px = nav bar content height, --sab = home-indicator area below that. */
-.chat-container {
+   PWA: --dvh = window.innerHeight excludes the status bar; +--sat gives the true
+   screen height; -68px nav content height; ---sab home-indicator area below nav.
+   Browser: fixed 104px offset (no --sab) keeps the container stable as the
+   Safari toolbar shows/hides, leaving a consistent gap above the floating pill. */
+html.is-pwa .chat-container {
   height: calc(var(--dvh) + var(--sat) - var(--sab) - 68px);
+}
+html:not(.is-pwa) .chat-container {
+  height: calc(var(--dvh) - 104px);
 }
 
 /* Nav bar: use top+translateY instead of bottom:0 to bypass iOS PWA bug where
