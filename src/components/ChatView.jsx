@@ -195,7 +195,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       const nowVVH = Math.round(vv.height)
       const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
-      document.documentElement.style.setProperty('--vvh', `${nowVVH}px`)
+      // vv.offsetTop is the distance the visual viewport has been shifted
+      // down from the layout origin (iOS adjusts this when the keyboard
+      // opens to keep the focused element visible). Adding it to vv.height
+      // gives the keyboard's top edge in layout coordinates, which is where
+      // the container bottom must sit so the input lands right above the keyboard.
+      document.documentElement.style.setProperty('--vvh', `${Math.round(vv.offsetTop + vv.height)}px`)
       if (nowOpen && !kbOpen) {
         kbOpen = true
         document.body.classList.add('chat-keyboard-open')
