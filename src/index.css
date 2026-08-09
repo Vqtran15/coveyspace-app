@@ -43,6 +43,12 @@ body.chat-keyboard-open nav.bottom-nav {
   transform: translateY(calc(var(--dvh) + var(--sat)));
   pointer-events: none;
 }
+/* Pill nav: hide on keyboard open */
+body.chat-keyboard-open nav.pill-nav {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
 /* --vvh is set by ChatView's visualViewport listener to the actual visible
    height when the keyboard is up. Falls back to 100svh if not yet set. */
 body.chat-keyboard-open .chat-container {

@@ -72,6 +72,10 @@ const TABS = [
 const PATHS = TABS.map(t => t.path)
 const OFF_NAV_PATHS = ['/settings', '/admin']
 
+const IS_PWA =
+  window.matchMedia?.('(display-mode: standalone)').matches ||
+  ('standalone' in window.navigator && window.navigator.standalone === true)
+
 function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -403,7 +407,7 @@ function AppContent() {
             : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
         }`}
         style={isFullHeight ? undefined : {
-          paddingBottom: 'calc(68px + var(--sab))',
+          paddingBottom: IS_PWA ? 'calc(68px + var(--sab))' : '80px',
           minHeight: 'calc(var(--dvh) - var(--sat))',
         }}
       >
@@ -514,45 +518,85 @@ function AppContent() {
         </div>
       </aside>
 
-      <LayoutGroup id="bottom-nav">
-        <nav
-          className="fixed bottom-nav inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
-          style={{ paddingBottom: 'var(--sab)' }}
-        >
-          {visibleTabs.map(t => {
-            const active = location.pathname === t.path
-            return (
-              <button
-                key={t.path}
-                onClick={() => handleTabChange(t.path)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 touch-manipulation ${active ? '' : 'text-stone-400'}`}
-              >
-                <span className={`relative px-3 py-1 ${active ? 'text-white' : ''}`}>
+      {IS_PWA ? (
+        <LayoutGroup id="bottom-nav">
+          <nav
+            className="fixed bottom-nav inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
+            style={{ paddingBottom: 'var(--sab)' }}
+          >
+            {visibleTabs.map(t => {
+              const active = location.pathname === t.path
+              return (
+                <button
+                  key={t.path}
+                  onClick={() => handleTabChange(t.path)}
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 touch-manipulation ${active ? '' : 'text-stone-400'}`}
+                >
+                  <span className={`relative px-3 py-1 ${active ? 'text-white' : ''}`}>
+                    {active && (
+                      <motion.span
+                        layoutId="tab-pill"
+                        className="absolute inset-0 bg-ember rounded-2xl"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <motion.span
+                      className="relative z-10 block"
+                      initial={false}
+                      animate={active ? { scale: [1, 1.28, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      <t.Icon size={26} weight={active ? 'fill' : 'regular'} />
+                    </motion.span>
+                    {t.path === '/chat' && unreadChatCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
+                    )}
+                  </span>
+                  <span className={`text-[13px] font-medium tracking-wide ${active ? 'text-ember' : ''}`}>{t.shortLabel}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </LayoutGroup>
+      ) : (
+        <LayoutGroup id="floating-pill">
+          <nav className="pill-nav fixed bottom-5 left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center p-1 gap-1">
+            {visibleTabs.map(t => {
+              const active = location.pathname === t.path
+              return (
+                <button
+                  key={t.path}
+                  onClick={() => handleTabChange(t.path)}
+                  className="relative w-11 h-11 flex items-center justify-center rounded-full touch-manipulation"
+                >
                   {active && (
                     <motion.span
-                      layoutId="tab-pill"
-                      className="absolute inset-0 bg-ember rounded-2xl"
+                      layoutId="pill-active"
+                      className="absolute inset-0 bg-ember rounded-full"
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
                   <motion.span
-                    className="relative z-10 block"
+                    className="relative z-10"
                     initial={false}
-                    animate={active ? { scale: [1, 1.28, 1] } : { scale: 1 }}
+                    animate={active ? { scale: [1, 1.2, 1] } : { scale: 1 }}
                     transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <t.Icon size={26} weight={active ? 'fill' : 'regular'} />
+                    <t.Icon
+                      size={22}
+                      weight={active ? 'fill' : 'regular'}
+                      className={active ? 'text-white' : 'text-stone-400'}
+                    />
                   </motion.span>
                   {t.path === '/chat' && unreadChatCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
                   )}
-                </span>
-                <span className={`text-[13px] font-medium tracking-wide ${active ? 'text-ember' : ''}`}>{t.shortLabel}</span>
-              </button>
-            )
-          })}
-        </nav>
-      </LayoutGroup>
+                </button>
+              )
+            })}
+          </nav>
+        </LayoutGroup>
+      )}
 
       {guide.open && (
         <div
