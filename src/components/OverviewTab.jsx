@@ -399,7 +399,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
 
       <InstallBanner />
 
-      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
         {!loaded ? (
           <>
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}

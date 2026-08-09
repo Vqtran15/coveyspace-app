@@ -325,6 +325,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
         className={`fixed inset-0 lg:left-56 bg-sunrise-50 z-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
+        <div className="flex-1 flex flex-col min-h-0 w-full lg:max-w-3xl lg:mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-stone-100 shrink-0">
           <button
@@ -592,6 +593,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             </div>
           )}
         </div>
+        </div>{/* end lg:max-w-3xl wrapper */}
       </div>
 
       {/* Action sheet */}

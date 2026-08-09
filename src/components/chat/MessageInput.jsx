@@ -26,7 +26,7 @@ export default function MessageInput() {
   } = useChatContext()
 
   return (
-    <div className="shrink-0 max-w-3xl mx-auto w-full px-3 pb-2">
+    <div className="shrink-0 max-w-3xl mx-auto w-full px-3 py-2">
     <div className="bg-white rounded-2xl shadow-md px-3 pt-3 pb-3 relative">
       {/* Reply preview */}
       {replyingTo && (
