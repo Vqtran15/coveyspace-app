@@ -545,14 +545,13 @@ function AppContent() {
 
       {birthday.open && (
         <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${birthday.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'var(--sat)', overscrollBehavior: 'contain' }}
+          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 ${birthday.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          style={{ paddingTop: 'var(--sat)' }}
         >
           <BirthdayTab
             birthdays={birthdays}
             revealKey="birthdays"
             onClose={birthday.close}
-            onRefresh={refreshBirthdays}
           />
         </div>
       )}
