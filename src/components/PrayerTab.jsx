@@ -578,7 +578,7 @@ export default function PrayerTab() {
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+    <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
       {pullDistance > 0 && (
         <div
           className="fixed inset-x-0 z-30 flex justify-center transition-transform"

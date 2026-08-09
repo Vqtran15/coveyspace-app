@@ -228,7 +228,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   if (loading) {
     return (
-      <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pb-12">
+      <div className="max-w-3xl mx-auto px-4 pb-12">
         {!compact && (
           <div className="pt-8 pb-4 flex items-center justify-between">
             <div className="h-9 w-24 bg-stone-200 rounded-lg animate-pulse" />

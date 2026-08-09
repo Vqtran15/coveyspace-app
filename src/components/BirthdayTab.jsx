@@ -10,7 +10,7 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
     // minus paddingTop: var(--sat)). overscroll-behavior: none prevents iOS elastic
     // bounce that can lock touch events and freeze the nav bar.
     <div className="h-full overflow-y-auto" style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)' }}>
-      <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-32 lg:pb-12">
+      <main className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12">
         <div className="mb-6">
           <div className="flex items-center gap-1 min-w-0">
             {onClose && (
