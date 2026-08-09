@@ -688,7 +688,7 @@ export default function PrayerTab() {
       {/* Content */}
       <div key={viewMode} className={contentAnimClass}>
       {loading ? (
-        <div className="space-y-2">
+        <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {[0, 1, 2, 3].map(i => (
             <div key={i} className="bg-white border border-stone-100 rounded-2xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-center gap-3">
@@ -715,7 +715,7 @@ export default function PrayerTab() {
             <p className="text-sm">No members match "{searchQuery}"</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
             {combinedList.map((item, i) =>
               item.type === 'member' ? (
                 <MemberCard
@@ -752,7 +752,7 @@ export default function PrayerTab() {
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
             {filteredFeed.map((item, i) =>
               item.type === 'individual' ? (
                 <FeedCard

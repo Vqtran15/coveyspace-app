@@ -69,17 +69,12 @@ a:focus:not(:focus-visible),
   display: none !important;
 }
 
-/* Desktop: replace slide-in page transitions with a simple fade.
-   Overrides only the keyframe name — duration and easing are inherited
-   from the Tailwind animation shorthand so timing stays consistent. */
-@keyframes page-fade-desktop {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* Desktop: disable slide-in page transitions — sidebar nav doesn't need
+   directional motion, and the fade variant caused flicker with lazy-loaded tabs. */
 @media (min-width: 1024px) {
   .animate-slide-in-right,
   .animate-slide-in-left,
   .animate-slide-in-up {
-    animation-name: page-fade-desktop;
+    animation: none;
   }
 }

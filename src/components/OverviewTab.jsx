@@ -388,7 +388,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
         <button
           onClick={onOpenSettings}
           aria-label="Open settings"
-          className="relative active:opacity-70 transition-opacity shrink-0"
+          className="relative active:opacity-70 transition-opacity shrink-0 lg:hidden"
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
           <div className="absolute -bottom-0.5 -right-0.5">
