@@ -186,29 +186,34 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
+
+    // Read env(safe-area-inset-top) once in px via a temp element.
+    const satEl = document.createElement('div')
+    satEl.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top,0px);width:0;pointer-events:none;visibility:hidden'
+    document.documentElement.appendChild(satEl)
+    const sat = satEl.offsetHeight
+    satEl.remove()
+
     // Capture baseline before any keyboard interaction. Using vv.height rather than
     // window.innerHeight because iOS mutates window.innerHeight when the keyboard
     // appears on some versions, which would make kbH ≈ 0 and prevent detection.
     const baseline = Math.round(vv.height)
     let kbOpen = false
 
-    function setVVH() {
-      // keyboard top in document coordinates = scrollY + vv.offsetTop + vv.height.
-      // iOS sometimes scrolls the page (window.scrollY > 0) when the keyboard opens
-      // to keep the focused input visible, even with interactive-widget=resizes-visual.
-      // That scroll is exactly the remaining gap between vv.offsetTop+vv.height and
-      // the actual keyboard top, so including scrollY closes the gap.
-      document.documentElement.style.setProperty(
-        '--vvh',
-        `${Math.round(window.scrollY + vv.offsetTop + vv.height)}px`
-      )
-    }
-
     function update() {
       const nowVVH = Math.round(vv.height)
       const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
-      setVVH()
+      // sat + vv.offsetTop + vv.height:
+      //   vv.height      = visible area from the visual-viewport top to keyboard top
+      //   vv.offsetTop   = visual viewport's offset within the layout viewport
+      //   sat            = status-bar height; document y=0 is behind the status bar,
+      //                    so the keyboard top in document coordinates is sat higher
+      //                    than vv.offsetTop + vv.height alone.
+      document.documentElement.style.setProperty(
+        '--vvh',
+        `${Math.round(sat + vv.offsetTop + vv.height)}px`
+      )
       if (nowOpen && !kbOpen) {
         kbOpen = true
         document.body.classList.add('chat-keyboard-open')
@@ -219,17 +224,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
     }
 
-    // Also update --vvh on scroll: iOS may adjust window.scrollY after the
-    // visualViewport resize event fires, so we need to re-sync on scroll too.
-    function onScroll() {
-      if (kbOpen) setVVH()
-    }
-
     vv.addEventListener('resize', update)
-    window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       vv.removeEventListener('resize', update)
-      window.removeEventListener('scroll', onScroll)
       document.body.classList.remove('chat-keyboard-open')
       document.documentElement.style.removeProperty('--vvh')
     }
