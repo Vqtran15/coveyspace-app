@@ -186,11 +186,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
+    // Capture baseline before any keyboard interaction. Using vv.height rather than
+    // window.innerHeight because iOS mutates window.innerHeight when the keyboard
+    // appears on some versions, which would make kbH ≈ 0 and prevent detection.
+    const baseline = Math.round(vv.height)
     let kbOpen = false
     function update() {
-      const kbH = window.innerHeight - Math.round(vv.height)
+      const nowVVH = Math.round(vv.height)
+      const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
-      document.documentElement.style.setProperty('--vvh', `${Math.round(vv.height)}px`)
+      document.documentElement.style.setProperty('--vvh', `${nowVVH}px`)
       if (nowOpen && !kbOpen) {
         kbOpen = true
         document.body.classList.add('chat-keyboard-open')

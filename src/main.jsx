@@ -30,8 +30,11 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 
   function isInsideScrollable(el) {
     while (el && el !== document.body) {
-      const oy = window.getComputedStyle(el).overflowY
+      const style = window.getComputedStyle(el)
+      const oy = style.overflowY
       if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) return true
+      // Fixed containers (overlays, sheets) manage their own scroll/overscroll
+      if (style.position === 'fixed') return true
       el = el.parentElement
     }
     return false
