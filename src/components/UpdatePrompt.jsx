@@ -50,24 +50,43 @@ export default function UpdatePrompt({ splashActive = false }) {
 
   if (!needRefresh || splashActive) return null
 
+  function handleClick() {
+    updateServiceWorker(true)
+    setTimeout(() => window.location.reload(), 500)
+  }
+
   return (
-    <div
-      className="fixed inset-x-0 top-0 z-[60] animate-toast-in"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
-    >
-      <div className="bg-ember rounded-b-3xl">
-        <button
-          onClick={() => {
-            updateServiceWorker(true)
-            setTimeout(() => window.location.reload(), 500)
-          }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-ember-700 transition-colors rounded-b-3xl"
-        >
-          <ArrowClockwise size={16} weight="bold" className="shrink-0" />
-          <span className="text-sm font-medium flex-1 text-left">Update available</span>
-          <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
-        </button>
+    <>
+      {/* Mobile: full-width strip hanging from status bar */}
+      <div
+        className="lg:hidden fixed inset-x-0 top-0 z-[60] animate-toast-in"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <div className="bg-ember rounded-b-3xl">
+          <button
+            onClick={handleClick}
+            className="w-full flex items-center gap-3 px-4 py-3 text-white active:opacity-90 transition-opacity rounded-b-3xl"
+          >
+            <ArrowClockwise size={16} weight="bold" className="shrink-0" />
+            <span className="text-sm font-medium flex-1 text-left">Update available</span>
+            <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Desktop: compact toast in top-right of content area */}
+      <div className="hidden lg:block fixed top-4 right-4 z-[60] animate-toast-in">
+        <div className="bg-ember rounded-2xl shadow-xl w-72">
+          <button
+            onClick={handleClick}
+            className="w-full flex items-center gap-3 px-4 py-3 text-white hover:opacity-90 active:opacity-80 transition-opacity rounded-2xl"
+          >
+            <ArrowClockwise size={16} weight="bold" className="shrink-0" />
+            <span className="text-sm font-medium flex-1 text-left">Update available</span>
+            <span className="text-sm font-semibold shrink-0">Click to refresh →</span>
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
