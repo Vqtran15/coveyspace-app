@@ -294,6 +294,7 @@ function AppContent() {
   const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
   const isChat = location.pathname === '/chat'
   const isFullHeight = isChat
+  const [chatViewOpen, setChatViewOpen] = useState(false)
 
   const visibleTabs = TABS.filter(t => {
     if (t.path === '/schedule') return showScheduleTab
@@ -436,6 +437,7 @@ function AppContent() {
               birthdayBannerClosing={birthdayBannerClosing}
               onDismissBirthdayBanner={dismissBirthdayBanner}
               onOpenBirthdays={() => birthday.setOpen(true)}
+              onConvOpen={setChatViewOpen}
             />
           } />
           <Route path="/prayer"   element={<PrayerTab />} />
@@ -563,7 +565,7 @@ function AppContent() {
             })}
           </nav>
         </LayoutGroup>
-      ) : !isChat ? (
+      ) : !chatViewOpen ? (
         <LayoutGroup id="floating-pill">
           <nav className="pill-nav fixed bottom-4 left-4 right-4 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5">
             {visibleTabs.map(t => {

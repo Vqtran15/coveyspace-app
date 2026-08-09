@@ -5,7 +5,7 @@ import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
 
-export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays }) {
+export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays, onConvOpen }) {
   const { session, displayName, groupId, isAdmin, push, setUnreadChatCount } = useAppContext()
   const onRead = () => setUnreadChatCount(0)
   const location = useLocation()
@@ -23,6 +23,11 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
   const [pinnedGroupId, setPinnedGroupId]     = useState(null)
+
+  useEffect(() => {
+    onConvOpen?.(!!activeConv)
+    return () => onConvOpen?.(false)
+  }, [activeConv])
 
   // Scroll to top synchronously before paint so the body-lock below applies at
   // offset 0. Without this, navigating here from a scrolled home screen would
