@@ -510,8 +510,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev
           const updated = [...prev, { ...msg, _isNew: true }]
-          requestIdleCallback
-            ? requestIdleCallback(() => saveCache(convId, updated))
+          window.requestIdleCallback
+            ? window.requestIdleCallback(() => saveCache(convId, updated))
             : setTimeout(() => saveCache(convId, updated), 0)
           return updated
         })
