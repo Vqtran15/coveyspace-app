@@ -560,19 +560,19 @@ function AppContent() {
         </LayoutGroup>
       ) : (
         <LayoutGroup id="floating-pill">
-          <nav className="pill-nav fixed bottom-5 left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center p-1 gap-1">
+          <nav className="pill-nav fixed bottom-4 left-4 right-4 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5">
             {visibleTabs.map(t => {
               const active = location.pathname === t.path
               return (
                 <button
                   key={t.path}
                   onClick={() => handleTabChange(t.path)}
-                  className="relative w-11 h-11 flex items-center justify-center rounded-full touch-manipulation"
+                  className="relative flex-1 h-12 flex items-center justify-center rounded-full touch-manipulation"
                 >
                   {active && (
                     <motion.span
                       layoutId="pill-active"
-                      className="absolute inset-0 bg-ember rounded-full"
+                      className="absolute top-1 bottom-1 left-1/2 -translate-x-1/2 w-10 bg-ember rounded-full"
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -583,13 +583,13 @@ function AppContent() {
                     transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                   >
                     <t.Icon
-                      size={22}
+                      size={24}
                       weight={active ? 'fill' : 'regular'}
                       className={active ? 'text-white' : 'text-stone-400'}
                     />
                   </motion.span>
                   {t.path === '/chat' && unreadChatCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
+                    <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
                   )}
                 </button>
               )
