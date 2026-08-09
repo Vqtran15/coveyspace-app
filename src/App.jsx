@@ -563,7 +563,7 @@ function AppContent() {
             })}
           </nav>
         </LayoutGroup>
-      ) : (
+      ) : !isChat ? (
         <LayoutGroup id="floating-pill">
           <nav className="pill-nav fixed bottom-4 left-4 right-4 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5">
             {visibleTabs.map(t => {
@@ -601,7 +601,7 @@ function AppContent() {
             })}
           </nav>
         </LayoutGroup>
-      )}
+      ) : null}
 
       {guide.open && (
         <div
