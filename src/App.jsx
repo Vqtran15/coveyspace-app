@@ -572,7 +572,7 @@ function AppContent() {
                   {active && (
                     <motion.span
                       layoutId="pill-active"
-                      className="absolute top-1 bottom-1 left-1/2 -translate-x-1/2 w-10 bg-ember rounded-full"
+                      className="absolute top-1 bottom-1 left-0 right-0 mx-auto w-10 bg-ember rounded-full"
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
