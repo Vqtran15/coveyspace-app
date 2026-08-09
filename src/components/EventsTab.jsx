@@ -245,7 +245,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       initial={{ y: '100%' }}
       animate={{ y: 0, transition: { type: 'tween', duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] } }}
       exit={{ y: '100%', transition: { type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] } }}
-      className="fixed inset-0 z-50 flex flex-col bg-stone-50"
+      className="fixed inset-0 lg:left-56 z-50 flex flex-col bg-stone-50"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Nav bar */}
@@ -538,6 +538,17 @@ export default function EventsTab() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting,     setDeleting]     = useState(false)
   const [showConvPicker, setShowConvPicker] = useState(false)
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key !== 'Escape') return
+      if (selectedEvent) { setSelectedEvent(null); return }
+      if (showConvPicker) { setShowConvPicker(false); return }
+      if (showForm || editingEvent) { setShowForm(false); setEditingEvent(null); return }
+      if (deleteTarget) { setDeleteTarget(null); return }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [selectedEvent, showConvPicker, showForm, editingEvent, deleteTarget])
   const [pickerConvs,    setPickerConvs]    = useState([])
   const [pickerLoading,  setPickerLoading]  = useState(false)
   const [sendingToConv,  setSendingToConv]  = useState(null)
@@ -706,7 +717,7 @@ export default function EventsTab() {
         <>
           {/* Upcoming */}
           {upcoming.length > 0 ? (
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 mb-6">
               {upcoming.map((event, i) => (
                 <EventCard
                   key={event.id}
@@ -756,7 +767,7 @@ export default function EventsTab() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="space-y-3 pb-2 opacity-60">
+                    <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 pb-2 opacity-60">
                       {past.map(event => (
                         <EventCard
                           key={event.id}
@@ -804,7 +815,7 @@ export default function EventsTab() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 lg:left-56 z-[60] flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) setShowConvPicker(false) }}
           >
             <motion.div
@@ -812,10 +823,10 @@ export default function EventsTab() {
               dragConstraints={{ top: 0 }}
               dragElastic={{ top: 0.05, bottom: 0.6 }}
               onDragEnd={(_, { velocity, offset }) => { if (offset.y > 80 || velocity.y > 400) setShowConvPicker(false) }}
-              className="bg-white rounded-t-3xl"
+              className="bg-white rounded-t-3xl lg:rounded-2xl lg:w-[480px] lg:max-w-full lg:shadow-xl"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
-              <div className="flex justify-center pt-3 pb-0" style={{ touchAction: 'none' }}>
+              <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
                 <div className="w-8 h-1 rounded-full bg-stone-200" />
               </div>
               <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
@@ -874,12 +885,12 @@ export default function EventsTab() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingEvent(null) } }}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="bg-white rounded-t-3xl overflow-hidden max-h-[90dvh]">
-              <div className="flex justify-center pt-3 pb-0" style={{ touchAction: 'none' }}>
+            <div className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden max-h-[90dvh] lg:w-[480px] lg:max-w-full lg:shadow-xl">
+              <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
                 <div className="w-8 h-1 rounded-full bg-stone-200" />
               </div>
               <div className="overflow-y-auto max-h-[90dvh] p-5">
@@ -910,7 +921,7 @@ export default function EventsTab() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) setDeleteTarget(null) }}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
@@ -919,9 +930,9 @@ export default function EventsTab() {
               dragConstraints={{ top: 0 }}
               dragElastic={{ top: 0.05, bottom: 0.6 }}
               onDragEnd={(_, { velocity, offset }) => { if (offset.y > 80 || velocity.y > 400) setDeleteTarget(null) }}
-              className="bg-white rounded-t-3xl"
+              className="bg-white rounded-t-3xl lg:rounded-2xl lg:w-[480px] lg:max-w-full lg:shadow-xl"
             >
-              <div className="flex justify-center pt-3 pb-0" style={{ touchAction: 'none' }}>
+              <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
                 <div className="w-8 h-1 rounded-full bg-stone-200" />
               </div>
               <div className="p-5">

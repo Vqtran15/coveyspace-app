@@ -180,7 +180,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
   }
 
   return (
-    <div className={`fixed inset-0 z-50 bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}>
+    <div className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}>
 
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-safe-or-4 pb-3 pt-4 border-b border-stone-100">
@@ -299,14 +299,14 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
       {/* Action sheet */}
       {actionSheetOpen && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${actionSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 lg:left-56 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${actionSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeActionSheet}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl pb-safe ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex justify-center pt-3 pb-1">
+            <div className="flex justify-center pt-3 pb-1 lg:hidden">
               <div className="w-10 h-1 rounded-full bg-stone-200" />
             </div>
             <div className="px-4 pt-2 pb-3 space-y-1">
@@ -339,11 +339,11 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
       {/* Delete confirmation */}
       {confirmDelete && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${confirmDeleteClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 lg:left-56 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${confirmDeleteClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           onClick={closeConfirmDelete}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${confirmDeleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl pb-safe ${confirmDeleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-6">

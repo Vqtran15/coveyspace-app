@@ -597,17 +597,17 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
       {/* Action sheet */}
       {actionSheetReq && (
         <div
-          className={`fixed inset-0 z-50 flex items-end bg-black/50 ${sheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+          className={`fixed inset-0 lg:left-56 z-50 flex items-end lg:items-center lg:justify-center bg-black/50 ${sheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
           onClick={() => closeActionSheet()}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full ${sheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl ${sheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
             style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Request preview */}
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
-              <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
+              <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
               <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Prayer request</p>
               <p className="text-sm text-stone-700 line-clamp-2">{actionSheetReq.request}</p>
             </div>
@@ -665,16 +665,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
       {/* Delete confirmation sheet */}
       {deleteSheetReq && (
         <div
-          className={`fixed inset-0 z-50 flex items-end bg-black/50 ${deleteSheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+          className={`fixed inset-0 lg:left-56 z-50 flex items-end lg:items-center lg:justify-center bg-black/50 ${deleteSheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
           onClick={() => closeDeleteSheet()}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full ${deleteSheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl ${deleteSheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
             style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
-              <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
+              <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
               <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Delete request?</p>
               <p className="text-sm text-stone-700 line-clamp-2">{deleteSheetReq.request}</p>
             </div>

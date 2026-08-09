@@ -92,48 +92,63 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state?.tabReset])
 
-  if (activeConv) {
-    return (
-      <ChatView
-        conversation={activeConv}
-        session={session}
-        displayName={displayName}
-        groupId={groupId}
-        members={members}
-        isAdmin={isAdmin}
-        exiting={chatExiting}
-        onBack={goBack}
-        onRead={onRead}
-        openedWithLastReadAt={openedWithLastReadAt}
-      />
-    )
+  const convListProps = {
+    session,
+    groupId,
+    members,
+    enterClass: listClass,
+    autoOpenGroupChat,
+    onAutoOpenConsumed: consumeAutoOpen,
+    autoOpenMainChat,
+    onAutoOpenMainChatConsumed: consumeAutoOpenMain,
+    onSelect: openConv,
+    onRead,
+    onOpenSettings,
+    upcoming,
+    birthdayBannerDismissed,
+    birthdayBannerClosing,
+    onDismissBirthdayBanner,
+    onOpenBirthdays,
+    pushSupported: push.supported,
+    pushSubscribed: push.subscribed,
+    pushPermission: push.permission,
+    pushToggling: push.toggling,
+    onPushToggle: push.toggle,
+    pinnedGroupId,
+    onPinGroup: setPinnedGroupId,
+    activeConvId: activeConv?.id ?? null,
   }
 
   return (
-    <ConversationList
-      session={session}
-      groupId={groupId}
-      members={members}
-      enterClass={listClass}
-      autoOpenGroupChat={autoOpenGroupChat}
-      onAutoOpenConsumed={consumeAutoOpen}
-      autoOpenMainChat={autoOpenMainChat}
-      onAutoOpenMainChatConsumed={consumeAutoOpenMain}
-      onSelect={openConv}
-      onRead={onRead}
-      onOpenSettings={onOpenSettings}
-      upcoming={upcoming}
-      birthdayBannerDismissed={birthdayBannerDismissed}
-      birthdayBannerClosing={birthdayBannerClosing}
-      onDismissBirthdayBanner={onDismissBirthdayBanner}
-      onOpenBirthdays={onOpenBirthdays}
-      pushSupported={push.supported}
-      pushSubscribed={push.subscribed}
-      pushPermission={push.permission}
-      pushToggling={push.toggling}
-      onPushToggle={push.toggle}
-      pinnedGroupId={pinnedGroupId}
-      onPinGroup={setPinnedGroupId}
-    />
+    /* Desktop: flex row — ConvList left panel + ChatView right panel
+       Mobile: show ConvList OR ChatView, never both */
+    <div className="lg:flex lg:h-[calc(var(--dvh)+var(--sat))] lg:overflow-hidden">
+      {/* Conversation list panel */}
+      <div className={`${activeConv ? 'hidden' : ''} lg:block lg:w-64 lg:shrink-0 lg:border-r lg:border-stone-200 lg:bg-white lg:overflow-y-auto lg:h-full`}>
+        <ConversationList {...convListProps} />
+      </div>
+
+      {/* Chat area */}
+      {activeConv ? (
+        <div className="lg:flex-1 lg:overflow-hidden lg:min-w-0">
+          <ChatView
+            conversation={activeConv}
+            session={session}
+            displayName={displayName}
+            groupId={groupId}
+            members={members}
+            isAdmin={isAdmin}
+            exiting={chatExiting}
+            onBack={goBack}
+            onRead={onRead}
+            openedWithLastReadAt={openedWithLastReadAt}
+          />
+        </div>
+      ) : (
+        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:bg-sunrise-50">
+          <p className="text-sm text-stone-400">Select a conversation to start messaging</p>
+        </div>
+      )}
+    </div>
   )
 }

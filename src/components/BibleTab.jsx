@@ -368,7 +368,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end bg-black/30"
+      className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
@@ -377,10 +377,10 @@ function AddEditSheet({ initial, onSave, onClose }) {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-        className="bg-white rounded-t-3xl overflow-hidden"
+        className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden lg:w-[480px] lg:max-w-full lg:shadow-xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 lg:hidden">
           <div className="w-9 h-1 rounded-full bg-stone-200" />
         </div>
         <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
@@ -1687,7 +1687,7 @@ export default function BibleTab() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end bg-black/40"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/40"
             onClick={() => setShowChapterMenu(false)}
           >
             <motion.div
@@ -1695,7 +1695,7 @@ export default function BibleTab() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              className="bg-white rounded-t-2xl shadow-xl px-4 pt-4 pb-2"
+              className="bg-white rounded-t-2xl lg:rounded-2xl shadow-xl px-4 pt-4 pb-2 lg:w-[400px] lg:max-w-full"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
               onClick={e => e.stopPropagation()}
             >
@@ -1764,7 +1764,7 @@ export default function BibleTab() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
             onClick={() => setDeleteConfirmIdx(null)}
           >
             <motion.div
@@ -1772,11 +1772,11 @@ export default function BibleTab() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              className="bg-white rounded-t-3xl"
+              className="bg-white rounded-t-3xl lg:rounded-2xl lg:w-[480px] lg:max-w-full lg:shadow-xl"
               style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex justify-center pt-3 pb-1">
+              <div className="flex justify-center pt-3 pb-1 lg:hidden">
                 <div className="w-9 h-1 rounded-full bg-stone-200" />
               </div>
               <div className="px-5 py-4">

@@ -9,7 +9,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime } from '../utils/format.js'
 
-function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, isDeleting, onSelect, onOptionsRequest, i }) {
+function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, isDeleting, onSelect, onOptionsRequest, i, activeConvId }) {
   const name        = convName(conv)
   const isDm        = conv.type === 'direct'
   const otherId     = isDm ? conv.conversation_members?.find(m => m.user_id !== myId)?.user_id : null
@@ -18,7 +18,7 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
   const deletable   = !isMainGroupChat(conv)
   return (
     <motion.div
-      className="flex items-stretch bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden animate-fade-up"
+      className={`flex items-stretch rounded-2xl border overflow-hidden animate-fade-up ${conv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
       style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -64,7 +64,7 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
   )
 }
 
-function ConversationListBody({ conversations, searchQuery, pinnedGroupId, members, myId, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onOptionsRequest }) {
+function ConversationListBody({ conversations, searchQuery, pinnedGroupId, members, myId, lastMessages, deletingConvId, isUnread, convName, lastPreview, isMainGroupChat, onSelect, onOptionsRequest, activeConvId }) {
   const q = searchQuery.trim().toLowerCase()
   const filtered = conversations.filter(conv =>
     !q || convName(conv).toLowerCase().includes(q) || lastPreview(conv).toLowerCase().includes(q)
@@ -81,7 +81,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-1 px-1">Group Chat</p>
           <motion.button
             onClick={() => onSelect(mainConv)}
-            className="w-full bg-white rounded-2xl border border-ember/20 shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up"
+            className={`w-full rounded-2xl border shadow p-5 text-left active:bg-stone-50 transition-colors animate-fade-up ${mainConv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-ember/20'}`}
             whileTap={{ scale: 0.975 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
           >
@@ -126,13 +126,14 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
           isDeleting={deletingConvId === conv.id}
           onSelect={onSelect}
           onOptionsRequest={onOptionsRequest}
+          activeConvId={activeConvId}
         />
       ))}
     </div>
   )
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup }) {
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -552,6 +553,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             isMainGroupChat={isMainGroupChat}
             onSelect={onSelect}
             onOptionsRequest={conv => { resetActionSheet(); setActionSheetConv(conv) }}
+            activeConvId={activeConvId}
           />
         )}
       </div>
