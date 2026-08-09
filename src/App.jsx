@@ -9,6 +9,7 @@ import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
 import { AppProvider, useAppContext } from './contexts/AppContext.jsx'
+import { AvatarCircle } from './lib/avatarIcons.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 
 import BirthdayBanner       from './components/BirthdayBanner.jsx'
@@ -342,7 +343,7 @@ function AppContent() {
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
     ) : (
-    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'var(--sat)', minHeight: 'calc(var(--dvh) + var(--sat))' }}>
+    <div className="bg-sunrise-50 lg:pl-56 lg:border-t lg:border-stone-200" style={{ paddingTop: isChat ? 0 : 'var(--sat)', minHeight: 'calc(var(--dvh) + var(--sat))' }}>
       {!isOnline && (
         <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'var(--sat)' }}>
           <WifiSlash size={14} weight="bold" />
@@ -466,13 +467,17 @@ function AppContent() {
             )
           })}
         </nav>
-        <div className="px-3 py-4 border-t border-stone-100">
+        <div className="px-3 py-3 border-t border-stone-100">
           <button
             onClick={navigateToSettings}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-stone-500 hover:bg-stone-100 hover:text-stone-800 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-100 transition-colors text-left"
           >
-            <GearSix size={20} />
-            Settings
+            <AvatarCircle size="8" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-stone-800 truncate leading-tight">{displayName}</p>
+              {groupName && <p className="text-xs text-stone-400 truncate leading-tight mt-0.5">{groupName}</p>}
+            </div>
+            <GearSix size={16} className="text-stone-400 shrink-0" />
           </button>
         </div>
       </aside>
