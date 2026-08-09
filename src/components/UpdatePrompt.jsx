@@ -65,11 +65,11 @@ export default function UpdatePrompt({ splashActive = false }) {
         <div className="bg-ember rounded-b-3xl">
           <button
             onClick={handleClick}
-            className="w-full flex items-center gap-3 px-4 py-3 text-white active:opacity-90 transition-opacity rounded-b-3xl"
+            className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-ember-700 transition-colors rounded-b-3xl"
           >
             <ArrowClockwise size={16} weight="bold" className="shrink-0" />
-            <span className="text-sm font-medium flex-1 text-left">Update available</span>
-            <span className="text-sm font-semibold shrink-0">Tap to refresh →</span>
+            <span className="text-sm font-semibold flex-1 text-left">New update ready</span>
+            <span className="text-sm font-medium text-white/80 shrink-0">Tap to refresh</span>
           </button>
         </div>
       </div>
