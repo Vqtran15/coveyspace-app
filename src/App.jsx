@@ -281,6 +281,20 @@ function AppContent() {
     trackPageView(location.pathname)
   }, [location.pathname])
 
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
+  const isChat = location.pathname === '/chat'
+  const isFullHeight = isChat
+
+  const visibleTabs = TABS.filter(t => {
+    if (t.path === '/schedule') return showScheduleTab
+    if (t.path === '/events')   return eventsEnabled
+    if (t.path === '/chat')     return chatEnabled
+    if (t.path === '/prayer')   return prayerEnabled
+    if (t.path === '/bible')    return bibleEnabled
+    return true
+  })
+
   // ── Desktop keyboard shortcuts ─────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e) {
@@ -300,20 +314,6 @@ function AppContent() {
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [guide.open, giving.open, birthday.open, visibleTabs])
-
-  // ── Derived ────────────────────────────────────────────────────────────────
-  const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
-  const isChat = location.pathname === '/chat'
-  const isFullHeight = isChat
-
-  const visibleTabs = TABS.filter(t => {
-    if (t.path === '/schedule') return showScheduleTab
-    if (t.path === '/events')   return eventsEnabled
-    if (t.path === '/chat')     return chatEnabled
-    if (t.path === '/prayer')   return prayerEnabled
-    if (t.path === '/bible')    return bibleEnabled
-    return true
-  })
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   function dismissBirthdayBanner() {
