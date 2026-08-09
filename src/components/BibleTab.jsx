@@ -368,7 +368,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
+      className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end bg-black/30"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
@@ -561,7 +561,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
       onAnimationComplete={() => setBooksReady(true)}
-      className="fixed inset-0 z-[20] bg-sunrise-50 flex flex-col"
+      className="fixed inset-0 lg:left-56 z-[20] bg-sunrise-50 flex flex-col"
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
         {/* Header */}
@@ -622,7 +622,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
             className="absolute inset-0 overflow-y-auto"
           >
-            <div className="px-4 py-3 pb-24 lg:pb-6">
+            <div className="max-w-3xl mx-auto px-4 py-3 pb-24 lg:pb-6">
               {booksReady ? (
                 <>
                   {bookSearch.trim() ? (
@@ -688,7 +688,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
             className="absolute inset-0 overflow-y-auto"
           >
             {selectedBook && (
-              <div className="px-4 py-4 pb-24 lg:pb-6">
+              <div className="max-w-3xl mx-auto px-4 py-4 pb-24 lg:pb-6">
                 <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map(ch => (
                     <motion.button
@@ -1171,7 +1171,7 @@ export default function BibleTab() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="px-4 pt-8 pb-4">
+    <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -1438,11 +1438,12 @@ export default function BibleTab() {
             animate={{ x: '0%' }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
-            className="fixed inset-0 z-[20] bg-sunrise-50 flex flex-col"
+            className="fixed inset-0 lg:left-56 z-[20] bg-sunrise-50 flex flex-col"
             style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Sticky header */}
-            <div className="px-4 pt-4 shrink-0 border-b border-stone-200/60">
+            <div className="shrink-0 border-b border-stone-200/60">
+              <div className="max-w-3xl mx-auto px-4 pt-4">
               {/* Row 1: back + title (+ Cancel in select mode) */}
               <div className="flex items-center gap-2 pb-2">
                 <motion.button
@@ -1521,6 +1522,7 @@ export default function BibleTab() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             {/* Select mode hint */}
@@ -1558,8 +1560,9 @@ export default function BibleTab() {
                   animate="center"
                   exit="exit"
                   transition={{ type: 'spring', stiffness: 350, damping: 36, mass: 0.8 }}
-                  className="absolute inset-0 overflow-y-auto px-4 pt-4 pb-24 lg:pb-8"
+                  className="absolute inset-0 overflow-y-auto pt-4 pb-24 lg:pb-8"
                 >
+                  <div className="max-w-3xl mx-auto px-4">
                   {/* Error */}
                   {chapterError && (
                     <div className="flex flex-col items-center gap-3 py-20 text-center">
@@ -1623,6 +1626,7 @@ export default function BibleTab() {
                       </div>
                     </>
                   )}
+                  </div>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -1683,7 +1687,7 @@ export default function BibleTab() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end bg-black/40"
             onClick={() => setShowChapterMenu(false)}
           >
             <motion.div
@@ -1760,7 +1764,7 @@ export default function BibleTab() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end bg-black/30"
             onClick={() => setDeleteConfirmIdx(null)}
           >
             <motion.div
