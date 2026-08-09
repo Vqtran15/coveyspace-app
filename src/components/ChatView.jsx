@@ -186,6 +186,18 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
+    // Read env(safe-area-inset-top) in px once. vv.height is measured from the
+    // BOTTOM of the status bar, so the keyboard top in document coordinates
+    // (where y=0 is behind the status bar) is sat + vv.height. vv.offsetTop is
+    // not used: it's non-zero only when iOS shifts the visual viewport to keep
+    // the focused element visible, but that shift doesn't change the keyboard's
+    // document-coordinate position, and its value varies across iOS versions.
+    const satEl = document.createElement('div')
+    satEl.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top,0px);width:0;pointer-events:none;visibility:hidden'
+    document.documentElement.appendChild(satEl)
+    const sat = satEl.offsetHeight
+    satEl.remove()
+
     // Capture baseline before any keyboard interaction. Using vv.height rather than
     // window.innerHeight because iOS mutates window.innerHeight when the keyboard
     // appears on some versions, which would make kbH ≈ 0 and prevent detection.
@@ -195,12 +207,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       const nowVVH = Math.round(vv.height)
       const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
-      // vv.offsetTop is the distance the visual viewport has been shifted
-      // down from the layout origin (iOS adjusts this when the keyboard
-      // opens to keep the focused element visible). Adding it to vv.height
-      // gives the keyboard's top edge in layout coordinates, which is where
-      // the container bottom must sit so the input lands right above the keyboard.
-      document.documentElement.style.setProperty('--vvh', `${Math.round(vv.offsetTop + vv.height)}px`)
+      // sat + vv.height = keyboard top in document coordinates:
+      //   vv.height = visible area from status-bar-bottom to keyboard top
+      //   sat       = status bar height (gap from document y=0 to vv.height origin)
+      document.documentElement.style.setProperty('--vvh', `${Math.round(sat + vv.height)}px`)
       if (nowOpen && !kbOpen) {
         kbOpen = true
         document.body.classList.add('chat-keyboard-open')
