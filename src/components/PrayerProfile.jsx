@@ -411,7 +411,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
               </div>
               {/* Date + Notify on one row */}
               <div className="flex items-end gap-3">
-                <div className="flex-1">
+                <div className="flex-1 lg:flex-none lg:w-44">
                   <label className="block text-xs font-medium text-stone-500 mb-1">Date</label>
                   <input
                     type="date"

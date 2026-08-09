@@ -717,7 +717,7 @@ export default function EventsTab() {
         <>
           {/* Upcoming */}
           {upcoming.length > 0 ? (
-            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 mb-6">
+            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start mb-6">
               {upcoming.map((event, i) => (
                 <EventCard
                   key={event.id}
