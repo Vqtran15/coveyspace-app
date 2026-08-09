@@ -177,29 +177,34 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => ro.disconnect()
   }, [])
 
-  // Hide the bottom nav when the keyboard is open so it doesn't appear
-  // pushed above the keyboard. iOS native behavior already scrolls the
-  // focused input into view — we just need the nav out of the way.
+  // Track keyboard visibility via visualViewport. When the keyboard appears,
+  // window.innerHeight stays fixed but visualViewport.height shrinks, giving us
+  // the exact visible-area height to size the chat container against.
+  // This replaces the old focusin/focusout approach which was unreliable —
+  // focus can move between inputs without the keyboard closing, leaving the
+  // chat-keyboard-open class stuck on or off.
   useEffect(() => {
-    function onFocusIn(e) {
-      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+    const vv = window.visualViewport
+    if (!vv) return
+    let kbOpen = false
+    function update() {
+      const kbH = window.innerHeight - Math.round(vv.height)
+      const nowOpen = kbH > 120
+      document.documentElement.style.setProperty('--vvh', `${Math.round(vv.height)}px`)
+      if (nowOpen && !kbOpen) {
+        kbOpen = true
         document.body.classList.add('chat-keyboard-open')
+      } else if (!nowOpen && kbOpen) {
+        kbOpen = false
+        document.body.classList.remove('chat-keyboard-open')
+        window.scrollTo(0, 0)
       }
     }
-    function onFocusOut() {
-      setTimeout(() => {
-        const active = document.activeElement
-        if (!active || !['TEXTAREA', 'INPUT'].includes(active.tagName)) {
-          document.body.classList.remove('chat-keyboard-open')
-        }
-      }, 50)
-    }
-    document.addEventListener('focusin', onFocusIn)
-    document.addEventListener('focusout', onFocusOut)
+    vv.addEventListener('resize', update)
     return () => {
-      document.removeEventListener('focusin', onFocusIn)
-      document.removeEventListener('focusout', onFocusOut)
+      vv.removeEventListener('resize', update)
       document.body.classList.remove('chat-keyboard-open')
+      document.documentElement.style.removeProperty('--vvh')
     }
   }, [])
 

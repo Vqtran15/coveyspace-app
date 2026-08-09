@@ -19,7 +19,8 @@ body {
 }
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
-   and fills the screen down to the nav bar. */
+   and fills the screen down to the nav bar.
+   68px = nav bar content height excluding safe-area-inset-bottom. */
 .chat-container {
   height: calc(var(--dvh) - var(--sab) - 68px);
 }
@@ -40,8 +41,10 @@ body.chat-keyboard-open nav.bottom-nav {
   transform: translateY(calc(var(--dvh) + var(--sat)));
   pointer-events: none;
 }
+/* --vvh is set by ChatView's visualViewport listener to the actual visible
+   height when the keyboard is up. Falls back to 100svh if not yet set. */
 body.chat-keyboard-open .chat-container {
-  height: 100svh;
+  height: var(--vvh, 100svh);
 }
 
 /* Prevent iOS Safari double-tap-to-click on hover-styled elements */

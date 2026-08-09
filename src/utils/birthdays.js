@@ -1,16 +1,30 @@
 export function dedupBirthdays(rows) {
-  const linkedNames = new Set(
-    rows.filter(b => b.profile_user_id).map(b => b.name.trim().toLowerCase())
-  )
+  // Multiple rows can exist for the same profile_user_id (e.g. re-registration).
+  // Keep only the first occurrence per linked profile, then filter out manual
+  // entries whose name matches a linked profile.
+  const seenProfileIds = new Set()
+  const profileRows = []
+  const manualRows = []
+  for (const b of rows) {
+    if (b.profile_user_id) {
+      if (!seenProfileIds.has(b.profile_user_id)) {
+        seenProfileIds.add(b.profile_user_id)
+        profileRows.push(b)
+      }
+    } else {
+      manualRows.push(b)
+    }
+  }
+  const linkedNames = new Set(profileRows.map(b => b.name.trim().toLowerCase()))
   const seenManual = new Set()
-  return rows.filter(b => {
+  const filteredManual = manualRows.filter(b => {
     const key = b.name.trim().toLowerCase()
-    if (b.profile_user_id) return true
     if (linkedNames.has(key)) return false
     if (seenManual.has(key)) return false
     seenManual.add(key)
     return true
   })
+  return [...profileRows, ...filteredManual]
 }
 
 function nextOccurrence(dateStr, today) {

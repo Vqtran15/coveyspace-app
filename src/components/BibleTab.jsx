@@ -545,6 +545,14 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
   const [selectedBook, setSelectedBook] = useState(initialBook)
   const [booksReady, setBooksReady] = useState(false)
   const [bookSearch, setBookSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchInputRef = useRef(null)
+
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) searchInputRef.current.focus()
+  }, [searchOpen])
+
+  function closeSearch() { setSearchOpen(false); setBookSearch('') }
 
   return (
     <motion.div
@@ -557,21 +565,51 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-200 bg-white shrink-0">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-200 bg-sunrise-50 shrink-0">
           <motion.button
             whileTap={{ scale: 0.92 }}
-            onClick={selectedBook ? () => setSelectedBook(null) : onClose}
-            aria-label={selectedBook ? 'Back to books' : 'Close browser'}
-            className="w-11 h-11 flex items-center justify-center -ml-1 rounded-full text-stone-500 hover:bg-stone-100 transition-colors"
+            onClick={() => {
+              if (selectedBook) { setSelectedBook(null); return }
+              if (searchOpen) { closeSearch(); return }
+              onClose()
+            }}
+            aria-label={selectedBook ? 'Back to books' : searchOpen ? 'Cancel search' : 'Close browser'}
+            className="w-11 h-11 flex items-center justify-center -ml-1 rounded-full text-stone-500 hover:bg-stone-100 transition-colors shrink-0"
           >
             <ArrowLeft size={20} weight="bold" />
           </motion.button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-stone-800 truncate">
-              {selectedBook ? selectedBook.name : 'Browse Bible'}
-            </h1>
-          </div>
-          <span className="text-xs font-medium text-stone-400">BSB</span>
+          {searchOpen && !selectedBook ? (
+            <>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={bookSearch}
+                onChange={e => setBookSearch(e.target.value)}
+                placeholder="Search books…"
+                className="flex-1 min-w-0 text-base text-stone-800 bg-transparent placeholder:text-stone-400 focus:outline-none"
+              />
+              <button onClick={closeSearch} className="text-sm font-medium text-ember shrink-0">Cancel</button>
+            </>
+          ) : (
+            <>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-stone-800 truncate">
+                  {selectedBook ? selectedBook.name : 'Browse Bible'}
+                </h1>
+              </div>
+              <span className="text-xs font-medium text-stone-400">BSB</span>
+              {!selectedBook && (
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search books"
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 transition-colors"
+                >
+                  <MagnifyingGlass size={20} />
+                </motion.button>
+              )}
+            </>
+          )}
         </div>
 
         {/* Sliding panels */}
@@ -587,22 +625,6 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
             <div className="px-4 py-3 pb-24 lg:pb-6">
               {booksReady ? (
                 <>
-                  {/* Book search */}
-                  <div className="relative mb-3">
-                    <MagnifyingGlass size={15} weight="bold" className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={bookSearch}
-                      onChange={e => setBookSearch(e.target.value)}
-                      placeholder="Search books…"
-                      className="w-full pl-8 pr-8 py-2 rounded-xl bg-white border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent transition"
-                    />
-                    {bookSearch && (
-                      <button onClick={() => setBookSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400">
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
                   {bookSearch.trim() ? (
                     (() => {
                       const q = bookSearch.trim().toLowerCase()
