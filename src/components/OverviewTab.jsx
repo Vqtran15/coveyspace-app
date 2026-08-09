@@ -184,12 +184,13 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
   const realtimeDebounceRef = useRef(null)
   const [shouldAnimate]  = useState(() => !greetingDone)
   const greetingControls = useAnimation()
+  const pathControls     = useAnimation()
   const [announceShake, setAnnounceShake] = useState(false)
 
   useEffect(() => {
     if (!shouldAnimate || !greetingReady) return
     greetingDone = true
-    greetingControls.start({ clipPath: 'inset(0 0% 0 0)', transition: { duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] } })
+    pathControls.start({ pathLength: 1, transition: { duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] } })
     const fadeId   = setTimeout(() => greetingControls.start({ opacity: 0, transition: { duration: 0.3, ease: 'easeIn' } }), 1150)
     const shakeId  = setTimeout(() => setAnnounceShake(true),  1600)
     const clearId  = setTimeout(() => setAnnounceShake(false), 2200)
@@ -349,7 +350,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                 preserveAspectRatio="none"
                 className="absolute top-full left-0"
                 style={{ overflow: 'visible' }}
-                initial={{ clipPath: 'inset(0 100% 0 0)', opacity: 1 }}
+                initial={{ opacity: 1 }}
                 animate={greetingControls}
               >
                 <defs>
@@ -359,7 +360,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                     <stop offset="100%" stopColor="#C4622D" stopOpacity="1" />
                   </linearGradient>
                 </defs>
-                <path
+                <motion.path
                   d="M 0 14 C 14 3 30 4 200 4"
                   fill="none"
                   stroke="#C4622D"
@@ -367,14 +368,18 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                   strokeOpacity="0.65"
+                  initial={{ pathLength: 0 }}
+                  animate={pathControls}
                 />
-                <path
+                <motion.path
                   d="M 0 14 C 14 3 30 4 200 4"
                   fill="none"
                   stroke="url(#greeting-taper)"
                   strokeWidth="4.5"
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
+                  initial={{ pathLength: 0 }}
+                  animate={pathControls}
                 />
               </motion.svg>
             )}
