@@ -19,10 +19,12 @@ body {
 }
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
-   and fills the screen down to the nav bar.
-   68px = nav bar content height excluding safe-area-inset-bottom. */
+   (above the status bar) and fills to the nav bar top.
+   --dvh = window.innerHeight excludes the status bar on iOS PWA; adding --sat
+   gives the true screen height so the bottom aligns with the nav bar top.
+   68px = nav bar content height, --sab = home-indicator area below that. */
 .chat-container {
-  height: calc(var(--dvh) - var(--sab) - 68px);
+  height: calc(var(--dvh) + var(--sat) - var(--sab) - 68px);
 }
 
 /* Nav bar: use top+translateY instead of bottom:0 to bypass iOS PWA bug where
