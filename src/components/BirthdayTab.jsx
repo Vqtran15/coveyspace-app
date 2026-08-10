@@ -114,6 +114,7 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
   }
 
   return (
+    <div className="relative h-full">
     <div className="h-full overflow-y-auto" style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)' }}>
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12">
         <div className="mb-6">
@@ -157,8 +158,12 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
           </div>
         )}
       </main>
+    </div>
 
-      {/* Action sheet + edit/delete overlays */}
+      {/* Action sheet + edit/delete overlays — absolute so they position relative to
+          this full-screen container, not the viewport. The parent motion.div in App.jsx
+          applies CSS transforms for its slide-in animation, which would make position:fixed
+          children position relative to the transformed container instead of the viewport. */}
       <AnimatePresence>
         {selected && (
           <>
@@ -169,7 +174,7 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/40 z-50"
+              className="absolute inset-0 bg-black/40 z-50"
               onClick={closeAction}
             />
 
@@ -180,7 +185,7 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl"
+              className="absolute bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl"
               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             >
               {!editOpen && !deleteOpen && (
@@ -287,3 +292,4 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
     </div>
   )
 }
+
