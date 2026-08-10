@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Cake, ArrowLeft, X } from '@phosphor-icons/react'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
@@ -114,8 +115,11 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
   }
 
   return (
-    <div className="relative h-full">
-    <div className="h-full overflow-y-auto" style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)' }}>
+    <>
+    <div
+      className="h-full overflow-y-auto"
+      style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)', overflow: selected ? 'hidden' : undefined }}
+    >
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12">
         <div className="mb-6">
           <div className="flex items-center gap-1 min-w-0">
@@ -160,32 +164,31 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
       </main>
     </div>
 
-      {/* Action sheet + edit/delete overlays — absolute so they position relative to
-          this full-screen container, not the viewport. The parent motion.div in App.jsx
-          applies CSS transforms for its slide-in animation, which would make position:fixed
-          children position relative to the transformed container instead of the viewport. */}
+    {/* Portal to document.body so position:fixed works correctly regardless of any
+        CSS transform applied to ancestor elements (Framer Motion slide-in animation). */}
+    {createPortal(
       <AnimatePresence>
         {selected && (
           <>
             {/* Backdrop */}
             <motion.div
-              key="backdrop"
+              key="birthday-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-black/40 z-50"
+              className="fixed inset-0 bg-black/40 z-[60]"
               onClick={closeAction}
             />
 
             {/* Sheet */}
             <motion.div
-              key="sheet"
+              key="birthday-sheet"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              className="absolute bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl"
+              className="fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-2xl shadow-xl"
               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             >
               {!editOpen && !deleteOpen && (
@@ -289,7 +292,8 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
           </>
         )}
       </AnimatePresence>
-    </div>
+    , document.body)}
+    </>
   )
 }
 
