@@ -17,7 +17,7 @@ function daysInMonth(month) {
 const inputCls = 'flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800'
 
 export default function BirthdayTab({ birthdays, revealKey, onClose }) {
-  const { userId, isAdmin } = useAppContext()
+  const { userId, isAdmin, refreshBirthdays } = useAppContext()
   const toast = useToast()
 
   const sorted = [...birthdays].sort((a, b) => daysUntilNext(a.birthday) - daysUntilNext(b.birthday))
@@ -80,8 +80,9 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
     if (error) {
       toast('Failed to save birthday', 'error')
     } else {
-      toast('Birthday updated', 'success')
       closeAction()
+      refreshBirthdays()
+      toast('Birthday updated', 'success')
     }
     setSaving(false)
   }
@@ -108,18 +109,16 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
     if (error) {
       toast('Failed to delete birthday', 'error')
     } else {
-      toast('Birthday removed', 'success')
       closeAction()
+      refreshBirthdays()
+      toast('Birthday removed', 'success')
     }
     setDeleting(false)
   }
 
   return (
     <>
-    <div
-      className="h-full overflow-y-auto"
-      style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)', overflow: selected ? 'hidden' : undefined }}
-    >
+    <div className="h-full overflow-y-auto" style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)' }}>
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12">
         <div className="mb-6">
           <div className="flex items-center gap-1 min-w-0">
@@ -184,7 +183,6 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
             {/* Sheet */}
             <motion.div
               key="birthday-sheet"
-              layout
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
