@@ -562,12 +562,12 @@ export default function MessageList() {
                     </div>
                   )}
 
-                  <div className={`flex flex-col min-w-0 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
+                  <div className={`flex flex-col min-w-0 max-w-[75%] ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
                     {!isOwn && isFirstInGroup && (
                       <p className="text-xs font-semibold text-stone-500 mb-2 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
                     )}
-                    <div className="relative">
-                    <div className={`w-full overflow-hidden select-none transition-colors duration-200
+                    <div className="relative w-full">
+                    <div className={`overflow-hidden select-none transition-colors duration-200
                       ${editingMsgId === msg.id ? 'animate-edit-pop' : editClosingId === msg.id ? 'animate-edit-close' : ''}
                       ${isOwn
                         ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-ember'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? `rounded-bl-2xl ${msg.image_url ? 'rounded-br-sm' : 'rounded-br-none'}` : 'rounded-b-md'}`
@@ -671,13 +671,13 @@ export default function MessageList() {
                     </div>
 
                     {isLastInGroup && (
-                      <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-400'}`}>
+                      <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1 text-right' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-400'}`}>
                         {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatMessageTime(msg.created_at)}
                       </p>
                     )}
 
                     {hasReactions && (
-                      <div className={`flex flex-wrap gap-1 mt-1 ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
+                      <div className={`flex flex-wrap gap-1 mt-1 ${isOwn ? 'justify-end' : ''} ${isLastInGroup ? 'mb-2' : 'mb-0'}`}>
                         {Object.entries(msgReactions).map(([emoji, users]) => {
                           const isNew = justReacted[`${msg.id}:${emoji}`]
                           const isMine = users.some(u => u.user_id === myId)
