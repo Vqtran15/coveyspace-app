@@ -184,110 +184,133 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
             {/* Sheet */}
             <motion.div
               key="birthday-sheet"
+              layout
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              className="fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-2xl shadow-xl"
+              className="fixed bottom-0 left-0 right-0 z-[60] bg-white rounded-t-2xl shadow-xl overflow-hidden"
               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             >
-              {!editOpen && !deleteOpen && (
-                <div className="px-4 pt-4 pb-2">
-                  {/* Handle */}
-                  <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
-                  <p className="text-base font-semibold text-stone-800 mb-1">{selected.name}</p>
-                  <p className="text-sm text-stone-500 mb-4">{formatBirthdayDate(selected.birthday)}</p>
-                  <div className="space-y-2">
-                    <button
-                      onClick={openEdit}
-                      className="w-full py-3 rounded-xl bg-stone-50 border border-stone-100 text-sm font-medium text-stone-700 hover:bg-stone-100 transition-colors"
-                    >
-                      Edit birthday
-                    </button>
-                    <button
-                      onClick={() => setDeleteOpen(true)}
-                      className="w-full py-3 rounded-xl bg-red-50 border border-red-100 text-sm font-medium text-red-500 hover:bg-red-100 transition-colors"
-                    >
-                      Remove birthday
-                    </button>
-                    <button
-                      onClick={closeAction}
-                      className="w-full py-3 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {!editOpen && !deleteOpen && (
+                  <motion.div
+                    key="action"
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -24 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="px-4 pt-4 pb-2"
+                  >
+                    <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
+                    <p className="text-base font-semibold text-stone-800 mb-1">{selected.name}</p>
+                    <p className="text-sm text-stone-500 mb-4">{formatBirthdayDate(selected.birthday)}</p>
+                    <div className="space-y-2">
+                      <button
+                        onClick={openEdit}
+                        className="w-full py-3 rounded-xl bg-stone-50 border border-stone-100 text-sm font-medium text-stone-700 hover:bg-stone-100 transition-colors"
+                      >
+                        Edit birthday
+                      </button>
+                      <button
+                        onClick={() => setDeleteOpen(true)}
+                        className="w-full py-3 rounded-xl bg-red-50 border border-red-100 text-sm font-medium text-red-500 hover:bg-red-100 transition-colors"
+                      >
+                        Remove birthday
+                      </button>
+                      <button
+                        onClick={closeAction}
+                        className="w-full py-3 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
 
-              {editOpen && (
-                <div className="px-4 pt-4 pb-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-base font-semibold text-stone-800">Edit birthday</p>
-                    <button onClick={closeAction} aria-label="Close" className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100">
-                      <X size={20} />
-                    </button>
-                  </div>
+                {editOpen && (
+                  <motion.div
+                    key="edit"
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -24 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="px-4 pt-4 pb-2"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-base font-semibold text-stone-800">Edit birthday</p>
+                      <button onClick={closeAction} aria-label="Close" className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100">
+                        <X size={20} />
+                      </button>
+                    </div>
 
-                  <label className="block text-xs font-medium text-stone-500 mb-1.5">Date</label>
-                  <div className="flex gap-2 mb-4">
-                    <select
-                      value={editMonth ?? ''}
-                      onChange={e => { setEditMonth(Number(e.target.value) || null); setEditDay(null) }}
-                      className={inputCls}
-                    >
-                      <option value="">Month</option>
-                      {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-                    </select>
-                    <select
-                      value={editDay ?? ''}
-                      onChange={e => setEditDay(Number(e.target.value) || null)}
-                      className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
-                    >
-                      <option value="">Day</option>
-                      {Array.from({ length: daysInMonth(editMonth) }, (_, i) => i + 1).map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
+                    <label className="block text-xs font-medium text-stone-500 mb-1.5">Date</label>
+                    <div className="flex gap-2 mb-4">
+                      <select
+                        value={editMonth ?? ''}
+                        onChange={e => { setEditMonth(Number(e.target.value) || null); setEditDay(null) }}
+                        className={inputCls}
+                      >
+                        <option value="">Month</option>
+                        {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+                      </select>
+                      <select
+                        value={editDay ?? ''}
+                        onChange={e => setEditDay(Number(e.target.value) || null)}
+                        className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                      >
+                        <option value="">Day</option>
+                        {Array.from({ length: daysInMonth(editMonth) }, (_, i) => i + 1).map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="flex gap-3">
-                    <button onClick={closeAction} className="flex-1 py-3 rounded-xl border border-stone-200 text-sm font-medium text-stone-500 hover:border-stone-300 transition-colors">
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={!editMonth || !editDay || saving}
-                      className="flex-1 py-3 rounded-xl bg-ember text-white text-sm font-medium disabled:opacity-40 hover:bg-ember-700 transition-colors"
-                    >
-                      {saving ? 'Saving…' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              )}
+                    <div className="flex gap-3">
+                      <button onClick={closeAction} className="flex-1 py-3 rounded-xl border border-stone-200 text-sm font-medium text-stone-500 hover:border-stone-300 transition-colors">
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={!editMonth || !editDay || saving}
+                        className="flex-1 py-3 rounded-xl bg-ember text-white text-sm font-medium disabled:opacity-40 hover:bg-ember-700 transition-colors"
+                      >
+                        {saving ? 'Saving…' : 'Save'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
 
-              {deleteOpen && (
-                <div className="px-4 pt-4 pb-2">
-                  <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
-                  <p className="text-base font-semibold text-stone-800 mb-1">Remove birthday?</p>
-                  <p className="text-sm text-stone-500 mb-5">
-                    {selected.name}'s birthday will be removed from the list.
-                    {selected.profile_user_id === userId ? ' Your profile birthday will also be cleared.' : ''}
-                  </p>
-                  <div className="flex gap-3">
-                    <button onClick={() => setDeleteOpen(false)} className="flex-1 py-3 rounded-xl border border-stone-200 text-sm font-medium text-stone-500 hover:border-stone-300 transition-colors">
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-40 hover:bg-red-600 transition-colors"
-                    >
-                      {deleting ? 'Removing…' : 'Remove'}
-                    </button>
-                  </div>
-                </div>
-              )}
+                {deleteOpen && (
+                  <motion.div
+                    key="delete"
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -24 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="px-4 pt-4 pb-2"
+                  >
+                    <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
+                    <p className="text-base font-semibold text-stone-800 mb-1">Remove birthday?</p>
+                    <p className="text-sm text-stone-500 mb-5">
+                      {selected.name}'s birthday will be removed from the list.
+                      {selected.profile_user_id === userId ? ' Your profile birthday will also be cleared.' : ''}
+                    </p>
+                    <div className="flex gap-3">
+                      <button onClick={() => setDeleteOpen(false)} className="flex-1 py-3 rounded-xl border border-stone-200 text-sm font-medium text-stone-500 hover:border-stone-300 transition-colors">
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-40 hover:bg-red-600 transition-colors"
+                      >
+                        {deleting ? 'Removing…' : 'Remove'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </>
         )}
