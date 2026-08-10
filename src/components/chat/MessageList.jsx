@@ -562,12 +562,12 @@ export default function MessageList() {
                     </div>
                   )}
 
-                  <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
+                  <div className={`flex flex-col min-w-0 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
                     {!isOwn && isFirstInGroup && (
                       <p className="text-xs font-semibold text-stone-500 mb-2 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
                     )}
                     <div className="relative">
-                    <div className={`overflow-hidden select-none transition-colors duration-200
+                    <div className={`w-full overflow-hidden select-none transition-colors duration-200
                       ${editingMsgId === msg.id ? 'animate-edit-pop' : editClosingId === msg.id ? 'animate-edit-close' : ''}
                       ${isOwn
                         ? `${editingMsgId === msg.id ? 'bg-stone-600' : 'bg-ember'} text-white ${isFirstInGroup ? 'rounded-t-2xl' : 'rounded-t-md'} ${isLastInGroup ? `rounded-bl-2xl ${msg.image_url ? 'rounded-br-sm' : 'rounded-br-none'}` : 'rounded-b-md'}`
@@ -579,7 +579,7 @@ export default function MessageList() {
                           onClick={() => scrollToMessage(msg.reply_message.id)}
                           className={`w-full text-left mx-0 px-3 pt-2.5 pb-1.5 border-b ${isOwn ? 'border-white/20' : 'border-stone-100'}`}
                         >
-                          <div className={`pl-2 border-l-2 ${isOwn ? 'border-white/60' : 'border-ember'}`}>
+                          <div className={`min-w-0 pl-2 border-l-2 ${isOwn ? 'border-white/60' : 'border-ember'}`}>
                             <p className={`text-[11px] font-semibold truncate ${isOwn ? 'text-white/90' : 'text-ember'}`}>
                               {senderName(msg.reply_message.user_id, msg.reply_message.display_name)}
                             </p>
