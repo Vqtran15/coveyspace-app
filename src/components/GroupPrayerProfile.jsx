@@ -180,7 +180,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
   }
 
   return (
-    <div className={`fixed inset-0 lg:left-56 z-[35] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className={`fixed inset-0 lg:left-56 ${(actionSheetOpen || confirmDelete) ? 'z-50' : 'z-[35]'} bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="flex-1 flex flex-col min-h-0 w-full lg:max-w-3xl lg:mx-auto">
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-4 pt-3 pb-3 border-b border-stone-100">

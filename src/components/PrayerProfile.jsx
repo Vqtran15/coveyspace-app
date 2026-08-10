@@ -322,7 +322,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     <>
       {/* Full-screen prayer profile page */}
       <div
-        className={`fixed inset-0 lg:left-56 bg-sunrise-50 z-[35] flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+        className={`fixed inset-0 lg:left-56 ${(actionSheetReq || deleteSheetReq) ? 'z-50' : 'z-[35]'} bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="flex-1 flex flex-col min-h-0 w-full lg:max-w-3xl lg:mx-auto">
