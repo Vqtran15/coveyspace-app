@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion'
-import { Cake } from '@phosphor-icons/react'
+import { Cake, DotsThreeVertical } from '@phosphor-icons/react'
 import { formatBirthdayDate } from '../utils/birthdays.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { haptic } from '../lib/haptic.js'
 import ConfettiDots from './ConfettiDots.jsx'
 
-export default function BirthdayCard({ index, birthday, days, revealKey, onClick }) {
+export default function BirthdayCard({ index, birthday, days, revealKey, canEdit, onClick }) {
   const { className: entranceClass, style: entranceStyle } = useEntranceAnimation(revealKey, index)
 
   return (
@@ -24,30 +24,31 @@ export default function BirthdayCard({ index, birthday, days, revealKey, onClick
     >
       {days <= 30 && <ConfettiDots />}
       <div className="relative flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-1.5 font-semibold text-stone-800">
             {birthday.name}
             {days <= 7 && <Cake size={15} weight="fill" className={days === 0 ? 'text-ember' : 'text-coral'} />}
           </div>
           <div className="text-sm text-stone-500 mt-0.5">{formatBirthdayDate(birthday.birthday)}</div>
         </div>
-        {days === 0 ? (
-          <span className="text-xs font-medium bg-ember text-white px-2.5 py-1 rounded-full shrink-0">
-            Today!
-          </span>
-        ) : days <= 14 ? (
-          <span className="text-xs font-medium bg-coral-100 text-coral-700 px-2.5 py-1 rounded-full shrink-0">
-            in {days} day{days !== 1 ? 's' : ''}
-          </span>
-        ) : days <= 30 ? (
-          <span className="text-xs font-medium bg-lagoon-100 text-ember px-2.5 py-1 rounded-full shrink-0">
-            in {days} days
-          </span>
-        ) : (
-          <span className="text-xs text-stone-400 shrink-0">
-            in {days} days
-          </span>
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {days === 0 ? (
+            <span className="text-xs font-medium bg-ember text-white px-2.5 py-1 rounded-full">Today!</span>
+          ) : days <= 14 ? (
+            <span className="text-xs font-medium bg-coral-100 text-coral-700 px-2.5 py-1 rounded-full">
+              in {days} day{days !== 1 ? 's' : ''}
+            </span>
+          ) : days <= 30 ? (
+            <span className="text-xs font-medium bg-lagoon-100 text-ember px-2.5 py-1 rounded-full">
+              in {days} days
+            </span>
+          ) : (
+            <span className="text-xs text-stone-400">in {days} days</span>
+          )}
+          {canEdit && (
+            <DotsThreeVertical size={18} className="text-stone-400 ml-0.5" />
+          )}
+        </div>
       </div>
     </motion.button>
   )
