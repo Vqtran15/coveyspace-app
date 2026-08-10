@@ -280,6 +280,7 @@ export default function PrayerTab() {
   const [groupPrayers, setGroupPrayers]     = useState([])
   const [groupReactions, setGroupReactions] = useState({})
   const [loading, setLoading]               = useState(true)
+  const [loadError, setLoadError]           = useState(false)
   const [selectedMember, setSelectedMember] = useState(null)
   const [selectedGroupPrayer, setSelectedGroupPrayer] = useState(null)
   const [searchQuery, setSearchQuery]       = useState('')
@@ -332,6 +333,7 @@ export default function PrayerTab() {
 
   async function load() {
     if (!groupId) return
+    setLoadError(false)
     try {
       const [membersRes, reactionsRes, groupPrayersRes] = await Promise.all([
         supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').eq('community_group_id', groupId).order('display_name'),
@@ -375,6 +377,8 @@ export default function PrayerTab() {
       setAllReactions(reactionMap)
       setGroupPrayers(gpList)
       setGroupReactions(gpReactionMap)
+    } catch {
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -700,6 +704,14 @@ export default function PrayerTab() {
               </div>
             </div>
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="text-center py-16">
+          <HandsPraying size={40} weight="fill" className="text-stone-300 mx-auto mb-3" />
+          <p className="text-sm text-stone-500 mb-4">Couldn't load prayer requests. Check your connection and try again.</p>
+          <button onClick={load} className="px-4 py-2 rounded-xl bg-ember text-white text-sm font-medium hover:bg-ember-700 transition-colors">
+            Retry
+          </button>
         </div>
       ) : members.length === 0 ? (
         <div className="text-center py-16 text-stone-500">
