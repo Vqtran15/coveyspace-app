@@ -1770,7 +1770,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {/* Unread pill — positioned just below the floating header */}
       {firstUnreadId && !searchOpen && (
-        <div className="absolute left-0 right-0 flex justify-center py-1.5 z-[9] animate-overlay-in" style={{ top: headerH }}>
+        <div className="absolute left-0 right-0 flex justify-center py-1.5 z-[9] animate-overlay-in" style={{ top: `calc(env(safe-area-inset-top) + ${headerH}px)` }}>
           <button
             onClick={() => {
               document.getElementById(`msg-${firstUnreadId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })

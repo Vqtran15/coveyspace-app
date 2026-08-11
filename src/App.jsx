@@ -347,6 +347,9 @@ function AppContent() {
 
   function handleTabChange(path) {
     haptic()
+    if (guide.open) guide.close()
+    if (giving.open) giving.close()
+    if (birthday.open) birthday.close()
     const newIndex = PATHS.indexOf(path)
     enterFromRef.current = newIndex > prevIndexRef.current ? 'right' : 'left'
     prevIndexRef.current = newIndex

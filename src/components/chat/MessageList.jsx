@@ -117,7 +117,7 @@ export default function MessageList() {
 
   return (
     <div className="relative flex-1 min-h-0">
-      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: headerH }}>
+      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)` }}>
         {loadingMore && (
           <div className="flex justify-center py-3">
             <div className="flex items-center gap-1.5">
