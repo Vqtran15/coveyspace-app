@@ -118,7 +118,7 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
 
   return (
     <>
-    <div className="h-full overflow-y-auto" style={{ overscrollBehaviorY: 'none', paddingTop: 'var(--sat)' }}>
+    <div className="h-full overflow-y-auto" style={{ overscrollBehavior: 'contain', paddingTop: 'var(--sat)' }}>
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12">
         <div className="mb-6">
           <div className="flex items-center gap-1 min-w-0">
