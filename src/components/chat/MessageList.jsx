@@ -4,7 +4,7 @@ import {
   ArrowDown, MagnifyingGlass, ChartBar,
   CalendarHeart, CheckCircle, Minus, MapPin,
   PencilSimple, Trash, Check, X, DotsThreeVertical,
-  Plus as PlusIcon,
+  Plus as PlusIcon, HandsPraying,
 } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../../utils/format.js'
@@ -94,7 +94,8 @@ export default function MessageList() {
     senderName, scrollToMessage, formatEventDate,
     handleDoubleTap, handleLongPressStart, handleLongPressEnd,
     startEdit, handleSaveEdit, exitEdit, openMenu,
-    castVote, rsvpInChat,
+    castVote, rsvpInChat, prayInChat,
+    chatPrayers,
     startEditPoll, savePoll, deletePoll,
     deleteMessage,
     toggleReaction,
@@ -429,6 +430,57 @@ export default function MessageList() {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  </div>
+                )
+              }
+
+              if (msg.prayer_request_id) {
+                const pr = chatPrayers[msg.prayer_request_id]
+                if (!pr) return (
+                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
+                    <div className="bg-stone-100 rounded-2xl h-24 animate-pulse" />
+                  </div>
+                )
+                const hasReacted = pr.reactions.some(rx => rx.user_id === myId)
+                const reactionCount = pr.reactions.length
+                return (
+                  <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
+                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                      {/* Header */}
+                      <div className="px-4 pt-3 pb-2.5 border-b border-stone-100">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">
+                          <HandsPraying size={11} weight="bold" />
+                          {`Prayer · ${senderName(msg.user_id, msg.display_name)}`}
+                        </div>
+                        {/* Who the prayer is for */}
+                        {pr.member && (
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-6 h-6 rounded-full shrink-0 overflow-hidden flex items-center justify-center ${pr.member.avatar_image_url ? 'bg-stone-200' : `${avatarColor(pr.member.user_id, pr.member.avatar_color)}`}`}>
+                              {pr.member.avatar_image_url
+                                ? <img src={pr.member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                                : pr.member.avatar_icon
+                                  ? <AvatarIcon name={pr.member.avatar_icon} size={10} />
+                                  : <span className="text-white text-[8px] font-bold">{(pr.member.display_name ?? '?').charAt(0).toUpperCase()}</span>
+                              }
+                            </div>
+                            <span className="text-xs font-semibold text-stone-600">For {pr.member.display_name}</span>
+                          </div>
+                        )}
+                        <p className="text-sm text-stone-700 leading-relaxed line-clamp-4">{pr.request}</p>
+                      </div>
+                      {/* Pray button + timestamp */}
+                      <div className="px-4 py-2.5 flex items-center gap-3">
+                        <button
+                          onClick={() => prayInChat(msg.prayer_request_id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-colors ${hasReacted ? 'bg-ember text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                        >
+                          <HandsPraying size={15} weight={hasReacted ? 'fill' : 'regular'} />
+                          {hasReacted ? 'Praying' : 'Pray'}
+                          {reactionCount > 0 && <span className={`text-xs ${hasReacted ? 'text-white/80' : 'text-stone-400'}`}>{reactionCount}</span>}
+                        </button>
+                        <span className="ml-auto text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                      </div>
                     </div>
                   </div>
                 )

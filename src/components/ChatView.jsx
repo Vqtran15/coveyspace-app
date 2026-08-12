@@ -119,6 +119,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false)
   const [polls, setPolls]                     = useState({})
   const [chatEvents, setChatEvents]           = useState({})
+  const [chatPrayers, setChatPrayers]         = useState({})
   const [pollCreating, setPollCreating]       = useState(false)
   const [pollQuestion, setPollQuestion]       = useState('')
   const [pollOptions, setPollOptions]         = useState(['', ''])
@@ -282,6 +283,55 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }
 
+  async function fetchPrayerRequestsForMessages(msgs) {
+    const ids = [...new Set(msgs.filter(m => m.prayer_request_id).map(m => m.prayer_request_id))]
+    if (!ids.length) return
+    const [{ data: prs }, { data: rxs }] = await Promise.all([
+      supabase.from('prayer_requests').select('id, request, member_user_id').in('id', ids),
+      supabase.from('prayer_reactions').select('prayer_request_id, user_id, display_name, avatar_icon, avatar_color').in('prayer_request_id', ids),
+    ])
+    if (!prs?.length) return
+    const memberUserIds = [...new Set(prs.map(pr => pr.member_user_id))]
+    const { data: memberProfiles } = await supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').in('user_id', memberUserIds)
+    const profileMap = {}
+    for (const p of memberProfiles ?? []) profileMap[p.user_id] = p
+    const map = {}
+    for (const pr of prs) map[pr.id] = { id: pr.id, request: pr.request, member_user_id: pr.member_user_id, member: profileMap[pr.member_user_id] ?? null, reactions: [] }
+    for (const rx of rxs ?? []) { if (map[rx.prayer_request_id]) map[rx.prayer_request_id].reactions.push(rx) }
+    if (Object.keys(map).length) {
+      setChatPrayers(prev => ({ ...prev, ...map }))
+      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => { if (isAtBottomRef.current) scrollToBottom() }))
+    }
+  }
+
+  async function prayInChat(prayerReqId) {
+    const pr = chatPrayers[prayerReqId]
+    if (!pr) return
+    const hasReacted = pr.reactions.some(rx => rx.user_id === myId)
+    const myMember = members.find(m => m.user_id === myId)
+    setChatPrayers(prev => {
+      const p = prev[prayerReqId]
+      if (!p) return prev
+      const reactions = hasReacted
+        ? p.reactions.filter(rx => rx.user_id !== myId)
+        : [...p.reactions, { user_id: myId, display_name: displayName, avatar_icon: myMember?.avatar_icon ?? null, avatar_color: myMember?.avatar_color ?? null }]
+      return { ...prev, [prayerReqId]: { ...p, reactions } }
+    })
+    if (hasReacted) {
+      await supabase.from('prayer_reactions').delete().eq('prayer_request_id', prayerReqId).eq('user_id', myId)
+    } else {
+      await supabase.from('prayer_reactions').insert({
+        prayer_request_id: prayerReqId,
+        prayer_request_owner_id: pr.member_user_id,
+        community_group_id: groupId,
+        user_id: myId,
+        display_name: displayName,
+        avatar_icon: myMember?.avatar_icon ?? null,
+        avatar_color: myMember?.avatar_color ?? null,
+      })
+    }
+  }
+
   async function rsvpInChat(eventId, status) {
     const ev = chatEvents[eventId]
     if (!ev) return
@@ -442,6 +492,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setFetchingFresh(true)
       fetchPollsForMessages(cached)
       fetchEventsForMessages(cached)
+      fetchPrayerRequestsForMessages(cached)
     } else {
       setLoading(true)
     }
@@ -499,6 +550,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         setReactions(map)
         fetchPollsForMessages(msgs)
         fetchEventsForMessages(msgs)
+        fetchPrayerRequestsForMessages(msgs)
       })
 
     const msgCh = supabase
@@ -517,6 +569,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         })
         if (msg.poll_id) fetchPollsForMessages([msg])
         if (msg.event_id) fetchEventsForMessages([msg])
+        if (msg.prayer_request_id) fetchPrayerRequestsForMessages([msg])
         if (msg.user_id !== myId) {
           if (isAtBottomRef.current) {
             const now = new Date().toISOString()
@@ -969,6 +1022,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       preserveScrollRef.current = scrollRef.current?.scrollHeight ?? 0
       setMessages(prev => [...older, ...prev])
       fetchPollsForMessages(older)
+      fetchPrayerRequestsForMessages(older)
       supabase
         .from('reactions')
         .select('id, message_id, emoji, user_id')
@@ -1619,7 +1673,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     firstUnreadId, setFirstUnreadId, openUnreadCount,
     lightboxImg, setLightboxImg,
     convImageUrl, uploadingGroupIcon,
-    polls, chatEvents,
+    polls, chatEvents, chatPrayers,
     pollCreating, setPollCreating,
     pollQuestion, setPollQuestion,
     pollOptions, setPollOptions,
@@ -1640,7 +1694,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     startEdit, handleSaveEdit, handleReply, closeReactionPicker,
     closeEmojiPicker, insertEmoji, retryMessage,
     uploadGroupIcon, removeGroupIcon,
-    castVote, rsvpInChat, createPoll, startEditPoll, savePoll, deletePoll,
+    castVote, rsvpInChat, prayInChat, createPoll, startEditPoll, savePoll, deletePoll,
     handleRenameGroup, scrollToMessage, formatEventDate,
     handleScrollToBottom, onMessageImageLoad, handleImageTap,
     // senderName via memberMap — stable reference, always current
@@ -1662,7 +1716,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     convName, memberReadTimes, unreadCount, firstUnreadId, openUnreadCount,
     lightboxImg, convImageUrl, uploadingGroupIcon, polls, chatEvents,
     pollCreating, pollQuestion, pollOptions, pollSubmitting, pollMenuOpenId,
-    deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending,
+    deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending, chatPrayers,
     headerH,
   ])
 

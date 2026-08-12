@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { HandsPraying, Plus, X, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell } from '@phosphor-icons/react'
+import { HandsPraying, Plus, X, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell, ChatCircle } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
@@ -292,6 +292,32 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     if (err) {
       toast('Failed to update', 'error')
       setRequests(prev => prev.map(r => r.id === req.id ? { ...r, answered: req.answered, answered_at: req.answered_at } : r))
+    }
+  }
+
+  async function shareToChat(req) {
+    try {
+      const { data: conv } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('community_group_id', groupId)
+        .eq('type', 'group')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (!conv) { toast('No group chat found', 'error'); return }
+      const { error: err } = await supabase.from('messages').insert({
+        community_group_id: groupId,
+        conversation_id: conv.id,
+        user_id: currentUserId,
+        display_name: displayName,
+        body: `🙏 Prayer request for ${member.display_name}`,
+        prayer_request_id: req.id,
+      })
+      if (err) throw err
+      toast('Shared to group chat')
+    } catch {
+      toast('Failed to share', 'error')
     }
   }
 
@@ -628,6 +654,13 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   <span className="text-base text-stone-800 font-medium">{sheetHasReacted ? 'Undo prayer' : 'Pray for'}</span>
                 </motion.button>
               )}
+              <button
+                onClick={() => closeActionSheet(req => shareToChat(req))}
+                className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+              >
+                <ChatCircle size={22} className="text-stone-400" />
+                <span className="text-base text-stone-800 font-medium">Share in Chat</span>
+              </button>
               <button
                 onClick={() => closeActionSheet(req => handleToggleAnswered(req))}
                 className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors"
