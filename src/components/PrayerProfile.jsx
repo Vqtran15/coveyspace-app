@@ -759,16 +759,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
               <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Share in Chat?</p>
               <p className="text-sm text-stone-700 line-clamp-2">{shareSheetReq.request}</p>
             </div>
-            <div className="py-1">
-              <button
+            <div className="px-4 pt-3 pb-2 flex flex-col gap-2">
+              <motion.button
                 onClick={() => closeShareSheet(req => shareToChat(req))}
-                className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-ember hover:bg-ember-700 active:bg-ember-700 transition-colors text-white font-semibold text-base"
               >
-                <ChatCircle size={22} className="text-stone-400" />
-                <span className="text-base text-stone-800 font-medium">Share to group chat</span>
-              </button>
-            </div>
-            <div className="px-4 pt-1 pb-2">
+                <ChatCircle size={20} weight="fill" />
+                Share to group chat
+              </motion.button>
               <button
                 onClick={() => closeShareSheet()}
                 className="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 active:bg-stone-300 transition-colors text-stone-600 font-semibold text-base"
