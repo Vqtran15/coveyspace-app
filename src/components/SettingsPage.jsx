@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
+import { swRegistrationRef } from '../lib/swRegistration.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -169,6 +170,24 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
   const [deleteError, setDeleteError] = useState(null)
 
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+
+  // App update
+  const [updateChecking, setUpdateChecking] = useState(false)
+  const [updateChecked, setUpdateChecked] = useState(false)
+
+  async function checkForUpdates() {
+    setUpdateChecking(true)
+    setUpdateChecked(false)
+    try {
+      await swRegistrationRef.current?.update()
+      // If an update was found, UpdatePrompt auto-applies it → page reloads.
+      // If we reach here, there's no update waiting.
+      setUpdateChecked(true)
+      setTimeout(() => setUpdateChecked(false), 3000)
+    } finally {
+      setUpdateChecking(false)
+    }
+  }
 
   useEffect(() => {
     if (!userId) return
@@ -484,6 +503,26 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
             >
               <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
               <span className="flex-1 text-left">Sign out</span>
+            </button>
+          </div>
+        </div>
+
+        {/* App */}
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">App</p>
+          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+            <button
+              onClick={checkForUpdates}
+              disabled={updateChecking}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-60"
+            >
+              {updateChecked
+                ? <CheckCircle size={16} weight="bold" className="text-jade-600 shrink-0" />
+                : <ArrowsClockwise size={16} weight="bold" className={`text-stone-400 shrink-0 ${updateChecking ? 'animate-spin' : ''}`} />
+              }
+              <span className="flex-1 text-left">
+                {updateChecking ? 'Checking…' : updateChecked ? 'You\'re up to date' : 'Check for updates'}
+              </span>
             </button>
           </div>
         </div>

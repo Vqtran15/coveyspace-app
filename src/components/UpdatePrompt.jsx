@@ -1,23 +1,21 @@
 import { useEffect, useRef } from 'react'
-import { ArrowClockwise } from '@phosphor-icons/react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { swRegistrationRef } from '../lib/swRegistration.js'
 
-export default function UpdatePrompt({ splashActive = false }) {
-  const registrationRef  = useRef(null)
+export default function UpdatePrompt() {
   const needRefreshRef   = useRef(false)
   const hadControllerRef = useRef(typeof navigator !== 'undefined' && !!navigator.serviceWorker?.controller)
 
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_, registration) {
-      registrationRef.current = registration
+      swRegistrationRef.current = registration
       setInterval(() => registration?.update(), 60 * 60 * 1000)
     },
   })
 
   useEffect(() => { needRefreshRef.current = needRefresh }, [needRefresh])
 
-  // Native reload when a new SW takes control — Workbox's 'controlling' event
-  // can silently skip the reload on iOS when isUpdate is falsy.
+  // Reload whenever a new SW takes control
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
     function onControllerChange() {
@@ -28,65 +26,24 @@ export default function UpdatePrompt({ splashActive = false }) {
     return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
   }, [])
 
-  // Check for updates whenever the app comes back to the foreground.
-  // If a new SW is already waiting, apply it immediately at that natural moment.
+  // Check for updates on foreground return; apply immediately if one is waiting
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.visibilityState !== 'visible') return
       if (needRefreshRef.current) {
         updateServiceWorker(true)
       } else {
-        registrationRef.current?.update()
+        swRegistrationRef.current?.update()
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
-  // Auto-apply immediately if a new SW arrives while the splash is still up.
+  // Silent auto-apply: no banner — apply the moment a new SW is detected
   useEffect(() => {
-    if (needRefresh && splashActive) updateServiceWorker(true)
-  }, [needRefresh, splashActive])
+    if (needRefresh) updateServiceWorker(true)
+  }, [needRefresh])
 
-  if (!needRefresh || splashActive) return null
-
-  function handleClick() {
-    updateServiceWorker(true)
-    setTimeout(() => window.location.reload(), 500)
-  }
-
-  return (
-    <>
-      {/* Mobile: full-width strip hanging from status bar */}
-      <div
-        className="lg:hidden fixed inset-x-0 top-0 z-[60] animate-toast-in"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
-      >
-        <div className="bg-ember rounded-b-3xl">
-          <button
-            onClick={handleClick}
-            className="w-full flex items-center gap-3 px-4 py-3 text-white active:bg-ember-700 transition-colors rounded-b-3xl"
-          >
-            <ArrowClockwise size={16} weight="bold" className="shrink-0" />
-            <span className="text-sm font-semibold flex-1 text-left">New update ready</span>
-            <span className="text-sm font-medium text-white/80 shrink-0">Tap to refresh</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop: compact toast in top-right of content area */}
-      <div className="hidden lg:block fixed top-4 right-4 z-[60] animate-toast-in">
-        <div className="bg-ember rounded-2xl shadow-xl w-72">
-          <button
-            onClick={handleClick}
-            className="w-full flex items-center gap-3 px-4 py-3 text-white hover:opacity-90 active:opacity-80 transition-opacity rounded-2xl"
-          >
-            <ArrowClockwise size={16} weight="bold" className="shrink-0" />
-            <span className="text-sm font-medium flex-1 text-left">Update available</span>
-            <span className="text-sm font-semibold shrink-0">Click to refresh →</span>
-          </button>
-        </div>
-      </div>
-    </>
-  )
+  return null
 }

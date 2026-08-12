@@ -666,7 +666,7 @@ function AppContent() {
         </div>
       )}
 
-      <UpdatePrompt splashActive={splashVisible} />
+      <UpdatePrompt />
     </div>
     )}
     </Suspense>
