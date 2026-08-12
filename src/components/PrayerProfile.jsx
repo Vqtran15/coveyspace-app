@@ -60,6 +60,8 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
   const lastTapRef                          = useRef({ id: null, time: 0 })
   const [deleteSheetReq, setDeleteSheetReq]     = useState(null)
   const [deleteSheetClosing, setDeleteSheetClosing] = useState(false)
+  const [shareSheetReq, setShareSheetReq]       = useState(null)
+  const [shareSheetClosing, setShareSheetClosing] = useState(false)
   const [reactions, setReactions]           = useState({})
   const [togglingIds, setTogglingIds]       = useState(new Set())
   const [celebratingIds, setCelebratingIds] = useState(() => new Set())
@@ -94,6 +96,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     setTimeout(() => {
       setActionSheetReq(null)
       setSheetClosing(false)
+      callback?.(captured)
+    }, 260)
+  }
+
+  function closeShareSheet(callback) {
+    const captured = shareSheetReq
+    setShareSheetClosing(true)
+    setTimeout(() => {
+      setShareSheetReq(null)
+      setShareSheetClosing(false)
       callback?.(captured)
     }, 260)
   }
@@ -348,7 +360,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
     <>
       {/* Full-screen prayer profile page */}
       <div
-        className={`fixed inset-0 lg:left-56 ${(actionSheetReq || deleteSheetReq) ? 'z-50' : 'z-[35]'} bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+        className={`fixed inset-0 lg:left-56 ${(actionSheetReq || deleteSheetReq || shareSheetReq) ? 'z-50' : 'z-[35]'} bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="flex-1 flex flex-col min-h-0 w-full lg:max-w-3xl lg:mx-auto">
@@ -655,7 +667,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                 </motion.button>
               )}
               <button
-                onClick={() => closeActionSheet(req => shareToChat(req))}
+                onClick={() => closeActionSheet(req => { setShareSheetClosing(false); setShareSheetReq(req) })}
                 className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors"
               >
                 <ChatCircle size={22} className="text-stone-400" />
@@ -723,6 +735,42 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             <div className="px-4 pt-1 pb-2">
               <button
                 onClick={() => closeDeleteSheet()}
+                className="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 active:bg-stone-300 transition-colors text-stone-600 font-semibold text-base"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Share confirmation sheet */}
+      {shareSheetReq && (
+        <div
+          className={`fixed inset-0 lg:left-56 z-50 flex items-end lg:items-center lg:justify-center bg-black/50 ${shareSheetClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+          onClick={() => closeShareSheet()}
+        >
+          <div
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl ${shareSheetClosing ? 'animate-sheet-out' : 'animate-sheet-in'}`}
+            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-5 pt-4 pb-3 border-b border-stone-100">
+              <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
+              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Share in Chat?</p>
+              <p className="text-sm text-stone-700 line-clamp-2">{shareSheetReq.request}</p>
+            </div>
+            <div className="py-1">
+              <button
+                onClick={() => closeShareSheet(req => shareToChat(req))}
+                className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+              >
+                <ChatCircle size={22} className="text-stone-400" />
+                <span className="text-base text-stone-800 font-medium">Share to group chat</span>
+              </button>
+            </div>
+            <div className="px-4 pt-1 pb-2">
+              <button
+                onClick={() => closeShareSheet()}
                 className="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 active:bg-stone-300 transition-colors text-stone-600 font-semibold text-base"
               >
                 Cancel
