@@ -451,7 +451,7 @@ export default function MessageList() {
                       <div className="px-4 pt-3 pb-2.5 border-b border-stone-100">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">
                           <HandsPraying size={11} weight="bold" />
-                          {`Prayer · ${senderName(msg.user_id, msg.display_name)}`}
+                          {`Prayer Request · ${senderName(msg.user_id, msg.display_name)}`}
                         </div>
                         {/* Who the prayer is for */}
                         {pr.member && (
