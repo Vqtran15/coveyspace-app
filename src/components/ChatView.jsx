@@ -1022,6 +1022,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       preserveScrollRef.current = scrollRef.current?.scrollHeight ?? 0
       setMessages(prev => [...older, ...prev])
       fetchPollsForMessages(older)
+      fetchEventsForMessages(older)
       fetchPrayerRequestsForMessages(older)
       supabase
         .from('reactions')
