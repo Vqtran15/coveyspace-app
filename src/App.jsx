@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion, LayoutGroup } from 'framer-motion'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, BookOpen, ShieldCheck } from '@phosphor-icons/react'
@@ -9,6 +9,7 @@ import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
 import { AppProvider, useAppContext } from './contexts/AppContext.jsx'
+import { tabScrollRef } from './lib/tabScrollRef.js'
 import { AvatarCircle } from './lib/avatarIcons.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 
@@ -94,9 +95,15 @@ function AppContent() {
     setProfile, refreshProfile,
   } = useAppContext()
 
-  const prevIndexRef = useRef(PATHS.indexOf(location.pathname))
-  const locationRef  = useRef(location.pathname)
-  const enterFromRef = useRef('right')
+  const prevIndexRef       = useRef(PATHS.indexOf(location.pathname))
+  const locationRef        = useRef(location.pathname)
+  const enterFromRef       = useRef('right')
+  const scrollContainerRef = useRef(null)
+
+  const setScrollRef = useCallback(el => {
+    scrollContainerRef.current = el
+    tabScrollRef.current = el
+  }, [])
 
   const [splashVisible, setSplashVisible] = useState(true)
   const [splashExiting, setSplashExiting] = useState(false)
@@ -416,10 +423,22 @@ function AppContent() {
             : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
         }`}
         style={isFullHeight ? undefined : {
-          paddingBottom: IS_PWA ? 'calc(68px + var(--sab))' : '80px',
-          minHeight: 'calc(var(--dvh) - var(--sat))',
+          height: 'calc(var(--dvh) - var(--sat))',
+          overflow: 'hidden',
         }}
       >
+        {/* Inner per-tab scroll container — keeps document body stationary so
+            the pill nav stays anchored. Chat uses its own scroll container. */}
+        <div
+          ref={isFullHeight ? null : setScrollRef}
+          style={isFullHeight ? undefined : {
+            height: '100%',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            paddingBottom: 'calc(var(--sab) + 80px)',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home"     element={
@@ -459,6 +478,7 @@ function AppContent() {
           } />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
+        </div>
       </div>
 
       {showWelcome && (
@@ -528,49 +548,12 @@ function AppContent() {
         </div>
       </aside>
 
-      {IS_PWA ? (
-        <LayoutGroup id="bottom-nav">
-          <nav
-            className="fixed bottom-nav inset-x-0 bg-white border-t border-stone-200 z-40 flex lg:hidden"
-            style={{ paddingBottom: 'var(--sab)' }}
-          >
-            {visibleTabs.map(t => {
-              const active = location.pathname === t.path
-              return (
-                <button
-                  key={t.path}
-                  onClick={() => handleTabChange(t.path)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 touch-manipulation ${active ? '' : 'text-stone-400'}`}
-                >
-                  <span className={`relative px-3 py-1 ${active ? 'text-white' : ''}`}>
-                    {active && (
-                      <motion.span
-                        layoutId="tab-pill"
-                        className="absolute inset-0 bg-ember rounded-2xl"
-                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                      />
-                    )}
-                    <motion.span
-                      className="relative z-10 block"
-                      initial={false}
-                      animate={active ? { scale: [1, 1.28, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      <t.Icon size={26} weight={active ? 'fill' : 'regular'} />
-                    </motion.span>
-                    {t.path === '/chat' && unreadChatCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
-                    )}
-                  </span>
-                  <span className={`text-[13px] font-medium tracking-wide ${active ? 'text-ember' : ''}`}>{t.shortLabel}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </LayoutGroup>
-      ) : !chatViewOpen ? (
+      {!chatViewOpen && (
         <LayoutGroup id="floating-pill">
-          <nav className="pill-nav fixed bottom-4 left-4 right-4 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5">
+          <nav
+            className="pill-nav fixed left-4 right-4 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5"
+            style={{ bottom: 'max(16px, calc(var(--sab) + 8px))' }}
+          >
             {visibleTabs.map(t => {
               const active = location.pathname === t.path
               return (
@@ -606,7 +589,7 @@ function AppContent() {
             })}
           </nav>
         </LayoutGroup>
-      ) : null}
+      )}
 
       {guide.open && (
         <div

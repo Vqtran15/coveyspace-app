@@ -31,23 +31,7 @@ html:not(.is-pwa) .chat-container {
   height: calc(var(--dvh) - 16px);
 }
 
-/* Nav bar: use top+translateY instead of bottom:0 to bypass iOS PWA bug where
-   position:fixed;bottom:0 anchors to document bottom (not viewport) on
-   non-scrollable pages. top:0 always anchors to viewport top reliably. */
-nav.bottom-nav {
-  top: 0;
-  /* window.innerHeight excludes the status bar in iOS PWA standalone mode,
-     so --dvh alone undershoots. Adding --sat (status bar height) gives the
-     true screen height: top_of_status_bar + dvh + sat = screen_bottom. */
-  transform: translateY(calc(var(--dvh) + var(--sat) - 100%));
-  transition: transform 0.2s ease;
-}
-/* When keyboard opens: slide nav fully off-screen */
-body.chat-keyboard-open nav.bottom-nav {
-  transform: translateY(calc(var(--dvh) + var(--sat)));
-  pointer-events: none;
-}
-/* Pill nav: hide on keyboard open */
+/* Pill nav: hide when keyboard opens in chat */
 body.chat-keyboard-open nav.pill-nav {
   opacity: 0;
   pointer-events: none;

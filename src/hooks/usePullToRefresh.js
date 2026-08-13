@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { tabScrollRef } from '../lib/tabScrollRef.js'
 
 const THRESHOLD = 72
 
@@ -15,7 +16,8 @@ export function usePullToRefresh(onRefresh, enabled = true) {
     if (!enabled) return
 
     function onTouchStart(e) {
-      if (window.scrollY === 0) startY.current = e.touches[0].clientY
+      const scrollTop = tabScrollRef.current ? tabScrollRef.current.scrollTop : window.scrollY
+      if (scrollTop === 0) startY.current = e.touches[0].clientY
     }
 
     function onTouchMove(e) {
