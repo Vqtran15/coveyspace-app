@@ -19,7 +19,7 @@ function today() {
 
 function formatDateBadge(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')
-  return { month: MONTHS[d.getMonth()], day: d.getDate() }
+  return { month: MONTHS[d.getMonth()], day: d.getDate(), year: d.getFullYear() }
 }
 
 function formatDateFull(dateStr, timeStr) {
@@ -238,7 +238,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
     return () => document.removeEventListener('mousedown', handleClick)
   }, [menuOpen])
 
-  const { month, day } = formatDateBadge(event.event_date)
+  const { month, day, year } = formatDateBadge(event.event_date)
 
   return (
     <motion.div
@@ -302,6 +302,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           >
             <span className="text-[11px] font-bold text-ember uppercase tracking-wide">{month}</span>
             <span className="text-2xl font-bold text-ember leading-none">{day}</span>
+            <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{year}</span>
           </motion.div>
           <div className="pt-1 min-w-0">
             <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
@@ -408,7 +409,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
 function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOpenDetail, onRsvp }) {
-  const { month, day } = formatDateBadge(event.event_date)
+  const { month, day, year } = formatDateBadge(event.event_date)
   const myRsvp = eventRsvps.find(r => r.user_id === userId)
 
   if (isFeatured) {
@@ -425,6 +426,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
           >
             <span className="text-[10px] font-bold text-ember uppercase tracking-wide">{month}</span>
             <span className="text-2xl font-bold text-ember leading-none">{day}</span>
+            <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{year}</span>
           </motion.div>
           <div className="flex-1 min-w-0 pt-0.5">
             <p className="font-bold text-stone-800 text-base leading-snug">{event.title}</p>
@@ -504,6 +506,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
       >
         <span className="text-[10px] font-bold text-ember uppercase tracking-wide">{month}</span>
         <span className="text-xl font-bold text-ember leading-none">{day}</span>
+        <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{year}</span>
       </motion.div>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-stone-800 text-sm truncate">{event.title}</p>

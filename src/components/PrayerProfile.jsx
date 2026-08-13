@@ -517,7 +517,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   {filteredRequests.map((r, idx) => {
                     const requestReactions = reactions[r.id] ?? []
                     const isLast = idx === filteredRequests.length - 1
-                    const [, mo, dy] = r.date.split('-').map(Number)
+                    const [yr, mo, dy] = r.date.split('-').map(Number)
                     const mon = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })
                     return (
                       <div key={r.id} className={`flex ${newId === r.id ? 'animate-fade-up' : ''}`}>
@@ -526,6 +526,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                           <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-2 py-1.5">
                             <span className="text-[10px] font-bold text-ember uppercase tracking-wide leading-none">{mon}</span>
                             <span className="text-xl font-bold text-ember leading-none mt-0.5">{dy}</span>
+                            <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{yr}</span>
                           </div>
                         </div>
                         {/* Spine */}
