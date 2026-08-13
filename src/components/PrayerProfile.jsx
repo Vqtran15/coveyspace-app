@@ -365,7 +365,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
       >
         <div className="flex-1 flex flex-col min-h-0 w-full lg:max-w-3xl lg:mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-stone-100 shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 shrink-0">
           <button
             onClick={handleClose}
             className="w-9 h-9 flex items-center justify-center rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-100 active:bg-stone-200 transition-colors shrink-0"
@@ -493,17 +493,16 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                 <div>
                   {[0, 1, 2].map(i => (
                     <div key={i} className="flex animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
-                      <div className="w-14 shrink-0 pr-3 pt-2.5 flex flex-col items-end gap-1">
-                        <div className="h-2 bg-stone-200 rounded w-7" />
-                        <div className="h-6 bg-stone-200 rounded w-9" />
-                        <div className="h-2 bg-stone-200 rounded w-10" />
+                      <div className="w-16 shrink-0 flex items-center justify-end pr-2">
+                        <div className="h-12 w-11 bg-stone-200 rounded-xl" />
                       </div>
-                      <div className="flex flex-col items-center w-5 shrink-0 pt-2.5">
+                      <div className="flex flex-col items-center w-5 shrink-0">
+                        <div className={`w-px flex-1 bg-stone-200 mb-1 ${i === 0 ? 'opacity-0' : ''}`} />
                         <div className="w-2.5 h-2.5 rounded-full bg-stone-200 shrink-0" />
-                        {i < 2 && <div className="w-px flex-1 bg-stone-200 mt-1" />}
+                        <div className={`w-px flex-1 bg-stone-200 mt-1 ${i === 2 ? 'opacity-0' : ''}`} />
                       </div>
-                      <div className="flex-1 pl-2 pb-6">
-                        <div className="h-3 bg-stone-200 rounded w-full mb-2 mt-0.5" />
+                      <div className="flex-1 pl-2 py-2.5">
+                        <div className="h-3 bg-stone-200 rounded w-full mb-2" />
                         <div className="h-3 bg-stone-200 rounded w-4/5" />
                       </div>
                     </div>
@@ -518,24 +517,25 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   {filteredRequests.map((r, idx) => {
                     const requestReactions = reactions[r.id] ?? []
                     const isLast = idx === filteredRequests.length - 1
-                    const [yr, mo, dy] = r.date.split('-').map(Number)
-                    const dateObj = new Date(yr, mo - 1, dy)
-                    const mon = dateObj.toLocaleDateString('en-US', { month: 'short' })
+                    const [, mo, dy] = r.date.split('-').map(Number)
+                    const mon = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })
                     return (
                       <div key={r.id} className={`flex ${newId === r.id ? 'animate-fade-up' : ''}`}>
                         {/* Date column */}
-                        <div className="w-14 shrink-0 text-right pr-3 pt-2.5">
-                          <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider leading-none">{mon}</p>
-                          <p className="text-2xl font-bold text-stone-700 leading-none mt-0.5">{dy}</p>
-                          <p className="text-[10px] text-stone-400 leading-none mt-0.5">{yr}</p>
+                        <div className="w-16 shrink-0 flex items-center justify-end pr-2">
+                          <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-2 py-1.5">
+                            <span className="text-[10px] font-bold text-ember uppercase tracking-wide leading-none">{mon}</span>
+                            <span className="text-xl font-bold text-ember leading-none mt-0.5">{dy}</span>
+                          </div>
                         </div>
                         {/* Spine */}
-                        <div className="flex flex-col items-center w-5 shrink-0 pt-2.5">
+                        <div className="flex flex-col items-center w-5 shrink-0">
+                          <div className={`w-px flex-1 bg-stone-200 mb-1 ${idx === 0 ? 'opacity-0' : ''}`} />
                           <div className={`w-2.5 h-2.5 rounded-full shrink-0 z-10 ${r.answered ? 'bg-sage-700' : 'bg-ember'}`} />
-                          {!isLast && <div className="w-px flex-1 bg-stone-200 mt-1" />}
+                          <div className={`w-px flex-1 bg-stone-200 mt-1 ${isLast ? 'opacity-0' : ''}`} />
                         </div>
                         {/* Content bubble */}
-                        <div className={`flex-1 min-w-0 pl-2 ${isLast ? 'pb-4' : 'pb-5'}`}>
+                        <div className="flex-1 min-w-0 pl-2 py-2.5">
                           <div
                             className={`relative rounded-xl border border-stone-100 shadow-sm px-3 py-2.5 bg-white select-none`}
                             onClick={() => !isOwnProfile && handleBubbleTap(r.id)}
