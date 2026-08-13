@@ -19,16 +19,17 @@ body {
 }
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
-   (above the status bar) and fills to the nav bar top.
-   PWA: --dvh = window.innerHeight excludes the status bar; +--sat gives the true
-   screen height; -68px nav content height; ---sab home-indicator area below nav.
-   Browser: fixed 104px offset (no --sab) keeps the container stable as the
-   Safari toolbar shows/hides, leaving a consistent gap above the floating pill. */
+   (above the status bar) and fills to the bottom safe area.
+   PWA: container spans the full screen (dvh + sat = screen height) minus the
+   home-indicator zone (sab). The pill nav is hidden when chat is open, so no
+   extra nav subtraction is needed.
+   Browser: fills the full visible viewport (dvh). Keyboard override below
+   replaces this height via --vvh when the soft keyboard is open. */
 html.is-pwa .chat-container {
-  height: calc(var(--dvh) + var(--sat) - var(--sab) - 68px);
+  height: calc(var(--dvh) + var(--sat) - var(--sab));
 }
 html:not(.is-pwa) .chat-container {
-  height: calc(var(--dvh) - 16px);
+  height: var(--dvh);
 }
 
 /* Pill nav: hide when keyboard opens in chat */
