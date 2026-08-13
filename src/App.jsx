@@ -423,7 +423,7 @@ function AppContent() {
             : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
         }`}
         style={isFullHeight ? undefined : {
-          height: 'calc(var(--dvh) - var(--sat))',
+          height: 'var(--dvh)',
           overflow: 'hidden',
         }}
       >
@@ -435,8 +435,7 @@ function AppContent() {
             height: '100%',
             overflowY: 'auto',
             overscrollBehavior: 'contain',
-            paddingBottom: 'calc(var(--sab) + 80px)',
-            WebkitOverflowScrolling: 'touch',
+            paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)',
           }}
         >
         <Routes>
