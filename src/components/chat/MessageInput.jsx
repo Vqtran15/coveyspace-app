@@ -14,6 +14,7 @@ export default function MessageInput() {
     replyingTo, setReplyingTo,
     sending,
     textareaRef, fileInputRef, savedSelectionRef,
+    scrollRef,
     pollCreating, setPollCreating,
     pollQuestion, setPollQuestion,
     pollOptions, setPollOptions,
@@ -25,8 +26,16 @@ export default function MessageInput() {
     senderName,
   } = useChatContext()
 
+  // Stop message list momentum scroll the moment the user touches the input area.
+  // While momentum is active, iOS calculates an unstable layout for keyboard-open
+  // scroll-to-focus, which causes --vvh to be computed incorrectly and the chat
+  // container to jump. Setting scrollTop to itself aborts WebKit momentum instantly.
+  function stopListMomentum() {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollTop
+  }
+
   return (
-    <div className="shrink-0 max-w-3xl mx-auto w-full px-3 py-2">
+    <div className="shrink-0 max-w-3xl mx-auto w-full px-3 py-2" onTouchStart={stopListMomentum}>
     <div className="bg-white rounded-2xl shadow-md px-3 pt-3 pb-3 relative">
       {/* Reply preview */}
       {replyingTo && (

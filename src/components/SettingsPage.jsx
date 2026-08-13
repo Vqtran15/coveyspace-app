@@ -528,6 +528,7 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
         </div>
 
         {/* Danger zone */}
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 px-1">Danger Zone</p>
         <div className="space-y-2">
           <AnimatePresence initial={false}>
             {leaveConfirm ? (
