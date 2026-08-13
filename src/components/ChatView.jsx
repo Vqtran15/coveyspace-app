@@ -212,25 +212,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     let kbOpen = false
 
     function update() {
-      // iOS scrolls the document when the keyboard opens to bring the focused input
-      // into view. The page is not supposed to scroll in chat (the chat container
-      // handles its own layout), so snap it back immediately and defer this update.
-      // vv.scroll will re-fire once the scroll settles at 0.
-      if (window.scrollY !== 0) {
-        window.scrollTo(0, 0)
-        requestAnimationFrame(update)
-        return
-      }
-
       const nowVVH = Math.round(vv.height)
       const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
-      // With scrollY forced to 0, vv.offsetTop is always 0.
-      // sat = status-bar height; document y=0 is behind the status bar, so
-      // the keyboard top in CSS pixels from document origin = sat + vv.height.
+      // sat + vv.offsetTop + vv.height gives the keyboard top in document
+      // coordinates, which is the correct chat container height.
+      // vv.offsetTop accounts for any page scroll iOS applies when the keyboard
+      // opens, so this formula stays accurate whether or not body overflow:hidden
+      // fully prevents that scroll.
       document.documentElement.style.setProperty(
         '--vvh',
-        `${Math.round(sat + vv.height)}px`
+        `${Math.round(sat + vv.offsetTop + vv.height)}px`
       )
       if (nowOpen && !kbOpen) {
         kbOpen = true
