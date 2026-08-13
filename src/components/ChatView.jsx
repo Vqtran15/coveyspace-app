@@ -178,6 +178,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => ro.disconnect()
   }, [])
 
+  // Prevent iOS from scrolling the document while chat is open. The outer div has
+  // minHeight > dvh (needed for env(safe-area-inset-bottom) to return non-zero), which
+  // makes the document technically scrollable. iOS keyboard-open triggers a page scroll
+  // to "ensure" the focused input is visible; hiding body overflow blocks that scroll so
+  // vv.offsetTop stays 0 and the --vvh formula stays accurate.
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   // Track keyboard visibility via visualViewport. When the keyboard appears,
   // window.innerHeight stays fixed but visualViewport.height shrinks, giving us
   // the exact visible-area height to size the chat container against.

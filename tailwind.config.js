@@ -109,8 +109,7 @@ export default {
         },
         'welcome-pop': {
           '0%':   { opacity: '0', transform: 'scale(0.3)' },
-          '60%':  { opacity: '1', transform: 'scale(1.15)' },
-          '80%':  { transform: 'scale(0.95)' },
+          '65%':  { opacity: '1', transform: 'scale(1.08)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         'fade-up': {

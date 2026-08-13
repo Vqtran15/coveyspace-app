@@ -383,7 +383,7 @@ function AppContent() {
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
     ) : (
-    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'var(--sat)', minHeight: isChat ? 'var(--dvh)' : 'calc(var(--dvh) + var(--sat))' }}>
+    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'var(--sat)', minHeight: 'calc(var(--dvh) + var(--sat))' }}>
       {!isOnline && (
         <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'var(--sat)' }}>
           <WifiSlash size={14} weight="bold" />
