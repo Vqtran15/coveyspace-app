@@ -202,18 +202,25 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     let kbOpen = false
 
     function update() {
+      // iOS scrolls the document when the keyboard opens to bring the focused input
+      // into view. The page is not supposed to scroll in chat (the chat container
+      // handles its own layout), so snap it back immediately and defer this update.
+      // vv.scroll will re-fire once the scroll settles at 0.
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0)
+        requestAnimationFrame(update)
+        return
+      }
+
       const nowVVH = Math.round(vv.height)
       const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
-      // sat + vv.offsetTop + vv.height:
-      //   vv.height      = visible area from the visual-viewport top to keyboard top
-      //   vv.offsetTop   = visual viewport's offset within the layout viewport
-      //   sat            = status-bar height; document y=0 is behind the status bar,
-      //                    so the keyboard top in document coordinates is sat higher
-      //                    than vv.offsetTop + vv.height alone.
+      // With scrollY forced to 0, vv.offsetTop is always 0.
+      // sat = status-bar height; document y=0 is behind the status bar, so
+      // the keyboard top in CSS pixels from document origin = sat + vv.height.
       document.documentElement.style.setProperty(
         '--vvh',
-        `${Math.round(sat + vv.offsetTop + vv.height)}px`
+        `${Math.round(sat + vv.height)}px`
       )
       if (nowOpen && !kbOpen) {
         kbOpen = true
@@ -226,8 +233,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
 
     vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
     return () => {
       vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
       document.body.classList.remove('chat-keyboard-open')
       document.documentElement.style.removeProperty('--vvh')
     }
