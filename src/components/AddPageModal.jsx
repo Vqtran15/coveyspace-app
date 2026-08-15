@@ -145,7 +145,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
       <form
         id="add-page-form"
         onSubmit={handleSubmit}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto overflow-x-hidden"
       >
         <div className="max-w-3xl mx-auto px-4 pb-6 space-y-4">
           {pages.length > 0 && (
@@ -178,13 +178,13 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             />
           </div>
 
-          <div className="overflow-hidden">
+          <div>
             <label className={labelClass}>Date</label>
             <input
               type="date"
               value={date}
               onChange={handleDateChange}
-              className={inputClass + ' min-w-0'}
+              className={inputClass}
               required
             />
           </div>
@@ -210,7 +210,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             </label>
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
               {dishes.map((dish, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+                <div key={i} className="flex items-center gap-3 px-4 py-3.5">
                   <span className="text-xs font-medium text-stone-400 shrink-0 text-right tabular-nums whitespace-nowrap">
                     {noun} {i + 1}
                   </span>
@@ -219,7 +219,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
                     value={dish}
                     onChange={e => setDish(i, e.target.value)}
                     placeholder="—"
-                    className="flex-1 text-sm text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
+                    className="flex-1 text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
                   />
                 </div>
               ))}
