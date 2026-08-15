@@ -1965,7 +1965,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
         <>
           <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
-          <div className={`fixed inset-x-0 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
+          <div className={`fixed inset-x-0 lg:left-56 bottom-0 z-40 overflow-hidden bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
@@ -1974,6 +1974,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 searchPlaceholder="Search emojis…"
                 previewConfig={{ showPreview: false }}
                 autoFocusSearch={false}
+                defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
+                onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
               />
             </Suspense>
           </div>
