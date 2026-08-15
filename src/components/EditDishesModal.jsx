@@ -130,7 +130,6 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
 
       {/* Scrollable form */}
       <form
-        id="edit-page-form"
         onSubmit={handleSubmit}
         className="flex-1 overflow-y-auto overflow-x-hidden"
       >
@@ -312,23 +311,18 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
               </div>
             )}
           </div>
+
+          <div style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+            <button
+              type="submit"
+              disabled={saving || entries.length === 0}
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
+            >
+              {saving ? 'Saving…' : `Save ${pageNoun}`}
+            </button>
+          </div>
         </div>
       </form>
-
-      {/* Sticky footer */}
-      <div
-        className="shrink-0 max-w-3xl mx-auto w-full px-4 pt-3"
-        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-      >
-        <button
-          type="submit"
-          form="edit-page-form"
-          disabled={saving || entries.length === 0}
-          className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
-        >
-          {saving ? 'Saving…' : `Save ${pageNoun}`}
-        </button>
-      </div>
     </div>
   )
 }
