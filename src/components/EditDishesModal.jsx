@@ -156,7 +156,6 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
               onChange={e => setTitle(e.target.value)}
               className={inputClass}
               required
-              autoFocus
             />
           </div>
 
@@ -168,7 +167,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 style={{ width: '100%', boxSizing: 'border-box', display: 'block' }}
-                className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white"
+                className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white appearance-none"
                 required
               />
             </div>

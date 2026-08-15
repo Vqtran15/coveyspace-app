@@ -186,7 +186,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
                 value={date}
                 onChange={handleDateChange}
                 style={{ width: '100%', boxSizing: 'border-box', display: 'block' }}
-                className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white"
+                className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white appearance-none"
                 required
               />
             </div>
