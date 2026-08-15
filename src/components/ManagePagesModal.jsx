@@ -43,11 +43,6 @@ export default function ManagePagesPage({
     setTimeout(onClose, ANIM_DURATION)
   }
 
-  function handleAddPage() {
-    setExiting(true)
-    setTimeout(onAddPage, ANIM_DURATION)
-  }
-
   function clearTransforms() {
     rowRefs.current.forEach(el => { if (el) el.style.transform = '' })
   }
@@ -159,21 +154,21 @@ export default function ManagePagesPage({
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
       onClick={() => { setMenuOpenId(null); setConfirmDeleteId(null) }}
     >
-      {/* Header */}
-      <div className="bg-white border-b border-stone-100 shrink-0" onClick={e => e.stopPropagation()}>
-        <div className="max-w-3xl mx-auto flex items-center px-2 py-2">
+      {/* Header — no white bar, sits directly on page background */}
+      <div className="max-w-3xl mx-auto w-full px-4 pt-8 pb-4 shrink-0" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3">
           <button
             onClick={handleClose}
             aria-label="Back"
-            className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-200 active:bg-stone-300 transition-colors shrink-0"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} weight="bold" />
           </button>
-          <h1 className="flex-1 text-lg font-bold text-stone-800 px-2">Manage {pageNounPlural}</h1>
+          <h1 className="flex-1 text-3xl font-bold text-stone-800">Manage {pageNounPlural}</h1>
           <button
-            onClick={handleAddPage}
+            onClick={onAddPage}
             aria-label={`Add ${pageNoun}`}
-            className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember hover:bg-ember-700 active:bg-ember-800 text-white transition-colors shrink-0"
           >
             <Plus size={20} weight="bold" />
           </button>
@@ -186,14 +181,14 @@ export default function ManagePagesPage({
           <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
             <p className="text-stone-500 text-sm mb-5">No {pageNounPlural.toLowerCase()} yet.</p>
             <button
-              onClick={handleAddPage}
+              onClick={onAddPage}
               className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-xl transition-colors"
             >
               + Add {pageNoun}
             </button>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto px-4 pt-4 pb-8 flex flex-col gap-3">
+          <div className="max-w-3xl mx-auto px-4 pb-8 flex flex-col gap-3">
             {list.map((page, i) => {
               const isDragging = page.id === draggingId
               const isRenaming = page.id === renamingId
@@ -224,12 +219,12 @@ export default function ManagePagesPage({
                   </button>
 
                   {/* Date badge */}
-                  <div className="shrink-0 w-10 h-10 flex flex-col items-center justify-center bg-stone-100 rounded-xl">
-                    <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide leading-none">{month}</span>
-                    <span className="text-base font-bold text-stone-700 leading-tight">{day}</span>
+                  <div className="shrink-0 w-10 h-10 flex flex-col items-center justify-center bg-ember/10 rounded-xl">
+                    <span className="text-[10px] font-semibold text-ember uppercase tracking-wide leading-none">{month}</span>
+                    <span className="text-base font-bold text-ember leading-tight">{day}</span>
                   </div>
 
-                  {/* Title / rename input */}
+                  {/* Title or rename input */}
                   {isRenaming ? (
                     <input
                       ref={renameInputRef}

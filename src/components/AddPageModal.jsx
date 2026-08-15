@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { ArrowLeft } from '@phosphor-icons/react'
 import { toDateString } from '../utils/dates.js'
 import { nextScheduledDate } from '../utils/schedule.js'
-import { useModalClose } from '../hooks/useModalClose.js'
+
+const ANIM_DURATION = 300
 
 function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null) {
   const today = new Date()
@@ -41,18 +43,23 @@ function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7
 }
 
 export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [], onClose, onSave, existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null }) {
-  const [closing, close] = useModalClose(onClose)
+  const [exiting, setExiting] = useState(false)
   const defaultDate = findNextAvailableDate(existingDates, targetDow, intervalDays, weekOccurrences)
   const defaultDateStr = toDateString(defaultDate)
 
-  const [title, setTitle]         = useState(defaultTitle(defaultDateStr))
-  const [date, setDate]           = useState(defaultDateStr)
+  const [title, setTitle]       = useState(defaultTitle(defaultDateStr))
+  const [date, setDate]         = useState(defaultDateStr)
   const [slotCount, setSlotCount] = useState(10)
-  const [dishes, setDishes]       = useState(Array(10).fill(''))
-  const [saving, setSaving]       = useState(false)
-  const [error, setError]         = useState(null)
+  const [dishes, setDishes]     = useState(Array(10).fill(''))
+  const [saving, setSaving]     = useState(false)
+  const [error, setError]       = useState(null)
   const [duplicateFrom, setDuplicateFrom] = useState('')
   const [duplicateCategories, setDuplicateCategories] = useState([])
+
+  function handleClose() {
+    setExiting(true)
+    setTimeout(onClose, ANIM_DURATION)
+  }
 
   function handleDuplicateChange(pageId) {
     setDuplicateFrom(pageId)
@@ -109,35 +116,44 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
     }
   }
 
+  const inputClass = 'w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-white'
+  const labelClass = 'block text-sm font-semibold text-stone-700 mb-1.5'
+
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
-      onClick={close}
+      className={`fixed inset-0 lg:left-56 z-[55] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-6 pb-0 shrink-0">
-          <h2 className="text-xl font-bold text-stone-800">Add {pageNoun}</h2>
+      {/* Header */}
+      <div className="max-w-3xl mx-auto w-full px-4 pt-8 pb-4 shrink-0">
+        <div className="flex items-center gap-3">
           <button
-            onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            onClick={handleClose}
+            aria-label="Back"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-200 active:bg-stone-300 transition-colors shrink-0"
           >
-            &times;
+            <ArrowLeft size={20} weight="bold" />
           </button>
+          <h1 className="flex-1 text-3xl font-bold text-stone-800">Add {pageNoun}</h1>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+      {/* Scrollable form */}
+      <form
+        id="add-page-form"
+        onSubmit={handleSubmit}
+        className="flex-1 overflow-y-auto"
+      >
+        <div className="max-w-3xl mx-auto px-4 pb-6 space-y-4">
           {pages.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                Duplicate from <span className="text-stone-400 font-normal">(optional)</span>
+              <label className={labelClass}>
+                Duplicate from <span className="text-stone-400 font-normal">— optional</span>
               </label>
               <select
                 value={duplicateFrom}
                 onChange={e => handleDuplicateChange(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-white"
+                className={inputClass}
               >
                 <option value="">Start from scratch</option>
                 {pages.map(p => (
@@ -148,60 +164,59 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
           )}
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Title</label>
+            <label className={labelClass}>Title</label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              className={inputClass}
               required
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Date</label>
+            <label className={labelClass}>Date</label>
             <input
               type="date"
               value={date}
               onChange={handleDateChange}
-              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              className={inputClass}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
+            <label className={labelClass}>
               Number of {noun.toLowerCase()}s
+              <span className="text-stone-400 font-normal ml-1.5 tabular-nums">{slotCount}</span>
             </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={1}
-                max={30}
-                value={slotCount}
-                onChange={e => setSlotCount(Number(e.target.value))}
-                className="flex-1 accent-ember"
-              />
-              <span className="w-10 text-center font-semibold text-stone-700">{slotCount}</span>
-            </div>
+            <input
+              type="range"
+              min={1}
+              max={30}
+              value={slotCount}
+              onChange={e => setSlotCount(Number(e.target.value))}
+              className="w-full accent-ember"
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
-              {noun}s{' '}
-              <span className="text-stone-400 font-normal">(optional — fill in now or later)</span>
+            <label className={labelClass}>
+              {noun}s <span className="text-stone-400 font-normal">— optional, fill in now or later</span>
             </label>
-            <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
               {dishes.map((dish, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-xs text-stone-400 w-20 shrink-0 text-right">{noun} {i + 1}</span>
+                <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+                  <span className="text-xs font-medium text-stone-400 w-14 shrink-0 text-right tabular-nums">
+                    {noun} {i + 1}
+                  </span>
                   <input
                     type="text"
                     value={dish}
                     onChange={e => setDish(i, e.target.value)}
-                    placeholder=""
-                    className="flex-1 border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                    placeholder="—"
+                    className="flex-1 text-sm text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
                   />
                 </div>
               ))}
@@ -209,28 +224,26 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
               {error}
             </p>
           )}
+        </div>
+      </form>
 
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
-            >
-              {saving ? 'Adding…' : `Add ${pageNoun}`}
-            </button>
-          </div>
-        </form>
+      {/* Sticky footer CTA */}
+      <div
+        className="shrink-0 max-w-3xl mx-auto w-full px-4 pt-3 pb-3"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+      >
+        <button
+          type="submit"
+          form="add-page-form"
+          disabled={saving}
+          className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
+        >
+          {saving ? 'Adding…' : `Add ${pageNoun}`}
+        </button>
       </div>
     </div>
   )

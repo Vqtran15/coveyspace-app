@@ -355,7 +355,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           pageNoun={pageNoun}
           pageNounPlural={pageNounPlural}
           onReorder={handleReorderPages}
-          onAddPage={() => { setShowManagePages(false); setShowAddModal(true) }}
+          onAddPage={() => setShowAddModal(true)}
           onDeletePage={async (pageId) => {
             const { error } = await supabase.from(tables.pages).delete().eq('id', pageId)
             if (error) throw new Error(error.message)
