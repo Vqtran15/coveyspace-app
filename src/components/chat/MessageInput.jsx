@@ -153,13 +153,13 @@ export default function MessageInput() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
+            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                width="100%"
+                width="calc(100% - 2px)"
                 height={350}
                 searchPlaceholder="Search emojis…"
                 previewConfig={{ showPreview: false }}

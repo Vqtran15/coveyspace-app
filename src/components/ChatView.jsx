@@ -1984,7 +1984,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
-                width="100%"
+                width="calc(100% - 2px)"
                 height={350}
                 searchPlaceholder="Search emojis…"
                 previewConfig={{ showPreview: false }}

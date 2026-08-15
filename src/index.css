@@ -69,6 +69,8 @@ a:focus:not(:focus-visible),
    !important here wins the cascade regardless of injection order. */
 .epr-main {
   --epr-horizontal-padding: 16px !important;
+  /* icon sits at left:16px, is 20px wide → right edge at 36px; give text 40px left padding for a 4px gap */
+  --epr-search-input-padding: 0 30px 0 40px !important;
 }
 
 /* Desktop: disable directional page transitions — sidebar nav doesn't need
