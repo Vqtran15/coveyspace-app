@@ -178,13 +178,13 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             />
           </div>
 
-          <div>
+          <div className="overflow-hidden">
             <label className={labelClass}>Date</label>
             <input
               type="date"
               value={date}
               onChange={handleDateChange}
-              className={inputClass}
+              className={inputClass + ' min-w-0'}
               required
             />
           </div>
@@ -211,7 +211,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
               {dishes.map((dish, i) => (
                 <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                  <span className="text-xs font-medium text-stone-400 w-14 shrink-0 text-right tabular-nums">
+                  <span className="text-xs font-medium text-stone-400 shrink-0 text-right tabular-nums whitespace-nowrap">
                     {noun} {i + 1}
                   </span>
                   <input
