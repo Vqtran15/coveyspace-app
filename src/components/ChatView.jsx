@@ -1976,6 +1976,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 autoFocusSearch={false}
                 defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
                 onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
+                style={{ '--epr-horizontal-padding': '16px' }}
               />
             </Suspense>
           </div>
