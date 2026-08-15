@@ -16,6 +16,10 @@ export function usePullToRefresh(onRefresh, enabled = true) {
     if (!enabled) return
 
     function onTouchStart(e) {
+      // Don't arm pull-to-refresh when a fixed overlay is active — its scroll events
+      // reach the window listener too (window.scrollY stays 0 under a fixed overlay),
+      // which would trigger a RotationTab key change and unmount the overlay.
+      if (e.target.closest('[data-overlay]')) return
       const scrollTop = tabScrollRef.current ? tabScrollRef.current.scrollTop : window.scrollY
       if (scrollTop === 0) startY.current = e.touches[0].clientY
     }

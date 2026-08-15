@@ -124,6 +124,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
   return (
     <div
+      data-overlay="true"
       className={`fixed inset-0 lg:left-56 z-[55] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
