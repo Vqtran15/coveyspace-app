@@ -144,7 +144,6 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
       {/* Scrollable form */}
       <form
-        id="add-page-form"
         onSubmit={handleSubmit}
         className="flex-1 overflow-y-auto overflow-x-hidden"
       >
@@ -235,23 +234,18 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
               {error}
             </p>
           )}
+
+          <div style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
+            >
+              {saving ? 'Adding…' : `Add ${pageNoun}`}
+            </button>
+          </div>
         </div>
       </form>
-
-      {/* Sticky footer CTA */}
-      <div
-        className="shrink-0 max-w-3xl mx-auto w-full px-4 pt-3 pb-3"
-        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-      >
-        <button
-          type="submit"
-          form="add-page-form"
-          disabled={saving}
-          className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
-        >
-          {saving ? 'Adding…' : `Add ${pageNoun}`}
-        </button>
-      </div>
     </div>
   )
 }
