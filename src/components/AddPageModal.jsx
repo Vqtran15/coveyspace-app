@@ -180,13 +180,16 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
           <div>
             <label className={labelClass}>Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={handleDateChange}
-              className={inputClass}
-              required
-            />
+            <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-ember bg-white">
+              <input
+                type="date"
+                value={date}
+                onChange={handleDateChange}
+                style={{ width: '100%', boxSizing: 'border-box', display: 'block' }}
+                className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white"
+                required
+              />
+            </div>
           </div>
 
           <div>

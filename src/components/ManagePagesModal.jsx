@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { DotsSixVertical, Plus, ArrowLeft, DotsThreeVertical, PencilSimple, Trash, Check, X } from '@phosphor-icons/react'
+import { DotsSixVertical, Plus, ArrowLeft, DotsThreeVertical, NotePencil, PencilSimple, Trash, Check, X } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const ANIM_IN  = 300  // matches slide-in-right 0.3s
@@ -14,7 +14,7 @@ function shortDate(dateStr) {
 
 export default function ManagePagesPage({
   pages, isAdmin, pageNoun, pageNounPlural,
-  onReorder, onAddPage, onDeletePage, onRenamePage, onClose,
+  onReorder, onAddPage, onDeletePage, onRenamePage, onEditPage, onClose,
 }) {
   const [exiting, setExiting] = useState(false)
   const [list, setList] = useState(pages)
@@ -306,6 +306,18 @@ export default function ManagePagesPage({
                             className="absolute right-0 top-9 z-10 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden w-36"
                             onClick={e => e.stopPropagation()}
                           >
+                            {onEditPage && (
+                              <>
+                                <button
+                                  onClick={() => { setMenuOpenId(null); onEditPage(page) }}
+                                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                                >
+                                  <NotePencil size={14} className="text-stone-500" />
+                                  Edit
+                                </button>
+                                <div className="h-px bg-stone-100" />
+                              </>
+                            )}
                             <button
                               onClick={() => startRename(page)}
                               className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"

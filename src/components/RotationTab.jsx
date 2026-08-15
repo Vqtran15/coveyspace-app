@@ -7,6 +7,7 @@ import { haptic } from '../lib/haptic.js'
 import MealPage from './MealPage.jsx'
 import AddPageModal from './AddPageModal.jsx'
 import ManagePagesModal from './ManagePagesModal.jsx'
+import EditDishesModal from './EditDishesModal.jsx'
 
 const FUTURE_BUFFER = 2  // always keep at least this many pages with dates after today
 const AUTO_FILL_LIMIT = 10 // safety cap per load
@@ -81,6 +82,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
   const [showAddModal, setShowAddModal]       = useState(false)
   const [showManagePages, setShowManagePages] = useState(false)
   const [showEditPage, setShowEditPage]       = useState(false)
+  const [managingEditPage, setManagingEditPage] = useState(null)
 
   async function load() {
     setLoading(true)
@@ -136,6 +138,25 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     setPages(sorted.map((p, i) => ({ ...p, position: i })))
     setViewIndex(newIndex)
     // AddPageModal animates itself out on success and then calls onClose → setShowAddModal(false)
+  }
+
+  async function handleManageEditSave({ newTitle, newDate, newLocation, newDishes, newCategories, newColumns, removedOrigSlots, renames }) {
+    const pageId = managingEditPage.id
+    if (removedOrigSlots.length > 0) {
+      const { error } = await supabase.from(tables.signups).delete().eq('meal_page_id', pageId).in('slot_number', removedOrigSlots)
+      if (error) throw new Error(error.message)
+    }
+    for (const { from, to } of renames) {
+      const { error } = await supabase.from(tables.signups).update({ slot_number: to }).eq('meal_page_id', pageId).eq('slot_number', from)
+      if (error) throw new Error(error.message)
+    }
+    const { data, error } = await supabase
+      .from(tables.pages)
+      .update({ title: newTitle, week_date: newDate, location: newLocation, slot_count: newDishes.length, slot_dishes: newDishes, slot_columns: newColumns ?? 1, ...(supportsCategories && { slot_categories: newCategories }) })
+      .eq('id', pageId).select().single()
+    if (error) throw new Error(error.message)
+    setPages(prev => prev.map(p => p.id === pageId ? data : p))
+    setManagingEditPage(null)
   }
 
   function handlePageDeleted(pageId) {
@@ -366,7 +387,26 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             if (error) throw new Error(error.message)
             setPages(prev => prev.map(p => p.id === pageId ? { ...p, title: newTitle } : p))
           }}
+          onEditPage={page => { setManagingEditPage(page); setShowManagePages(false) }}
           onClose={() => setShowManagePages(false)}
+        />
+      )}
+
+      {managingEditPage && (
+        <EditDishesModal
+          page={managingEditPage}
+          noun={noun}
+          pageNoun={pageNoun}
+          signups={[]}
+          onClose={() => setManagingEditPage(null)}
+          onSave={handleManageEditSave}
+          supportsCategories={supportsCategories}
+          onDelete={async () => {
+            const { error } = await supabase.from(tables.pages).delete().eq('id', managingEditPage.id)
+            if (error) throw new Error(error.message)
+            handlePageDeleted(managingEditPage.id)
+            setManagingEditPage(null)
+          }}
         />
       )}
 
