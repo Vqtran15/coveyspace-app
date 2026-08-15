@@ -3,7 +3,7 @@ import { ArrowLeft } from '@phosphor-icons/react'
 import { toDateString } from '../utils/dates.js'
 import { nextScheduledDate } from '../utils/schedule.js'
 
-const ANIM_DURATION = 300
+const ANIM_OUT = 200  // matches slide-out-right 0.2s
 
 function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null) {
   const today = new Date()
@@ -58,7 +58,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
   function handleClose() {
     setExiting(true)
-    setTimeout(onClose, ANIM_DURATION)
+    setTimeout(onClose, ANIM_OUT)
   }
 
   function handleDuplicateChange(pageId) {
@@ -110,6 +110,9 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
         slot_dishes: dishes.map(d => d.trim()),
         ...(duplicateCategories.length > 0 && { slot_categories: duplicateCategories }),
       })
+      // Animate out on success so the transition matches the back-button path
+      setExiting(true)
+      setTimeout(onClose, ANIM_OUT)
     } catch (err) {
       setError(err.message ?? `Could not create ${pageNoun.toLowerCase()}.`)
       setSaving(false)

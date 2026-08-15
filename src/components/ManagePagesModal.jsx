@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { DotsSixVertical, Plus, ArrowLeft, DotsThreeVertical, PencilSimple, Trash, Check, X } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const ANIM_DURATION = 300
+const ANIM_IN  = 300  // matches slide-in-right 0.3s
+const ANIM_OUT = 200  // matches slide-out-right 0.2s
 
 function shortDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -30,7 +31,11 @@ export default function ManagePagesPage({
   const renameInputRef = useRef(null)
 
   useEffect(() => {
-    if (!suppressSync.current) setList(pages)
+    if (!suppressSync.current) {
+      setList(pages)
+      // Truncate stale refs left over from deleted rows
+      rowRefs.current.length = pages.length
+    }
   }, [pages])
 
   // Fixed date anchors — position 0 is always the earliest date
@@ -40,7 +45,7 @@ export default function ManagePagesPage({
 
   function handleClose() {
     setExiting(true)
-    setTimeout(onClose, ANIM_DURATION)
+    setTimeout(onClose, ANIM_OUT)
   }
 
   function clearTransforms() {
@@ -74,7 +79,7 @@ export default function ManagePagesPage({
     info.lastSteps = steps
 
     const targetIndex = info.startIndex + steps
-    for (let i = 0; i < rowRefs.current.length; i++) {
+    for (let i = 0; i < info.length; i++) {
       if (i === info.startIndex) continue
       const el = rowRefs.current[i]
       if (!el) continue
@@ -285,7 +290,7 @@ export default function ManagePagesPage({
                           setMenuOpenId(id => id === page.id ? null : page.id)
                           setConfirmDeleteId(null)
                         }}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors"
                         aria-label="Page options"
                       >
                         <DotsThreeVertical size={16} weight="bold" />

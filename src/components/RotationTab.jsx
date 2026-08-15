@@ -135,7 +135,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
     setPages(sorted.map((p, i) => ({ ...p, position: i })))
     setViewIndex(newIndex)
-    setShowAddModal(false)
+    // AddPageModal animates itself out on success and then calls onClose → setShowAddModal(false)
   }
 
   function handlePageDeleted(pageId) {
