@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { useModalClose } from '../hooks/useModalClose.js'
+import { ArrowLeft, Plus, X } from '@phosphor-icons/react'
+
+const ANIM_OUT = 200  // matches slide-out-right 0.2s
 
 const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
 
@@ -11,9 +13,9 @@ const CATEGORY_STYLES = {
 }
 
 export default function EditDishesModal({ page, noun, pageNoun, signups, onClose, onSave, onDelete, supportsCategories = false }) {
-  const [closing, close] = useModalClose(onClose)
-  const [title, setTitle]       = useState(page.title)
-  const [date, setDate]         = useState(page.week_date)
+  const [exiting, setExiting] = useState(false)
+  const [title, setTitle]     = useState(page.title)
+  const [date, setDate]       = useState(page.week_date)
   const [location, setLocation] = useState(page.location ?? '')
   const [entries, setEntries] = useState(() =>
     Array.from({ length: page.slot_count }, (_, i) => ({
@@ -23,11 +25,16 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
       origSlot: i + 1,
     }))
   )
-  const [columns, setColumns]       = useState(page.slot_columns ?? 1)
-  const [saving, setSaving]         = useState(false)
-  const [error, setError]           = useState(null)
+  const [columns, setColumns]   = useState(page.slot_columns ?? 1)
+  const [saving, setSaving]     = useState(false)
+  const [error, setError]       = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting]     = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  function handleClose() {
+    setExiting(true)
+    setTimeout(onClose, ANIM_OUT)
+  }
 
   async function handleDelete() {
     setDeleting(true)
@@ -90,123 +97,151 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
 
     try {
       await onSave({ newTitle: title.trim(), newDate: date, newLocation: location.trim() || null, newDishes, newCategories, newColumns: columns, removedOrigSlots, renames })
+      setExiting(true)
+      setTimeout(onClose, ANIM_OUT)
     } catch (err) {
       setError(err.message ?? 'Could not save.')
       setSaving(false)
     }
   }
 
+  const inputClass = 'w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent bg-white'
+  const labelClass = 'block text-sm font-semibold text-stone-700 mb-1.5'
+
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
-      onClick={close}
+      className={`fixed inset-0 lg:left-56 z-[60] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col ${closing ? 'animate-modal-out' : 'animate-modal-in'}`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-6 pb-4 shrink-0">
-          <h2 className="text-xl font-bold text-stone-800">Edit {pageNoun}</h2>
+      {/* Header */}
+      <div className="max-w-3xl mx-auto w-full px-4 pt-8 pb-4 shrink-0">
+        <div className="flex items-center gap-3">
           <button
-            onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            onClick={handleClose}
+            aria-label="Back"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-stone-500 hover:text-stone-800 hover:bg-stone-200 active:bg-stone-300 transition-colors shrink-0"
           >
-            &times;
+            <ArrowLeft size={20} weight="bold" />
           </button>
+          <h1 className="flex-1 text-3xl font-bold text-stone-800">Edit {pageNoun}</h1>
         </div>
+      </div>
 
-        {removedWithSignups.length > 0 && (
-          <div className="mx-6 mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 shrink-0">
-            Removing{' '}
-            {removedWithSignups.map((s, i) => (
-              <span key={s.id}>
-                <strong>{s.name}</strong>
-                {i < removedWithSignups.length - 1 ? ', ' : "'s"}
-              </span>
-            ))}{' '}
-            sign-up{removedWithSignups.length > 1 ? 's' : ''}.
-          </div>
-        )}
+      {/* Scrollable form */}
+      <form
+        id="edit-page-form"
+        onSubmit={handleSubmit}
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+      >
+        <div className="max-w-3xl mx-auto px-4 pb-6 space-y-4">
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="px-6 pb-4 shrink-0 space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Title</label>
-              <input
-                type="text"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                required
-              />
+          {removedWithSignups.length > 0 && (
+            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              Removing{' '}
+              {removedWithSignups.map((s, i) => (
+                <span key={s.id}>
+                  <strong>{s.name}</strong>
+                  {i < removedWithSignups.length - 1 ? ', ' : "'s"}
+                </span>
+              ))}{' '}
+              sign-up{removedWithSignups.length > 1 ? 's' : ''}.
             </div>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Date</label>
+          )}
+
+          <div>
+            <label className={labelClass}>Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className={inputClass}
+              required
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Date</label>
+            <div className="overflow-hidden rounded-xl border border-stone-200 focus-within:ring-2 focus-within:ring-ember bg-white">
               <input
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                style={{ width: '100%', boxSizing: 'border-box', display: 'block' }}
+                className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white"
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                Location <span className="text-stone-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="e.g. 123 Main St or John's house"
-                className="w-full border border-stone-300 rounded-lg px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">Layout</label>
-              <div className="inline-flex bg-stone-100 rounded-xl p-1">
-                {[1, 2].map(n => (
-                  <button
-                    key={n}
-                    type="button"
-                    aria-pressed={columns === n}
-                    onClick={() => setColumns(n)}
-                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      columns === n
-                        ? 'bg-ember text-white shadow-sm'
-                        : 'text-stone-500 hover:text-stone-700'
-                    }`}
-                  >
-                    {n === 1 ? '1 column' : '2 columns'}
-                  </button>
-                ))}
-              </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>
+              Location <span className="text-stone-400 font-normal">— optional</span>
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              placeholder="e.g. 123 Main St or John's house"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Layout</label>
+            <div className="inline-flex bg-stone-100 rounded-xl p-1">
+              {[1, 2].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-pressed={columns === n}
+                  onClick={() => setColumns(n)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    columns === n
+                      ? 'bg-ember text-white shadow-sm'
+                      : 'text-stone-500 hover:text-stone-700'
+                  }`}
+                >
+                  {n === 1 ? '1 column' : '2 columns'}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="px-6 pb-2 space-y-3 overflow-y-auto flex-1">
-            {entries.map((entry, i) => {
-              const signup = signupForEntry(entry)
-              return (
-                <div key={entry.key} className="flex items-start gap-2">
-                  <span className="text-xs text-stone-400 w-20 shrink-0 text-right pt-2">
-                    {noun} {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <input
-                      type="text"
-                      value={entry.dish}
-                      onChange={e => updateDish(entry.key, e.target.value)}
-                      placeholder=""
-                      className="w-full border border-stone-300 rounded-lg px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                    />
+          <div>
+            <label className={labelClass}>{noun}s</label>
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
+              {entries.map((entry, i) => {
+                const signup = signupForEntry(entry)
+                return (
+                  <div key={entry.key} className="px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-stone-400 shrink-0 whitespace-nowrap">
+                        {noun} {i + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={entry.dish}
+                        onChange={e => updateDish(entry.key, e.target.value)}
+                        placeholder="—"
+                        className="flex-1 text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none min-w-0"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeEntry(entry.key)}
+                        title={signup ? `Remove — will also remove ${signup.name}'s sign-up` : `Remove ${noun.toLowerCase()}`}
+                        className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full text-stone-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
+                      >
+                        <X size={14} weight="bold" />
+                      </button>
+                    </div>
                     {signup && (
-                      <p className="text-xs text-ember mt-0.5 pl-1">
+                      <p className="text-xs text-ember mt-1 pl-0">
                         Signed up: {signup.name}
                       </p>
                     )}
                     {supportsCategories && (
-                      <div className="flex gap-1 mt-1.5">
+                      <div className="flex gap-1.5 mt-2">
                         {CATEGORIES.map(cat => (
                           <button
                             key={cat}
@@ -224,63 +259,39 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                       </div>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeEntry(entry.key)}
-                    title={signup ? `Remove — will also remove ${signup.name}'s sign-up` : `Remove ${noun.toLowerCase()}`}
-                    className="mt-1.5 w-7 h-7 shrink-0 flex items-center justify-center rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors text-lg leading-none"
-                  >
-                    &times;
-                  </button>
-                </div>
-              )
-            })}
-
-            <button
-              type="button"
-              onClick={addSlot}
-              className="w-full py-2 mt-1 border-2 border-dashed border-stone-300 hover:border-coral text-stone-500 hover:text-ember rounded-lg text-sm font-medium transition-colors"
-            >
-              + Add another {noun.toLowerCase()}
-            </button>
-          </div>
-
-          <div className="px-6 py-4 border-t border-stone-100 shrink-0 space-y-3">
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <div className="flex gap-3">
+                )
+              })}
               <button
                 type="button"
-                onClick={close}
-                className="flex-1 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors font-medium"
+                onClick={addSlot}
+                className="w-full flex items-center gap-2 px-4 py-3.5 text-sm font-medium text-ember hover:bg-ember/5 active:bg-ember/10 transition-colors rounded-b-2xl"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving || entries.length === 0}
-                className="flex-1 py-2 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white rounded-lg font-medium disabled:opacity-40 transition-colors"
-              >
-                {saving ? 'Saving…' : 'Save'}
+                <Plus size={16} weight="bold" />
+                Add another {noun.toLowerCase()}
               </button>
             </div>
+          </div>
 
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              {error}
+            </p>
+          )}
+
+          {/* Delete zone */}
+          <div className="pt-2">
             {!confirmDelete ? (
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                className="w-full py-3 border border-red-200 text-red-500 rounded-xl hover:bg-red-50 active:bg-red-100 transition-colors text-sm font-medium"
               >
-                Delete this page
+                Delete this {pageNoun.toLowerCase()}
               </button>
             ) : (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
                 <span className="text-sm text-red-700 flex-1">
-                  Delete page and all sign-ups?
+                  Delete and remove all sign-ups?
                 </span>
                 <button
                   type="button"
@@ -294,14 +305,29 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-1 rounded-lg disabled:opacity-40 transition-colors"
+                  className="text-sm text-white bg-red-500 hover:bg-red-600 font-medium px-3 py-1.5 rounded-lg disabled:opacity-40 transition-colors"
                 >
                   {deleting ? 'Deleting…' : 'Delete'}
                 </button>
               </div>
             )}
           </div>
-        </form>
+        </div>
+      </form>
+
+      {/* Sticky footer */}
+      <div
+        className="shrink-0 max-w-3xl mx-auto w-full px-4 pt-3"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+      >
+        <button
+          type="submit"
+          form="edit-page-form"
+          disabled={saving || entries.length === 0}
+          className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
+        >
+          {saving ? 'Saving…' : `Save ${pageNoun}`}
+        </button>
       </div>
     </div>
   )

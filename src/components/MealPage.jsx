@@ -190,7 +190,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
       .single()
     if (error) throw new Error(error.message)
     onPageUpdate(data)
-    onEditClose()
+    // EditDishesModal animates itself out on success and calls onClose → onEditClose
   }
 
   async function handleTogglePause() {
