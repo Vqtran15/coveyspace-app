@@ -64,6 +64,13 @@ a:focus:not(:focus-visible),
   display: none !important;
 }
 
+/* Emoji picker: increase horizontal padding so the rightmost column has
+   clearance from the viewport edge. The picker's own .epr-main sets 10px;
+   !important here wins the cascade regardless of injection order. */
+.epr-main {
+  --epr-horizontal-padding: 16px !important;
+}
+
 /* Desktop: disable directional page transitions — sidebar nav doesn't need
    motion, and the fade variant caused flicker with lazy-loaded tabs.
    Also disable slide-out-right so chat goBack() clears instantly on desktop. */

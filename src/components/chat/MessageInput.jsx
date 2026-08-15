@@ -153,7 +153,7 @@ export default function MessageInput() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] overflow-hidden"
+            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <Suspense fallback={null}>
@@ -166,7 +166,6 @@ export default function MessageInput() {
                 autoFocusSearch={false}
                 defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
                 onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
-                style={{ '--epr-horizontal-padding': '16px' }}
               />
             </Suspense>
           </motion.div>

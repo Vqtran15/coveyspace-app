@@ -183,9 +183,24 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // makes the document technically scrollable. iOS keyboard-open triggers a page scroll
   // to "ensure" the focused input is visible; hiding body overflow blocks that scroll so
   // vv.offsetTop stays 0 and the --vvh formula stays accurate.
+  //
+  // Measure sab BEFORE setting overflow:hidden. On some iOS versions, applying
+  // overflow:hidden to the body causes env(safe-area-inset-bottom) to return 0px
+  // (iOS treats the page as non-scrollable and skips safe-area reporting). Pinning
+  // --sab to the real JS-measured value keeps the container height formula correct.
   useEffect(() => {
+    const sabEl = document.createElement('div')
+    sabEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
+    document.documentElement.appendChild(sabEl)
+    const sabPx = sabEl.offsetHeight
+    sabEl.remove()
+    if (sabPx > 0) document.documentElement.style.setProperty('--sab', `${sabPx}px`)
+
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.removeProperty('--sab')
+    }
   }, [])
 
   // Track keyboard visibility via visualViewport. When the keyboard appears,
@@ -1965,7 +1980,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
         <>
           <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
-          <div className={`fixed inset-x-0 lg:left-56 bottom-0 z-40 overflow-hidden bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
+          <div className={`fixed inset-x-0 lg:left-56 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
@@ -1976,7 +1991,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 autoFocusSearch={false}
                 defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
                 onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
-                style={{ '--epr-horizontal-padding': '16px' }}
               />
             </Suspense>
           </div>
