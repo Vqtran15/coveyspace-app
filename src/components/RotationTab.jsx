@@ -422,6 +422,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           targetDow={targetDow}
           intervalDays={intervalDays}
           weekOccurrences={weekOccurrences}
+          supportsCategories={supportsCategories}
         />
       )}
     </>

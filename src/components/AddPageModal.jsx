@@ -3,6 +3,15 @@ import { ArrowLeft } from '@phosphor-icons/react'
 import { toDateString } from '../utils/dates.js'
 import { nextScheduledDate } from '../utils/schedule.js'
 
+const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
+
+const CATEGORY_STYLES = {
+  Main:    'bg-coral/15 text-coral-700 border-coral/30',
+  Side:    'bg-lagoon/15 text-lagoon-700 border-lagoon/30',
+  Dessert: 'bg-amber-50 text-amber-600 border-amber-200',
+  Other:   'bg-stone-100 text-stone-600 border-stone-300',
+}
+
 const ANIM_OUT = 200  // matches slide-out-right 0.2s
 
 function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null) {
@@ -42,7 +51,7 @@ function findNextAvailableDate(existingDates, targetDow = null, intervalDays = 7
   return d
 }
 
-export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [], onClose, onSave, existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null }) {
+export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [], onClose, onSave, existingDates, targetDow = null, intervalDays = 7, weekOccurrences = null, supportsCategories = false }) {
   const [exiting, setExiting] = useState(false)
   const defaultDate = findNextAvailableDate(existingDates, targetDow, intervalDays, weekOccurrences)
   const defaultDateStr = toDateString(defaultDate)
@@ -54,7 +63,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState(null)
   const [duplicateFrom, setDuplicateFrom] = useState('')
-  const [duplicateCategories, setDuplicateCategories] = useState([])
+  const [categories, setCategories] = useState(() => Array(10).fill(''))
 
   function handleClose() {
     setExiting(true)
@@ -68,7 +77,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
     if (!source) return
     setSlotCount(source.slot_count)
     setDishes(source.slot_dishes?.length ? [...source.slot_dishes] : Array(source.slot_count).fill(''))
-    setDuplicateCategories(source.slot_categories ? [...source.slot_categories] : [])
+    setCategories(source.slot_categories?.length ? [...source.slot_categories] : Array(source.slot_count).fill(''))
   }
 
   useEffect(() => {
@@ -77,8 +86,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
       for (let i = 0; i < Math.min(prev.length, slotCount); i++) next[i] = prev[i]
       return next
     })
-    setDuplicateCategories(prev => {
-      if (!prev.length) return prev
+    setCategories(prev => {
       const next = Array(slotCount).fill('')
       for (let i = 0; i < Math.min(prev.length, slotCount); i++) next[i] = prev[i]
       return next
@@ -92,6 +100,10 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
   function setDish(index, value) {
     setDishes(prev => { const next = [...prev]; next[index] = value; return next })
+  }
+
+  function toggleCategory(index, value) {
+    setCategories(prev => { const next = [...prev]; next[index] = next[index] === value ? '' : value; return next })
   }
 
   async function handleSubmit(e) {
@@ -108,7 +120,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
         week_date: date,
         slot_count: slotCount,
         slot_dishes: dishes.map(d => d.trim()),
-        ...(duplicateCategories.length > 0 && { slot_categories: duplicateCategories }),
+        ...(supportsCategories && { slot_categories: categories }),
       })
       // Animate out on success so the transition matches the back-button path
       setExiting(true)
@@ -210,19 +222,39 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             <label className={labelClass}>
               {noun}s <span className="text-stone-400 font-normal">— optional, fill in now or later</span>
             </label>
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
+            <div className="flex flex-col gap-2">
               {dishes.map((dish, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-3.5">
-                  <span className={`text-xs font-medium shrink-0 text-right tabular-nums whitespace-nowrap ${dish ? 'text-stone-300' : 'text-stone-400'}`}>
-                    {noun} {i + 1}
-                  </span>
-                  <input
-                    type="text"
-                    value={dish}
-                    onChange={e => setDish(i, e.target.value)}
-                    placeholder="—"
-                    className="flex-1 text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
-                  />
+                <div key={i} className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-medium shrink-0 text-right tabular-nums whitespace-nowrap ${dish ? 'text-stone-300' : 'text-stone-400'}`}>
+                      {noun} {i + 1}
+                    </span>
+                    <input
+                      type="text"
+                      value={dish}
+                      onChange={e => setDish(i, e.target.value)}
+                      placeholder="—"
+                      className="flex-1 font-sans text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
+                    />
+                  </div>
+                  {supportsCategories && (
+                    <div className="flex gap-1.5 mt-2">
+                      {CATEGORIES.map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => toggleCategory(i, cat)}
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
+                            categories[i] === cat
+                              ? CATEGORY_STYLES[cat]
+                              : 'border-stone-200 text-stone-400 hover:border-stone-300 hover:text-stone-500'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

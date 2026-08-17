@@ -210,11 +210,11 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
 
           <div>
             <label className={labelClass}>{noun}s</label>
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
+            <div className="flex flex-col gap-2">
               {entries.map((entry, i) => {
                 const signup = signupForEntry(entry)
                 return (
-                  <div key={entry.key} className="px-4 py-3.5">
+                  <div key={entry.key} className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5">
                     <div className="flex items-center gap-3">
                       <span className={`text-xs font-medium shrink-0 whitespace-nowrap ${entry.dish ? 'text-stone-300' : 'text-stone-400'}`}>
                         {noun} {i + 1}
@@ -224,7 +224,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                         value={entry.dish}
                         onChange={e => updateDish(entry.key, e.target.value)}
                         placeholder="—"
-                        className="flex-1 text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none min-w-0"
+                        className="flex-1 font-sans text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none min-w-0"
                       />
                       <button
                         type="button"
@@ -264,7 +264,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
               <button
                 type="button"
                 onClick={addSlot}
-                className="w-full flex items-center gap-2 px-4 py-3.5 text-sm font-medium text-ember hover:bg-ember/5 active:bg-ember/10 transition-colors rounded-b-2xl"
+                className="flex items-center gap-2 px-1 py-2 text-sm font-medium text-ember hover:text-ember-700 transition-colors"
               >
                 <Plus size={16} weight="bold" />
                 Add another {noun.toLowerCase()}
