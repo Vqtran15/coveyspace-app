@@ -234,7 +234,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
                       value={dish}
                       onChange={e => setDish(i, e.target.value)}
                       placeholder="—"
-                      className="flex-1 font-sans text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
+                      className="flex-1 appearance-none text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none"
                     />
                   </div>
                   {supportsCategories && (
