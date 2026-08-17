@@ -167,14 +167,13 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
           )}
 
           <div>
-            <label className={labelClass}>Title</label>
+            <label className={labelClass}>{pageNoun} title</label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               className={inputClass}
               required
-              autoFocus
             />
           </div>
 
@@ -214,7 +213,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-100">
               {dishes.map((dish, i) => (
                 <div key={i} className="flex items-center gap-3 px-4 py-3.5">
-                  <span className="text-xs font-medium text-stone-400 shrink-0 text-right tabular-nums whitespace-nowrap">
+                  <span className={`text-xs font-medium shrink-0 text-right tabular-nums whitespace-nowrap ${dish ? 'text-stone-300' : 'text-stone-400'}`}>
                     {noun} {i + 1}
                   </span>
                   <input

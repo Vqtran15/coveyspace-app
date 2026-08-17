@@ -187,7 +187,8 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
           </div>
 
           <div>
-            <label className={labelClass}>Layout</label>
+            <label className={labelClass}>Sign-up layout</label>
+            <p className="text-xs text-stone-400 mb-2">How {noun.toLowerCase()}s appear on the sign-up page for members</p>
             <div className="inline-flex bg-stone-100 rounded-xl p-1">
               {[1, 2].map(n => (
                 <button
@@ -215,7 +216,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 return (
                   <div key={entry.key} className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-medium text-stone-400 shrink-0 whitespace-nowrap">
+                      <span className={`text-xs font-medium shrink-0 whitespace-nowrap ${entry.dish ? 'text-stone-300' : 'text-stone-400'}`}>
                         {noun} {i + 1}
                       </span>
                       <input
@@ -229,7 +230,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                         type="button"
                         onClick={() => removeEntry(entry.key)}
                         title={signup ? `Remove — will also remove ${signup.name}'s sign-up` : `Remove ${noun.toLowerCase()}`}
-                        className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full text-stone-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
+                        className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-stone-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
                       >
                         <X size={14} weight="bold" />
                       </button>
