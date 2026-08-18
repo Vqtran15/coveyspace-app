@@ -97,13 +97,17 @@ export default function MessageInput() {
             transition={{ type: 'spring', stiffness: 380, damping: 28 }}
             className="absolute bottom-full left-0 right-0 pb-2 px-4 z-[8]"
           >
-          <div className="border border-stone-200 rounded-2xl bg-white p-3">
-          <div className="flex items-center justify-between mb-2">
+          <div className="border border-stone-200 rounded-2xl bg-white flex flex-col overflow-hidden"
+               style={{ maxHeight: 'calc(100dvh - 80px)' }}>
+          {/* Header — always visible */}
+          <div className="flex items-center justify-between px-3 pt-3 pb-2 shrink-0">
             <p className="text-sm font-bold text-stone-800">Create Poll</p>
             <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className="text-stone-400 hover:text-stone-600">
               <X size={16} weight="bold" />
             </button>
           </div>
+          {/* Scrollable: question + options */}
+          <div className="overflow-y-auto flex-1 min-h-0 px-3">
           <input
             ref={pollQuestionRef}
             type="text"
@@ -138,7 +142,9 @@ export default function MessageInput() {
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-between">
+          </div>
+          {/* Footer — always visible */}
+          <div className="flex items-center justify-between px-3 pt-2 pb-3 shrink-0">
             {pollOptions.length < 10 ? (
               <button
                 onClick={() => { justAddedOptionRef.current = true; setPollOptions(prev => [...prev, '']) }}
