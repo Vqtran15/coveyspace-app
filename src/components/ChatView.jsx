@@ -1885,10 +1885,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         ref={inputWrapperRef}
         className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
       >
-        {/* Gradient fade so messages bleed through above the input */}
-        <div className="h-8 bg-gradient-to-b from-sunrise-50/0 to-sunrise-50/90" aria-hidden="true" />
-        {/* Solid frosted zone: typing + input */}
-        <div className="bg-sunrise-50/90 backdrop-blur-md pointer-events-auto">
+        <div className="pointer-events-auto">
           {typing && (
             <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
               <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
