@@ -1885,7 +1885,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         ref={inputWrapperRef}
         className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
       >
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {typing && (
             <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
               <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>

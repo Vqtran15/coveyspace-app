@@ -19,14 +19,13 @@ body {
 }
 
 /* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
-   (above the status bar) and fills to the bottom safe area.
-   PWA: container spans the full screen (dvh + sat = screen height) minus the
-   home-indicator zone (sab). The pill nav is hidden when chat is open, so no
-   extra nav subtraction is needed.
+   (above the status bar) and fills to the physical screen bottom (including the
+   home-indicator zone). Content is kept above the home indicator by adding
+   env(safe-area-inset-bottom) padding inside the floating input overlay.
    Browser: fills the full visible viewport (dvh). Keyboard override below
    replaces this height via --vvh when the soft keyboard is open. */
 html.is-pwa .chat-container {
-  height: calc(var(--dvh) + var(--sat) - var(--sab));
+  height: calc(var(--dvh) + var(--sat));
 }
 html:not(.is-pwa) .chat-container {
   height: var(--dvh);
