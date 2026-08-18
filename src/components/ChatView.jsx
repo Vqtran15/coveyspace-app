@@ -164,8 +164,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const groupIconFileRef      = useRef(null)
   const headerWrapperRef      = useRef(null)
   const inputWrapperRef       = useRef(null)
-  const [headerH, setHeaderH] = useState(80)
-  const [inputH, setInputH]   = useState(72)
+  const [headerH, setHeaderH]     = useState(80)
+  const [inputH, setInputH]       = useState(72)
+  const [keyboardOpen, setKeyboardOpen] = useState(false)
 
   useEffect(() => {
     mountedRef.current = true
@@ -252,9 +253,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (nowOpen && !kbOpen) {
         kbOpen = true
         document.body.classList.add('chat-keyboard-open')
+        setKeyboardOpen(true)
       } else if (!nowOpen && kbOpen) {
         kbOpen = false
         document.body.classList.remove('chat-keyboard-open')
+        setKeyboardOpen(false)
         window.scrollTo(0, 0)
       }
     }
@@ -266,6 +269,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       vv.removeEventListener('scroll', update)
       document.body.classList.remove('chat-keyboard-open')
       document.documentElement.style.removeProperty('--vvh')
+      setKeyboardOpen(false)
     }
   }, [])
 
@@ -1885,7 +1889,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         ref={inputWrapperRef}
         className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
       >
-        <div className="pointer-events-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="pointer-events-auto" style={{ paddingBottom: keyboardOpen ? '0' : 'env(safe-area-inset-bottom)' }}>
           {typing && (
             <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
               <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
