@@ -29,6 +29,7 @@ export default function MessageInput() {
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const attachMenuRef = useRef(null)
   const attachBtnRef = useRef(null)
+  const emojiPickerRef = useRef(null)
 
   // Capture-phase pointerdown listener: closes the attach menu when the user taps
   // anywhere outside the menu card or the + button. Fixed backdrop divs don't work
@@ -46,6 +47,15 @@ export default function MessageInput() {
     document.addEventListener('pointerdown', onPointerDown, true)
     return () => document.removeEventListener('pointerdown', onPointerDown, true)
   }, [showAttachMenu])
+
+  useEffect(() => {
+    if (!showEmojiPicker) return
+    function onPointerDown(e) {
+      if (!emojiPickerRef.current?.contains(e.target)) closeEmojiPicker()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [showEmojiPicker])
 
   function stopListMomentum() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollTop
@@ -189,28 +199,32 @@ export default function MessageInput() {
           </motion.div>
         )}
       </AnimatePresence>
-      {showEmojiPicker && (
-        <div
-          className="fixed inset-0 z-[9] pointer-events-auto"
-          onPointerDown={closeEmojiPicker}
-        />
-      )}
       <AnimatePresence>
         {showEmojiPicker && (
           <motion.div
+            ref={emojiPickerRef}
             key="emoji-picker"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white overflow-x-hidden"
+            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
+            <div className="flex justify-end px-3 pt-2 pb-0">
+              <button
+                type="button"
+                onPointerDown={closeEmojiPicker}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+              >
+                <X size={16} weight="bold" />
+              </button>
+            </div>
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
                 width="100%"
-                height={350}
+                height={310}
                 searchPlaceholder="Search emojis…"
                 previewConfig={{ showPreview: false }}
                 autoFocusSearch={false}
