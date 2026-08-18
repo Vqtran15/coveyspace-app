@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -26,12 +26,25 @@ export default function MessageInput() {
     senderName,
   } = useChatContext()
 
+  const [showAttachMenu, setShowAttachMenu] = useState(false)
+
   // Stop message list momentum scroll the moment the user touches the input area.
   // While momentum is active, iOS calculates an unstable layout for keyboard-open
   // scroll-to-focus, which causes --vvh to be computed incorrectly and the chat
   // container to jump. Setting scrollTop to itself aborts WebKit momentum instantly.
   function stopListMomentum() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollTop
+  }
+
+  function openPoll() {
+    if (showEmojiPicker) closeEmojiPicker()
+    const keyboardWasUp = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)
+    if (keyboardWasUp) {
+      flushSync(() => setPollCreating(true))
+      pollQuestionRef.current?.focus()
+    } else {
+      setPollCreating(true)
+    }
   }
 
   return (
@@ -66,6 +79,10 @@ export default function MessageInput() {
             </div>
           ))}
         </div>
+      )}
+      {/* Attach menu backdrop */}
+      {showAttachMenu && (
+        <div className="fixed inset-0 z-[7]" onClick={() => setShowAttachMenu(false)} />
       )}
       {pollCreating && !pollSubmitting && (
         <div className="fixed inset-0 z-[7]" onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} />
@@ -171,37 +188,67 @@ export default function MessageInput() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Attach menu popup */}
+      <AnimatePresence>
+        {showAttachMenu && (
+          <motion.div
+            key="attach-menu"
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            className="absolute bottom-full left-0 pb-2 z-[8]"
+          >
+            <div className="bg-white rounded-2xl shadow-lg border border-stone-100 py-1 min-w-[148px] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAttachMenu(false)
+                  if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click() }
+                }}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
+              >
+                <ImageIcon size={18} className="text-stone-500 shrink-0" />
+                <span className="text-sm font-medium text-stone-700">Photo</span>
+              </button>
+              <div className="mx-4 h-px bg-stone-100" />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAttachMenu(false)
+                  openPoll()
+                }}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
+              >
+                <ChartBar size={18} className="text-stone-500 shrink-0" />
+                <span className="text-sm font-medium text-stone-700">Poll</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex items-end gap-2 relative z-10">
-        <button
-          type="button"
-          onClick={() => { if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click() } }}
-          className="w-9 h-9 flex items-center justify-center rounded-full text-stone-400 hover:text-ember hover:bg-stone-100 transition-colors shrink-0"
-        >
-          <ImageIcon size={22} />
-        </button>
-        <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+        {/* + button — opens attach menu; rotates 45° to × when open */}
         <button
           type="button"
           onClick={() => {
-            if (pollCreating) {
-              setPollCreating(false); setPollQuestion(''); setPollOptions(['', ''])
-              return
-            }
-            if (showEmojiPicker) closeEmojiPicker()
-            // Only keep the keyboard up if it was already open (user was typing).
-            // If no keyboard is present, just show the form and let the user tap a field.
-            const keyboardWasUp = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)
-            if (keyboardWasUp) {
-              flushSync(() => setPollCreating(true))
-              pollQuestionRef.current?.focus()
-            } else {
-              setPollCreating(true)
+            const opening = !showAttachMenu
+            setShowAttachMenu(v => !v)
+            if (opening) {
+              if (showEmojiPicker) closeEmojiPicker()
+              if (pollCreating) { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }
             }
           }}
-          className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0 ${pollCreating ? 'text-ember bg-ember/10' : 'text-stone-400 hover:text-ember hover:bg-stone-100'}`}
+          className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0 ${showAttachMenu ? 'text-ember bg-ember/10' : 'text-stone-400 hover:text-ember hover:bg-stone-100'}`}
         >
-          <ChartBar size={22} />
+          <motion.div
+            animate={{ rotate: showAttachMenu ? 45 : 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          >
+            <PlusIcon size={22} weight="bold" />
+          </motion.div>
         </button>
+        <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
         <textarea
           ref={textareaRef}
           value={text}
@@ -222,6 +269,7 @@ export default function MessageInput() {
               savedSelectionRef.current = { start: el.selectionStart ?? text.length, end: el.selectionEnd ?? text.length }
               el.blur()
             }
+            setShowAttachMenu(false)
             setShowEmojiPicker(true)
             setPollCreating(false)
           }}
