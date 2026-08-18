@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -27,11 +27,26 @@ export default function MessageInput() {
   } = useChatContext()
 
   const [showAttachMenu, setShowAttachMenu] = useState(false)
+  const attachMenuRef = useRef(null)
+  const attachBtnRef = useRef(null)
 
-  // Stop message list momentum scroll the moment the user touches the input area.
-  // While momentum is active, iOS calculates an unstable layout for keyboard-open
-  // scroll-to-focus, which causes --vvh to be computed incorrectly and the chat
-  // container to jump. Setting scrollTop to itself aborts WebKit momentum instantly.
+  // Capture-phase pointerdown listener: closes the attach menu when the user taps
+  // anywhere outside the menu card or the + button. Fixed backdrop divs don't work
+  // here because they inherit pointer-events: none from the overlay's outer wrapper.
+  useEffect(() => {
+    if (!showAttachMenu) return
+    function onPointerDown(e) {
+      if (
+        !attachMenuRef.current?.contains(e.target) &&
+        !attachBtnRef.current?.contains(e.target)
+      ) {
+        setShowAttachMenu(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [showAttachMenu])
+
   function stopListMomentum() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollTop
   }
@@ -45,6 +60,16 @@ export default function MessageInput() {
     } else {
       setPollCreating(true)
     }
+  }
+
+  function openEmoji() {
+    const el = textareaRef.current
+    if (el) {
+      savedSelectionRef.current = { start: el.selectionStart ?? text.length, end: el.selectionEnd ?? text.length }
+      el.blur()
+    }
+    setShowEmojiPicker(true)
+    setPollCreating(false)
   }
 
   return (
@@ -80,12 +105,11 @@ export default function MessageInput() {
           ))}
         </div>
       )}
-      {/* Attach menu backdrop */}
-      {showAttachMenu && (
-        <div className="fixed inset-0 z-[7]" onClick={() => setShowAttachMenu(false)} />
-      )}
       {pollCreating && !pollSubmitting && (
-        <div className="fixed inset-0 z-[7]" onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} />
+        <div
+          className="fixed inset-0 z-[7] pointer-events-auto"
+          onPointerDown={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }}
+        />
       )}
       <AnimatePresence>
         {pollCreating && (
@@ -166,7 +190,10 @@ export default function MessageInput() {
         )}
       </AnimatePresence>
       {showEmojiPicker && (
-        <div className="fixed inset-0 z-[9]" onClick={closeEmojiPicker} />
+        <div
+          className="fixed inset-0 z-[9] pointer-events-auto"
+          onPointerDown={closeEmojiPicker}
+        />
       )}
       <AnimatePresence>
         {showEmojiPicker && (
@@ -176,13 +203,13 @@ export default function MessageInput() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white"
+            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white overflow-x-hidden"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                width="calc(100% - 2px)"
+                width="100%"
                 height={350}
                 searchPlaceholder="Search emojis…"
                 previewConfig={{ showPreview: false }}
@@ -205,7 +232,7 @@ export default function MessageInput() {
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
             className="absolute bottom-full left-0 pb-2 z-[8]"
           >
-            <div className="bg-white rounded-2xl shadow-lg border border-stone-100 py-1 min-w-[148px] overflow-hidden">
+            <div ref={attachMenuRef} className="bg-white rounded-2xl shadow-lg border border-stone-100 py-1 min-w-[148px] overflow-hidden">
               <button
                 type="button"
                 onClick={() => {
@@ -229,6 +256,18 @@ export default function MessageInput() {
                 <ChartBar size={18} className="text-stone-500 shrink-0" />
                 <span className="text-sm font-medium text-stone-700">Poll</span>
               </button>
+              <div className="mx-4 h-px bg-stone-100" />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAttachMenu(false)
+                  openEmoji()
+                }}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
+              >
+                <Smiley size={18} className="text-stone-500 shrink-0" />
+                <span className="text-sm font-medium text-stone-700">Emoji</span>
+              </button>
             </div>
           </motion.div>
         )}
@@ -236,6 +275,7 @@ export default function MessageInput() {
       <div className="flex items-end gap-2 relative z-10">
         {/* + button — opens attach menu; rotates 45° to × when open */}
         <button
+          ref={attachBtnRef}
           type="button"
           onClick={() => {
             const opening = !showAttachMenu
@@ -265,24 +305,6 @@ export default function MessageInput() {
           className="flex-1 resize-none bg-stone-100 border-0 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
           style={{ maxHeight: 120, overflowY: 'auto' }}
         />
-        <button
-          type="button"
-          onPointerDown={e => e.preventDefault()}
-          onClick={() => {
-            if (showEmojiPicker) { closeEmojiPicker(); return }
-            const el = textareaRef.current
-            if (el) {
-              savedSelectionRef.current = { start: el.selectionStart ?? text.length, end: el.selectionEnd ?? text.length }
-              el.blur()
-            }
-            setShowAttachMenu(false)
-            setShowEmojiPicker(true)
-            setPollCreating(false)
-          }}
-          className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0 ${showEmojiPicker ? 'text-ember bg-ember/10' : 'text-stone-400 hover:text-ember hover:bg-stone-100'}`}
-        >
-          <Smiley size={22} />
-        </button>
         <button
           type="button"
           onClick={handleSend}
