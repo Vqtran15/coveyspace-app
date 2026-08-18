@@ -36,7 +36,7 @@ export default function MessageInput() {
 
   return (
     <div className="shrink-0 max-w-3xl mx-auto w-full px-4 py-2" onTouchStart={stopListMomentum}>
-    <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-stone-100 px-3 pt-3 pb-3 relative">
+    <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-100 px-3 pt-3 pb-3 relative">
       {/* Reply preview */}
       {replyingTo && (
         <div className="flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2">
@@ -209,7 +209,7 @@ export default function MessageInput() {
           onKeyDown={handleKeyDown}
           placeholder="Message…"
           rows={1}
-          className="flex-1 resize-none bg-transparent border-0 rounded-full px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
+          className="flex-1 resize-none bg-stone-100 border-0 rounded-full px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
           style={{ maxHeight: 120, overflowY: 'auto' }}
         />
         <button
