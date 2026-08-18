@@ -15,7 +15,16 @@ const cookieStorage = {
     const match = document.cookie.match(
       new RegExp('(?:^|; )' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)')
     )
-    return match ? decodeURIComponent(match[1]) : null
+    if (!match) return null
+    try {
+      return decodeURIComponent(match[1])
+    } catch {
+      // Cookie was truncated mid-percent-sequence (iOS silently drops bytes past
+      // ~4 KB). Remove the corrupt entry so the SDK can sign the user out and
+      // let them re-authenticate with a clean session.
+      this.removeItem(key)
+      return null
+    }
   },
   setItem(key, value) {
     const expires = new Date(Date.now() + 365 * 864e5).toUTCString()

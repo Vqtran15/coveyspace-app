@@ -32,14 +32,21 @@ export function AppProvider({ children }) {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
+    // Hard ceiling: if INITIAL_SESSION never fires (e.g. corrupt cookie crashes
+    // the Supabase SDK's storage read), dismiss the splash after 8 s so the
+    // user lands on the login screen rather than being stuck forever.
+    const fallback = setTimeout(() => setAuthLoading(false), 8000)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
       setSession(sess)
-      if (event === 'INITIAL_SESSION') setAuthLoading(false)
+      if (event === 'INITIAL_SESSION') {
+        clearTimeout(fallback)
+        setAuthLoading(false)
+      }
       if (event === 'SIGNED_IN' && !PATHS.includes(window.location.pathname)) navigate('/home')
       if (event === 'PASSWORD_RECOVERY') setIsRecovery(true)
       if (!sess) { setProfile(null); setIsRecovery(false) }
     })
-    return () => subscription.unsubscribe()
+    return () => { clearTimeout(fallback); subscription.unsubscribe() }
   }, [])
 
   // ── Profile load ──────────────────────────────────────────────────────────
