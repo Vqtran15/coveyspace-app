@@ -103,6 +103,7 @@ export default function MessageList() {
     retryMessage,
     conversation,
     headerH,
+    inputH,
   } = useChatContext()
 
   // Pre-parse every message body so the URL regex doesn't run on every render
@@ -118,7 +119,7 @@ export default function MessageList() {
 
   return (
     <div className="relative flex-1 min-h-0">
-      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)` }}>
+      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)`, paddingBottom: `${inputH}px` }}>
         {loadingMore && (
           <div className="flex justify-center py-3">
             <div className="flex items-center gap-1.5">
@@ -791,7 +792,7 @@ export default function MessageList() {
 
       {/* Scroll-to-bottom — floats inside messages area, above typing + input */}
       {!isAtBottom && !searchOpen && (
-        <div className="absolute bottom-3 inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none">
+        <div className="absolute inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none" style={{ bottom: `${inputH + 12}px` }}>
           <button
             onClick={handleScrollToBottom}
             className="pointer-events-auto relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center"

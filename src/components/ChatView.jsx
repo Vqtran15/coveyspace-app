@@ -163,7 +163,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
   const headerWrapperRef      = useRef(null)
+  const inputWrapperRef       = useRef(null)
   const [headerH, setHeaderH] = useState(80)
+  const [inputH, setInputH]   = useState(72)
 
   useEffect(() => {
     mountedRef.current = true
@@ -174,6 +176,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const el = headerWrapperRef.current
     if (!el) return
     const ro = new ResizeObserver(([entry]) => setHeaderH(entry.contentRect.height))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const el = inputWrapperRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setInputH(entry.contentRect.height))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -1727,6 +1737,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     // senderName via memberMap — stable reference, always current
     senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
     headerH,
+    inputH,
+    inputWrapperRef,
   }), [
     // Props
     conversation, session, myId, convId, displayName, groupId, members, isAdmin,
@@ -1744,7 +1756,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     lightboxImg, convImageUrl, uploadingGroupIcon, polls, chatEvents,
     pollCreating, pollQuestion, pollOptions, pollSubmitting, pollMenuOpenId,
     deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending, chatPrayers,
-    headerH,
+    headerH, inputH,
   ])
 
   return (
@@ -1868,24 +1880,31 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {/* Messages */}
       <MessageList />
 
-      {/* Typing indicator */}
-      {typing && (
-        <div className="shrink-0 px-4 pb-2 max-w-3xl mx-auto w-full animate-overlay-in">
-          <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
-          <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
-            {[0, 1, 2].map(i => (
-              <div
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-bounce"
-                style={{ animationDelay: `${i * 150}ms` }}
-              />
-            ))}
-          </div>
+      {/* Floating input overlay — sits above the message list */}
+      <div
+        ref={inputWrapperRef}
+        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
+      >
+        {/* Gradient fade so messages bleed through above the input */}
+        <div className="h-8 bg-gradient-to-b from-sunrise-50/0 to-sunrise-50/90" aria-hidden="true" />
+        {/* Solid frosted zone: typing + input */}
+        <div className="bg-sunrise-50/90 backdrop-blur-md pointer-events-auto">
+          {typing && (
+            <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
+              <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
+              <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
+                {[0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-bounce"
+                    style={{ animationDelay: `${i * 150}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          <MessageInput />
         </div>
-      )}
-
-      <div className="shrink-0">
-        <MessageInput />
       </div>
 
       {/* Action menu */}
