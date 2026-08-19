@@ -16,6 +16,12 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   }
   update()
   window.addEventListener('resize', update)
+  // On iOS PWA resume from overnight suspension, window.innerHeight can briefly
+  // report a stale value before the viewport settles. Re-measuring after one
+  // animation frame gives the viewport time to stabilize.
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') requestAnimationFrame(update)
+  })
 }())
 
 // Prevent iOS PWA elastic/rubber-band scroll at the document boundary.
