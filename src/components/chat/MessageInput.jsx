@@ -208,17 +208,18 @@ export default function MessageInput() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
           >
             <div className="relative">
-              {/* Push the picker header's right padding out to make room for the X button */}
-              <style dangerouslySetInnerHTML={{ __html: `.covey-picker .epr-header { padding-right: 48px !important; }` }} />
+              <style dangerouslySetInnerHTML={{ __html: [
+                '.covey-picker { border: none !important; --epr-picker-border-radius: 0 !important; }',
+                '.covey-picker .epr-header { padding-right: 48px !important; }',
+              ].join(' ') }} />
               <Suspense fallback={null}>
                 <EmojiPicker
                   className="covey-picker"
                   onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                  width="calc(100% - 2px)"
+                  width="100%"
                   height={350}
                   searchPlaceholder="Search emojis…"
                   previewConfig={{ showPreview: false }}
@@ -236,6 +237,8 @@ export default function MessageInput() {
                 <X size={14} weight="bold" />
               </button>
             </div>
+            {/* White fill for home-indicator safe area */}
+            <div className="bg-white" style={{ height: 'env(safe-area-inset-bottom)' }} />
           </motion.div>
         )}
       </AnimatePresence>
