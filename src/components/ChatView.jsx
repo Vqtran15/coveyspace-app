@@ -262,12 +262,25 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
     }
 
-    // On iOS PWA resume from suspension, the keyboard may have been open when the
-    // app was backgrounded. iOS sometimes closes the keyboard without firing a
-    // visualViewport resize event, leaving chat-keyboard-open stuck on the body.
-    // Re-running update() when the app comes to the foreground corrects the state.
+    // On iOS PWA resume, iOS may close the keyboard without firing a visualViewport
+    // resize event, leaving chat-keyboard-open stuck. Clear the stuck state only
+    // when we can confirm the keyboard is closed — don't call update() here because
+    // vv.height can briefly report a transitional value during the iOS app-restore
+    // animation, which causes a false keyboard-open detection that persists until kill.
     function onVisible() {
-      if (document.visibilityState === 'visible') update()
+      if (document.visibilityState !== 'visible') return
+      // Wait one rAF for the viewport to settle before inspecting vv.height.
+      requestAnimationFrame(() => {
+        if (!kbOpen) return
+        const nowVVH = Math.round(vv.height)
+        if (baseline - nowVVH <= 120) {
+          // Keyboard is not open — clear the stuck state.
+          kbOpen = false
+          document.body.classList.remove('chat-keyboard-open')
+          document.documentElement.style.removeProperty('--vvh')
+          setKeyboardOpen(false)
+        }
+      })
     }
 
     vv.addEventListener('resize', update)

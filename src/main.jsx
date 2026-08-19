@@ -12,13 +12,18 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 // the correct env() values. --dvh gives us the reliable window.innerHeight.
 ;(function setDVH() {
   function update() {
-    document.documentElement.style.setProperty('--dvh', `${window.innerHeight}px`)
+    var h = window.innerHeight
+    // Guard against 0 or near-zero: iOS reports this briefly during a
+    // SW-triggered reload before the viewport has initialized.
+    if (h > 100) document.documentElement.style.setProperty('--dvh', h + 'px')
   }
   update()
   window.addEventListener('resize', update)
-  // On iOS PWA resume from overnight suspension, window.innerHeight can briefly
-  // report a stale value before the viewport settles. Re-measuring after one
-  // animation frame gives the viewport time to stabilize.
+  // Double-rAF on load: iOS may not have settled window.innerHeight by the
+  // time this script runs (e.g. immediately after a service-worker reload).
+  requestAnimationFrame(function () { requestAnimationFrame(update) })
+  // Re-measure on foreground return in case the OS resized the viewport
+  // while the app was suspended.
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') requestAnimationFrame(update)
   })
