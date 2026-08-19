@@ -15,7 +15,7 @@ export default function UpdatePrompt() {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_, registration) {
       swRegistrationRef.current = registration
-      setInterval(() => registration?.update(), 60 * 60 * 1000)
+      setInterval(() => registration?.update().catch(() => {}), 60 * 60 * 1000)
     },
   })
 
@@ -44,7 +44,7 @@ export default function UpdatePrompt() {
       if (needRefreshRef.current) {
         updateServiceWorker(true)
       } else {
-        swRegistrationRef.current?.update()
+        swRegistrationRef.current?.update().catch(() => {})
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
