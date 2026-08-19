@@ -211,27 +211,31 @@ export default function MessageInput() {
             className="fixed inset-x-0 lg:left-56 bottom-0 z-[11] bg-white"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="flex justify-end px-3 pt-2 pb-0">
+            <div className="relative">
+              {/* Push the picker header's right padding out to make room for the X button */}
+              <style dangerouslySetInnerHTML={{ __html: `.covey-picker .epr-header { padding-right: 48px !important; }` }} />
+              <Suspense fallback={null}>
+                <EmojiPicker
+                  className="covey-picker"
+                  onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
+                  width="calc(100% - 2px)"
+                  height={350}
+                  searchPlaceholder="Search emojis…"
+                  previewConfig={{ showPreview: false }}
+                  autoFocusSearch={false}
+                  defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
+                  onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
+                />
+              </Suspense>
               <button
                 type="button"
                 onPointerDown={closeEmojiPicker}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                className="absolute w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                style={{ top: 19, right: 8, zIndex: 10 }}
               >
-                <X size={16} weight="bold" />
+                <X size={14} weight="bold" />
               </button>
             </div>
-            <Suspense fallback={null}>
-              <EmojiPicker
-                onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                width="100%"
-                height={310}
-                searchPlaceholder="Search emojis…"
-                previewConfig={{ showPreview: false }}
-                autoFocusSearch={false}
-                defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
-                onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
-              />
-            </Suspense>
           </motion.div>
         )}
       </AnimatePresence>
