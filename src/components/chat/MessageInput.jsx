@@ -215,6 +215,12 @@ export default function MessageInput() {
                 <style dangerouslySetInnerHTML={{ __html: [
                   '.covey-picker { border: none !important; --epr-picker-border-radius: 0 !important; }',
                   '.covey-picker .epr-header { padding-right: 48px !important; }',
+                  // emojisPerRow uses the full <ul> clientWidth, but emojis are absolutely
+                  // positioned inside .epr-emoji-category-content which has margin: 0 10px.
+                  // On widths where (pickerWidth % emojiSize) < 10, the last column overshoots
+                  // the body's overflow-x:hidden boundary. Zeroing the margin keeps both
+                  // coordinate systems aligned so the last column never clips.
+                  '.covey-picker .epr-emoji-category-content { margin-left: 0 !important; margin-right: 0 !important; }',
                 ].join(' ') }} />
                 <Suspense fallback={null}>
                   <EmojiPicker
