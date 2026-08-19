@@ -13,20 +13,17 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 ;(function setDVH() {
   function update() {
     var h = window.innerHeight
-    // Guard against 0 or near-zero: iOS reports this briefly during a
-    // SW-triggered reload before the viewport has initialized.
-    if (h > 100) document.documentElement.style.setProperty('--dvh', h + 'px')
+    // Guard against 0: iOS briefly reports 0 during a SW-triggered reload
+    // before the viewport initializes. Also cap at screen.height to reject
+    // inflated values that can occur during PWA launch transitions.
+    var max = (window.screen && window.screen.height) || 9999
+    if (h > 100 && h <= max) document.documentElement.style.setProperty('--dvh', h + 'px')
   }
   update()
   window.addEventListener('resize', update)
-  // Double-rAF on load: iOS may not have settled window.innerHeight by the
-  // time this script runs (e.g. immediately after a service-worker reload).
+  // Double-rAF: gives iOS two frames to settle innerHeight after initial
+  // script execution (e.g. immediately after a service-worker-triggered reload).
   requestAnimationFrame(function () { requestAnimationFrame(update) })
-  // Re-measure on foreground return in case the OS resized the viewport
-  // while the app was suspended.
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') requestAnimationFrame(update)
-  })
 }())
 
 // Prevent iOS PWA elastic/rubber-band scroll at the document boundary.

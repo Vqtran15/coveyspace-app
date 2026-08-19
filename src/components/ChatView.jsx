@@ -207,6 +207,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     sabEl.remove()
     if (sabPx > 0) document.documentElement.style.setProperty('--sab', `${sabPx}px`)
 
+    // iOS returns 0 for env(safe-area-inset-bottom) when body.overflow:hidden is
+    // applied and the document scroll is 0 (treats it as non-scrollable). Scroll 1px
+    // first so iOS keeps reporting the correct safe-area value for any inline env()
+    // references inside chat (reaction picker, etc.).
+    window.scrollTo(0, 1)
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = ''
@@ -1912,7 +1917,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         ref={inputWrapperRef}
         className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
       >
-        <div className="pointer-events-auto" style={{ paddingBottom: keyboardOpen ? '0' : 'env(safe-area-inset-bottom)' }}>
+        <div className="pointer-events-auto" style={{ paddingBottom: keyboardOpen ? '0' : 'var(--sab)' }}>
           {typing && (
             <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
               <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
@@ -2023,7 +2028,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {(showMoreEmojis || reactionPickerClosing) && activeMsg && (
         <>
           <div className="fixed inset-0 z-[39]" style={{ cursor: 'pointer' }} onClick={closeReactionPicker} />
-          <div className={`fixed inset-x-0 lg:left-56 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', overscrollBehavior: 'contain' }}>
+          <div className={`fixed inset-x-0 lg:left-56 bottom-0 z-40 bg-white border-t border-stone-100 shadow-xl ${reactionPickerClosing ? 'animate-sheet-out' : 'animate-modal-in'}`} style={{ paddingBottom: 'var(--sab)', overscrollBehavior: 'contain' }}>
             <Suspense fallback={null}>
               <EmojiPicker
                 onEmojiClick={emojiData => toggleReaction(activeMsg, emojiData.emoji)}
