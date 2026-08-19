@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react'
-import { flushSync } from 'react-dom'
+import { flushSync, createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley,
@@ -199,49 +199,52 @@ export default function MessageInput() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AnimatePresence>
-        {showEmojiPicker && (
-          <motion.div
-            ref={emojiPickerRef}
-            key="emoji-picker"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
-          >
-            <div className="relative">
-              <style dangerouslySetInnerHTML={{ __html: [
-                '.covey-picker { border: none !important; --epr-picker-border-radius: 0 !important; }',
-                '.covey-picker .epr-header { padding-right: 48px !important; }',
-              ].join(' ') }} />
-              <Suspense fallback={null}>
-                <EmojiPicker
-                  className="covey-picker"
-                  onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
-                  width="100%"
-                  height={350}
-                  searchPlaceholder="Search emojis…"
-                  previewConfig={{ showPreview: false }}
-                  autoFocusSearch={false}
-                  defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
-                  onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
-                />
-              </Suspense>
-              <button
-                type="button"
-                onPointerDown={closeEmojiPicker}
-                className="absolute w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-                style={{ top: 19, right: 8, zIndex: 10 }}
-              >
-                <X size={14} weight="bold" />
-              </button>
-            </div>
-            {/* White fill for home-indicator safe area */}
-            <div className="bg-white" style={{ height: 'env(safe-area-inset-bottom)' }} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {showEmojiPicker && (
+            <motion.div
+              ref={emojiPickerRef}
+              key="emoji-picker"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
+            >
+              <div className="relative">
+                <style dangerouslySetInnerHTML={{ __html: [
+                  '.covey-picker { border: none !important; --epr-picker-border-radius: 0 !important; }',
+                  '.covey-picker .epr-header { padding-right: 48px !important; }',
+                ].join(' ') }} />
+                <Suspense fallback={null}>
+                  <EmojiPicker
+                    className="covey-picker"
+                    onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
+                    width="100%"
+                    height={350}
+                    searchPlaceholder="Search emojis…"
+                    previewConfig={{ showPreview: false }}
+                    autoFocusSearch={false}
+                    defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
+                    onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
+                  />
+                </Suspense>
+                <button
+                  type="button"
+                  onPointerDown={closeEmojiPicker}
+                  className="absolute w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                  style={{ top: 19, right: 8, zIndex: 10 }}
+                >
+                  <X size={14} weight="bold" />
+                </button>
+              </div>
+              {/* White fill for home-indicator safe area */}
+              <div className="bg-white" style={{ height: 'env(safe-area-inset-bottom)' }} />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
       {/* Attach menu popup */}
       <AnimatePresence>
         {showAttachMenu && (
