@@ -1,19 +1,45 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { ListBullets } from '@phosphor-icons/react'
 import RotationTab from './RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
-import { mealCutoffDate } from '../utils/dates.js'
+import { mealCutoffDate, toDateString } from '../utils/dates.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
+import { supabase } from '../lib/supabase.js'
 
 export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 0 }) {
   const { groupName, displayName, isAdmin, groupSettings } = useAppContext()
   const location = useLocation()
   const mealsEnabled    = groupSettings?.meals_enabled !== false
   const servicesEnabled = groupSettings?.services_enabled !== false
-  const defaultSegment  = location.state?.segment ?? (mealsEnabled ? 'meals' : 'services')
-  const [segment, setSegment] = useState(defaultSegment)
+
+  // If navigation state specifies a segment (e.g. tapping a home card), use it immediately.
+  // If only one tab is enabled, use it immediately.
+  // If both are enabled, start null and determine from DB which has the earliest non-paused page.
+  const navSegment = location.state?.segment
+  const initialSegment = navSegment
+    ?? (!mealsEnabled ? 'services' : !servicesEnabled ? 'meals' : null)
+  const [segment, setSegment] = useState(initialSegment)
+  useEffect(() => {
+    // Only needed when both tabs are enabled and no navigation hint was given
+    if (segment !== null) return
+    const mealsCutoff  = mealCutoffDate()
+    const servicesToday = toDateString(new Date())
+    Promise.all([
+      supabase.from('meal_pages').select('week_date, is_paused').gte('week_date', mealsCutoff).order('week_date').limit(10),
+      supabase.from('serving_pages').select('week_date, is_paused').gte('week_date', servicesToday).order('week_date').limit(10),
+    ]).then(([{ data: mealPages }, { data: servicePages }]) => {
+      const nextMeal    = (mealPages ?? []).find(p => !p.is_paused)
+      const nextService = (servicePages ?? []).find(p => !p.is_paused)
+      if (nextService && (!nextMeal || nextService.week_date < nextMeal.week_date)) {
+        setSegment('services')
+      } else {
+        setSegment('meals')
+      }
+    }).catch(() => setSegment('meals'))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
   const [localRefreshKey, setLocalRefreshKey] = useState(0)
   const switchingRef = useRef(false)
@@ -97,7 +123,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 
         )}
       </div>
 
-      <div className={animClass}>
+      {segment && <div className={animClass}>
         <RotationTab
           key={`${segment}-${refreshKey}-${localRefreshKey}`}
           ref={rotationRef}
@@ -112,7 +138,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 
           isAdmin={isAdmin}
           compact
         />
-      </div>
+      </div>}
     </div>
   )
 }
