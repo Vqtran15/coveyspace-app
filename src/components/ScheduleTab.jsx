@@ -24,19 +24,28 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 
   useEffect(() => {
     // Only needed when both tabs are enabled and no navigation hint was given
     if (segment !== null) return
-    const mealsCutoff  = mealCutoffDate()
+    const mealsCutoff   = mealCutoffDate()
     const servicesToday = toDateString(new Date())
     Promise.all([
-      supabase.from('meal_pages').select('week_date, is_paused').gte('week_date', mealsCutoff).order('week_date').limit(10),
-      supabase.from('serving_pages').select('week_date, is_paused').gte('week_date', servicesToday).order('week_date').limit(10),
-    ]).then(([{ data: mealPages }, { data: servicePages }]) => {
+      supabase.from('meal_pages').select('id, week_date, is_paused, slot_count').gte('week_date', mealsCutoff).order('week_date').limit(10),
+      supabase.from('serving_pages').select('id, week_date, is_paused, slot_count').gte('week_date', servicesToday).order('week_date').limit(10),
+    ]).then(async ([{ data: mealPages }, { data: servicePages }]) => {
       const nextMeal    = (mealPages ?? []).find(p => !p.is_paused)
       const nextService = (servicePages ?? []).find(p => !p.is_paused)
-      if (nextService && (!nextMeal || nextService.week_date < nextMeal.week_date)) {
-        setSegment('services')
-      } else {
-        setSegment('meals')
-      }
+
+      if (!nextMeal && !nextService) { setSegment('meals'); return }
+      if (!nextMeal)    { setSegment('services'); return }
+      if (!nextService) { setSegment('meals'); return }
+
+      if (nextMeal.week_date < nextService.week_date) { setSegment('meals'); return }
+      if (nextService.week_date < nextMeal.week_date) { setSegment('services'); return }
+
+      // Tie — same date. Pick whichever has fewer sign-ups filled.
+      const [{ count: mealCount }, { count: serviceCount }] = await Promise.all([
+        supabase.from('signups').select('id', { count: 'exact', head: true }).eq('meal_page_id', nextMeal.id),
+        supabase.from('serving_signups').select('id', { count: 'exact', head: true }).eq('meal_page_id', nextService.id),
+      ])
+      setSegment((serviceCount ?? 0) < (mealCount ?? 0) ? 'services' : 'meals')
     }).catch(() => setSegment('meals'))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
