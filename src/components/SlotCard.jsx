@@ -32,14 +32,14 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
         <CheckCircle size={18} weight="fill" className="absolute top-2.5 right-2.5 text-ember" />
       )}
       {dishName ? (
-        <div className="font-semibold text-stone-800 truncate mb-1">{dishName}</div>
+        <div className="font-semibold text-stone-800 mb-1">{dishName}</div>
       ) : (
         <div className="text-sm text-stone-400 italic mb-1">Add a new {itemNoun.toLowerCase()}</div>
       )}
 
       {filled ? (
         <>
-          <div className="text-sm text-ember font-medium truncate">→ {signup.name}</div>
+          <div className="text-sm text-ember font-medium">→ {signup.name}</div>
           {signup.notes && (
             <div className="text-xs text-stone-500 mt-1.5 line-clamp-1 italic">{signup.notes}</div>
           )}
