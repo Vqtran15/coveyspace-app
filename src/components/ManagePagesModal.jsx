@@ -171,13 +171,15 @@ export default function ManagePagesPage({
             <ArrowLeft size={20} weight="bold" />
           </button>
           <h1 className="flex-1 text-3xl font-bold text-stone-800">Manage {pageNounPlural}</h1>
-          <button
-            onClick={onAddPage}
-            aria-label={`Add ${pageNoun}`}
-            className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember hover:bg-ember-700 active:bg-ember-800 text-white transition-colors shrink-0"
-          >
-            <Plus size={20} weight="bold" />
-          </button>
+          {onAddPage && (
+            <button
+              onClick={onAddPage}
+              aria-label={`Add ${pageNoun}`}
+              className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember hover:bg-ember-700 active:bg-ember-800 text-white transition-colors shrink-0"
+            >
+              <Plus size={20} weight="bold" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -186,12 +188,14 @@ export default function ManagePagesPage({
         {list.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
             <p className="text-stone-500 text-sm mb-5">No {pageNounPlural.toLowerCase()} yet.</p>
-            <button
-              onClick={onAddPage}
-              className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-xl transition-colors"
-            >
-              + Add {pageNoun}
-            </button>
+            {onAddPage && (
+              <button
+                onClick={onAddPage}
+                className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-xl transition-colors"
+              >
+                + Add {pageNoun}
+              </button>
+            )}
           </div>
         ) : (
           <div className="max-w-3xl mx-auto px-4 pb-8 flex flex-col gap-3">
@@ -212,17 +216,21 @@ export default function ManagePagesPage({
                       : 'border-stone-100 shadow-sm transition-transform duration-150'
                   }`}
                 >
-                  {/* Drag handle */}
-                  <button
-                    onPointerDown={e => handlePointerDown(e, page.id)}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    onPointerCancel={handlePointerUp}
-                    className="shrink-0 w-8 h-8 flex items-center justify-center text-stone-300 hover:text-stone-500 cursor-grab active:cursor-grabbing touch-none"
-                    aria-label="Drag to reorder"
-                  >
-                    <DotsSixVertical size={18} weight="bold" />
-                  </button>
+                  {/* Drag handle — admins only */}
+                  {onReorder ? (
+                    <button
+                      onPointerDown={e => handlePointerDown(e, page.id)}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerCancel={handlePointerUp}
+                      className="shrink-0 w-8 h-8 flex items-center justify-center text-stone-300 hover:text-stone-500 cursor-grab active:cursor-grabbing touch-none"
+                      aria-label="Drag to reorder"
+                    >
+                      <DotsSixVertical size={18} weight="bold" />
+                    </button>
+                  ) : (
+                    <div className="shrink-0 w-8 h-8" />
+                  )}
 
                   {/* Date badge */}
                   <div className="shrink-0 w-10 h-10 flex flex-col items-center justify-center bg-ember/10 rounded-xl">
@@ -284,7 +292,7 @@ export default function ManagePagesPage({
                         {deleting ? 'Deleting…' : 'Delete'}
                       </button>
                     </div>
-                  ) : (
+                  ) : (onEditPage || onRenamePage || onDeletePage) ? (
                     <div className="shrink-0 relative" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => {
@@ -319,16 +327,18 @@ export default function ManagePagesPage({
                                 <div className="h-px bg-stone-100" />
                               </>
                             )}
-                            <button
-                              onClick={() => startRename(page)}
-                              className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-                            >
-                              <PencilSimple size={14} className="text-stone-500" />
-                              Rename
-                            </button>
+                            {onRenamePage && (
+                              <button
+                                onClick={() => startRename(page)}
+                                className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                              >
+                                <PencilSimple size={14} className="text-stone-500" />
+                                Rename
+                              </button>
+                            )}
                             {onDeletePage && (
                               <>
-                                <div className="h-px bg-stone-100" />
+                                {onRenamePage && <div className="h-px bg-stone-100" />}
                                 <button
                                   onClick={() => handleDelete(page.id)}
                                   className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -342,7 +352,7 @@ export default function ManagePagesPage({
                         )}
                       </AnimatePresence>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )
             })}

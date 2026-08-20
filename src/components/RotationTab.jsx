@@ -375,19 +375,19 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           isAdmin={isAdmin}
           pageNoun={pageNoun}
           pageNounPlural={pageNounPlural}
-          onReorder={handleReorderPages}
-          onAddPage={() => setShowAddModal(true)}
-          onDeletePage={async (pageId) => {
+          onReorder={isAdmin ? handleReorderPages : undefined}
+          onAddPage={isAdmin ? () => setShowAddModal(true) : undefined}
+          onDeletePage={isAdmin ? async (pageId) => {
             const { error } = await supabase.from(tables.pages).delete().eq('id', pageId)
             if (error) throw new Error(error.message)
             handlePageDeleted(pageId)
-          }}
-          onRenamePage={async (pageId, newTitle) => {
+          } : undefined}
+          onRenamePage={isAdmin ? async (pageId, newTitle) => {
             const { error } = await supabase.from(tables.pages).update({ title: newTitle }).eq('id', pageId)
             if (error) throw new Error(error.message)
             setPages(prev => prev.map(p => p.id === pageId ? { ...p, title: newTitle } : p))
-          }}
-          onEditPage={page => { setManagingEditPage(page); setShowManagePages(false) }}
+          } : undefined}
+          onEditPage={isAdmin ? page => { setManagingEditPage(page); setShowManagePages(false) } : undefined}
           onClose={() => setShowManagePages(false)}
         />
       )}
