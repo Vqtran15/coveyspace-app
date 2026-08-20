@@ -60,6 +60,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
   const [date, setDate]         = useState(defaultDateStr)
   const [slotCount, setSlotCount] = useState(10)
   const [dishes, setDishes]     = useState(Array(10).fill(''))
+  const [columns, setColumns]   = useState(1)
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState(null)
   const [duplicateFrom, setDuplicateFrom] = useState('')
@@ -72,12 +73,13 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
   function handleDuplicateChange(pageId) {
     setDuplicateFrom(pageId)
-    if (!pageId) { setDuplicateCategories([]); return }
+    if (!pageId) { setCategories(Array(slotCount).fill('')); setColumns(1); return }
     const source = pages.find(p => p.id === pageId)
     if (!source) return
     setSlotCount(source.slot_count)
     setDishes(source.slot_dishes?.length ? [...source.slot_dishes] : Array(source.slot_count).fill(''))
     setCategories(source.slot_categories?.length ? [...source.slot_categories] : Array(source.slot_count).fill(''))
+    setColumns(source.slot_columns ?? 1)
   }
 
   useEffect(() => {
@@ -120,6 +122,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
         week_date: date,
         slot_count: slotCount,
         slot_dishes: dishes.map(d => d.trim()),
+        slot_columns: columns,
         ...(supportsCategories && { slot_categories: categories }),
       })
       // Animate out on success so the transition matches the back-button path
@@ -200,6 +203,28 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
                 className="px-4 py-3 text-sm text-stone-800 focus:outline-none bg-white appearance-none"
                 required
               />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Sign-up layout</label>
+            <p className="text-xs text-stone-400 mb-2">How {noun.toLowerCase()}s appear on the sign-up page for members</p>
+            <div className="inline-flex bg-stone-100 rounded-xl p-1">
+              {[1, 2].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-pressed={columns === n}
+                  onClick={() => setColumns(n)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    columns === n
+                      ? 'bg-ember text-white shadow-sm'
+                      : 'text-stone-500 hover:text-stone-700'
+                  }`}
+                >
+                  {n === 1 ? '1 column' : '2 columns'}
+                </button>
+              ))}
             </div>
           </div>
 
