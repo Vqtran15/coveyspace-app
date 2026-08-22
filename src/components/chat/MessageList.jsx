@@ -791,7 +791,7 @@ export default function MessageList() {
       </div>
 
       {/* Scroll-to-bottom — floats inside messages area, above typing + input */}
-      {!isAtBottom && !searchOpen && (
+      {!isAtBottom && !searchOpen && visible && (
         <div className="absolute inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none" style={{ bottom: `${inputH + 12}px` }}>
           <button
             onClick={handleScrollToBottom}
