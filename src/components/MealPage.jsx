@@ -225,7 +225,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   })()
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pb-12">
+    <main className="max-w-3xl mx-auto px-4" style={{ paddingBottom: 'max(80px, calc(var(--sab) + 72px))' }}>
       <div className={`mb-6 bg-white rounded-2xl shadow border border-stone-100 ${headerEntranceClass}`}>
         <div className="p-4 flex items-start gap-4">
           {Icon && (
