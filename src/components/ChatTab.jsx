@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
+import { useBackButton } from '../hooks/useBackButton.js'
 
 export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays, onConvOpen }) {
   const { session, displayName, groupId, isAdmin, push, setUnreadChatCount } = useAppContext()
@@ -78,7 +79,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
     setActiveConv(conv)
   }
 
-  function goBack() {
+  const goBack = useCallback(() => {
     setChatExiting(true)
     setTimeout(() => {
       setChatExiting(false)
@@ -86,7 +87,10 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
       setListClass('animate-slide-in-left')
       setTimeout(() => setListClass(''), 250)
     }, 200)
-  }
+  }, [])
+
+  // Android back button: close the open conversation instead of leaving the app
+  useBackButton(!!activeConv, goBack)
 
   useEffect(() => {
     const reset = location.state?.tabReset

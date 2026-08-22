@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { DeviceMobile, X, CaretDown, CaretUp } from '@phosphor-icons/react'
+import { useState, useEffect, useRef } from 'react'
+import { DeviceMobile, X, CaretDown, CaretUp, DownloadSimple } from '@phosphor-icons/react'
 import { getCookie, setCookie } from '../lib/cookies.js'
 
 const COOKIE_KEY = 'installBannerDismissed'
@@ -37,6 +37,19 @@ export default function InstallBanner() {
   const [dismissed, setDismissed] = useState(() => getCookie(COOKIE_KEY))
   const [expanded, setExpanded] = useState(false)
   const [closing, setClosing] = useState(false)
+  // Android: capture beforeinstallprompt for one-tap install
+  const deferredPromptRef = useRef(null)
+  const [canPrompt, setCanPrompt] = useState(false)
+
+  useEffect(() => {
+    function handleBeforeInstallPrompt(e) {
+      e.preventDefault()
+      deferredPromptRef.current = e
+      setCanPrompt(true)
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+  }, [])
 
   if (!platform || platform === 'standalone' || dismissed) return null
 
@@ -46,6 +59,16 @@ export default function InstallBanner() {
       setCookie(COOKIE_KEY)
       setDismissed(true)
     }, 250)
+  }
+
+  async function handleInstallPrompt() {
+    const prompt = deferredPromptRef.current
+    if (!prompt) return
+    await prompt.prompt()
+    const { outcome } = await prompt.userChoice
+    deferredPromptRef.current = null
+    setCanPrompt(false)
+    if (outcome === 'accepted') handleDismiss()
   }
 
   return (
@@ -61,16 +84,27 @@ export default function InstallBanner() {
           <p className="text-xs text-stone-500 mt-0.5">Get the full app experience — no App Store required.</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="text-xs font-semibold text-ember px-2.5 py-1.5 rounded-lg hover:bg-ember/10 active:bg-ember/20 transition-colors flex items-center gap-1"
-          >
-            {expanded ? 'Hide' : 'How?'}
-            {expanded
-              ? <CaretUp size={12} weight="bold" />
-              : <CaretDown size={12} weight="bold" />
-            }
-          </button>
+          {/* Android: one-tap install button when browser supports it */}
+          {canPrompt ? (
+            <button
+              onClick={handleInstallPrompt}
+              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-ember px-3 py-1.5 rounded-lg hover:bg-ember-700 active:bg-ember-800 transition-colors"
+            >
+              <DownloadSimple size={13} weight="bold" />
+              Install
+            </button>
+          ) : (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="text-xs font-semibold text-ember px-2.5 py-1.5 rounded-lg hover:bg-ember/10 active:bg-ember/20 transition-colors flex items-center gap-1"
+            >
+              {expanded ? 'Hide' : 'How?'}
+              {expanded
+                ? <CaretUp size={12} weight="bold" />
+                : <CaretDown size={12} weight="bold" />
+              }
+            </button>
+          )}
           <button
             onClick={handleDismiss}
             aria-label="Dismiss"
@@ -81,7 +115,7 @@ export default function InstallBanner() {
         </div>
       </div>
 
-      {expanded && (
+      {expanded && !canPrompt && (
         <div className="mt-4 pt-4 border-t border-ember/20">
           <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest mb-3">
             {PLATFORM_LABEL[platform]}
