@@ -200,22 +200,29 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // (iOS treats the page as non-scrollable and skips safe-area reporting). Pinning
   // --sab to the real JS-measured value keeps the container height formula correct.
   useEffect(() => {
-    // iOS returns 0 for env(safe-area-inset-bottom) when the document scroll is 0,
-    // particularly after a service-worker reload or app update. Scroll 1px first so
-    // iOS recognises the document as scrollable before we capture the value. We also
-    // need the scroll to be non-zero AFTER overflow:hidden is applied so any inline
-    // env() references inside chat (reaction picker, etc.) keep working.
+    // After a SW-triggered reload iOS needs a few frames to finish initialising
+    // the viewport before env(safe-area-inset-bottom) returns the correct value
+    // (same issue as --dvh in main.jsx — iOS briefly reports 0 during reload).
+    // Nudge the scroll first so the document is non-zero, then wait two rAFs
+    // (matching the double-rAF guard in setDVH) before capturing the value.
     window.scrollTo(0, 1)
 
-    const sabEl = document.createElement('div')
-    sabEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
-    document.documentElement.appendChild(sabEl)
-    const sabPx = sabEl.offsetHeight
-    sabEl.remove()
-    if (sabPx > 0) document.documentElement.style.setProperty('--sab', `${sabPx}px`)
+    let cancelled = false
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (cancelled) return
 
-    document.body.style.overflow = 'hidden'
+      const sabEl = document.createElement('div')
+      sabEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
+      document.documentElement.appendChild(sabEl)
+      const sabPx = sabEl.offsetHeight
+      sabEl.remove()
+      if (sabPx > 0) document.documentElement.style.setProperty('--sab', `${sabPx}px`)
+
+      document.body.style.overflow = 'hidden'
+    }))
+
     return () => {
+      cancelled = true
       document.body.style.overflow = ''
       document.documentElement.style.removeProperty('--sab')
     }
