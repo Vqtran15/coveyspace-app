@@ -790,12 +790,17 @@ export default function MessageList() {
         )}
       </div>
 
-      {/* Scroll-to-bottom — floats inside messages area, above typing + input */}
-      {!isAtBottom && !searchOpen && visible && (
-        <div className="absolute inset-x-0 flex justify-center z-10 animate-overlay-in pointer-events-none" style={{ bottom: `${inputH + 12}px` }}>
+      {/* Scroll-to-bottom — always in the DOM; show/hide via opacity so any
+          brief isAtBottom=false state during initial scroll produces a smooth
+          fade rather than the mount animation replaying and creating a flicker. */}
+      {visible && (
+        <div
+          className={`absolute inset-x-0 flex justify-center z-10 pointer-events-none transition-opacity duration-150 ${!isAtBottom && !searchOpen ? 'opacity-100' : 'opacity-0'}`}
+          style={{ bottom: `${inputH + 12}px` }}
+        >
           <button
             onClick={handleScrollToBottom}
-            className="pointer-events-auto relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center"
+            className={`relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center ${!isAtBottom && !searchOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
           >
             <ArrowDown size={16} weight="bold" />
             {unreadCount > 0 && (
