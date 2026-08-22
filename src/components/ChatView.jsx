@@ -200,6 +200,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // (iOS treats the page as non-scrollable and skips safe-area reporting). Pinning
   // --sab to the real JS-measured value keeps the container height formula correct.
   useEffect(() => {
+    // iOS returns 0 for env(safe-area-inset-bottom) when the document scroll is 0,
+    // particularly after a service-worker reload or app update. Scroll 1px first so
+    // iOS recognises the document as scrollable before we capture the value. We also
+    // need the scroll to be non-zero AFTER overflow:hidden is applied so any inline
+    // env() references inside chat (reaction picker, etc.) keep working.
+    window.scrollTo(0, 1)
+
     const sabEl = document.createElement('div')
     sabEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
     document.documentElement.appendChild(sabEl)
@@ -207,11 +214,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     sabEl.remove()
     if (sabPx > 0) document.documentElement.style.setProperty('--sab', `${sabPx}px`)
 
-    // iOS returns 0 for env(safe-area-inset-bottom) when body.overflow:hidden is
-    // applied and the document scroll is 0 (treats it as non-scrollable). Scroll 1px
-    // first so iOS keeps reporting the correct safe-area value for any inline env()
-    // references inside chat (reaction picker, etc.).
-    window.scrollTo(0, 1)
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = ''
