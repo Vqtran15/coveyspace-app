@@ -162,14 +162,15 @@ function AppContent() {
   }, [])
 
   // ── iOS PWA safe-area fix ──────────────────────────────────────────────────
-  // env(safe-area-inset-bottom) returns 0 until native scroll occurs on a
-  // scrollable page. Scroll 1px (the root div is 1px taller than the viewport),
-  // wait for iOS native layer to process, then read via probe and cache as a
-  // JS inline style so it persists across SPA navigation without re-querying.
-  // ChatView does NOT remove --sab on unmount, so this value persists across
-  // all chat sessions. We try at 150ms and again at 500ms on cold launch in
-  // case the viewport hasn't initialized early enough.
+  // env(safe-area-inset-bottom) returns 0 until native scroll occurs. We probe
+  // via a fixed div and pin the result as --sab on :root. The value is cached
+  // in localStorage so that after a SW-triggered page reload (where the probe
+  // may fire too early and return 0), the correct value is applied immediately
+  // on mount — before timers even fire. The live probe still runs and refreshes
+  // the cache, so the value stays accurate across device changes.
   useEffect(() => {
+    const CACHE_KEY = 'covey_sab'
+
     function measureSab() {
       const probe = document.createElement('div')
       probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;opacity:0'
@@ -178,20 +179,36 @@ function AppContent() {
       document.body.removeChild(probe)
       return sab
     }
+
+    function apply(sab) {
+      document.documentElement.style.setProperty('--sab', sab + 'px')
+      localStorage.setItem(CACHE_KEY, String(sab))
+    }
+
+    // Apply cached value immediately so layout is correct on first paint,
+    // even after a SW-triggered reload where the live probe hasn't fired yet.
+    const cached = parseFloat(localStorage.getItem(CACHE_KEY) || '0')
+    if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
+
     const timers = []
     function attempt() {
       window.scrollTo(0, 1)
       const sab = measureSab()
-      if (sab > 0) document.documentElement.style.setProperty('--sab', sab + 'px')
-      return sab
+      if (sab > 0) { apply(sab); return true }
+      return false
     }
-    // First attempt at 150ms (scroll + settle)
+
     timers.push(setTimeout(() => {
-      if (attempt() === 0) {
-        // Fallback at 500ms if first attempt returned 0 (cold launch timing)
-        timers.push(setTimeout(attempt, 350))
+      if (!attempt()) {
+        timers.push(setTimeout(() => {
+          // If both probes return 0 (e.g., after SW reload on iOS), the cached
+          // value was already applied above — re-apply to ensure it wins over
+          // any CSS env() that resolved to 0 in the meantime.
+          if (!attempt() && cached > 0) apply(cached)
+        }, 350))
       }
     }, 150))
+
     return () => timers.forEach(clearTimeout)
   }, [])
 
