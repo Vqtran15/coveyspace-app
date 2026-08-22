@@ -569,16 +569,17 @@ function AppContent() {
           >
             {visibleTabs.map(t => {
               const active = location.pathname === t.path
+              const showLabel = visibleTabs.length <= 3
               return (
                 <button
                   key={t.path}
                   onClick={() => handleTabChange(t.path)}
-                  className="relative w-14 h-12 flex items-center justify-center rounded-full touch-manipulation"
+                  className={`relative w-14 flex flex-col items-center justify-center rounded-full touch-manipulation ${showLabel ? 'h-16 gap-0.5' : 'h-12'}`}
                 >
                   {active && (
                     <motion.span
                       layoutId="pill-active"
-                      className="absolute top-1 bottom-1 left-0 right-0 mx-auto w-10 bg-ember rounded-full"
+                      className={`absolute left-0 right-0 mx-auto w-10 bg-ember rounded-full ${showLabel ? 'top-1 bottom-5' : 'top-1 bottom-1'}`}
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -594,6 +595,11 @@ function AppContent() {
                       className={active ? 'text-white' : 'text-stone-400'}
                     />
                   </motion.span>
+                  {showLabel && (
+                    <span className={`relative z-10 text-[11px] font-medium leading-none ${active ? 'text-ember' : 'text-stone-400'}`}>
+                      {t.shortLabel}
+                    </span>
+                  )}
                   {t.path === '/chat' && unreadChatCount > 0 && (
                     <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
                   )}
