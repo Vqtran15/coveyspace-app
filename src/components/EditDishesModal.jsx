@@ -224,7 +224,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                         value={entry.dish}
                         onChange={e => updateDish(entry.key, e.target.value)}
                         placeholder="—"
-                        className="flex-1 appearance-none text-base text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none min-w-0"
+                        className="flex-1 appearance-none text-sm text-stone-800 placeholder:text-stone-300 bg-transparent focus:outline-none min-w-0"
                       />
                       <button
                         type="button"

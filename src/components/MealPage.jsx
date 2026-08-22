@@ -239,7 +239,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
               <p className="text-stone-500 text-sm mt-0.5">{headerShortDate}</p>
               {page.location && (
                 <p className="flex items-center gap-1 text-xs text-stone-400 mt-0.5">
-                  <MapPin size={11} weight="fill" />
+                  <MapPin size={11} weight="fill" className="text-ember shrink-0" />
                   {page.location}
                 </p>
               )}
