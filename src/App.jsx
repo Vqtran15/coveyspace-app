@@ -564,7 +564,7 @@ function AppContent() {
       {!chatViewOpen && (
         <LayoutGroup id="floating-pill">
           <nav
-            className="pill-nav fixed left-4 right-4 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5"
+            className="pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5"
             style={{ bottom: 'max(16px, calc(var(--sab) + 8px))' }}
           >
             {visibleTabs.map(t => {
@@ -573,7 +573,7 @@ function AppContent() {
                 <button
                   key={t.path}
                   onClick={() => handleTabChange(t.path)}
-                  className="relative flex-1 h-12 flex items-center justify-center rounded-full touch-manipulation"
+                  className="relative w-12 h-12 flex items-center justify-center rounded-full touch-manipulation"
                 >
                   {active && (
                     <motion.span
