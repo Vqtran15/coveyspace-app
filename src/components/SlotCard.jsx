@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { CheckCircle } from '@phosphor-icons/react'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 
+const CATEGORY_CHIP = {
+  Main:    'bg-coral/15 text-coral-700',
+  Side:    'bg-lagoon/15 text-lagoon-700',
+  Dessert: 'bg-amber-50 text-amber-600',
+  Other:   'bg-stone-100 text-stone-600',
+}
+
 export default function SlotCard({ slotNumber, noun, itemNoun, dishName, category, signup, revealKey, isNew = false, onClick }) {
   const filled = Boolean(signup)
   const [pulse, setPulse] = useState(false)
@@ -35,6 +42,11 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
         <div className="font-semibold text-stone-800 mb-1">{dishName}</div>
       ) : (
         <div className="text-sm text-stone-400 italic mb-1">Add a new {itemNoun.toLowerCase()}</div>
+      )}
+      {category && CATEGORY_CHIP[category] && (
+        <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-1 ${CATEGORY_CHIP[category]}`}>
+          {category}
+        </span>
       )}
 
       {filled ? (
