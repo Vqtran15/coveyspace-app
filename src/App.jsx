@@ -367,102 +367,130 @@ function AppContent() {
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
     ) : (
-    <div className="bg-sunrise-50 lg:pl-56" style={{ paddingTop: isChat ? 0 : 'var(--sat)', minHeight: 'calc(var(--dvh) + var(--sat))' }}>
+    <div className="bg-sunrise-50 lg:pl-56" style={{ minHeight: 'calc(var(--dvh) + var(--sat))' }}>
       {!isOnline && (
         <div className="fixed inset-x-0 lg:left-56 z-[150] flex items-center justify-center gap-2 bg-stone-800 text-white text-xs font-medium py-2 px-4 animate-toast-in" style={{ top: 'var(--sat)' }}>
           <WifiSlash size={14} weight="bold" />
           You're offline
         </div>
       )}
-      {(announcement || announcementClosing) && !isFullHeight && (
-        <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
-      )}
-      {!isFullHeight && birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
-        <BirthdayBanner
-          upcoming={upcoming}
-          closing={birthdayBannerClosing}
-          onDismiss={dismissBirthdayBanner}
-          onTap={() => { dismissBirthdayBanner(); birthday.setOpen(true) }}
-        />
-      )}
-      {(prayerBanner || prayerBannerClosing) && prayerEnabled && (
-        <PrayerReactionBanner
-          reactorName={prayerBanner?.reactorName}
-          closing={prayerBannerClosing}
-          onDismiss={dismissPrayerBanner}
-          onTap={() => {
-            dismissPrayerBanner()
-            navigate('/prayer', { state: { featuredUserId: userId } })
-          }}
-        />
-      )}
 
-      <div
-        key={location.pathname}
-        className={`${isFullHeight ? '' : 'lg:pb-0'} ${
-          OFF_NAV_PATHS.includes(location.pathname)
-            ? 'animate-slide-in-up'
-            : OFF_NAV_PATHS.includes(locationRef.current)
-            ? 'animate-slide-in-left'
-            : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
-        }`}
-        style={isFullHeight ? undefined : {
-          height: 'var(--dvh)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Inner per-tab scroll container — keeps document body stationary so
-            the pill nav stays anchored. Chat uses its own scroll container. */}
+      {!isFullHeight ? (
+        // Non-chat tabs: fixed to the real viewport below the status bar.
+        // This eliminates the dependency on --dvh (window.innerHeight) for layout
+        // sizing. With position:fixed + top:sat + bottom:0, the container is
+        // always exactly viewport-height minus the status bar — regardless of
+        // what --dvh reports after a SW-triggered reload. The gap math becomes
+        // paddingBottom − pillarBottom − pillHeight = constant, independent of dvh.
         <div
-          ref={isFullHeight ? null : setScrollRef}
-          style={isFullHeight ? undefined : {
-            height: '100%',
-            overflowY: 'auto',
-            overscrollBehavior: 'contain',
-            paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)',
-          }}
+          className="bg-sunrise-50 flex flex-col lg:left-56"
+          style={{ position: 'fixed', top: 'var(--sat)', left: 0, right: 0, bottom: 0 }}
         >
-        <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home"     element={
-            <OverviewTab
-              onOpenBirthdays={() => birthday.setOpen(true)}
-              onOpenGuide={() => guide.setOpen(true)}
-              onOpenGiving={() => giving.setOpen(true)}
-              onOpenSettings={navigateToSettings}
-              greetingReady={!splashVisible && !showWelcome}
-            />
-          } />
-          <Route path="/schedule" element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} />} />
-          <Route path="/events"   element={<EventsTab />} />
-          <Route path="/chat"     element={
-            <ChatTab
+          {/* Banners sit as flex header rows — they push the scroll area down
+              without affecting the fixed container's own viewport anchoring. */}
+          {(announcement || announcementClosing) && (
+            <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
+          )}
+          {birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
+            <BirthdayBanner
               upcoming={upcoming}
-              birthdayBannerDismissed={birthdayBannerDismissed}
-              birthdayBannerClosing={birthdayBannerClosing}
-              onDismissBirthdayBanner={dismissBirthdayBanner}
-              onOpenBirthdays={() => birthday.setOpen(true)}
-              onConvOpen={setChatViewOpen}
+              closing={birthdayBannerClosing}
+              onDismiss={dismissBirthdayBanner}
+              onTap={() => { dismissBirthdayBanner(); birthday.setOpen(true) }}
             />
-          } />
-          <Route path="/prayer"   element={<PrayerTab />} />
-          <Route path="/bible"    element={<BibleTab />} />
-          <Route path="/admin"    element={<AdminPage />} />
-          <Route path="/settings" element={
-            <SettingsPage
-              onClose={() => navigate(-1)}
-              onRevisitGuide={() => {
-                const key = `cg_welcomed_${userId}_${groupId}`
-                removeCookie(key)
-                navigate('/home')
-                setShowWelcome(true)
+          )}
+          {(prayerBanner || prayerBannerClosing) && prayerEnabled && (
+            <PrayerReactionBanner
+              reactorName={prayerBanner?.reactorName}
+              closing={prayerBannerClosing}
+              onDismiss={dismissPrayerBanner}
+              onTap={() => {
+                dismissPrayerBanner()
+                navigate('/prayer', { state: { featuredUserId: userId } })
               }}
             />
-          } />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
+          )}
+
+          <div
+            key={location.pathname}
+            className={`lg:pb-0 ${
+              OFF_NAV_PATHS.includes(location.pathname)
+                ? 'animate-slide-in-up'
+                : OFF_NAV_PATHS.includes(locationRef.current)
+                ? 'animate-slide-in-left'
+                : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
+            }`}
+            style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+          >
+            <div
+              ref={setScrollRef}
+              style={{
+                height: '100%',
+                overflowY: 'auto',
+                overscrollBehavior: 'contain',
+                paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)',
+              }}
+            >
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="/home"     element={
+                  <OverviewTab
+                    onOpenBirthdays={() => birthday.setOpen(true)}
+                    onOpenGuide={() => guide.setOpen(true)}
+                    onOpenGiving={() => giving.setOpen(true)}
+                    onOpenSettings={navigateToSettings}
+                    greetingReady={!splashVisible && !showWelcome}
+                  />
+                } />
+                <Route path="/schedule" element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} />} />
+                <Route path="/events"   element={<EventsTab />} />
+                <Route path="/prayer"   element={<PrayerTab />} />
+                <Route path="/bible"    element={<BibleTab />} />
+                <Route path="/admin"    element={<AdminPage />} />
+                <Route path="/settings" element={
+                  <SettingsPage
+                    onClose={() => navigate(-1)}
+                    onRevisitGuide={() => {
+                      const key = `cg_welcomed_${userId}_${groupId}`
+                      removeCookie(key)
+                      navigate('/home')
+                      setShowWelcome(true)
+                    }}
+                  />
+                } />
+                <Route path="*" element={<Navigate to="/home" replace />} />
+              </Routes>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        // Chat tab: ChatView manages its own full-screen sizing via .chat-container
+        // CSS. Keep it in document flow so that class-based height rule applies.
+        <div
+          key={location.pathname}
+          className={
+            OFF_NAV_PATHS.includes(location.pathname)
+              ? 'animate-slide-in-up'
+              : OFF_NAV_PATHS.includes(locationRef.current)
+              ? 'animate-slide-in-left'
+              : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
+          }
+        >
+          <Routes>
+            <Route path="/chat" element={
+              <ChatTab
+                upcoming={upcoming}
+                birthdayBannerDismissed={birthdayBannerDismissed}
+                birthdayBannerClosing={birthdayBannerClosing}
+                onDismissBirthdayBanner={dismissBirthdayBanner}
+                onOpenBirthdays={() => birthday.setOpen(true)}
+                onConvOpen={setChatViewOpen}
+              />
+            } />
+            <Route path="*" element={<Navigate to="/chat" replace />} />
+          </Routes>
+        </div>
+      )}
 
       {showWelcome && (
         <WelcomeSplash
