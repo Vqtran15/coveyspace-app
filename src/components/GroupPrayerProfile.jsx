@@ -304,7 +304,8 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
           onClick={closeActionSheet}
         >
           <div
-            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl pb-safe ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center pt-3 pb-1 lg:hidden">
@@ -344,7 +345,8 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
           onClick={closeConfirmDelete}
         >
           <div
-            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl pb-safe ${confirmDeleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full lg:w-[480px] lg:max-w-full lg:shadow-xl ${confirmDeleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-6">

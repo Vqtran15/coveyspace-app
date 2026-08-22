@@ -103,7 +103,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
-      style={keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 16 } : undefined}
+      style={keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 16 } : { paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
       onClick={close}
     >
       <div

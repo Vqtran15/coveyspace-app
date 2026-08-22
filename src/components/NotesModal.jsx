@@ -33,6 +33,7 @@ export default function NotesModal({ groupId, onClose }) {
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
       onClick={close}
     >
       <div

@@ -98,6 +98,7 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
       <div
         ref={modalRef}
         className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-4">

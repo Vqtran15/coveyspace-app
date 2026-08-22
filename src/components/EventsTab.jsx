@@ -827,7 +827,7 @@ export default function EventsTab() {
               dragElastic={{ top: 0.05, bottom: 0.6 }}
               onDragEnd={(_, { velocity, offset }) => { if (offset.y > 80 || velocity.y > 400) setShowConvPicker(false) }}
               className="bg-white rounded-t-3xl lg:rounded-2xl lg:w-[480px] lg:max-w-full lg:shadow-xl"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             >
               <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
                 <div className="w-8 h-1 rounded-full bg-stone-200" />
@@ -890,9 +890,8 @@ export default function EventsTab() {
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingEvent(null) } }}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden max-h-[90dvh] lg:w-[480px] lg:max-w-full lg:shadow-xl">
+            <div className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden max-h-[90dvh] lg:w-[480px] lg:max-w-full lg:shadow-xl" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
               <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
                 <div className="w-8 h-1 rounded-full bg-stone-200" />
               </div>
@@ -926,7 +925,6 @@ export default function EventsTab() {
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
             onClick={e => { if (e.target === e.currentTarget) setDeleteTarget(null) }}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <motion.div
               drag="y"
@@ -934,6 +932,7 @@ export default function EventsTab() {
               dragElastic={{ top: 0.05, bottom: 0.6 }}
               onDragEnd={(_, { velocity, offset }) => { if (offset.y > 80 || velocity.y > 400) setDeleteTarget(null) }}
               className="bg-white rounded-t-3xl lg:rounded-2xl lg:w-[480px] lg:max-w-full lg:shadow-xl"
+              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             >
               <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
                 <div className="w-8 h-1 rounded-full bg-stone-200" />

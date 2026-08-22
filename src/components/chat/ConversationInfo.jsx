@@ -25,6 +25,7 @@ export default function ConversationInfo() {
     >
       <div
         className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto max-h-[70vh] overflow-y-auto ${infoClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-5 pb-2">

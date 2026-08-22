@@ -565,7 +565,8 @@ export default function ConversationList({ session, groupId, members, enterClass
           onClick={closeActionSheet}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto ${actionSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center pt-3 pb-1">
@@ -605,7 +606,8 @@ export default function ConversationList({ session, groupId, members, enterClass
           onClick={closeDeleteConfirm}
         >
           <div
-            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto pb-safe ${deleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto ${deleteClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-6">
@@ -640,6 +642,7 @@ export default function ConversationList({ session, groupId, members, enterClass
         >
           <div
             className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Modal header */}

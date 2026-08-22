@@ -846,6 +846,7 @@ export default function PrayerTab() {
         >
           <div
             className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${createClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Sheet header */}
