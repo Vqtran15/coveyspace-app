@@ -247,14 +247,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         cancelled = true
         timers.forEach(clearTimeout)
         document.body.style.overflow = ''
-        document.documentElement.style.removeProperty('--sab')
+        // --sab is device-constant (34px or 0). Do NOT remove it — App.jsx set it
+        // at startup without overflow:hidden and the value persists across chat sessions.
+        // Removing it would lose the correct value, forcing a re-probe that races with
+        // the async scrollTo(0,1) and frequently returns 0 on subsequent chat opens.
       }
     }
 
     return () => {
       cancelled = true
       document.body.style.overflow = ''
-      document.documentElement.style.removeProperty('--sab')
+      // Same: keep --sab pinned. See comment above.
     }
   }, [])
 

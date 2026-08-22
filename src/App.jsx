@@ -166,19 +166,33 @@ function AppContent() {
   // scrollable page. Scroll 1px (the root div is 1px taller than the viewport),
   // wait for iOS native layer to process, then read via probe and cache as a
   // JS inline style so it persists across SPA navigation without re-querying.
+  // ChatView does NOT remove --sab on unmount, so this value persists across
+  // all chat sessions. We try at 150ms and again at 500ms on cold launch in
+  // case the viewport hasn't initialized early enough.
   useEffect(() => {
-    const t = setTimeout(() => {
+    function measureSab() {
+      const probe = document.createElement('div')
+      probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;opacity:0'
+      document.body.appendChild(probe)
+      const sab = probe.getBoundingClientRect().height
+      document.body.removeChild(probe)
+      return sab
+    }
+    const timers = []
+    function attempt() {
       window.scrollTo(0, 1)
-      setTimeout(() => {
-        const probe = document.createElement('div')
-        probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;opacity:0'
-        document.body.appendChild(probe)
-        const sab = probe.getBoundingClientRect().height
-        document.body.removeChild(probe)
-        if (sab > 0) document.documentElement.style.setProperty('--sab', sab + 'px')
-      }, 100)
-    }, 50)
-    return () => clearTimeout(t)
+      const sab = measureSab()
+      if (sab > 0) document.documentElement.style.setProperty('--sab', sab + 'px')
+      return sab
+    }
+    // First attempt at 150ms (scroll + settle)
+    timers.push(setTimeout(() => {
+      if (attempt() === 0) {
+        // Fallback at 500ms if first attempt returned 0 (cold launch timing)
+        timers.push(setTimeout(attempt, 350))
+      }
+    }, 150))
+    return () => timers.forEach(clearTimeout)
   }, [])
 
   // ── Announcement banner ────────────────────────────────────────────────────
