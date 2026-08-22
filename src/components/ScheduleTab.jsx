@@ -33,20 +33,20 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 
       const nextMeal    = (mealPages ?? []).find(p => !p.is_paused)
       const nextService = (servicePages ?? []).find(p => !p.is_paused)
 
-      if (!nextMeal && !nextService) { setSegment('meals'); return }
-      if (!nextMeal)    { setSegment('services'); return }
-      if (!nextService) { setSegment('meals'); return }
+      if (!nextMeal && !nextService) { setSegment(p => p ?? 'meals'); return }
+      if (!nextMeal)    { setSegment(p => p ?? 'services'); return }
+      if (!nextService) { setSegment(p => p ?? 'meals'); return }
 
-      if (nextMeal.week_date < nextService.week_date) { setSegment('meals'); return }
-      if (nextService.week_date < nextMeal.week_date) { setSegment('services'); return }
+      if (nextMeal.week_date < nextService.week_date) { setSegment(p => p ?? 'meals'); return }
+      if (nextService.week_date < nextMeal.week_date) { setSegment(p => p ?? 'services'); return }
 
       // Tie — same date. Pick whichever has fewer sign-ups filled.
       const [{ count: mealCount }, { count: serviceCount }] = await Promise.all([
         supabase.from('signups').select('id', { count: 'exact', head: true }).eq('meal_page_id', nextMeal.id),
         supabase.from('serving_signups').select('id', { count: 'exact', head: true }).eq('meal_page_id', nextService.id),
       ])
-      setSegment((serviceCount ?? 0) < (mealCount ?? 0) ? 'services' : 'meals')
-    }).catch(() => setSegment('meals'))
+      setSegment(p => p ?? ((serviceCount ?? 0) < (mealCount ?? 0) ? 'services' : 'meals'))
+    }).catch(() => setSegment(p => p ?? 'meals'))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
@@ -94,7 +94,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 
             <ListBullets size={20} weight="regular" />
           </button>
         </div>
-        {mealsEnabled && servicesEnabled && (
+        {mealsEnabled && servicesEnabled && segment && (
           <LayoutGroup id="schedule-tabs">
             <div className="flex bg-stone-100 rounded-xl p-1">
               <button

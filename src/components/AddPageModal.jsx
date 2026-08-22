@@ -73,7 +73,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
 
   function handleDuplicateChange(pageId) {
     setDuplicateFrom(pageId)
-    if (!pageId) { setCategories(Array(slotCount).fill('')); setColumns(1); return }
+    if (!pageId) { setSlotCount(10); setDishes(Array(10).fill('')); setCategories(Array(10).fill('')); setColumns(1); return }
     const source = pages.find(p => p.id === pageId)
     if (!source) return
     setSlotCount(source.slot_count)

@@ -359,12 +359,14 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
               </p>
             )}
             {!autoFill && <div className="mb-6" />}
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-lg transition-colors"
-            >
-              + Add First {pageNoun}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-5 py-2.5 bg-ember hover:bg-ember-700 text-white font-medium rounded-lg transition-colors"
+              >
+                + Add First {pageNoun}
+              </button>
+            )}
           </div>
         )}
       </div>
