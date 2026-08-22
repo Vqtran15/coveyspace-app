@@ -31,7 +31,13 @@ export default function UpdatePrompt() {
       const prev = prevControllerRef.current
       const curr = navigator.serviceWorker?.controller ?? null
       prevControllerRef.current = curr
-      if (prev !== null && curr !== null && prev !== curr) window.location.reload()
+      if (prev !== null && curr !== null && prev !== curr) {
+        // Clear overflow:hidden that ChatView may have set — iOS WKWebView can
+        // carry body.overflow state into the new page's init window, causing
+        // env(safe-area-inset-bottom) to return 0 in the next page's SAB probe.
+        document.body.style.overflow = ''
+        window.location.reload()
+      }
     }
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
     return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)

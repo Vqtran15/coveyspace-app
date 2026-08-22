@@ -26,6 +26,64 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   requestAnimationFrame(function () { requestAnimationFrame(update) })
 }())
 
+// iOS PWA safe-area-inset-bottom probe — runs synchronously before React mounts
+// so that the first render already has the correct --sab value.
+//
+// Two failure modes we guard against:
+// 1. Cold launch: env() returns 0 until iOS processes a native scroll event.
+//    We do scrollTo(0,1) then wait 150ms. Retry at 500ms if still 0.
+// 2. SW-triggered reload while ChatView had body.overflow='hidden': iOS can
+//    carry that overflow state into the new page's initialization window,
+//    making env() return 0 even after the scroll. We clear body.overflow
+//    here (before any React effect can re-set it) and also cache the last
+//    good measurement in localStorage so a post-reload probe failure falls
+//    back to a known-good value.
+;(function setSAB() {
+  var CACHE_KEY = 'covey_sab'
+
+  // Clear any overflow iOS may have carried from the previous page load.
+  document.body.style.overflow = ''
+
+  function measure() {
+    var el = document.createElement('div')
+    el.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;opacity:0'
+    document.body.appendChild(el)
+    var h = el.getBoundingClientRect().height
+    document.body.removeChild(el)
+    return h
+  }
+
+  function apply(sab) {
+    document.documentElement.style.setProperty('--sab', sab + 'px')
+    try { localStorage.setItem(CACHE_KEY, String(sab)) } catch (e) {}
+  }
+
+  // Apply cached value immediately so first React render uses the right value.
+  var cached = parseFloat(localStorage.getItem(CACHE_KEY) || '0')
+  if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
+
+  window.scrollTo(0, 1)
+  setTimeout(function () {
+    var sab = measure()
+    if (sab > 0) {
+      apply(sab)
+    } else {
+      // Retry once at 500ms total
+      setTimeout(function () {
+        sab = measure()
+        if (sab > 0) {
+          apply(sab)
+        } else if (cached > 0) {
+          // Both probes returned 0 (e.g. SW reload with delayed viewport init).
+          // Re-affirm cached value — it was applied above but the CSS env()
+          // default may have overwritten it since then.
+          apply(cached)
+        }
+      }, 350)
+    }
+  }, 150)
+}())
+
 // Prevent iOS PWA elastic/rubber-band scroll at the document boundary.
 // overscroll-behavior-y:none is unreliable in WKWebView; touchmove
 // preventDefault is the universal fallback. Skips elements inside
