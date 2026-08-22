@@ -24,13 +24,12 @@ body {
    env(safe-area-inset-bottom) padding inside the floating input overlay.
    Browser: fills the full visible viewport (dvh). Keyboard override below
    replaces this height via --vvh when the soft keyboard is open.
-   100dvh is used (not var(--dvh)) because 100dvh is computed by the CSS engine
-   natively and always returns the correct viewport height. var(--dvh) is set
-   from window.innerHeight which iOS WKWebView reports incorrectly after
-   background→foreground transitions (returns full screen height instead of
-   the layout viewport height below the status bar). */
+   var(--dvh) is set from window.innerHeight which iOS WKWebView occasionally
+   reports incorrectly after background→foreground transitions. The visibilitychange
+   listener was removed from setDVH() so --dvh is only ever set on page load and
+   resize — never on foreground return — keeping it stable at the correct value. */
 html.is-pwa .chat-container {
-  height: calc(100dvh + var(--sat));
+  height: calc(var(--dvh) + var(--sat));
 }
 html:not(.is-pwa) .chat-container {
   height: var(--dvh);

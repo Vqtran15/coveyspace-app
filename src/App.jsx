@@ -376,18 +376,28 @@ function AppContent() {
       )}
 
       {!isFullHeight ? (
-        // Non-chat tabs: fixed to the real viewport below the status bar.
-        // This eliminates the dependency on --dvh (window.innerHeight) for layout
-        // sizing. With position:fixed + top:sat + bottom:0, the container is
-        // always exactly viewport-height minus the status bar — regardless of
-        // what --dvh reports after a SW-triggered reload. The gap math becomes
-        // paddingBottom − pillarBottom − pillHeight = constant, independent of dvh.
+        // Non-chat tabs: in-flow flex column, height: 100dvh.
+        //
+        // IMPORTANT: do NOT use position:fixed here. A fixed element always creates
+        // a CSS stacking context. Any child z-index is then LOCAL to that context,
+        // so a modal at z-50 inside a fixed container competes only within that
+        // container — never against the nav pill at z-40 in the root context. The
+        // nav pill would cover every modal regardless of the modal's z-index.
+        //
+        // Using in-flow (no position) means no stacking context is created, so
+        // position:fixed modals rendered inside Route components escape to the root
+        // stacking context and their z-50 correctly beats the nav pill's z-40.
+        //
+        // 100dvh (native CSS) gives the full-screen height without any JS dependency.
+        // paddingTop:sat offsets content below the status bar. With box-sizing:border-box
+        // the total height stays 100dvh, keeping the document exactly at viewport
+        // height so preventElasticScroll blocks all document bounce.
         <div
-          className="bg-sunrise-50 flex flex-col lg:left-56"
-          style={{ position: 'fixed', top: 'var(--sat)', left: 0, right: 0, bottom: 0 }}
+          className="bg-sunrise-50 flex flex-col"
+          style={{ height: '100dvh', paddingTop: 'var(--sat)' }}
         >
-          {/* Banners sit as flex header rows — they push the scroll area down
-              without affecting the fixed container's own viewport anchoring. */}
+          {/* Banners are flex children — they push the scroll area down while the
+              container stays viewport-height. */}
           {(announcement || announcementClosing) && (
             <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
           )}
