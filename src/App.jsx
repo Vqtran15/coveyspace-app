@@ -487,7 +487,6 @@ function AppContent() {
                 onConvOpen={setChatViewOpen}
               />
             } />
-            <Route path="*" element={<Navigate to="/chat" replace />} />
           </Routes>
         </div>
       )}
