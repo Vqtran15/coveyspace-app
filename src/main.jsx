@@ -11,26 +11,36 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 // than the viewport (via root div minHeight in App.jsx) keeps iOS returning
 // the correct env() values. --dvh gives us the reliable window.innerHeight.
 ;(function setDVH() {
+  var CACHE_KEY = 'covey_dvh'
+
   function update() {
+    // Don't measure while backgrounded — iOS WKWebView reports wrong
+    // innerHeight values during background SW reloads and during the
+    // background-to-foreground transition animation.
+    if (document.visibilityState === 'hidden') return
     var h = window.innerHeight
-    // Guard against 0: iOS briefly reports 0 during a SW-triggered reload
-    // before the viewport initializes. Also cap at screen.height to reject
-    // inflated values that can occur during PWA launch transitions.
     var max = (window.screen && window.screen.height) || 9999
-    if (h > 100 && h <= max) document.documentElement.style.setProperty('--dvh', h + 'px')
+    if (h > 100 && h <= max) {
+      document.documentElement.style.setProperty('--dvh', h + 'px')
+      try { localStorage.setItem(CACHE_KEY, String(h)) } catch (e) {}
+    }
   }
+
+  // Apply cached value immediately. On background SW reloads the live
+  // innerHeight is unreliable, so the cache from the last foreground session
+  // is our source of truth until the user returns to the app.
+  var cached = parseInt(localStorage.getItem(CACHE_KEY) || '0', 10)
+  if (cached > 100) document.documentElement.style.setProperty('--dvh', cached + 'px')
+
   update()
   window.addEventListener('resize', update)
-  // Double-rAF: gives iOS two frames to settle innerHeight after initial
-  // script execution (e.g. immediately after a service-worker-triggered reload).
   requestAnimationFrame(function () { requestAnimationFrame(update) })
-  // Re-probe on foreground return: if a background SW reload captured a
-  // transient wrong innerHeight, this corrects it the moment the user sees
-  // the app — equivalent to kill+relaunch timing for the viewport metrics.
+
+  // On foreground return, wait 500ms for the iOS viewport transition animation
+  // to finish before re-reading innerHeight. The double-rAF (~32ms) fires
+  // mid-transition and captures a wrong inflated value.
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') {
-      requestAnimationFrame(function () { requestAnimationFrame(update) })
-    }
+    if (document.visibilityState === 'visible') setTimeout(update, 500)
   })
 }())
 
@@ -91,16 +101,6 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
     }
   }, 150)
 
-  // Re-probe on foreground return: corrects any wrong value that was captured
-  // during a background SW reload, at the moment the user actually sees the app.
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState !== 'visible') return
-    window.scrollTo(0, 1)
-    setTimeout(function () {
-      var sab = measure()
-      if (sab > 0) apply(sab)
-    }, 150)
-  })
 }())
 
 // Prevent iOS PWA elastic/rubber-band scroll at the document boundary.
