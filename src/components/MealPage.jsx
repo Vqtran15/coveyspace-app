@@ -341,15 +341,18 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
         </div>
       ) : (
         <>
-          {orderedGroups.map(cat => (
+          {orderedGroups.map(cat => {
+            const groupSlots  = groups[cat] ?? []
+            const groupFilled = groupSlots.filter(n => signups.some(s => s.slot_number === n)).length
+            const groupTotal  = groupSlots.length
+            const label       = cat ? (CATEGORY_LABELS[cat] ?? cat) : 'Other'
+            return (
             <div key={cat} className="mb-4">
-              {hasAnyCategory && cat && (
+              {hasAnyCategory && groupSlots.length > 0 && (
                 <p className={`text-xs font-bold uppercase tracking-widest mb-2 px-1 ${CATEGORY_COLORS[cat] ?? 'text-stone-500'}`}>
-                  {CATEGORY_LABELS[cat] ?? cat}
+                  {label}
+                  <span className="text-stone-400 font-medium normal-case tracking-normal ml-1.5">· {groupFilled}/{groupTotal}</span>
                 </p>
-              )}
-              {hasAnyCategory && !cat && groups['']?.length > 0 && (
-                <p className="text-xs font-bold uppercase tracking-widest text-stone-500 mb-2 px-1">Other</p>
               )}
               <div className={`grid ${page.slot_columns === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
                 {(groups[cat] ?? []).map(n => (
@@ -368,7 +371,8 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                 ))}
               </div>
             </div>
-          ))}
+            )}
+          )}
           <button
             onClick={handleAddSlot}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-ember hover:bg-ember-700 active:bg-ember-800 text-white transition-colors"
