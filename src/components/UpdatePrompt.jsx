@@ -22,9 +22,7 @@ export default function UpdatePrompt() {
   useEffect(() => { needRefreshRef.current = needRefresh }, [needRefresh])
 
   // Reload whenever a new SW takes control of a page that already had a SW.
-  // Tracking the SW instance prevents reload loops: if the page loads with a
-  // controller already set, a subsequent claim event for the *same* SW won't
-  // change the identity and won't trigger a reload.
+  // Tracking the SW instance prevents reload loops.
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
     function onControllerChange() {
@@ -32,9 +30,6 @@ export default function UpdatePrompt() {
       const curr = navigator.serviceWorker?.controller ?? null
       prevControllerRef.current = curr
       if (prev !== null && curr !== null && prev !== curr) {
-        // Clear overflow:hidden that ChatView may have set — iOS WKWebView can
-        // carry body.overflow state into the new page's init window, causing
-        // env(safe-area-inset-bottom) to return 0 in the next page's SAB probe.
         document.body.style.overflow = ''
         window.location.reload()
       }
@@ -43,24 +38,32 @@ export default function UpdatePrompt() {
     return () => navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
   }, [])
 
-  // Check for updates on foreground return; apply immediately if one is waiting
+  // Apply updates in the background, not on return to foreground.
+  //
+  // Previously: updateServiceWorker(true) fired when the app became visible
+  // (or immediately when needRefresh was set). This caused location.reload()
+  // to run while the WKWebView viewport was in a "returning from background"
+  // transition — the worst possible moment for window.innerHeight and
+  // env(safe-area-inset-bottom) to be read, producing wrong --dvh/--sab values
+  // that persisted until the app was killed.
+  //
+  // Now: we apply the update when the app goes to the background. The
+  // WKWebView reloads while the user isn't looking. When they return, the
+  // page is already fresh with a fully settled viewport — equivalent to a
+  // kill + relaunch from the layout's perspective.
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.visibilityState !== 'visible') return
-      if (needRefreshRef.current) {
-        updateServiceWorker(true)
+      if (document.visibilityState === 'hidden') {
+        // Going to background: apply any pending update now
+        if (needRefreshRef.current) updateServiceWorker(true)
       } else {
+        // Returning to foreground: check for updates but don't apply yet
         swRegistrationRef.current?.update().catch(() => {})
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
-
-  // Silent auto-apply: no banner — apply the moment a new SW is detected
-  useEffect(() => {
-    if (needRefresh) updateServiceWorker(true)
-  }, [needRefresh])
 
   return null
 }
