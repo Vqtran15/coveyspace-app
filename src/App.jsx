@@ -574,12 +574,12 @@ function AppContent() {
                 <button
                   key={t.path}
                   onClick={() => handleTabChange(t.path)}
-                  className={`relative w-14 flex flex-col items-center justify-center rounded-full touch-manipulation ${showLabel ? 'h-16 gap-0.5' : 'h-12'}`}
+                  className={`relative flex flex-col items-center justify-center rounded-full touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5' : 'w-14 h-12'}`}
                 >
                   {active && (
                     <motion.span
                       layoutId="pill-active"
-                      className={`absolute left-0 right-0 mx-auto w-10 bg-ember rounded-full ${showLabel ? 'top-1 bottom-5' : 'top-1 bottom-1'}`}
+                      className={`absolute bg-ember rounded-full ${showLabel ? 'inset-1' : 'top-1 bottom-1 left-0 right-0 mx-auto w-10'}`}
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -596,7 +596,7 @@ function AppContent() {
                     />
                   </motion.span>
                   {showLabel && (
-                    <span className={`relative z-10 text-[11px] font-medium leading-none ${active ? 'text-ember' : 'text-stone-400'}`}>
+                    <span className={`relative z-10 text-[11px] font-medium leading-none ${active ? 'text-white' : 'text-stone-400'}`}>
                       {t.shortLabel}
                     </span>
                   )}
