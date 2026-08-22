@@ -10,13 +10,21 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 // than the viewport (non-scrollable pages). Keeping the document 1px taller
 // than the viewport (via root div minHeight in App.jsx) keeps iOS returning
 // the correct env() values. --dvh gives us the reliable window.innerHeight.
+//
+// NOTE: --dvh is no longer used for any critical layout in the PWA:
+// - Non-chat tabs use position:fixed (top:--sat, bottom:0) — immune to --dvh
+// - Chat container uses 100dvh CSS unit instead of var(--dvh)
+// - Outer wrapper minHeight uses --dvh only as a SAB probe scaffold (harmless if wrong)
+// --dvh is still used for the non-PWA browser chat (html:not(.is-pwa) .chat-container).
+// We still set it on load and resize so it stays correct for that case and for
+// any future use, but we do NOT update it on visibilitychange — iOS WKWebView
+// reports wrong window.innerHeight values during background→foreground transitions
+// (returns full-screen height instead of the layout-viewport height below the status
+// bar), and updating --dvh at that moment was the source of the chat input cut-off bug.
 ;(function setDVH() {
   var CACHE_KEY = 'covey_dvh'
 
   function update() {
-    // Don't measure while backgrounded — iOS WKWebView reports wrong
-    // innerHeight values during background SW reloads and during the
-    // background-to-foreground transition animation.
     if (document.visibilityState === 'hidden') return
     var h = window.innerHeight
     var max = (window.screen && window.screen.height) || 9999
@@ -26,22 +34,15 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
     }
   }
 
-  // Apply cached value immediately. On background SW reloads the live
-  // innerHeight is unreliable, so the cache from the last foreground session
-  // is our source of truth until the user returns to the app.
   var cached = parseInt(localStorage.getItem(CACHE_KEY) || '0', 10)
   if (cached > 100) document.documentElement.style.setProperty('--dvh', cached + 'px')
 
   update()
   window.addEventListener('resize', update)
   requestAnimationFrame(function () { requestAnimationFrame(update) })
-
-  // On foreground return, wait 500ms for the iOS viewport transition animation
-  // to finish before re-reading innerHeight. The double-rAF (~32ms) fires
-  // mid-transition and captures a wrong inflated value.
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') setTimeout(update, 500)
-  })
+  // No visibilitychange listener — iOS WKWebView returns wrong window.innerHeight
+  // values during the background→foreground transition, and --dvh is no longer
+  // load-bearing for any PWA layout so there is nothing to gain by re-reading it.
 }())
 
 // iOS PWA safe-area-inset-bottom probe — runs synchronously before React mounts
