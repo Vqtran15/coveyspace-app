@@ -24,6 +24,14 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   // Double-rAF: gives iOS two frames to settle innerHeight after initial
   // script execution (e.g. immediately after a service-worker-triggered reload).
   requestAnimationFrame(function () { requestAnimationFrame(update) })
+  // Re-probe on foreground return: if a background SW reload captured a
+  // transient wrong innerHeight, this corrects it the moment the user sees
+  // the app — equivalent to kill+relaunch timing for the viewport metrics.
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+      requestAnimationFrame(function () { requestAnimationFrame(update) })
+    }
+  })
 }())
 
 // iOS PWA safe-area-inset-bottom probe — runs synchronously before React mounts
@@ -82,6 +90,17 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
       }, 350)
     }
   }, 150)
+
+  // Re-probe on foreground return: corrects any wrong value that was captured
+  // during a background SW reload, at the moment the user actually sees the app.
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return
+    window.scrollTo(0, 1)
+    setTimeout(function () {
+      var sab = measure()
+      if (sab > 0) apply(sab)
+    }, 150)
+  })
 }())
 
 // Prevent iOS PWA elastic/rubber-band scroll at the document boundary.
