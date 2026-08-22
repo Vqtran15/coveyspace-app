@@ -162,6 +162,7 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
   const [pwError, setPwError] = useState(null)
 
   // Danger zone
+  const [dangerZoneOpen, setDangerZoneOpen] = useState(false)
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
@@ -528,8 +529,24 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
         </div>
 
         {/* Danger zone */}
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 px-1 mb-2">Danger Zone</p>
-        <div className="space-y-2">
+        <button
+          onClick={() => setDangerZoneOpen(o => !o)}
+          className="w-full flex items-center justify-between px-1 mb-2 group"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Danger Zone</p>
+          <CaretRight size={12} weight="bold" className={`text-stone-400 transition-transform duration-200 ${dangerZoneOpen ? 'rotate-90' : ''}`} />
+        </button>
+        <AnimatePresence initial={false}>
+        {dangerZoneOpen && (
+        <motion.div
+          key="danger-content"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.18 }}
+          className="overflow-hidden"
+        >
+        <div className="space-y-2 pb-1">
           <AnimatePresence initial={false}>
             {leaveConfirm ? (
               <motion.div
@@ -600,6 +617,9 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
             )}
           </AnimatePresence>
         </div>
+        </motion.div>
+        )}
+        </AnimatePresence>
     </main>
 
     {/* Editing bottom sheets */}

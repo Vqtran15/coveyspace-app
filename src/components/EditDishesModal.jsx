@@ -278,8 +278,16 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
             </p>
           )}
 
-          {/* Delete zone */}
-          <div className="pt-2">
+          <div style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }} className="space-y-2 pt-2">
+            <button
+              type="submit"
+              disabled={saving || entries.length === 0}
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
+            >
+              {saving ? 'Saving…' : `Save ${pageNoun}`}
+            </button>
+
+            {/* Delete zone */}
             {!confirmDelete ? (
               <button
                 type="button"
@@ -311,16 +319,6 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
                 </button>
               </div>
             )}
-          </div>
-
-          <div style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
-            <button
-              type="submit"
-              disabled={saving || entries.length === 0}
-              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:bg-ember-800 text-white font-semibold rounded-2xl transition-colors disabled:opacity-40"
-            >
-              {saving ? 'Saving…' : `Save ${pageNoun}`}
-            </button>
           </div>
         </div>
       </form>
