@@ -200,26 +200,56 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // (iOS treats the page as non-scrollable and skips safe-area reporting). Pinning
   // --sab to the real JS-measured value keeps the container height formula correct.
   useEffect(() => {
-    // After a SW-triggered reload iOS needs a few frames to finish initialising
-    // the viewport before env(safe-area-inset-bottom) returns the correct value
-    // (same issue as --dvh in main.jsx — iOS briefly reports 0 during reload).
-    // Nudge the scroll first so the document is non-zero, then wait two rAFs
-    // (matching the double-rAF guard in setDVH) before capturing the value.
+    // Measure env(safe-area-inset-bottom) BEFORE setting overflow:hidden — iOS
+    // returns 0 for env() once the body is non-scrollable. We also need to
+    // handle iOS PWA: after a SW-triggered reload the viewport hasn't fully
+    // initialised yet, so the first measurement can return 0 even without
+    // overflow:hidden. We set overflow:hidden immediately (keyboard behaviour
+    // needs it from the start) then retry at 100 ms and 300 ms if needed,
+    // briefly lifting overflow:hidden so env() can return the real value.
+    function measure() {
+      const el = document.createElement('div')
+      el.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
+      document.documentElement.appendChild(el)
+      const px = el.offsetHeight
+      el.remove()
+      return px
+    }
+
     window.scrollTo(0, 1)
 
     let cancelled = false
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (cancelled) return
+    const initial = measure()
+    if (initial > 0) document.documentElement.style.setProperty('--sab', `${initial}px`)
+    document.body.style.overflow = 'hidden'
 
-      const sabEl = document.createElement('div')
-      sabEl.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
-      document.documentElement.appendChild(sabEl)
-      const sabPx = sabEl.offsetHeight
-      sabEl.remove()
-      if (sabPx > 0) document.documentElement.style.setProperty('--sab', `${sabPx}px`)
-
-      document.body.style.overflow = 'hidden'
-    }))
+    // If initial measurement returned 0 (viewport not yet initialised after SW
+    // reload), retry with overflow:hidden briefly removed so env() can report
+    // the real value. `measured` prevents the 300 ms timer from removing
+    // overflow:hidden a second time if the 100 ms retry already succeeded.
+    if (initial === 0) {
+      let measured = false
+      const timers = [100, 300].map(delay => setTimeout(() => {
+        if (cancelled || measured) return
+        document.body.style.overflow = ''
+        window.scrollTo(0, 1)
+        requestAnimationFrame(() => {
+          if (cancelled) return
+          const px = measure()
+          if (px > 0) {
+            document.documentElement.style.setProperty('--sab', `${px}px`)
+            measured = true
+          }
+          if (!cancelled) document.body.style.overflow = 'hidden'
+        })
+      }, delay))
+      return () => {
+        cancelled = true
+        timers.forEach(clearTimeout)
+        document.body.style.overflow = ''
+        document.documentElement.style.removeProperty('--sab')
+      }
+    }
 
     return () => {
       cancelled = true
@@ -1053,6 +1083,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function handleScroll() {
     const el = scrollRef.current
     if (!el) return
+    // Suppress state updates from the programmatic scroll-to-bottom during initial
+    // reveal — iOS fires async scroll events with intermediate positions before the
+    // scroll settles, which would briefly set isAtBottom=false and flash the button.
+    // initialScrollSettledRef is set to true 2 frames after the initial reveal scroll.
+    if (!initialScrollSettledRef.current) return
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
     setIsAtBottom(atBottom)
     isAtBottomRef.current = atBottom
