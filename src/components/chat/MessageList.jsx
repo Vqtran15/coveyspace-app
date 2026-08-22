@@ -783,34 +783,26 @@ export default function MessageList() {
           )
         )}
 
-        {visible && fetchingFresh && (
-          <div className="flex justify-center py-3">
-            <div className="w-4 h-4 rounded-full border-2 border-stone-200 border-t-stone-400 animate-spin" />
-          </div>
-        )}
       </div>
 
-      {/* Scroll-to-bottom — always in the DOM; show/hide via opacity so any
-          brief isAtBottom=false state during initial scroll produces a smooth
-          fade rather than the mount animation replaying and creating a flicker. */}
-      {visible && (
-        <div
-          className={`absolute inset-x-0 flex justify-center z-10 pointer-events-none transition-opacity duration-150 ${!isAtBottom && !searchOpen ? 'opacity-100' : 'opacity-0'}`}
-          style={{ bottom: `${inputH + 12}px` }}
+      {/* Scroll-to-bottom — always in the DOM so there is no mount/unmount flash.
+          Visibility is controlled by opacity: visible=false or isAtBottom=true → hidden. */}
+      <div
+        className={`absolute inset-x-0 flex justify-center z-10 pointer-events-none transition-opacity duration-150 ${visible && !isAtBottom && !searchOpen ? 'opacity-100' : 'opacity-0'}`}
+        style={{ bottom: `${inputH + 12}px` }}
+      >
+        <button
+          onClick={handleScrollToBottom}
+          className={`relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center ${visible && !isAtBottom && !searchOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
         >
-          <button
-            onClick={handleScrollToBottom}
-            className={`relative w-9 h-9 bg-ember text-white rounded-full shadow-lg flex items-center justify-center ${!isAtBottom && !searchOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
-          >
-            <ArrowDown size={16} weight="bold" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
-      )}
+          <ArrowDown size={16} weight="bold" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
 
     </div>
   )
