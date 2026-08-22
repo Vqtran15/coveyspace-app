@@ -9,6 +9,9 @@ import SlotCard from './SlotCard.jsx'
 import SignupModal from './SignupModal.jsx'
 import EditDishesModal from './EditDishesModal.jsx'
 
+const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
+const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
+const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-600' }
 
 export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false, Icon = null }) {
   const [signups, setSignups]           = useState([])
@@ -201,6 +204,19 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   const selectedDishName     = selectedSlot != null ? (page.slot_dishes?.[selectedSlot - 1] ?? '')     : ''
   const selectedCategory     = selectedSlot != null ? (page.slot_categories?.[selectedSlot - 1] ?? '') : ''
 
+  // Build category groups — only show headers if at least one slot has a category
+  // 'Other' and uncategorized ('') are merged into the same trailing bucket
+  const hasAnyCategory = slots.some(n => page.slot_categories?.[n - 1])
+  const groups = {}
+  slots.forEach(n => {
+    const rawCat = page.slot_categories?.[n - 1] || ''
+    const cat = rawCat === 'Other' ? '' : rawCat
+    ;(groups[cat] ??= []).push(n)
+  })
+  const orderedGroups = hasAnyCategory
+    ? [...CATEGORY_ORDER.filter(c => groups[c]), ...(groups[''] ? [''] : [])]
+    : ['']
+
   const isMeal = noun === 'Meal'
   const headerShortDate = (() => {
     const [y, m, d] = (page.week_date ?? '').split('-').map(Number)
@@ -325,22 +341,34 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
         </div>
       ) : (
         <>
-          <div className={`grid ${page.slot_columns === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'} gap-3 mb-4`}>
-            {slots.map(n => (
-              <SlotCard
-                key={`${page.id}-${n}`}
-                slotNumber={n}
-                noun={noun}
-                itemNoun={itemNoun}
-                dishName={page.slot_dishes?.[n - 1] ?? ''}
-                category={page.slot_categories?.[n - 1] ?? ''}
-                signup={signups.find(s => s.slot_number === n)}
-                revealKey={`${revealKey}-${page.id}`}
-                isNew={n === justAddedSlot}
-                onClick={() => setSelectedSlot(n)}
-              />
-            ))}
-          </div>
+          {orderedGroups.map(cat => (
+            <div key={cat} className="mb-4">
+              {hasAnyCategory && cat && (
+                <p className={`text-xs font-bold uppercase tracking-widest mb-2 px-1 ${CATEGORY_COLORS[cat] ?? 'text-stone-500'}`}>
+                  {CATEGORY_LABELS[cat] ?? cat}
+                </p>
+              )}
+              {hasAnyCategory && !cat && groups['']?.length > 0 && (
+                <p className="text-xs font-bold uppercase tracking-widest text-stone-500 mb-2 px-1">Other</p>
+              )}
+              <div className={`grid ${page.slot_columns === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
+                {(groups[cat] ?? []).map(n => (
+                  <SlotCard
+                    key={`${page.id}-${n}`}
+                    slotNumber={n}
+                    noun={noun}
+                    itemNoun={itemNoun}
+                    dishName={page.slot_dishes?.[n - 1] ?? ''}
+                    category={page.slot_categories?.[n - 1] ?? ''}
+                    signup={signups.find(s => s.slot_number === n)}
+                    revealKey={`${revealKey}-${page.id}`}
+                    isNew={n === justAddedSlot}
+                    onClick={() => setSelectedSlot(n)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
           <button
             onClick={handleAddSlot}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-ember hover:bg-ember-700 active:bg-ember-800 text-white transition-colors"
