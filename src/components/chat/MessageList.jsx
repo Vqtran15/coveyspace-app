@@ -783,7 +783,7 @@ export default function MessageList() {
           )
         )}
 
-        {fetchingFresh && (
+        {visible && fetchingFresh && (
           <div className="flex justify-center py-3">
             <div className="w-4 h-4 rounded-full border-2 border-stone-200 border-t-stone-400 animate-spin" />
           </div>

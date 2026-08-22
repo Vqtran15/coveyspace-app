@@ -580,6 +580,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setFetchingFresh(false)
     setFirstUnreadId(null)
     setOpenUnreadCount(0)
+    setIsAtBottom(true)
+    isAtBottomRef.current = true
     setConvName(conversation.name)
     initialScrollDoneRef.current = false
     pendingScrollRef.current = null
