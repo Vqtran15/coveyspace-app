@@ -8,7 +8,7 @@ import { mealCutoffDate, toDateString } from '../utils/dates.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { supabase } from '../lib/supabase.js'
 
-export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 0 }) {
+export default function ScheduleTab({ mealsConfig, servicesConfig }) {
   const { groupName, displayName, isAdmin, groupSettings } = useAppContext()
   const location = useLocation()
   const mealsEnabled    = groupSettings?.meals_enabled !== false
@@ -134,7 +134,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig, refreshKey = 
 
       {segment && <div className={animClass}>
         <RotationTab
-          key={`${segment}-${refreshKey}-${localRefreshKey}`}
+          key={`${segment}-${localRefreshKey}`}
           ref={rotationRef}
           config={segment === 'meals'
             ? { ...mealsConfig, intervalDays: groupSettings?.meal_interval_days ?? 7, targetDow: groupSettings?.meal_day_of_week ?? null, weekOccurrences: groupSettings?.meal_week_occurrences ?? null }

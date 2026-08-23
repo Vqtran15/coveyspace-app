@@ -126,20 +126,18 @@ function EventForm({ event, groupId, userId, onSave, onClose }) {
   async function handleSave() {
     if (!title.trim() || !date) return
     setSaving(true)
-    const payload = {
-      community_group_id: groupId,
-      created_by:         userId,
-      title:              title.trim(),
-      event_date:         date,
-      event_time:         time || null,
-      location:           location.trim() || null,
-      description:        description.trim() || null,
+    const basePayload = {
+      title:       title.trim(),
+      event_date:  date,
+      event_time:  time || null,
+      location:    location.trim() || null,
+      description: description.trim() || null,
     }
     let error
     if (event?.id) {
-      ;({ error } = await db.events.update(event.id, payload))
+      ;({ error } = await db.events.update(event.id, basePayload))
     } else {
-      ;({ error } = await db.events.insert(payload))
+      ;({ error } = await db.events.insert({ community_group_id: groupId, created_by: userId, ...basePayload }))
     }
     setSaving(false)
     if (error) { toast('Failed to save event', 'error'); return }
@@ -633,6 +631,16 @@ export default function EventsTab() {
 
   useEffect(() => { load() }, [groupId])
 
+  useEffect(() => {
+    if (!groupId) return
+    const channel = supabase
+      .channel(`events-tab:${groupId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `community_group_id=eq.${groupId}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps', filter: `community_group_id=eq.${groupId}` }, load)
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [groupId])
+
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedEvent && !showForm && !editingEvent)
 
   async function handleRsvp(eventId, status, currentStatus) {
@@ -647,7 +655,7 @@ export default function EventsTab() {
     })
 
     const { error } = newStatus
-      ? await db.events.rsvp(eventId, userId, newStatus)
+      ? await db.events.rsvp(eventId, userId, newStatus, groupId)
       : await db.events.removeRsvp(eventId, userId)
     if (error) { toast('Failed to update RSVP', 'error'); load() }
   }
@@ -943,14 +951,14 @@ export default function EventsTab() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setDeleteTarget(null)}
-                  className="flex-1 py-3 rounded-2xl border border-stone-200 text-sm font-semibold text-stone-600"
+                  className="flex-1 py-3 rounded-xl border border-stone-200 text-sm font-semibold text-stone-600"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDelete(deleteTarget)}
                   disabled={deleting}
-                  className="flex-1 py-3 rounded-2xl bg-red-500 text-white text-sm font-semibold disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-semibold disabled:opacity-50"
                 >
                   {deleting ? 'Deleting…' : 'Delete'}
                 </button>

@@ -1,4 +1,4 @@
-import { ListBullets, PencilSimple } from '@phosphor-icons/react'
+import { ListBullets, PencilSimple, X } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
 export default function PagesModal({ editLabel, editSubLabel, pageNounPlural, onEditPage, onManagePages, onClose }) {
@@ -21,9 +21,10 @@ export default function PagesModal({ editLabel, editSubLabel, pageNounPlural, on
           </div>
           <button
             onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            aria-label="Close"
+            className="text-stone-400 hover:text-stone-600 w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
-            &times;
+            <X size={20} />
           </button>
         </div>
 

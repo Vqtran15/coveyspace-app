@@ -65,7 +65,7 @@ export function AppProvider({ children }) {
 
   // ── Birthdays ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!session) return
+    if (!groupId) return
     supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
 
     const channel = supabase
@@ -79,7 +79,7 @@ export function AppProvider({ children }) {
       )
       .subscribe()
     return () => supabase.removeChannel(channel)
-  }, [session])
+  }, [groupId])
 
   // ── last_seen_at ping ─────────────────────────────────────────────────────
   useEffect(() => {

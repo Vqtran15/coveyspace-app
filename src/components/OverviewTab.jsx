@@ -5,7 +5,7 @@ import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimp
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
-import { daysUntilNext } from '../utils/birthdays.js'
+import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { useToast } from '../lib/toast.jsx'
@@ -157,7 +157,7 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, refreshKey = 0, greetingReady = false }) {
+export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, greetingReady = false }) {
   const {
     displayName, groupName, groupId, isAdmin, userId,
     avatarIcon, avatarColorKey, avatarImageUrl,
@@ -269,7 +269,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
-  useEffect(() => { load() }, [groupId, refreshKey, prayerEnabled, isAdmin, eventsEnabled, chatEnabled])
+  useEffect(() => { load() }, [groupId, prayerEnabled, isAdmin, eventsEnabled, chatEnabled])
 
   useEffect(() => {
     if (!groupId) return
@@ -543,7 +543,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                   iconBg: 'bg-coral/10',
                   label: 'Upcoming Birthdays',
                   primary: birthdayPrimary,
-                  secondary: nextBirthday ? shortDate(nextBirthday.birthday) : 'Tap to view all',
+                  secondary: nextBirthday ? formatBirthdayDate(nextBirthday.birthday) : 'Tap to view all',
                   confetti: !!nextBirthday && nextBirthday.days <= 30,
                 },
                 guideEnabled && {

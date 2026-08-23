@@ -458,7 +458,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (isToggle) {
       await supabase.from('event_rsvps').delete().eq('event_id', eventId).eq('user_id', myId)
     } else {
-      await supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: myId, status }, { onConflict: 'event_id,user_id' })
+      await supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: myId, status, community_group_id: groupId }, { onConflict: 'event_id,user_id' })
     }
   }
 

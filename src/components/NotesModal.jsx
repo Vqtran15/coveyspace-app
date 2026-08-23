@@ -50,7 +50,7 @@ export default function NotesModal({ groupId, onClose }) {
           </div>
           <button
             onClick={close}
-            className="text-stone-400 hover:text-stone-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors"
+            className="text-stone-400 hover:text-stone-600 w-10 h-10 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors"
           >
             <X size={16} weight="bold" />
           </button>

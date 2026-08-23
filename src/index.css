@@ -29,7 +29,7 @@ body {
    listener was removed from setDVH() so --dvh is only ever set on page load and
    resize — never on foreground return — keeping it stable at the correct value. */
 html.is-pwa .chat-container {
-  height: calc(var(--dvh) + var(--sat));
+  height: calc(100dvh + env(safe-area-inset-top));
 }
 html:not(.is-pwa) .chat-container {
   height: var(--dvh);

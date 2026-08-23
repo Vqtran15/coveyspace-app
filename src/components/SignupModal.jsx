@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { X } from '@phosphor-icons/react'
 import { useModalClose } from '../hooks/useModalClose.js'
 
 const CATEGORIES = ['Main', 'Side', 'Dessert', 'Other']
@@ -109,9 +110,10 @@ export default function SignupModal({ slot, itemNoun, dishName, category: initia
           </div>
           <button
             onClick={close}
-            className="text-stone-400 hover:text-stone-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full hover:bg-stone-100"
+            aria-label="Close"
+            className="text-stone-400 hover:text-stone-600 w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
           >
-            &times;
+            <X size={20} />
           </button>
         </div>
 

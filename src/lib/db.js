@@ -66,26 +66,18 @@ export const db = {
   },
 
   events: {
-    fetch: (groupId) =>
-      supabase.from('events').select('id, title, event_date, event_time, location, description').eq('community_group_id', groupId).order('event_date', { ascending: true }),
     fetchAll: (groupId) =>
       supabase.from('events').select('id, title, event_date, event_time, location, description, event_rsvps(event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url))').eq('community_group_id', groupId).order('event_date', { ascending: true }),
-    fetchWithRsvps: (eventIds) => Promise.all([
-      supabase.from('events').select('id, title, event_date, event_time, location').in('id', eventIds),
-      supabase.from('event_rsvps').select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)').in('event_id', eventIds),
-    ]),
     insert: (payload) =>
       supabase.from('events').insert(payload),
     update: (id, payload) =>
       supabase.from('events').update(payload).eq('id', id),
     delete: (id) =>
       supabase.from('events').delete().eq('id', id),
-    rsvp: (eventId, userId, status) =>
-      supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: userId, status }, { onConflict: 'event_id,user_id' }),
+    rsvp: (eventId, userId, status, groupId) =>
+      supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: userId, status, community_group_id: groupId }, { onConflict: 'event_id,user_id' }),
     removeRsvp: (eventId, userId) =>
       supabase.from('event_rsvps').delete().eq('event_id', eventId).eq('user_id', userId),
-    fetchRsvps: (eventIds) =>
-      supabase.from('event_rsvps').select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)').in('event_id', eventIds),
   },
 
   profiles: {
