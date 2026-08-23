@@ -18,18 +18,18 @@ body {
   background-color: #FBF8F4;
 }
 
-/* Chat container — root wrapper has no paddingTop in chat, so this starts at y:0
-   (above the status bar) and fills to the physical screen bottom (including the
-   home-indicator zone). Content is kept above the home indicator by adding
-   env(safe-area-inset-bottom) padding inside the floating input overlay.
-   Browser: fills the full visible viewport (dvh). Keyboard override below
-   replaces this height via --vvh when the soft keyboard is open.
-   var(--dvh) is set from window.innerHeight which iOS WKWebView occasionally
-   reports incorrectly after background→foreground transitions. The visibilitychange
-   listener was removed from setDVH() so --dvh is only ever set on page load and
-   resize — never on foreground return — keeping it stable at the correct value. */
+/* Chat container — starts at y:0 (the top of the physical screen in PWA) and
+   fills to the physical screen bottom. Content is kept within safe areas by
+   paddingTop:env(sat) on the header and paddingBottom:var(--sab) on the input.
+   PWA: 100dvh = full physical screen height (natively computed, never stale).
+     Note: window.innerHeight in iOS PWA = screen − status-bar (not full screen),
+     so the old JS-based var(--dvh) + var(--sat) formula was equivalent to 100dvh
+     when correct, but spiked during background→foreground transitions. 100dvh is
+     immune to that spike.
+   Browser: var(--dvh) = window.innerHeight below browser chrome (no sat needed).
+   Keyboard override replaces this height via --vvh when the soft keyboard is open. */
 html.is-pwa .chat-container {
-  height: calc(100dvh + env(safe-area-inset-top));
+  height: 100dvh;
 }
 html:not(.is-pwa) .chat-container {
   height: var(--dvh);
