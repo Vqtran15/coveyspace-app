@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle, UsersThree, Plus } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { swRegistrationRef } from '../lib/swRegistration.js'
@@ -122,7 +122,7 @@ function useSheetDrag(onClose) {
 }
 
 export default function SettingsPage({ onClose, onRevisitGuide }) {
-  const { displayName, isAdmin, userId, push, onDisplayNameChange, onAvatarChange } = useAppContext()
+  const { displayName, isAdmin, userId, groupId, push, onDisplayNameChange, onAvatarChange, allMemberships, switchGroup, refreshMemberships } = useAppContext()
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -172,9 +172,56 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
 
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
+  // Group switcher
+  const [switchingGroupId, setSwitchingGroupId] = useState(null)
+  const [joinGroupExpanded, setJoinGroupExpanded] = useState(false)
+  const [joinGroupCode, setJoinGroupCode] = useState('')
+  const [joinGroupLoading, setJoinGroupLoading] = useState(false)
+  const [joinGroupError, setJoinGroupError] = useState(null)
+
   // App update
   const [updateChecking, setUpdateChecking] = useState(false)
   const [updateChecked, setUpdateChecked] = useState(false)
+
+  async function handleSwitchGroup(targetGroupId) {
+    setSwitchingGroupId(targetGroupId)
+    try {
+      await switchGroup(targetGroupId)
+      const name = allMemberships.find(m => m.community_group_id === targetGroupId)?.community_groups?.name
+      toast(`Switched to ${name ?? 'group'}`, 'success')
+    } catch {
+      toast('Failed to switch group', 'error')
+    } finally {
+      setSwitchingGroupId(null)
+    }
+  }
+
+  async function handleJoinGroup() {
+    const code = joinGroupCode.trim()
+    if (code.length < 6) return
+    setJoinGroupLoading(true)
+    setJoinGroupError(null)
+    const { data, error } = await db.groupMemberships.joinGroup(code)
+    if (error) {
+      setJoinGroupError(
+        error.message === 'invalid invite code'
+          ? 'Invalid invite code. Please check and try again.'
+          : error.message
+      )
+      setJoinGroupLoading(false)
+      return
+    }
+    if (data?.already_member) {
+      setJoinGroupError(`You're already a member of ${data.group_name}.`)
+      setJoinGroupLoading(false)
+      return
+    }
+    await refreshMemberships()
+    toast(`Joined ${data.group_name}!`, 'success')
+    setJoinGroupCode('')
+    setJoinGroupExpanded(false)
+    setJoinGroupLoading(false)
+  }
 
   async function checkForUpdates() {
     setUpdateChecking(true)
@@ -352,6 +399,99 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
             </button>
           </div>
         )}
+
+        {/* My Groups */}
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">My Groups</p>
+          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+            {allMemberships.map(m => {
+              const isActive = m.community_group_id === groupId
+              const isSwitching = switchingGroupId === m.community_group_id
+              return (
+                <button
+                  key={m.community_group_id}
+                  onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
+                  disabled={isActive || !!switchingGroupId}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors border-b border-stone-100 ${
+                    isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'
+                  }`}
+                >
+                  <UsersThree
+                    size={16}
+                    weight={isActive ? 'fill' : 'regular'}
+                    className={`shrink-0 ${isActive ? 'text-ember' : 'text-stone-400'}`}
+                  />
+                  <span className={`flex-1 text-left font-medium ${isActive ? 'text-ember' : 'text-stone-700'}`}>
+                    {m.community_groups?.name ?? 'Group'}
+                  </span>
+                  {isActive && (
+                    <span className="text-[10px] font-semibold text-ember uppercase tracking-wide shrink-0">Active</span>
+                  )}
+                  {!isActive && m.role === 'admin' && !isSwitching && (
+                    <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide shrink-0">Admin</span>
+                  )}
+                  {isSwitching && (
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-stone-400 border-t-transparent animate-spin shrink-0" />
+                  )}
+                  {!isActive && !isSwitching && (
+                    <CaretRight size={14} className="text-stone-300 shrink-0" />
+                  )}
+                </button>
+              )
+            })}
+
+            {/* Join another group */}
+            <button
+              onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors"
+            >
+              <div className="w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                <Plus size={9} weight="bold" className="text-stone-400" />
+              </div>
+              <span className="flex-1 text-left">Join another group</span>
+              <CaretRight
+                size={14}
+                className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
+              />
+            </button>
+
+            <AnimatePresence initial={false}>
+              {joinGroupExpanded && (
+                <motion.div
+                  key="join-form"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
+                    <input
+                      type="text"
+                      value={joinGroupCode}
+                      onChange={e => {
+                        setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
+                        setJoinGroupError(null)
+                      }}
+                      placeholder="Invite code (e.g. A3B7C2)"
+                      className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                    />
+                    {joinGroupError && (
+                      <p className="text-xs text-red-500">{joinGroupError}</p>
+                    )}
+                    <button
+                      onClick={handleJoinGroup}
+                      disabled={joinGroupCode.length < 6 || joinGroupLoading}
+                      className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+                    >
+                      {joinGroupLoading ? 'Joining…' : 'Join Group'}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
         {/* Notifications */}
         {push.supported && (

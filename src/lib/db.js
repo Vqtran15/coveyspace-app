@@ -96,6 +96,18 @@ export const db = {
       supabase.from('group_settings').upsert({ group_id: groupId, ...changes }, { onConflict: 'group_id' }),
   },
 
+  groupMemberships: {
+    fetchAll: (userId) =>
+      supabase.from('group_memberships')
+        .select('community_group_id, role, joined_at, community_groups(name, church_id, churches(id, name))')
+        .eq('user_id', userId)
+        .order('joined_at', { ascending: true }),
+    joinGroup: (inviteCode) =>
+      supabase.rpc('join_additional_group', { p_invite_code: inviteCode }),
+    switchActive: (targetGroupId) =>
+      supabase.rpc('switch_active_group', { target_group_id: targetGroupId }),
+  },
+
   churches: {
     fetchAll: () =>
       supabase.from('churches').select('id, name').order('name'),

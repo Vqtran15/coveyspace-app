@@ -21,6 +21,7 @@ export function AppProvider({ children }) {
   const [unreadChatCount, setUnreadChatCount] = useState(0)
   const [churchConversations, setChurchConversations] = useState([])
   const [isChurchAdmin, setIsChurchAdmin] = useState(false)
+  const [allMemberships, setAllMemberships] = useState([])
 
   // Derived early so effects below can reference them in dependency arrays
   const userId        = session?.user?.id ?? null
@@ -66,6 +67,12 @@ export function AppProvider({ children }) {
     if (!groupId) return
     db.groupSettings.fetch(groupId).then(({ data }) => setGroupSettings(data ?? {}))
   }, [groupId])
+
+  // ── Group memberships (all groups this user belongs to) ──────────────────
+  useEffect(() => {
+    if (!userId) { setAllMemberships([]); return }
+    db.groupMemberships.fetchAll(userId).then(({ data }) => setAllMemberships(data ?? []))
+  }, [userId])
 
   // ── Church data ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -166,9 +173,20 @@ export function AppProvider({ children }) {
   const clearRecovery = useCallback(() => setIsRecovery(false), [])
 
   const refreshProfile = useCallback(() => {
-    if (!userId) return
-    db.profiles.fetch(userId).then(({ data }) => { if (data) setProfile(data) })
+    if (!userId) return Promise.resolve()
+    return db.profiles.fetch(userId).then(({ data }) => { if (data) setProfile(data) })
   }, [userId])
+
+  const refreshMemberships = useCallback(() => {
+    if (!userId) return Promise.resolve()
+    return db.groupMemberships.fetchAll(userId).then(({ data }) => setAllMemberships(data ?? []))
+  }, [userId])
+
+  const switchGroup = useCallback(async (targetGroupId) => {
+    const { error } = await db.groupMemberships.switchActive(targetGroupId)
+    if (error) throw error
+    await refreshProfile()
+  }, [refreshProfile])
 
   const refreshBirthdays = useCallback(() => {
     supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
@@ -191,6 +209,8 @@ export function AppProvider({ children }) {
     onDisplayNameChange, onAvatarChange, onGroupSettingsChange, onGroupNameChange,
     setProfile,
     refreshProfile, refreshBirthdays,
+    // Multi-group
+    allMemberships, switchGroup, refreshMemberships,
     // Church
     churchId, churchName, isChurchAdmin, churchConversations,
   }
