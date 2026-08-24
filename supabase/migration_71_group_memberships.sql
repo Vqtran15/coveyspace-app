@@ -65,20 +65,56 @@ AFTER UPDATE OF role ON profiles
 FOR EACH ROW EXECUTE FUNCTION sync_membership_role();
 
 -- 6. RPC: switch the user's active group (validates membership first)
+--    Also syncs profiles.role to the role in the target group so isAdmin is correct.
 CREATE OR REPLACE FUNCTION switch_active_group(target_group_id uuid)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_role text;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM group_memberships
-    WHERE user_id = auth.uid() AND community_group_id = target_group_id
-  ) THEN
+  SELECT role INTO v_role FROM group_memberships
+  WHERE user_id = auth.uid() AND community_group_id = target_group_id;
+
+  IF v_role IS NULL THEN
     RAISE EXCEPTION 'not a member of that group';
   END IF;
-  UPDATE profiles SET community_group_id = target_group_id WHERE user_id = auth.uid();
+
+  UPDATE profiles
+  SET community_group_id = target_group_id,
+      role               = v_role
+  WHERE user_id = auth.uid();
 END;
 $$;
 
--- 7. RPC: join a second group via invite code
+-- 7. Patch leave_group (migration_34) to also clean up group_memberships.
+--    Without this, leaving deletes the profiles row but leaves a stale membership row.
+--    If the user rejoins the same group later, ON CONFLICT DO NOTHING preserves the
+--    stale role (potentially 'admin') instead of inserting a fresh 'member' row.
+CREATE OR REPLACE FUNCTION leave_group()
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_group_id uuid;
+  v_role     text;
+  v_admins   int;
+BEGIN
+  SELECT community_group_id, role INTO v_group_id, v_role
+    FROM profiles WHERE user_id = auth.uid();
+
+  IF v_role = 'admin' THEN
+    SELECT count(*) INTO v_admins
+      FROM profiles WHERE community_group_id = v_group_id AND role = 'admin';
+    IF v_admins = 1 THEN
+      RAISE EXCEPTION 'You are the only admin. Promote another member before leaving.';
+    END IF;
+  END IF;
+
+  DELETE FROM group_memberships
+  WHERE user_id = auth.uid() AND community_group_id = v_group_id;
+
+  DELETE FROM profiles WHERE user_id = auth.uid();
+END;
+$$;
+
+-- 8. RPC: join a second group via invite code
 --    Does NOT auto-switch the active group — user switches manually.
 --    Returns: { group_id, group_name, already_member }
 CREATE OR REPLACE FUNCTION join_additional_group(p_invite_code text)
