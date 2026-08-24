@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { UsersThree, ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { db } from '../lib/db.js'
 import { trackEvent } from '../lib/analytics.js'
 
 const MODE_ORDER = { signin: 0, forgot: 1, signup: 2 }
@@ -25,6 +26,14 @@ export default function AuthPage() {
   const [animDir, setAnimDir]       = useState(null)
   const [pwLengthError, setPwLengthError]   = useState(false)
   const [pwMismatchError, setPwMismatchError] = useState(false)
+  const [selectedChurchId, setSelectedChurchId] = useState('')
+  const [churchList, setChurchList] = useState([])
+
+  useEffect(() => {
+    if (joinMode === 'create' && churchList.length === 0) {
+      db.churches.fetchAll().then(({ data }) => setChurchList(data ?? []))
+    }
+  }, [joinMode])
 
   function switchMode(next) {
     setAnimDir(MODE_ORDER[next] > MODE_ORDER[mode] ? 'right' : 'left')
@@ -104,6 +113,7 @@ export default function AuthPage() {
           first_name: firstName.trim(),
           last_name:  lastName.trim() || null,
           community_group_name: newGroupName.trim(),
+          ...(selectedChurchId ? { church_id: selectedChurchId } : {}),
         }
       }
 
@@ -277,22 +287,39 @@ export default function AuthPage() {
                       </p>
                     </div>
                   ) : (
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
-                        Group Name
-                      </label>
-                      <input
-                        type="text"
-                        value={newGroupName}
-                        onChange={e => setNewGroupName(e.target.value)}
-                        placeholder="e.g. Lake Oswego & SE"
-                        required
-                        autoComplete="organization"
-                        className={inputClass}
-                      />
-                      <p className="text-xs text-stone-400 mt-1.5">
-                        Once signed in, find your invite code in Admin settings to share with members.
-                      </p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
+                          Group Name
+                        </label>
+                        <input
+                          type="text"
+                          value={newGroupName}
+                          onChange={e => setNewGroupName(e.target.value)}
+                          placeholder="e.g. Lake Oswego & SE"
+                          required
+                          autoComplete="organization"
+                          className={inputClass}
+                        />
+                        <p className="text-xs text-stone-400 mt-1.5">
+                          Once signed in, find your invite code in Admin settings to share with members.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
+                          Church <span className="normal-case font-normal text-stone-400">(optional)</span>
+                        </label>
+                        <select
+                          value={selectedChurchId}
+                          onChange={e => setSelectedChurchId(e.target.value)}
+                          className={`${inputClass} bg-white`}
+                        >
+                          <option value="">None (independent group)</option>
+                          {churchList.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   )}
                 </>

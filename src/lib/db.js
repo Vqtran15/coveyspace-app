@@ -82,7 +82,7 @@ export const db = {
 
   profiles: {
     fetch: (userId) =>
-      supabase.from('profiles').select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, birthday, community_groups(name)').eq('user_id', userId).single(),
+      supabase.from('profiles').select('display_name, community_group_id, role, avatar_icon, avatar_color, avatar_image_url, birthday, community_groups(name, church_id, churches(id, name))').eq('user_id', userId).single(),
     updateDisplayName: (userId, name) =>
       supabase.from('profiles').update({ display_name: name }).eq('user_id', userId),
     updateAvatar: (userId, { icon, color, imageUrl }) =>
@@ -94,5 +94,35 @@ export const db = {
       supabase.from('group_settings').select('*').eq('group_id', groupId).maybeSingle(),
     upsert: (groupId, changes) =>
       supabase.from('group_settings').upsert({ group_id: groupId, ...changes }, { onConflict: 'group_id' }),
+  },
+
+  churches: {
+    fetchAll: () =>
+      supabase.from('churches').select('id, name').order('name'),
+    fetchRole: (userId) =>
+      supabase.from('church_roles').select('church_id, role').eq('user_id', userId),
+    fetchConversations: (churchId) =>
+      supabase.from('church_conversations').select('id, church_id, type, name').eq('church_id', churchId),
+    fetchMessages: (convId) =>
+      supabase.from('church_messages')
+        .select('id, church_id, church_conversation_id, user_id, display_name, body, image_url, audience, target_group_ids, created_at')
+        .eq('church_conversation_id', convId)
+        .order('created_at', { ascending: true })
+        .limit(100),
+    sendMessage: ({ churchId, convId, userId, displayName, body, audience, targetGroupIds = null }) =>
+      supabase.from('church_messages').insert({
+        church_id: churchId,
+        church_conversation_id: convId,
+        user_id: userId,
+        display_name: displayName,
+        body,
+        audience,
+        target_group_ids: targetGroupIds,
+      }).select().single(),
+    updateLastRead: (convId, userId) =>
+      supabase.from('church_conversation_members')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', convId)
+        .eq('user_id', userId),
   },
 }

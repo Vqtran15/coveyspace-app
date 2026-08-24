@@ -19,6 +19,8 @@ export function AppProvider({ children }) {
   const [groupSettings, setGroupSettings] = useState(null)
   const [birthdays, setBirthdays]         = useState([])
   const [unreadChatCount, setUnreadChatCount] = useState(0)
+  const [churchConversations, setChurchConversations] = useState([])
+  const [isChurchAdmin, setIsChurchAdmin] = useState(false)
 
   // Derived early so effects below can reference them in dependency arrays
   const userId        = session?.user?.id ?? null
@@ -29,6 +31,8 @@ export function AppProvider({ children }) {
   const avatarIcon     = profile?.avatar_icon ?? null
   const avatarColorKey = profile?.avatar_color ?? null
   const avatarImageUrl = profile?.avatar_image_url ?? null
+  const churchId      = profile?.community_groups?.church_id ?? null
+  const churchName    = profile?.community_groups?.churches?.name ?? null
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -62,6 +66,21 @@ export function AppProvider({ children }) {
     if (!groupId) return
     db.groupSettings.fetch(groupId).then(({ data }) => setGroupSettings(data ?? {}))
   }, [groupId])
+
+  // ── Church data ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!userId) return
+    db.churches.fetchRole(userId).then(({ data }) => {
+      setIsChurchAdmin((data ?? []).length > 0)
+    })
+  }, [userId])
+
+  useEffect(() => {
+    if (!churchId) { setChurchConversations([]); return }
+    db.churches.fetchConversations(churchId).then(({ data }) => {
+      setChurchConversations(data ?? [])
+    })
+  }, [churchId])
 
   // ── Birthdays ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -172,6 +191,8 @@ export function AppProvider({ children }) {
     onDisplayNameChange, onAvatarChange, onGroupSettingsChange, onGroupNameChange,
     setProfile,
     refreshProfile, refreshBirthdays,
+    // Church
+    churchId, churchName, isChurchAdmin, churchConversations,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, Megaphone, UsersThree } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -133,7 +133,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   )
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null }) {
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null, churchName = null, churchConversations = [], isAdmin = false, isChurchAdmin = false, onSelectChurchConv = null }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -514,6 +514,47 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">
+        {/* Church section — shown when group belongs to a church */}
+        {!loading && !searchQuery && churchName && churchConversations.length > 0 && (
+          <div className="max-w-3xl mx-auto w-full px-4 pt-3 pb-1">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2 px-1">{churchName}</p>
+            <div className="space-y-2">
+              {churchConversations
+                .filter(c => c.type === 'all_members' || (c.type === 'admins_only' && (isAdmin || isChurchAdmin)))
+                .map(conv => {
+                  const isActive = activeConvId === `church:${conv.id}`
+                  return (
+                    <motion.button
+                      key={conv.id}
+                      onClick={() => onSelectChurchConv?.(conv)}
+                      className={`w-full rounded-2xl border p-4 text-left transition-colors flex items-center gap-3 animate-fade-up ${isActive ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
+                      whileTap={{ scale: 0.975 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                    >
+                      <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10 shrink-0">
+                        {conv.type === 'all_members'
+                          ? <Megaphone size={22} weight="fill" className="text-ember" />
+                          : <UsersThree size={22} weight="fill" className="text-ember" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-stone-800 truncate">
+                          {conv.type === 'all_members' ? 'Church Updates' : 'Leaders Chat'}
+                        </p>
+                        <p className="text-xs text-stone-400 mt-0.5 truncate">
+                          {conv.type === 'all_members'
+                            ? (isChurchAdmin ? 'Broadcast to all members' : 'Read-only announcements')
+                            : 'Church leaders discussion'}
+                        </p>
+                      </div>
+                      <CaretRight size={16} className="text-stone-300 shrink-0" />
+                    </motion.button>
+                  )
+                })}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
             {[0, 1, 2, 3, 4].map(i => (
