@@ -119,7 +119,7 @@ export const db = {
       supabase.from('church_messages')
         .select('id, church_id, church_conversation_id, user_id, display_name, body, image_url, audience, target_group_ids, created_at')
         .eq('church_conversation_id', convId)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(100),
     sendMessage: ({ churchId, convId, userId, displayName, body, audience, targetGroupIds = null, imageUrl = null }) =>
       supabase.from('church_messages').insert({

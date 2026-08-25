@@ -221,14 +221,14 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         table: 'church_messages',
         filter: `church_conversation_id=eq.${convId}`,
       }, ({ new: msg }) => {
-        setMessages(prev => [...prev, msg])
+        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [msg, ...prev])
       })
       .subscribe()
     return () => supabase.removeChannel(ch)
   }, [convId])
 
   const handleSent = useCallback((msg) => {
-    setMessages(prev => [...prev, msg])
+    setMessages(prev => [msg, ...prev])
   }, [])
 
   return (
