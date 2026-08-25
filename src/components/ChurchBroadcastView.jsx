@@ -54,30 +54,33 @@ function BroadcastComposer({ churchId, convId, audience, groupsInChurch, display
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-3">
-        <button
-          onClick={handleClose}
-          className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
-          aria-label="Cancel"
-        >
-          <ArrowLeft size={22} weight="bold" />
-        </button>
-        <h2 className="flex-1 text-base font-bold text-stone-800">New Broadcast</h2>
-        <button
-          onClick={handleSend}
-          disabled={sendDisabled}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
-        >
-          <PaperPlaneRight size={15} weight="fill" />
-          {sending ? 'Sending…' : 'Send'}
-        </button>
+      <div className="shrink-0 py-3">
+        <div className="max-w-2xl mx-auto px-4 flex items-center gap-3">
+          <button
+            onClick={handleClose}
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
+            aria-label="Cancel"
+          >
+            <ArrowLeft size={22} weight="bold" />
+          </button>
+          <h2 className="flex-1 text-base font-bold text-stone-800">New Broadcast</h2>
+          <button
+            onClick={handleSend}
+            disabled={sendDisabled}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+          >
+            <PaperPlaneRight size={15} weight="fill" />
+            {sending ? 'Sending…' : 'Send'}
+          </button>
+        </div>
       </div>
 
       {/* Scrollable form — iOS auto-scrolls textarea above keyboard */}
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6"
-        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
-      >
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div
+          className="max-w-2xl mx-auto px-4 py-6 space-y-6"
+          style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+        >
         <div>
           <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">Message</label>
           <textarea
@@ -131,6 +134,7 @@ function BroadcastComposer({ churchId, convId, audience, groupsInChurch, display
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   )
@@ -212,7 +216,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
       >
         <button
           onClick={onBack}
-          className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
+          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
           aria-label="Back"
         >
           <ArrowLeft size={22} weight="bold" />

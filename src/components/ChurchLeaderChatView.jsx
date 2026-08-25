@@ -172,7 +172,7 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
       >
         <button
           onClick={onBack}
-          className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
+          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
           aria-label="Back"
         >
           <ArrowLeft size={22} weight="bold" />
