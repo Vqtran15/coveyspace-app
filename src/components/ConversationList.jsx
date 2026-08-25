@@ -153,6 +153,8 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [actionSheetClosing, closeActionSheet, resetActionSheet] = useModalClose(() => setActionSheetConv(null))
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
+  const [churchLastMsgAt, setChurchLastMsgAt]   = useState({})
+  const [churchLastReadAt, setChurchLastReadAt] = useState({})
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
@@ -269,6 +271,42 @@ export default function ConversationList({ session, groupId, members, enterClass
 
     return () => supabase.removeChannel(ch)
   }, [groupId])
+
+  useEffect(() => {
+    if (!churchConversations.length || !myId) return
+    const convIds = churchConversations.map(c => c.id)
+    Promise.all([
+      supabase.from('church_messages')
+        .select('church_conversation_id, created_at')
+        .in('church_conversation_id', convIds)
+        .order('created_at', { ascending: false })
+        .limit(convIds.length * 3),
+      supabase.from('church_conversation_members')
+        .select('conversation_id, last_read_at')
+        .in('conversation_id', convIds)
+        .eq('user_id', myId),
+    ]).then(([{ data: msgs }, { data: reads }]) => {
+      const msgMap = {}
+      for (const m of msgs ?? []) {
+        if (!msgMap[m.church_conversation_id]) msgMap[m.church_conversation_id] = m.created_at
+      }
+      setChurchLastMsgAt(msgMap)
+      const readMap = {}
+      for (const r of reads ?? []) readMap[r.conversation_id] = r.last_read_at
+      setChurchLastReadAt(readMap)
+    })
+
+    const ch = supabase
+      .channel(`church-unread:${myId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'church_messages',
+      }, ({ new: msg }) => {
+        setChurchLastMsgAt(prev => ({ ...prev, [msg.church_conversation_id]: msg.created_at }))
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(ch)
+  }, [churchConversations, myId])
 
   function convName(conv) {
     if (conv.type === 'direct') {
@@ -523,19 +561,28 @@ export default function ConversationList({ session, groupId, members, enterClass
                 .filter(c => c.type === 'all_members')
                 .map(conv => {
                   const isActive = activeConvId === `church:${conv.id}`
+                  const msgAt = churchLastMsgAt[conv.id]
+                  const readAt = churchLastReadAt[conv.id]
+                  const isUnread = !isActive && !!msgAt && (!readAt || new Date(msgAt) > new Date(readAt))
                   return (
                     <motion.button
                       key={conv.id}
-                      onClick={() => onSelectChurchConv?.(conv)}
+                      onClick={() => {
+                        setChurchLastReadAt(prev => ({ ...prev, [conv.id]: new Date().toISOString() }))
+                        onSelectChurchConv?.(conv)
+                      }}
                       className={`w-full rounded-2xl border p-4 text-left transition-colors flex items-center gap-3 animate-fade-up ${isActive ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
                       whileTap={{ scale: 0.975 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     >
-                      <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10 shrink-0">
-                        <Megaphone size={22} weight="fill" className="text-ember" />
+                      <div className="relative w-11 h-11 shrink-0">
+                        <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10">
+                          <Megaphone size={22} weight="fill" className="text-ember" />
+                        </div>
+                        {isUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-stone-800 truncate">Church Updates</p>
+                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>Church Updates</p>
                         <p className="text-xs text-stone-400 mt-0.5 truncate">
                           {isChurchAdmin ? 'Broadcast to members' : 'Read-only announcements'}
                         </p>

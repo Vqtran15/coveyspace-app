@@ -78,6 +78,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   function openConv(conv) {
     setOpenedWithLastReadAt(localStorage.getItem(`readAt:${conv.id}`))
     setListClass('')
+    setActiveChurchConv(null)
     setActiveConv(conv)
   }
 
@@ -142,6 +143,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
     isChurchAdmin,
     onSelectChurchConv: (conv) => {
       setListClass('')
+      setActiveConv(null)
       setActiveChurchConv(conv)
     },
   }

@@ -235,7 +235,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
     <div className="flex flex-col bg-sunrise-50" style={{ height: '100dvh' }}>
       {/* Header */}
       <div
-        className="shrink-0 bg-white border-b border-stone-100 flex items-center gap-3 px-4"
+        className="shrink-0 flex items-center gap-3 px-4"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)', paddingBottom: '12px' }}
       >
         <button
