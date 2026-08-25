@@ -1,0 +1,33 @@
+-- migration_74_church_message_push
+--
+-- Wire up push notifications for church_messages (broadcasts + leaders chat).
+-- No SQL changes needed — this is a webhook + edge function setup.
+--
+-- ─── 1. Deploy the edge function ─────────────────────────────────────────────
+--
+--   supabase functions deploy send-church-message-push --no-verify-jwt
+--
+-- ─── 2. Create the Database Webhook ──────────────────────────────────────────
+--
+-- In Supabase Dashboard → Database → Webhooks → Create new webhook:
+--   Name:    on_church_message_insert
+--   Table:   church_messages
+--   Events:  INSERT
+--   URL:     https://ktmlyzwpgvhrwfgyoeiq.supabase.co/functions/v1/send-church-message-push
+--   Headers: Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>
+--            Content-Type: application/json
+--
+-- ─── Notification behaviour ───────────────────────────────────────────────────
+--
+-- Leaders chat (audience = 'admins_only'):
+--   Recipients: all church_conversation_members of the conversation, except sender
+--   Title:      "Leaders: {display_name}"
+--   Body:       message preview or "📷 Photo"
+--   URL:        /chat
+--
+-- Broadcasts (audience = 'all_members'):
+--   Recipients: all church_conversation_members, filtered to target_group_ids
+--               members when target_group_ids is set
+--   Title:      "{display_name}"
+--   Body:       message preview or "📷 Photo"
+--   URL:        /chat
