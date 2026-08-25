@@ -553,13 +553,18 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* List */}
       <div className="flex-1 overflow-y-auto">
         {/* Church section — shown when group belongs to a church */}
-        {!loading && !searchQuery && churchName && churchConversations.length > 0 && (
-          <div className="max-w-3xl mx-auto w-full px-4 pt-3 pb-1">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2 px-1">{churchName}</p>
-            <div className="space-y-2">
-              {churchConversations
-                .filter(c => c.type === 'all_members')
-                .map(conv => {
+        {!loading && !searchQuery && churchName && churchConversations.length > 0 && (() => {
+          // all_members: visible to everyone; admins_only: visible to group admins only
+          const visibleConvs = churchConversations.filter(c =>
+            c.type === 'all_members' || (c.type === 'admins_only' && isAdmin)
+          )
+          if (!visibleConvs.length) return null
+          return (
+            <div className="max-w-3xl mx-auto w-full px-4 pt-3 pb-1">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2 px-1">{churchName}</p>
+              <div className="space-y-2">
+                {visibleConvs.map(conv => {
+                  const isAdminsOnly = conv.type === 'admins_only'
                   const isActive = activeConvId === `church:${conv.id}`
                   const msgAt = churchLastMsgAt[conv.id]
                   const readAt = churchLastReadAt[conv.id]
@@ -582,18 +587,23 @@ export default function ConversationList({ session, groupId, members, enterClass
                         {isUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>Church Updates</p>
+                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
+                          {isAdminsOnly ? 'Group Admins' : 'Church Updates'}
+                        </p>
                         <p className="text-xs text-stone-400 mt-0.5 truncate">
-                          {isChurchAdmin ? 'Broadcast to members' : 'Read-only announcements'}
+                          {isAdminsOnly
+                            ? 'Messages for group admins only'
+                            : isChurchAdmin ? 'Broadcast to members' : 'Read-only announcements'}
                         </p>
                       </div>
                       <CaretRight size={16} className="text-stone-300 shrink-0" />
                     </motion.button>
                   )
                 })}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {loading ? (
           <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">

@@ -32,6 +32,7 @@ const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'
 const WelcomeSplash     = lazy(() => import('./components/WelcomeSplash.jsx'))
 const SettingsPage      = lazy(() => import('./components/SettingsPage.jsx'))
 const AdminPage         = lazy(() => import('./components/AdminPage.jsx'))
+const ChurchSettingsPage = lazy(() => import('./components/ChurchSettingsPage.jsx'))
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -71,7 +72,7 @@ const TABS = [
 ]
 
 const PATHS = TABS.map(t => t.path)
-const OFF_NAV_PATHS = ['/settings', '/admin']
+const OFF_NAV_PATHS = ['/settings', '/admin', '/church-settings']
 
 const IS_PWA =
   window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -456,7 +457,8 @@ function AppContent() {
                 <Route path="/events"   element={<EventsTab />} />
                 <Route path="/prayer"   element={<PrayerTab />} />
                 <Route path="/bible"    element={<BibleTab />} />
-                <Route path="/admin"    element={<AdminPage />} />
+                <Route path="/admin"           element={<AdminPage />} />
+                <Route path="/church-settings" element={<ChurchSettingsPage />} />
                 <Route path="/settings" element={
                   <SettingsPage
                     onClose={() => navigate(-1)}

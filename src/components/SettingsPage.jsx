@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle, UsersThree, Plus } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle, UsersThree, Plus } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { swRegistrationRef } from '../lib/swRegistration.js'
@@ -122,7 +122,7 @@ function useSheetDrag(onClose) {
 }
 
 export default function SettingsPage({ onClose, onRevisitGuide }) {
-  const { displayName, isAdmin, userId, groupId, push, onDisplayNameChange, onAvatarChange, allMemberships, switchGroup, refreshMemberships } = useAppContext()
+  const { displayName, isAdmin, isChurchAdmin, userId, groupId, churchName, push, onDisplayNameChange, onAvatarChange, allMemberships, switchGroup, refreshMemberships } = useAppContext()
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -382,6 +382,25 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
         </div>
 
         <InstallBanner />
+
+        {/* Church Settings — church admins only */}
+        {isChurchAdmin && (
+          <div className="mb-4">
+            <button
+              onClick={() => navigate('/church-settings')}
+              className="w-full flex items-center gap-3 px-4 py-3.5 bg-white border border-stone-100 shadow-sm hover:bg-stone-50 active:scale-[0.98] rounded-2xl transition-all"
+            >
+              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                <Church size={18} weight="fill" className="text-ember" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold text-stone-800">Church Settings</p>
+                <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
+              </div>
+              <CaretRight size={14} className="text-stone-300" />
+            </button>
+          </div>
+        )}
 
         {/* Admin */}
         {isAdmin && (
