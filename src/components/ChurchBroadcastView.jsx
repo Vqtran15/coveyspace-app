@@ -112,7 +112,7 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
       TextAlignExt.configure({ types: ['heading', 'paragraph'] }),
     ],
     editorProps: {
-      attributes: { class: 'broadcast-editor outline-none min-h-[140px] text-sm text-stone-800 leading-relaxed' },
+      attributes: { class: 'broadcast-editor outline-none min-h-[240px] text-sm text-stone-800 leading-relaxed' },
     },
   })
 
@@ -186,7 +186,7 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
           >
             <ArrowLeft size={22} weight="bold" />
           </button>
-          <h2 className="flex-1 text-base font-bold text-stone-800">New Broadcast</h2>
+          <h2 className="flex-1 text-lg font-bold text-stone-800">New Broadcast</h2>
           <button
             onClick={() => !sendDisabled && setConfirmOpen(true)}
             disabled={sendDisabled}
@@ -198,152 +198,136 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
         </div>
       </div>
 
-      {/* Formatting toolbar */}
-      <div className="shrink-0 bg-white border-y border-stone-100 overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-0.5 px-3 py-1.5 min-w-max">
-          {/* Text size */}
-          <select
-            value={headingLevel}
-            onChange={e => {
-              const v = e.target.value
-              if (!v) editor?.chain().focus().setParagraph().run()
-              else editor?.chain().focus().setHeading({ level: parseInt(v) }).run()
-            }}
-            className="h-8 pl-2 pr-6 text-xs font-medium border border-stone-200 rounded-lg bg-white text-stone-700 focus:outline-none focus:ring-1 focus:ring-ember shrink-0"
-            style={{
-              appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a8a29e'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 6px center',
-            }}
-          >
-            <option value="">Normal</option>
-            <option value="2">Large</option>
-            <option value="1">XL</option>
-          </select>
-
-          <TSep />
-
-          {/* Bold, Italic, Underline, Strikethrough */}
-          <TBtn active={editor?.isActive('bold')} onActivate={() => editor?.chain().focus().toggleBold().run()} title="Bold">
-            <TextB size={15} weight="bold" />
-          </TBtn>
-          <TBtn active={editor?.isActive('italic')} onActivate={() => editor?.chain().focus().toggleItalic().run()} title="Italic">
-            <TextItalic size={15} />
-          </TBtn>
-          <TBtn active={editor?.isActive('underline')} onActivate={() => editor?.chain().focus().toggleUnderline().run()} title="Underline">
-            <TextUnderline size={15} />
-          </TBtn>
-          <TBtn active={editor?.isActive('strike')} onActivate={() => editor?.chain().focus().toggleStrike().run()} title="Strikethrough">
-            <TextStrikethrough size={15} />
-          </TBtn>
-
-          <TSep />
-
-          {/* Bullet list, Numbered list, Indent, Outdent */}
-          <TBtn active={editor?.isActive('bulletList')} onActivate={() => editor?.chain().focus().toggleBulletList().run()} title="Bullet list">
-            <ListBullets size={15} />
-          </TBtn>
-          <TBtn active={editor?.isActive('orderedList')} onActivate={() => editor?.chain().focus().toggleOrderedList().run()} title="Numbered list">
-            <ListNumbers size={15} />
-          </TBtn>
-          <TBtn
-            onActivate={() => editor?.chain().focus().sinkListItem('listItem').run()}
-            disabled={!editor?.can().sinkListItem('listItem')}
-            title="Indent"
-          >
-            <TextIndent size={15} />
-          </TBtn>
-          <TBtn
-            onActivate={() => editor?.chain().focus().liftListItem('listItem').run()}
-            disabled={!editor?.can().liftListItem('listItem')}
-            title="Outdent"
-          >
-            <TextOutdent size={15} />
-          </TBtn>
-
-          <TSep />
-
-          {/* Text alignment */}
-          <TBtn active={editor?.isActive({ textAlign: 'left' })} onActivate={() => editor?.chain().focus().setTextAlign('left').run()} title="Align left">
-            <TextAlignLeft size={15} />
-          </TBtn>
-          <TBtn active={editor?.isActive({ textAlign: 'center' })} onActivate={() => editor?.chain().focus().setTextAlign('center').run()} title="Align center">
-            <TextAlignCenter size={15} />
-          </TBtn>
-          <TBtn active={editor?.isActive({ textAlign: 'right' })} onActivate={() => editor?.chain().focus().setTextAlign('right').run()} title="Align right">
-            <TextAlignRight size={15} />
-          </TBtn>
-
-          <TSep />
-
-          {/* Link */}
-          <TBtn active={editor?.isActive('link') || linkBarOpen} onActivate={openLinkBar} title="Link">
-            <LinkSimple size={15} />
-          </TBtn>
-        </div>
-      </div>
-
-      {/* Link URL bar */}
-      {linkBarOpen && (
-        <div className="shrink-0 bg-stone-50 border-b border-stone-200 px-4 py-2 flex items-center gap-2 max-w-2xl w-full self-center">
-          <input
-            ref={linkInputRef}
-            type="url"
-            value={linkUrl}
-            onChange={e => setLinkUrl(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') { e.preventDefault(); applyLink() }
-              if (e.key === 'Escape') setLinkBarOpen(false)
-            }}
-            placeholder="https://example.com"
-            className="flex-1 border border-stone-200 rounded-xl px-3 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-          />
-          {editor?.isActive('link') && (
-            <button
-              type="button"
-              onClick={() => { editor.chain().focus().unsetLink().run(); setLinkBarOpen(false) }}
-              className="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-1.5 shrink-0 transition-colors"
-            >
-              Remove
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={applyLink}
-            className="text-xs font-semibold text-ember px-2 py-1.5 shrink-0"
-          >
-            Apply
-          </button>
-          <button
-            type="button"
-            onClick={() => setLinkBarOpen(false)}
-            className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 shrink-0 transition-colors"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
-
-      {/* Scrollable form */}
+      {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <div
-          className="max-w-2xl mx-auto px-4 py-5 space-y-6"
+          className="max-w-2xl mx-auto px-4 py-4 space-y-4"
           style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
         >
-          {/* Rich text editor */}
-          <div>
-            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">Message</label>
-            <div className="border border-stone-200 rounded-xl bg-white px-4 py-3 focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent">
+
+          {/* Editor card — content area + toolbar in one unit */}
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
+            <div className="px-4 pt-4 pb-3">
               <EditorContent editor={editor} />
             </div>
+
+            {/* Link bar — replaces toolbar when open */}
+            {linkBarOpen ? (
+              <div className="border-t border-stone-100 px-3 py-2.5 flex items-center gap-2">
+                <LinkSimple size={15} className="text-stone-400 shrink-0" />
+                <input
+                  ref={linkInputRef}
+                  type="url"
+                  value={linkUrl}
+                  onChange={e => setLinkUrl(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); applyLink() }
+                    if (e.key === 'Escape') setLinkBarOpen(false)
+                  }}
+                  placeholder="https://example.com"
+                  className="flex-1 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none min-w-0"
+                />
+                {editor?.isActive('link') && (
+                  <button
+                    type="button"
+                    onClick={() => { editor.chain().focus().unsetLink().run(); setLinkBarOpen(false) }}
+                    className="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-1 shrink-0 transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+                <button type="button" onClick={applyLink} className="text-xs font-semibold text-ember px-2 py-1 shrink-0">
+                  Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLinkBarOpen(false)}
+                  className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 shrink-0 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              /* Formatting toolbar */
+              <div className="border-t border-stone-100 overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-0.5 px-3 py-1.5 min-w-max">
+                  <select
+                    value={headingLevel}
+                    onChange={e => {
+                      const v = e.target.value
+                      if (!v) editor?.chain().focus().setParagraph().run()
+                      else editor?.chain().focus().setHeading({ level: parseInt(v) }).run()
+                    }}
+                    className="h-8 pl-2 pr-6 text-xs font-medium border border-stone-200 rounded-lg bg-white text-stone-700 focus:outline-none focus:ring-1 focus:ring-ember shrink-0"
+                    style={{
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a8a29e'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 6px center',
+                    }}
+                  >
+                    <option value="">Normal</option>
+                    <option value="2">Large</option>
+                    <option value="1">XL</option>
+                  </select>
+                  <TSep />
+                  <TBtn active={editor?.isActive('bold')} onActivate={() => editor?.chain().focus().toggleBold().run()} title="Bold">
+                    <TextB size={15} weight="bold" />
+                  </TBtn>
+                  <TBtn active={editor?.isActive('italic')} onActivate={() => editor?.chain().focus().toggleItalic().run()} title="Italic">
+                    <TextItalic size={15} />
+                  </TBtn>
+                  <TBtn active={editor?.isActive('underline')} onActivate={() => editor?.chain().focus().toggleUnderline().run()} title="Underline">
+                    <TextUnderline size={15} />
+                  </TBtn>
+                  <TBtn active={editor?.isActive('strike')} onActivate={() => editor?.chain().focus().toggleStrike().run()} title="Strikethrough">
+                    <TextStrikethrough size={15} />
+                  </TBtn>
+                  <TSep />
+                  <TBtn active={editor?.isActive('bulletList')} onActivate={() => editor?.chain().focus().toggleBulletList().run()} title="Bullet list">
+                    <ListBullets size={15} />
+                  </TBtn>
+                  <TBtn active={editor?.isActive('orderedList')} onActivate={() => editor?.chain().focus().toggleOrderedList().run()} title="Numbered list">
+                    <ListNumbers size={15} />
+                  </TBtn>
+                  <TBtn
+                    onActivate={() => editor?.chain().focus().sinkListItem('listItem').run()}
+                    disabled={!editor?.can().sinkListItem('listItem')}
+                    title="Indent"
+                  >
+                    <TextIndent size={15} />
+                  </TBtn>
+                  <TBtn
+                    onActivate={() => editor?.chain().focus().liftListItem('listItem').run()}
+                    disabled={!editor?.can().liftListItem('listItem')}
+                    title="Outdent"
+                  >
+                    <TextOutdent size={15} />
+                  </TBtn>
+                  <TSep />
+                  <TBtn active={editor?.isActive({ textAlign: 'left' })} onActivate={() => editor?.chain().focus().setTextAlign('left').run()} title="Align left">
+                    <TextAlignLeft size={15} />
+                  </TBtn>
+                  <TBtn active={editor?.isActive({ textAlign: 'center' })} onActivate={() => editor?.chain().focus().setTextAlign('center').run()} title="Align center">
+                    <TextAlignCenter size={15} />
+                  </TBtn>
+                  <TBtn active={editor?.isActive({ textAlign: 'right' })} onActivate={() => editor?.chain().focus().setTextAlign('right').run()} title="Align right">
+                    <TextAlignRight size={15} />
+                  </TBtn>
+                  <TSep />
+                  <TBtn active={editor?.isActive('link') || linkBarOpen} onActivate={openLinkBar} title="Link">
+                    <LinkSimple size={15} />
+                  </TBtn>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Send to */}
+          {/* Send to — only shown when church has multiple groups */}
           {groupsInChurch.length > 1 && (
-            <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 block">Send to</label>
-              <div className="bg-stone-100 rounded-xl p-1 flex mb-3">
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Send to</p>
+              <div className="bg-stone-100 rounded-xl p-1 flex">
                 <button
                   type="button"
                   onClick={() => setTargetMode('all')}
@@ -360,7 +344,7 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
                 </button>
               </div>
               {targetMode === 'select' && (
-                <div className="space-y-1">
+                <div className="space-y-0.5 -mx-1">
                   {groupsInChurch.map(g => {
                     const selected = selectedGroupIds.has(g.id)
                     return (
@@ -383,8 +367,8 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
           )}
 
           {/* Audience */}
-          <div>
-            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 block">Audience</label>
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Audience</p>
             <div className="bg-stone-100 rounded-xl p-1 flex">
               <button
                 type="button"
@@ -402,6 +386,7 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
