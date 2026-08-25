@@ -87,3 +87,29 @@ a:focus:not(:focus-visible),
     animation: none;
   }
 }
+
+/* ── Broadcast composer rich-text editor ─────────────────────────────────── */
+.broadcast-editor p              { margin-bottom: 0.4rem; }
+.broadcast-editor p:last-child   { margin-bottom: 0; }
+.broadcast-editor h1             { font-size: 1.4rem; font-weight: 700; color: #1c1917; margin-bottom: 0.4rem; }
+.broadcast-editor h2             { font-size: 1.15rem; font-weight: 700; color: #1c1917; margin-bottom: 0.4rem; }
+.broadcast-editor ul             { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.4rem; }
+.broadcast-editor ol             { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.4rem; }
+.broadcast-editor li             { margin-bottom: 0.2rem; }
+.broadcast-editor li:last-child  { margin-bottom: 0; }
+.broadcast-editor a              { color: #C4622D; text-decoration: underline; }
+
+/* ── Rendered broadcast HTML in feed cards ───────────────────────────────── */
+.broadcast-html p              { margin-bottom: 0.4rem; }
+.broadcast-html p:last-child   { margin-bottom: 0; }
+.broadcast-html h1             { font-size: 1.35rem; font-weight: 700; color: #1c1917; margin-bottom: 0.4rem; }
+.broadcast-html h2             { font-size: 1.1rem; font-weight: 700; color: #1c1917; margin-bottom: 0.4rem; }
+.broadcast-html ul             { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.4rem; }
+.broadcast-html ol             { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.4rem; }
+.broadcast-html li             { margin-bottom: 0.2rem; }
+.broadcast-html li:last-child  { margin-bottom: 0; }
+.broadcast-html a              { color: #C4622D; text-decoration: underline; }
+.broadcast-html strong         { font-weight: 600; }
+.broadcast-html em             { font-style: italic; }
+.broadcast-html u              { text-decoration: underline; }
+.broadcast-html s              { text-decoration: line-through; }
