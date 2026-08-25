@@ -205,15 +205,76 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
           style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
         >
 
-          {/* Editor card — content area + toolbar in one unit */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
-            <div className="px-4 pt-4 pb-3">
-              <EditorContent editor={editor} />
+            {/* Send to — only shown when church has multiple groups */}
+          {groupsInChurch.length > 1 && (
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Send to</p>
+              <div className="bg-stone-100 rounded-xl p-1 flex">
+                <button
+                  type="button"
+                  onClick={() => setTargetMode('all')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'all' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+                >
+                  All groups
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetMode('select')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'select' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+                >
+                  Select groups
+                </button>
+              </div>
+              {targetMode === 'select' && (
+                <div className="space-y-0.5 -mx-1">
+                  {groupsInChurch.map(g => {
+                    const selected = selectedGroupIds.has(g.id)
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => toggleGroup(g.id)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
+                      >
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
+                          {selected && <Check size={11} weight="bold" className="text-white" />}
+                        </div>
+                        <span className="text-sm text-stone-700">{g.name}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
+          )}
+
+          {/* Audience */}
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Audience</p>
+            <div className="bg-stone-100 rounded-xl p-1 flex">
+              <button
+                type="button"
+                onClick={() => setAudience('all_members')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'all_members' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+              >
+                All members
+              </button>
+              <button
+                type="button"
+                onClick={() => setAudience('admins_only')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'admins_only' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+              >
+                Admins only
+              </button>
+            </div>
+          </div>
+
+          {/* Editor card — toolbar on top, content below */}
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
 
             {/* Link bar — replaces toolbar when open */}
             {linkBarOpen ? (
-              <div className="border-t border-stone-100 px-3 py-2.5 flex items-center gap-2">
+              <div className="border-b border-stone-100 px-3 py-2.5 flex items-center gap-2">
                 <LinkSimple size={15} className="text-stone-400 shrink-0" />
                 <input
                   ref={linkInputRef}
@@ -249,7 +310,7 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
               </div>
             ) : (
               /* Formatting toolbar */
-              <div className="border-t border-stone-100 overflow-x-auto scrollbar-hide">
+              <div className="border-b border-stone-100 overflow-x-auto scrollbar-hide">
                 <div className="flex items-center gap-0.5 px-3 py-1.5 min-w-max">
                   <select
                     value={headingLevel}
@@ -321,69 +382,9 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Send to — only shown when church has multiple groups */}
-          {groupsInChurch.length > 1 && (
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
-              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Send to</p>
-              <div className="bg-stone-100 rounded-xl p-1 flex">
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('all')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'all' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-                >
-                  All groups
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('select')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'select' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-                >
-                  Select groups
-                </button>
-              </div>
-              {targetMode === 'select' && (
-                <div className="space-y-0.5 -mx-1">
-                  {groupsInChurch.map(g => {
-                    const selected = selectedGroupIds.has(g.id)
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => toggleGroup(g.id)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
-                      >
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
-                          {selected && <Check size={11} weight="bold" className="text-white" />}
-                        </div>
-                        <span className="text-sm text-stone-700">{g.name}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Audience */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
-            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Audience</p>
-            <div className="bg-stone-100 rounded-xl p-1 flex">
-              <button
-                type="button"
-                onClick={() => setAudience('all_members')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'all_members' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-              >
-                All members
-              </button>
-              <button
-                type="button"
-                onClick={() => setAudience('admins_only')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'admins_only' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-              >
-                Admins only
-              </button>
+            <div className="px-4 pt-3 pb-4">
+              <EditorContent editor={editor} />
             </div>
           </div>
 
