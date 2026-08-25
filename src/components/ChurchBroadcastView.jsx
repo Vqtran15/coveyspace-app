@@ -1,19 +1,23 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ArrowLeft, PaperPlaneRight, Megaphone, Check } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { formatListTime } from '../utils/format.js'
 
-// Church admin broadcast composer with optional group targeting
+// Full-screen slide-in composer — textarea is in the scrollable flow so iOS
+// auto-scrolls to keep it above the keyboard (same pattern as PrayerProfile).
 function BroadcastComposer({ churchId, convId, audience, groupsInChurch, displayName, userId, onSent, onClose }) {
   const [text, setText] = useState('')
   const [targetMode, setTargetMode] = useState('all') // 'all' | 'select'
   const [selectedGroupIds, setSelectedGroupIds] = useState(new Set())
   const [sending, setSending] = useState(false)
-  const textareaRef = useRef(null)
+  const [exiting, setExiting] = useState(false)
 
-  useEffect(() => { textareaRef.current?.focus() }, [])
+  function handleClose() {
+    setExiting(true)
+    setTimeout(onClose, 200)
+  }
 
   function toggleGroup(id) {
     setSelectedGroupIds(prev => {
@@ -39,90 +43,94 @@ function BroadcastComposer({ churchId, convId, audience, groupsInChurch, display
       targetGroupIds,
     })
     setSending(false)
-    if (!error && data) { onSent(data); onClose() }
+    if (!error && data) { onSent(data); handleClose() }
   }
+
+  const sendDisabled = !text.trim() || sending || (targetMode === 'select' && selectedGroupIds.size === 0)
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-end z-50 animate-overlay-in"
-      onClick={onClose}
+      className={`fixed inset-0 lg:left-56 z-[35] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
+      {/* Header */}
+      <div className="shrink-0 bg-white border-b border-stone-100 flex items-center gap-3 px-4 py-3">
+        <button
+          onClick={handleClose}
+          className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
+          aria-label="Cancel"
+        >
+          <ArrowLeft size={22} weight="bold" />
+        </button>
+        <h2 className="flex-1 text-base font-bold text-stone-800">New Broadcast</h2>
+        <button
+          onClick={handleSend}
+          disabled={sendDisabled}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+        >
+          <PaperPlaneRight size={15} weight="fill" />
+          {sending ? 'Sending…' : 'Send'}
+        </button>
+      </div>
+
+      {/* Scrollable form — iOS auto-scrolls textarea above keyboard */}
       <div
-        className="bg-white rounded-t-2xl w-full max-w-lg mx-auto animate-modal-in shadow-xl"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
-        onClick={e => e.stopPropagation()}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 space-y-6"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-stone-200" />
+        <div>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">Message</label>
+          <textarea
+            autoFocus
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Write your message…"
+            rows={6}
+            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent resize-none"
+          />
         </div>
-        <div className="px-5 pt-2 pb-4 space-y-4">
-          <h2 className="text-lg font-bold text-stone-800">New Broadcast</h2>
 
-          {/* Message */}
+        {groupsInChurch.length > 1 && (
           <div>
-            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">Message</label>
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder="Write your message…"
-              rows={4}
-              className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent resize-none"
-            />
-          </div>
-
-          {/* Group targeting */}
-          {groupsInChurch.length > 1 && (
-            <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 block">Send to</label>
-              <div className="bg-stone-100 rounded-xl p-1 flex mb-3">
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('all')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'all' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-                >
-                  All groups
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('select')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'select' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-                >
-                  Select groups
-                </button>
-              </div>
-              {targetMode === 'select' && (
-                <div className="space-y-1 max-h-36 overflow-y-auto">
-                  {groupsInChurch.map(g => {
-                    const selected = selectedGroupIds.has(g.id)
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => toggleGroup(g.id)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
-                      >
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
-                          {selected && <Check size={11} weight="bold" className="text-white" />}
-                        </div>
-                        <span className="text-sm text-stone-700">{g.name}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 block">Send to</label>
+            <div className="bg-stone-100 rounded-xl p-1 flex mb-3">
+              <button
+                type="button"
+                onClick={() => setTargetMode('all')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'all' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+              >
+                All groups
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetMode('select')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'select' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+              >
+                Select groups
+              </button>
             </div>
-          )}
-
-          <button
-            onClick={handleSend}
-            disabled={!text.trim() || sending || (targetMode === 'select' && selectedGroupIds.size === 0)}
-            className="w-full py-3.5 rounded-xl bg-ember text-white font-semibold text-sm hover:bg-ember-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
-          >
-            <PaperPlaneRight size={18} weight="fill" />
-            {sending ? 'Sending…' : 'Send Broadcast'}
-          </button>
-        </div>
+            {targetMode === 'select' && (
+              <div className="space-y-1">
+                {groupsInChurch.map(g => {
+                  const selected = selectedGroupIds.has(g.id)
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => toggleGroup(g.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
+                        {selected && <Check size={11} weight="bold" className="text-white" />}
+                      </div>
+                      <span className="text-sm text-stone-700">{g.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -148,7 +156,7 @@ function BroadcastCard({ msg, isChurchAdmin, groupsInChurch }) {
 }
 
 export default function ChurchBroadcastView({ conversation, onBack }) {
-  const { userId, displayName, churchId, isChurchAdmin, isAdmin } = useAppContext()
+  const { userId, displayName, churchId, isChurchAdmin } = useAppContext()
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
   const [composerOpen, setComposerOpen] = useState(false)
@@ -165,7 +173,6 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
     })
     db.churches.updateLastRead(convId, userId).then()
 
-    // Fetch groups in church for targeting UI (church admin only)
     if (isChurchAdmin && churchId) {
       supabase
         .from('community_groups')
@@ -176,7 +183,6 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
     }
   }, [convId, churchId, isChurchAdmin, userId])
 
-  // Realtime subscription
   useEffect(() => {
     if (!convId) return
     const ch = supabase
@@ -198,10 +204,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
   }, [])
 
   return (
-    <div
-      className="flex flex-col bg-sunrise-50"
-      style={{ height: '100dvh' }}
-    >
+    <div className="flex flex-col bg-sunrise-50" style={{ height: '100dvh' }}>
       {/* Header */}
       <div
         className="shrink-0 bg-white border-b border-stone-100 flex items-center gap-3 px-4"
@@ -258,7 +261,8 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
             )}
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto px-4 py-6 space-y-3"
+          <div
+            className="max-w-2xl mx-auto px-4 py-6 space-y-3"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
             {messages.map(msg => (

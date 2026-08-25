@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, PaperPlaneRight, UsersThree } from '@phosphor-icons/react'
+import { ArrowLeft, UsersThree, PaperPlaneTilt } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
@@ -33,10 +33,66 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const [keyboardOpen, setKeyboardOpen] = useState(false)
   const bottomRef = useRef(null)
-  const inputRef = useRef(null)
+  const textareaRef = useRef(null)
 
   const convId = conversation.id
+
+  // Prevent iOS from scrolling the page when keyboard opens (same mechanism as ChatView)
+  useEffect(() => {
+    function measure() {
+      const el = document.createElement('div')
+      el.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:0;pointer-events:none;visibility:hidden'
+      document.documentElement.appendChild(el)
+      const px = el.offsetHeight
+      el.remove()
+      return px
+    }
+    window.scrollTo(0, 1)
+    const initial = measure()
+    if (initial > 0) document.documentElement.style.setProperty('--sab', `${initial}px`)
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  // Track keyboard via visualViewport — sets --vvh and chat-keyboard-open class
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const satEl = document.createElement('div')
+    satEl.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top,0px);width:0;pointer-events:none;visibility:hidden'
+    document.documentElement.appendChild(satEl)
+    const sat = satEl.offsetHeight
+    satEl.remove()
+    const baseline = Math.round(vv.height)
+    let kbOpen = false
+    function update() {
+      const nowVVH = Math.round(vv.height)
+      const kbH = baseline - nowVVH
+      const nowOpen = kbH > 120
+      document.documentElement.style.setProperty('--vvh', `${Math.round(sat + vv.offsetTop + vv.height)}px`)
+      if (nowOpen && !kbOpen) {
+        kbOpen = true
+        document.body.classList.add('chat-keyboard-open')
+        setKeyboardOpen(true)
+      } else if (!nowOpen && kbOpen) {
+        kbOpen = false
+        document.body.classList.remove('chat-keyboard-open')
+        setKeyboardOpen(false)
+        window.scrollTo(0, 0)
+      }
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      document.body.classList.remove('chat-keyboard-open')
+      document.documentElement.style.removeProperty('--vvh')
+      setKeyboardOpen(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!convId) return
@@ -75,9 +131,12 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
 
   async function handleSend() {
     const body = text.trim()
-    if (!body) return
+    if (!body || sending) return
     setSending(true)
     setText('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
     const { data, error } = await db.churches.sendMessage({
       churchId,
       convId,
@@ -98,11 +157,14 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
     }
   }
 
+  function handleTextInput(e) {
+    setText(e.target.value)
+    e.target.style.height = 'auto'
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+  }
+
   return (
-    <div
-      className="flex flex-col bg-sunrise-50"
-      style={{ height: '100dvh' }}
-    >
+    <div className="chat-container relative flex flex-col bg-sunrise-50">
       {/* Header */}
       <div
         className="shrink-0 bg-white border-b border-stone-100 flex items-center gap-3 px-4"
@@ -146,33 +208,33 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
         )}
       </div>
 
-      {/* Input */}
+      {/* Input — pill style matching the main group chat */}
       <div
-        className="shrink-0 bg-white border-t border-stone-100 px-4 py-3 flex items-end gap-2"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
+        className="shrink-0 px-4 py-2"
+        style={{ paddingBottom: keyboardOpen ? '8px' : 'max(8px, var(--sab, env(safe-area-inset-bottom)))' }}
       >
-        <textarea
-          ref={inputRef}
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Message leaders…"
-          rows={1}
-          style={{ resize: 'none', maxHeight: '120px', overflowY: 'auto' }}
-          className="flex-1 border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-          onInput={e => {
-            e.target.style.height = 'auto'
-            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-          }}
-        />
-        <button
-          onClick={handleSend}
-          disabled={!text.trim() || sending}
-          className="w-10 h-10 rounded-xl bg-ember text-white flex items-center justify-center hover:bg-ember-700 transition-colors disabled:opacity-40 shrink-0"
-          aria-label="Send"
-        >
-          <PaperPlaneRight size={18} weight="fill" />
-        </button>
+        <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-100 px-3 py-3">
+          <div className="flex items-end gap-2">
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={handleTextInput}
+              onKeyDown={handleKeyDown}
+              placeholder="Message leaders…"
+              rows={1}
+              className="flex-1 resize-none bg-stone-100 border-0 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
+              style={{ maxHeight: '120px', overflowY: 'auto' }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!text.trim() || sending}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40"
+              aria-label="Send"
+            >
+              <PaperPlaneTilt size={18} weight="fill" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
