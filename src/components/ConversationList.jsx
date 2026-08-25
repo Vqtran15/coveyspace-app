@@ -554,53 +554,53 @@ export default function ConversationList({ session, groupId, members, enterClass
       <div className="flex-1 overflow-y-auto">
         {/* Church section — shown when group belongs to a church */}
         {!loading && !searchQuery && churchName && churchConversations.length > 0 && (() => {
-          // all_members: visible to everyone; admins_only: visible to group admins only
-          const visibleConvs = churchConversations.filter(c =>
-            c.type === 'all_members' || (c.type === 'admins_only' && isAdmin)
+          const allMembersConv  = churchConversations.find(c => c.type === 'all_members')
+          const adminsOnlyConv  = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
+          if (!allMembersConv) return null
+          const isActive = activeConvId === `church:${allMembersConv.id}`
+          const amMsgAt  = churchLastMsgAt[allMembersConv.id]
+          const amReadAt = churchLastReadAt[allMembersConv.id]
+          const aoMsgAt  = adminsOnlyConv ? churchLastMsgAt[adminsOnlyConv.id]  : null
+          const aoReadAt = adminsOnlyConv ? churchLastReadAt[adminsOnlyConv.id] : null
+          const isUnread = !isActive && (
+            (!!amMsgAt && (!amReadAt || new Date(amMsgAt) > new Date(amReadAt))) ||
+            (!!aoMsgAt && (!aoReadAt || new Date(aoMsgAt) > new Date(aoReadAt)))
           )
-          if (!visibleConvs.length) return null
+          const subtitle = isChurchAdmin
+            ? 'Broadcast to members'
+            : isAdmin
+              ? 'Includes admin-only messages'
+              : 'Read-only announcements'
           return (
             <div className="max-w-3xl mx-auto w-full px-4 pt-3 pb-1">
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2 px-1">{churchName}</p>
-              <div className="space-y-2">
-                {visibleConvs.map(conv => {
-                  const isAdminsOnly = conv.type === 'admins_only'
-                  const isActive = activeConvId === `church:${conv.id}`
-                  const msgAt = churchLastMsgAt[conv.id]
-                  const readAt = churchLastReadAt[conv.id]
-                  const isUnread = !isActive && !!msgAt && (!readAt || new Date(msgAt) > new Date(readAt))
-                  return (
-                    <motion.button
-                      key={conv.id}
-                      onClick={() => {
-                        setChurchLastReadAt(prev => ({ ...prev, [conv.id]: new Date().toISOString() }))
-                        onSelectChurchConv?.(conv)
-                      }}
-                      className={`w-full rounded-2xl border p-4 text-left transition-colors flex items-center gap-3 animate-fade-up ${isActive ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
-                      whileTap={{ scale: 0.975 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    >
-                      <div className="relative w-11 h-11 shrink-0">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10">
-                          <Megaphone size={22} weight="fill" className="text-ember" />
-                        </div>
-                        {isUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate ${isUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
-                          {isAdminsOnly ? 'Group Admins' : 'Church Updates'}
-                        </p>
-                        <p className="text-xs text-stone-400 mt-0.5 truncate">
-                          {isAdminsOnly
-                            ? 'Messages for group admins only'
-                            : isChurchAdmin ? 'Broadcast to members' : 'Read-only announcements'}
-                        </p>
-                      </div>
-                      <CaretRight size={16} className="text-stone-300 shrink-0" />
-                    </motion.button>
-                  )
-                })}
-              </div>
+              <motion.button
+                onClick={() => {
+                  setChurchLastReadAt(prev => {
+                    const next = { ...prev, [allMembersConv.id]: new Date().toISOString() }
+                    if (adminsOnlyConv) next[adminsOnlyConv.id] = new Date().toISOString()
+                    return next
+                  })
+                  onSelectChurchConv?.(allMembersConv)
+                }}
+                className={`w-full rounded-2xl border p-4 text-left transition-colors flex items-center gap-3 animate-fade-up ${isActive ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
+                whileTap={{ scale: 0.975 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              >
+                <div className="relative w-11 h-11 shrink-0">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10">
+                    <Megaphone size={22} weight="fill" className="text-ember" />
+                  </div>
+                  {isUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm truncate ${isUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
+                    Church Updates
+                  </p>
+                  <p className="text-xs text-stone-400 mt-0.5 truncate">{subtitle}</p>
+                </div>
+                <CaretRight size={16} className="text-stone-300 shrink-0" />
+              </motion.button>
             </div>
           )
         })()}

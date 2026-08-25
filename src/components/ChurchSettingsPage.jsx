@@ -448,6 +448,7 @@ export default function ChurchSettingsPage() {
   const [memberStatuses, setMemberStatuses]       = useState({})
   const [inviteSending, setInviteSending]         = useState({})
   const [inviteCode, setInviteCode]               = useState(null)
+  const [activeTab, setActiveTab]                 = useState('broadcasts')
 
   // Load broadcasts from both conversations merged by date
   useEffect(() => {
@@ -664,12 +665,31 @@ export default function ChurchSettingsPage() {
       </div>
 
       {churchName && (
-        <p className="text-sm text-stone-500 -mt-6 mb-8 pl-[52px]">{churchName}</p>
+        <p className="text-sm text-stone-500 -mt-6 mb-6 pl-[52px]">{churchName}</p>
       )}
 
-      <div className="space-y-8">
+      {/* Tab nav */}
+      <div className="flex bg-stone-100 rounded-xl p-1 mb-6">
+        {[
+          { id: 'broadcasts',      label: 'Broadcasts'      },
+          { id: 'planning_center', label: 'Planning Center' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            aria-pressed={activeTab === tab.id}
+            className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${
+              activeTab === tab.id
+                ? 'bg-ember text-white shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        {/* ── Broadcasts ───────────────────────────────────────────────────────── */}
+      {activeTab === 'broadcasts' && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Broadcasts</p>
@@ -718,8 +738,9 @@ export default function ChurchSettingsPage() {
             </div>
           )}
         </section>
+      )}
 
-        {/* ── Planning Center ───────────────────────────────────────────────────── */}
+      {activeTab === 'planning_center' && (
         <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Planning Center</p>
 
@@ -922,8 +943,7 @@ export default function ChurchSettingsPage() {
             )}
           </div>
         </section>
-
-      </div>
+      )}
 
       {/* Broadcast composer overlay */}
       {composerOpen && convIds.allMembers && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Megaphone } from '@phosphor-icons/react'
+import { ArrowLeft, Megaphone, ShieldCheck } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
@@ -23,7 +23,7 @@ export function sanitizeHtml(html) {
   } catch { return '' }
 }
 
-export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [] }) {
+export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdminOnly = false }) {
   const targetedGroups = isChurchAdmin && msg.target_group_ids?.length
     ? msg.target_group_ids.map(id => groupsInChurch.find(g => g.id === id)?.name).filter(Boolean)
     : null
@@ -34,7 +34,15 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [] }) {
     <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 animate-fade-up">
       <div className="flex items-start justify-between gap-2 mb-2">
         <p className="text-sm font-semibold text-stone-800">{msg.display_name}</p>
-        <span className="text-xs text-stone-400 whitespace-nowrap shrink-0">{formatListTime(msg.created_at)}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          {isAdminOnly && (
+            <span className="flex items-center gap-1 bg-ember/10 text-ember rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap">
+              <ShieldCheck size={12} weight="fill" />
+              Group Admins
+            </span>
+          )}
+          <span className="text-xs text-stone-400 whitespace-nowrap">{formatListTime(msg.created_at)}</span>
+        </div>
       </div>
       {isHtml ? (
         <div
@@ -55,38 +63,53 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [] }) {
 }
 
 export default function ChurchBroadcastView({ conversation, onBack }) {
-  const { userId, isChurchAdmin } = useAppContext()
+  const { userId, isChurchAdmin, isAdmin, churchConversations } = useAppContext()
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const convId = conversation.id
-  const isAdminsOnly = conversation.type === 'admins_only'
+  const convId        = conversation.id
+  const adminsOnlyConv   = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
+  const adminsOnlyConvId = adminsOnlyConv?.id ?? null
 
   useEffect(() => {
     if (!convId) return
     setLoading(true)
-    db.churches.fetchMessages(convId).then(({ data }) => {
-      setMessages(data ?? [])
-      setLoading(false)
-    })
+    const doFetch = isAdmin && adminsOnlyConvId
+      ? Promise.all([db.churches.fetchMessages(convId), db.churches.fetchMessages(adminsOnlyConvId)])
+          .then(([r1, r2]) =>
+            [...(r1.data ?? []).map(m => ({ ...m, _isAdminOnly: false })),
+             ...(r2.data ?? []).map(m => ({ ...m, _isAdminOnly: true }))]
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          )
+      : db.churches.fetchMessages(convId).then(r => (r.data ?? []).map(m => ({ ...m, _isAdminOnly: false })))
+
+    doFetch.then(msgs => { setMessages(msgs); setLoading(false) })
     db.churches.updateLastRead(convId, userId).then()
-  }, [convId, userId])
+    if (isAdmin && adminsOnlyConvId) db.churches.updateLastRead(adminsOnlyConvId, userId).then()
+  }, [convId, adminsOnlyConvId, userId, isAdmin])
 
   useEffect(() => {
     if (!convId) return
-    const ch = supabase
-      .channel(`church-broadcast:${convId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'church_messages',
-        filter: `church_conversation_id=eq.${convId}`,
-      }, ({ new: msg }) => {
-        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [msg, ...prev])
-      })
-      .subscribe()
-    return () => supabase.removeChannel(ch)
-  }, [convId])
+    const channels = []
+    const subscribe = (id, adminOnly) => {
+      const ch = supabase
+        .channel(`church-broadcast:${id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'church_messages',
+          filter: `church_conversation_id=eq.${id}`,
+        }, ({ new: msg }) => {
+          const tagged = { ...msg, _isAdminOnly: adminOnly }
+          setMessages(prev => prev.some(m => m.id === tagged.id) ? prev : [tagged, ...prev])
+        })
+        .subscribe()
+      channels.push(ch)
+    }
+    subscribe(convId, false)
+    if (isAdmin && adminsOnlyConvId) subscribe(adminsOnlyConvId, true)
+    return () => channels.forEach(ch => supabase.removeChannel(ch))
+  }, [convId, adminsOnlyConvId, isAdmin])
 
   return (
     <div className="flex flex-col bg-sunrise-50" style={{ height: '100dvh' }}>
@@ -106,12 +129,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
           <Megaphone size={20} weight="fill" className="text-ember" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-base font-bold text-stone-800 truncate">
-            {isAdminsOnly ? 'Group Admins' : 'Church Updates'}
-          </p>
-          {isAdminsOnly && (
-            <p className="text-xs text-stone-400 truncate">Messages for group admins only</p>
-          )}
+          <p className="text-base font-bold text-stone-800 truncate">Church Updates</p>
         </div>
       </div>
 
@@ -146,7 +164,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
             {messages.map(msg => (
-              <BroadcastCard key={msg.id} msg={msg} isChurchAdmin={isChurchAdmin} />
+              <BroadcastCard key={msg.id} msg={msg} isChurchAdmin={isChurchAdmin} isAdminOnly={msg._isAdminOnly} />
             ))}
           </div>
         )}
