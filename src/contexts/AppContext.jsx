@@ -185,8 +185,8 @@ export function AppProvider({ children }) {
   const switchGroup = useCallback(async (targetGroupId) => {
     const { error } = await db.groupMemberships.switchActive(targetGroupId)
     if (error) throw error
-    await refreshProfile()
-  }, [refreshProfile])
+    await Promise.all([refreshProfile(), refreshMemberships()])
+  }, [refreshProfile, refreshMemberships])
 
   const refreshBirthdays = useCallback(() => {
     supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
