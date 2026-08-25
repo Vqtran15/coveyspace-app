@@ -134,8 +134,6 @@ export const db = {
       }).select().single(),
     updateLastRead: (convId, userId) =>
       supabase.from('church_conversation_members')
-        .update({ last_read_at: new Date().toISOString() })
-        .eq('conversation_id', convId)
-        .eq('user_id', userId),
+        .upsert({ conversation_id: convId, user_id: userId, last_read_at: new Date().toISOString() }, { onConflict: 'conversation_id,user_id' }),
   },
 }

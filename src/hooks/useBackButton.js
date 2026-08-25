@@ -7,13 +7,15 @@ import { useEffect, useRef, useCallback } from 'react'
 // On JS close (X button, etc.): consumes the dummy history entry via history.back()
 // without triggering navigation (same URL → React Router ignores it).
 export function useBackButton(isOpen, onBack) {
-  const guardRef   = useRef(false)
-  const stableBack = useCallback(onBack, [onBack])
+  const guardRef    = useRef(false)
+  const openPathRef = useRef(null)
+  const stableBack  = useCallback(onBack, [onBack])
 
   useEffect(() => {
     if (!isOpen) return
 
     history.pushState(null, '')
+    openPathRef.current = window.location.pathname
     guardRef.current = true
 
     function handlePop() {
@@ -28,11 +30,13 @@ export function useBackButton(isOpen, onBack) {
     return () => {
       window.removeEventListener('popstate', handlePop)
       if (guardRef.current) {
-        // Overlay was closed by JS, not by Android back — consume the dummy
-        // history entry so it doesn't linger. history.back() with same URL is
-        // ignored by React Router (URL unchanged).
         guardRef.current = false
-        history.back()
+        // Only pop the dummy entry if we're still on the same route.
+        // If the user navigated to another tab, skip history.back() — calling
+        // it from a different path would push them back to this route.
+        if (window.location.pathname === openPathRef.current) {
+          history.back()
+        }
       }
     }
   }, [isOpen, stableBack])
