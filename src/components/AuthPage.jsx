@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { UsersThree, ArrowLeft } from '@phosphor-icons/react'
+import { ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { trackEvent } from '../lib/analytics.js'
@@ -161,11 +161,9 @@ export default function AuthPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
           {/* Logo inside card */}
           <div className="pt-7 pb-5 text-center border-b border-stone-100">
-            <div className="inline-flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-ember ring-4 ring-ember/20 flex items-center justify-center shrink-0">
-                <UsersThree size={24} weight="fill" className="text-white" />
-              </div>
-              <h1 className="font-league-gothic text-5xl tracking-wide text-ember">Coveyspace</h1>
+            <div className="inline-flex flex-col items-center gap-2.5">
+              <img src="/icons/icon-192.png" alt="" className="w-14 h-14 rounded-[18px] shadow-sm" />
+              <h1 className="font-bold text-2xl tracking-tight text-stone-800">Coveyspace</h1>
             </div>
           </div>
 
