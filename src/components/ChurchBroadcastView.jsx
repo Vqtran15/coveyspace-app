@@ -54,7 +54,7 @@ function BroadcastComposer({ churchId, convId, audience, groupsInChurch, display
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header */}
-      <div className="shrink-0 bg-white border-b border-stone-100 flex items-center gap-3 px-4 py-3">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-3">
         <button
           onClick={handleClose}
           className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"

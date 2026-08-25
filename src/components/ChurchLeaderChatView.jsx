@@ -120,7 +120,7 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
         table: 'church_messages',
         filter: `church_conversation_id=eq.${convId}`,
       }, ({ new: msg }) => {
-        setMessages(prev => [...prev, msg])
+        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg])
         if (msg.user_id !== userId) {
           db.churches.updateLastRead(convId, userId).then()
         }
