@@ -520,7 +520,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2 px-1">{churchName}</p>
             <div className="space-y-2">
               {churchConversations
-                .filter(c => c.type === 'all_members' || (c.type === 'admins_only' && (isAdmin || isChurchAdmin)))
+                .filter(c => c.type === 'all_members')
                 .map(conv => {
                   const isActive = activeConvId === `church:${conv.id}`
                   return (
@@ -532,19 +532,12 @@ export default function ConversationList({ session, groupId, members, enterClass
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     >
                       <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10 shrink-0">
-                        {conv.type === 'all_members'
-                          ? <Megaphone size={22} weight="fill" className="text-ember" />
-                          : <UsersThree size={22} weight="fill" className="text-ember" />
-                        }
+                        <Megaphone size={22} weight="fill" className="text-ember" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-stone-800 truncate">
-                          {conv.type === 'all_members' ? 'Church Updates' : 'Leaders Chat'}
-                        </p>
+                        <p className="text-sm font-semibold text-stone-800 truncate">Church Updates</p>
                         <p className="text-xs text-stone-400 mt-0.5 truncate">
-                          {conv.type === 'all_members'
-                            ? (isChurchAdmin ? 'Broadcast to all members' : 'Read-only announcements')
-                            : 'Church leaders discussion'}
+                          {isChurchAdmin ? 'Broadcast to members' : 'Read-only announcements'}
                         </p>
                       </div>
                       <CaretRight size={16} className="text-stone-300 shrink-0" />

@@ -7,10 +7,11 @@ import { formatListTime } from '../utils/format.js'
 
 // Full-screen slide-in composer — textarea is in the scrollable flow so iOS
 // auto-scrolls to keep it above the keyboard (same pattern as PrayerProfile).
-function BroadcastComposer({ churchId, convId, audience, groupsInChurch, displayName, userId, onSent, onClose }) {
+function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, userId, onSent, onClose }) {
   const [text, setText] = useState('')
   const [targetMode, setTargetMode] = useState('all') // 'all' | 'select'
   const [selectedGroupIds, setSelectedGroupIds] = useState(new Set())
+  const [audience, setAudience] = useState('all_members') // 'all_members' | 'admins_only'
   const [sending, setSending] = useState(false)
   const [exiting, setExiting] = useState(false)
 
@@ -134,6 +135,26 @@ function BroadcastComposer({ churchId, convId, audience, groupsInChurch, display
             )}
           </div>
         )}
+
+        <div>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 block">Audience</label>
+          <div className="bg-stone-100 rounded-xl p-1 flex">
+            <button
+              type="button"
+              onClick={() => setAudience('all_members')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'all_members' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+            >
+              All members
+            </button>
+            <button
+              type="button"
+              onClick={() => setAudience('admins_only')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'admins_only' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
+            >
+              Admins only
+            </button>
+          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -152,8 +173,11 @@ function BroadcastCard({ msg, isChurchAdmin, groupsInChurch }) {
         <span className="text-xs text-stone-400 whitespace-nowrap shrink-0">{formatListTime(msg.created_at)}</span>
       </div>
       <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{msg.body}</p>
-      {targetedGroups?.length > 0 && (
-        <p className="text-xs text-stone-400 mt-2">Sent to: {targetedGroups.join(', ')}</p>
+      {isChurchAdmin && (
+        <p className="text-xs text-stone-400 mt-2">
+          {targetedGroups?.length > 0 ? `${targetedGroups.join(', ')} · ` : ''}
+          {msg.audience === 'admins_only' ? 'Admins only' : 'All members'}
+        </p>
       )}
     </div>
   )
@@ -285,7 +309,6 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         <BroadcastComposer
           churchId={churchId}
           convId={convId}
-          audience="all_members"
           groupsInChurch={groupsInChurch}
           displayName={displayName}
           userId={userId}

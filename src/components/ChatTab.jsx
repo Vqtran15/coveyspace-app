@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
 import ChurchBroadcastView from './ChurchBroadcastView.jsx'
-import ChurchLeaderChatView from './ChurchLeaderChatView.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useBackButton } from '../hooks/useBackButton.js'
 
@@ -159,11 +158,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
       {/* Chat area */}
       {activeChurchConv ? (
         <div className="lg:flex-1 lg:overflow-hidden lg:min-w-0">
-          {activeChurchConv.type === 'all_members' ? (
-            <ChurchBroadcastView conversation={activeChurchConv} onBack={goBack} />
-          ) : (
-            <ChurchLeaderChatView conversation={activeChurchConv} onBack={goBack} />
-          )}
+          <ChurchBroadcastView conversation={activeChurchConv} onBack={goBack} />
         </div>
       ) : activeConv ? (
         <div className="lg:flex-1 lg:overflow-hidden lg:min-w-0">
