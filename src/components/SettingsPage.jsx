@@ -422,20 +422,21 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
         )}
 
         {/* My Groups */}
-        <div className="mb-4">
+        <div className="mb-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">My Groups</p>
           <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-            {allMemberships.map(m => {
+            {allMemberships.map((m, i) => {
               const isActive = m.community_group_id === groupId
               const isSwitching = switchingGroupId === m.community_group_id
+              const isLast = i === allMemberships.length - 1
               return (
                 <button
                   key={m.community_group_id}
                   onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
                   disabled={isActive || !!switchingGroupId}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors border-b border-stone-100 ${
-                    isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors ${
+                    !isLast ? 'border-b border-stone-100' : ''
+                  } ${isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'}`}
                 >
                   <UsersThree
                     size={16}
@@ -460,28 +461,39 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
                 </button>
               )
             })}
+          </div>
+        </div>
 
+        {/* Group actions */}
+        <div className="mb-4">
+          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
             {/* Create a new group */}
             <button
               onClick={() => setCreateGroupOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors border-b border-stone-100"
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
             >
-              <div className="w-4 h-4 rounded-full bg-ember/10 flex items-center justify-center shrink-0">
-                <Sparkle size={9} weight="fill" className="text-ember" />
+              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                <Sparkle size={15} weight="fill" className="text-ember" />
               </div>
-              <span className="flex-1 text-left">Create a new group</span>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-medium text-stone-800">Create a new group</p>
+                <p className="text-xs text-stone-400">Start a group and invite members</p>
+              </div>
               <CaretRight size={14} className="text-stone-300 shrink-0" />
             </button>
 
             {/* Join another group */}
             <button
               onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
             >
-              <div className="w-4 h-4 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
-                <Plus size={9} weight="bold" className="text-stone-400" />
+              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                <Plus size={15} weight="bold" className="text-stone-500" />
               </div>
-              <span className="flex-1 text-left">Join another group</span>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-medium text-stone-800">Join another group</p>
+                <p className="text-xs text-stone-400">Enter an invite code to join</p>
+              </div>
               <CaretRight
                 size={14}
                 className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}

@@ -97,18 +97,36 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
   const scrollBodyRef = useRef(null)
 
   useEffect(() => {
+    // Lock body scroll so iOS doesn't scroll the underlying page into view
+    // when the Tiptap contenteditable receives focus
+    const prevBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
     const vp = window.visualViewport
-    if (!vp) return
+    if (!vp) {
+      if (composerRef.current) composerRef.current.style.height = `${window.innerHeight}px`
+      return () => { document.body.style.overflow = prevBodyOverflow }
+    }
+
     let prevH = vp.height
     const sync = () => {
-      if (composerRef.current) composerRef.current.style.height = `${vp.height}px`
+      if (!composerRef.current) return
+      // Height is set exclusively via JS — never via JSX style — so React
+      // re-renders triggered by the editor don't overwrite it
+      composerRef.current.style.height = `${vp.height}px`
       if (vp.height < prevH) {
         scrollBodyRef.current?.scrollTo({ top: scrollBodyRef.current.scrollHeight })
       }
       prevH = vp.height
     }
+    sync() // initialize immediately so the initial render doesn't rely on the JSX expression
     vp.addEventListener('resize', sync)
-    return () => vp.removeEventListener('resize', sync)
+    vp.addEventListener('scroll', sync)
+    return () => {
+      vp.removeEventListener('resize', sync)
+      vp.removeEventListener('scroll', sync)
+      document.body.style.overflow = prevBodyOverflow
+    }
   }, [])
 
   const editor = useEditor({
@@ -186,7 +204,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     <div
       ref={composerRef}
       className={`fixed inset-0 z-[70] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ paddingTop: 'env(safe-area-inset-top)', height: `${window.visualViewport?.height ?? window.innerHeight}px` }}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header */}
       <div className="shrink-0 py-3">
