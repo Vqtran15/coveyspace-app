@@ -99,26 +99,23 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
   const [confirmOpen, setConfirmOpen]           = useState(false)
   const [linkBarOpen, setLinkBarOpen]           = useState(false)
   const [linkUrl, setLinkUrl]                   = useState('')
-  const [viewportH, setViewportH]               = useState(() => window.visualViewport?.height ?? window.innerHeight)
   const linkInputRef  = useRef(null)
+  const composerRef   = useRef(null)
   const scrollBodyRef = useRef(null)
 
   useEffect(() => {
     const vp = window.visualViewport
     if (!vp) return
-    const handler = () => {
-      setViewportH(prev => {
-        if (vp.height < prev) {
-          // Keyboard opened — scroll editor card into view
-          setTimeout(() => {
-            scrollBodyRef.current?.scrollTo({ top: scrollBodyRef.current.scrollHeight, behavior: 'smooth' })
-          }, 80)
-        }
-        return vp.height
-      })
+    let prevH = vp.height
+    const sync = () => {
+      if (composerRef.current) composerRef.current.style.height = `${vp.height}px`
+      if (vp.height < prevH) {
+        scrollBodyRef.current?.scrollTo({ top: scrollBodyRef.current.scrollHeight })
+      }
+      prevH = vp.height
     }
-    vp.addEventListener('resize', handler)
-    return () => vp.removeEventListener('resize', handler)
+    vp.addEventListener('resize', sync)
+    return () => vp.removeEventListener('resize', sync)
   }, [])
 
   const editor = useEditor({
@@ -193,8 +190,9 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
 
   return (
     <div
+      ref={composerRef}
       className={`fixed top-0 inset-x-0 lg:left-56 z-[35] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ paddingTop: 'env(safe-area-inset-top)', height: `${viewportH}px` }}
+      style={{ paddingTop: 'env(safe-area-inset-top)', height: `${window.visualViewport?.height ?? window.innerHeight}px` }}
     >
       {/* Header */}
       <div className="shrink-0 py-3">
