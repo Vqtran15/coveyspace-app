@@ -74,6 +74,16 @@ export default function WelcomeSplash({ onDone }) {
   const [closing, close] = useModalClose(onDone)
   const navigate = useNavigate()
 
+  // Detect if this splash was triggered by in-app group creation (Settings → Create a new group)
+  const createdFromSettings = useRef((() => {
+    const flag = sessionStorage.getItem('cg_created_from_settings')
+    if (flag) {
+      sessionStorage.removeItem('cg_created_from_settings')
+      return true
+    }
+    return false
+  })()).current
+
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
     ('standalone' in window.navigator && window.navigator.standalone === true)
@@ -82,7 +92,9 @@ export default function WelcomeSplash({ onDone }) {
 
   const steps = useRef(
     isAdmin
-      ? ['welcome', 'personalize', 'features', 'setup', 'invite', ...(isStandalone ? [] : ['install'])]
+      ? (createdFromSettings
+          ? ['welcome', 'setup', 'invite', ...(isStandalone ? [] : ['install'])]
+          : ['welcome', 'personalize', 'features', 'setup', 'invite', ...(isStandalone ? [] : ['install'])])
       : ['welcome', 'personalize', 'tour', ...(isStandalone ? [] : ['install'])]
   ).current
 
@@ -105,6 +117,16 @@ export default function WelcomeSplash({ onDone }) {
 
   // ── Features (admin) ───────────────────────────────────────────────────────
   const [features, setFeatures] = useState(() => {
+    // When arriving from in-app group creation, features were already saved — read them back
+    if (createdFromSettings) {
+      try {
+        const s = sessionStorage.getItem('cg_settings_create_features')
+        if (s) {
+          sessionStorage.removeItem('cg_settings_create_features')
+          return JSON.parse(s)
+        }
+      } catch {}
+    }
     if (isAdmin && groupId) {
       try {
         const s = localStorage.getItem(`cg_onb_features_${groupId}`)
@@ -351,7 +373,7 @@ export default function WelcomeSplash({ onDone }) {
   const onBack = (() => {
     if (step === 'personalize') return () => setStep('welcome')
     if (step === 'features')   return () => setStep('personalize')
-    if (step === 'setup')      return () => setStep('features')
+    if (step === 'setup')      return () => setStep(createdFromSettings ? 'welcome' : 'features')
     if (step === 'invite')     return () => setStep('setup')
     if (step === 'tour')       return () => setStep('personalize')
     if (step === 'install')    return () => setStep(isAdmin ? 'invite' : 'tour')
@@ -395,11 +417,11 @@ export default function WelcomeSplash({ onDone }) {
           </>
         )}
         <button
-          onClick={() => setStep('personalize')}
+          onClick={() => setStep(createdFromSettings ? 'setup' : 'personalize')}
           className="px-8 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
           style={{ animationDelay: '0.65s' }}
         >
-          Let's go
+          {createdFromSettings ? 'Set up your schedule →' : "Let's go"}
         </button>
       </div>
     )

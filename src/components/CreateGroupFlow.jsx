@@ -21,12 +21,12 @@ const DEFAULT_FEATURES = {
   chat_enabled:      true,
   prayer_enabled:    true,
   birthdays_enabled: true,
-  meals_enabled:     false,
-  services_enabled:  false,
-  events_enabled:    false,
-  guide_enabled:     false,
-  bible_enabled:     false,
-  giving_enabled:    false,
+  meals_enabled:     true,
+  services_enabled:  true,
+  events_enabled:    true,
+  guide_enabled:     true,
+  bible_enabled:     true,
+  giving_enabled:    true,
 }
 
 export default function CreateGroupFlow({ onDone, onClose }) {
@@ -34,6 +34,8 @@ export default function CreateGroupFlow({ onDone, onClose }) {
   const toast = useToast()
 
   const [step, setStep]         = useState('name')   // 'name' | 'features'
+  const [direction, setDirection] = useState(null)   // null | 'forward' | 'back'
+  const [closing, setClosing]   = useState(false)
   const [groupName, setGroupName] = useState('')
   const [features, setFeatures] = useState({ ...DEFAULT_FEATURES })
   const [creating, setCreating] = useState(false)
@@ -58,12 +60,24 @@ export default function CreateGroupFlow({ onDone, onClose }) {
     }
     await Promise.all([refreshProfile(), refreshMemberships()])
     toast(`"${data.group_name}" created!`, 'success')
+    sessionStorage.setItem('cg_created_from_settings', '1')
+    sessionStorage.setItem('cg_settings_create_features', JSON.stringify(features))
     onDone?.()
+  }
+
+  function goBack() {
+    if (step === 'features') {
+      setDirection('back')
+      setStep('name')
+    } else {
+      setClosing(true)
+      setTimeout(() => onClose?.(), 250)
+    }
   }
 
   const content = (
     <div
-      className="fixed inset-0 z-[70] bg-sunrise-50 flex flex-col animate-slide-in-right"
+      className={`fixed inset-0 z-[70] bg-sunrise-50 flex flex-col ${closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {/* Progress dots */}
@@ -87,7 +101,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
       {/* Header */}
       <div className="shrink-0 flex items-center gap-3 px-4 py-3 mt-4">
         <button
-          onClick={step === 'name' ? onClose : () => setStep('name')}
+          onClick={goBack}
           className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-600 hover:bg-stone-100 transition-colors"
           aria-label="Back"
         >
@@ -100,6 +114,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
+        <div key={step} className={direction === 'back' ? 'animate-slide-in-left' : direction === 'forward' ? 'animate-slide-in-right' : ''}>
 
         {/* ── Step 1: Group name ─────────────────────────────────────────── */}
         {step === 'name' && (
@@ -117,8 +132,8 @@ export default function CreateGroupFlow({ onDone, onClose }) {
                 type="text"
                 value={groupName}
                 onChange={e => setGroupName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && groupName.trim().length >= 2 && setStep('features')}
-                placeholder="e.g. Lake Oswego Men's Group"
+                onKeyDown={e => { if (e.key === 'Enter' && groupName.trim().length >= 2) { setDirection('forward'); setStep('features') } }}
+                placeholder="e.g. West Linn Community Group"
                 maxLength={60}
                 autoFocus
                 className="w-full border border-stone-200 rounded-xl px-4 py-3.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
@@ -126,7 +141,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
               <p className="text-xs text-stone-400 mt-1.5 text-right">{groupName.length}/60</p>
             </div>
             <button
-              onClick={() => setStep('features')}
+              onClick={() => { setDirection('forward'); setStep('features') }}
               disabled={groupName.trim().length < 2}
               className="w-full py-3.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
             >
@@ -185,6 +200,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

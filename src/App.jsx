@@ -17,6 +17,7 @@ import BirthdayBanner       from './components/BirthdayBanner.jsx'
 import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 import UpdatePrompt         from './components/UpdatePrompt.jsx'
 import AnnouncementBanner   from './components/AnnouncementBanner.jsx'
+import GroupWelcomeBack     from './components/GroupWelcomeBack.jsx'
 
 const ScheduleTab       = lazy(() => import('./components/ScheduleTab.jsx'))
 const BirthdayTab       = lazy(() => import('./components/BirthdayTab.jsx'))
@@ -110,6 +111,7 @@ function AppContent() {
   const [splashExiting, setSplashExiting] = useState(false)
   const [splashMinDone, setSplashMinDone] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [welcomeBackGroupName, setWelcomeBackGroupName] = useState(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
   const guide    = useAnimatedOverlay()
@@ -468,6 +470,7 @@ function AppContent() {
                       navigate('/home')
                       setShowWelcome(true)
                     }}
+                    onGroupSwitch={(name) => setWelcomeBackGroupName(name)}
                   />
                 } />
                 <Route path="*" element={<Navigate to="/home" replace />} />
@@ -510,6 +513,13 @@ function AppContent() {
             refreshProfile()
             refreshBirthdays()
           }}
+        />
+      )}
+
+      {welcomeBackGroupName && (
+        <GroupWelcomeBack
+          name={welcomeBackGroupName}
+          onDone={() => setWelcomeBackGroupName(null)}
         />
       )}
 

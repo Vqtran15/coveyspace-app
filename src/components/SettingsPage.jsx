@@ -122,7 +122,7 @@ function useSheetDrag(onClose) {
   }
 }
 
-export default function SettingsPage({ onClose, onRevisitGuide }) {
+export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch }) {
   const { displayName, isAdmin, isChurchAdmin, userId, groupId, churchName, push, onDisplayNameChange, onAvatarChange, allMemberships, switchGroup, refreshMemberships } = useAppContext()
   const navigate = useNavigate()
   const toast = useToast()
@@ -190,7 +190,7 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
     try {
       await switchGroup(targetGroupId)
       const name = allMemberships.find(m => m.community_group_id === targetGroupId)?.community_groups?.name
-      toast(`Switched to ${name ?? 'group'}`, 'success')
+      onGroupSwitch?.(name ?? 'your group')
     } catch {
       toast('Failed to switch group', 'error')
     } finally {
