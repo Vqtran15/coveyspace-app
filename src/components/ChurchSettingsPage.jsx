@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import UnderlineExt from '@tiptap/extension-underline'
@@ -181,10 +182,10 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     audience === 'admins_only' ? 'Group Admins only' : 'All members'
   }`
 
-  return (
+  return createPortal(
     <div
       ref={composerRef}
-      className={`fixed top-0 inset-x-0 lg:left-56 z-[35] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      className={`fixed inset-0 z-[70] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
       style={{ paddingTop: 'env(safe-area-inset-top)', height: `${window.visualViewport?.height ?? window.innerHeight}px` }}
     >
       {/* Header */}
@@ -409,7 +410,8 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           onConfirm={doSend}
         />
       )}
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -449,6 +451,10 @@ export default function ChurchSettingsPage() {
   const [inviteSending, setInviteSending]         = useState({})
   const [inviteCode, setInviteCode]               = useState(null)
   const [activeTab, setActiveTab]                 = useState('broadcasts')
+  // Which Coveyspace group to invite PCO members into
+  const [selectedCoveyGroupId, setSelectedCoveyGroupId] = useState(null)
+  const [coveyGroupInviteCode, setCoveyGroupInviteCode] = useState(null)
+  const [coveyGroupInviteLoading, setCoveyGroupInviteLoading] = useState(false)
 
   // Load broadcasts from both conversations merged by date
   useEffect(() => {
@@ -477,12 +483,25 @@ export default function ChurchSettingsPage() {
       .then(({ data }) => setGroupsInChurch(data ?? []))
   }, [churchId])
 
-  // Load PCO connection
+  // Load PCO connection + default invite target to admin's own group
   useEffect(() => {
     if (!isChurchAdmin) return
     supabase.rpc('get_pco_connection').then(({ data }) => setPcoConnection(data?.[0] ?? null))
     supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
+    if (groupId) setSelectedCoveyGroupId(groupId)
   }, [groupId])
+
+  // Fetch invite code for the selected Coveyspace target group
+  useEffect(() => {
+    if (!selectedCoveyGroupId) { setCoveyGroupInviteCode(null); return }
+    // If it's the admin's own group, reuse the already-fetched code
+    if (selectedCoveyGroupId === groupId) { setCoveyGroupInviteCode(inviteCode); return }
+    setCoveyGroupInviteLoading(true)
+    db.churches.getGroupInviteCode(selectedCoveyGroupId).then(({ data, error }) => {
+      setCoveyGroupInviteCode(error ? null : (data ?? null))
+      setCoveyGroupInviteLoading(false)
+    })
+  }, [selectedCoveyGroupId, groupId, inviteCode])
 
   // Auto-load PCO groups when connected
   useEffect(() => {
@@ -618,10 +637,13 @@ export default function ChurchSettingsPage() {
   }
 
   async function handleSendInvite(member) {
-    const inviteUrl = `${window.location.origin}/login?code=${inviteCode}`
+    const targetCode = coveyGroupInviteCode ?? inviteCode
+    if (!targetCode) { toast('No invite code available', 'error'); return }
+    const targetGroupName = groupsInChurch.find(g => g.id === selectedCoveyGroupId)?.name ?? groupName
+    const inviteUrl = `${window.location.origin}/login?code=${targetCode}`
     setInviteSending(prev => ({ ...prev, [member.email]: true }))
     const { error } = await supabase.functions.invoke('pco-send-invite', {
-      body: { email: member.email, name: member.name, invite_url: inviteUrl, group_name: groupName },
+      body: { email: member.email, name: member.name, invite_url: inviteUrl, group_name: targetGroupName },
     })
     if (error) {
       toast('Failed to send invite', 'error')
@@ -845,6 +867,34 @@ export default function ChurchSettingsPage() {
                   </div>
                 )}
 
+                {/* Coveyspace target group picker — shown when there are multiple groups */}
+                {selectedPcoGroup && groupsInChurch.length > 1 && (
+                  <div className="px-4 pb-3 border-t border-stone-100 pt-3">
+                    <p className="text-xs font-semibold text-stone-500 mb-2">Invite to Coveyspace Group</p>
+                    <div className="relative">
+                      <select
+                        value={selectedCoveyGroupId ?? ''}
+                        onChange={e => {
+                          const val = e.target.value || null
+                          setSelectedCoveyGroupId(val)
+                          setMemberStatuses({})
+                        }}
+                        disabled={coveyGroupInviteLoading}
+                        className="w-full appearance-none border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 bg-white pr-9 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent disabled:opacity-50"
+                      >
+                        <option value="">Pick a Coveyspace group…</option>
+                        {groupsInChurch.map(g => (
+                          <option key={g.id} value={g.id}>{g.name}{g.id === groupId ? ' (your group)' : ''}</option>
+                        ))}
+                      </select>
+                      <CaretDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    </div>
+                    {coveyGroupInviteLoading && (
+                      <p className="text-xs text-stone-400 mt-1">Loading invite code…</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Member list */}
                 {selectedPcoGroup && (
                   <div className="px-4 pb-4">
@@ -883,7 +933,9 @@ export default function ChurchSettingsPage() {
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button
                                       onClick={() => {
-                                        navigator.clipboard.writeText(`${window.location.origin}/login?code=${inviteCode}`)
+                                        const code = coveyGroupInviteCode ?? inviteCode
+                                        if (!code) { toast('No invite code available', 'error'); return }
+                                        navigator.clipboard.writeText(`${window.location.origin}/login?code=${code}`)
                                         toast('Invite link copied', 'success')
                                       }}
                                       aria-label="Copy invite link"

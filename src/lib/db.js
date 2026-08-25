@@ -106,6 +106,8 @@ export const db = {
       supabase.rpc('join_additional_group', { p_invite_code: inviteCode }),
     switchActive: (targetGroupId) =>
       supabase.rpc('switch_active_group', { target_group_id: targetGroupId }),
+    createGroup: (groupName, features) =>
+      supabase.rpc('create_group_for_current_user', { p_group_name: groupName, p_features: features }),
   },
 
   churches: {
@@ -135,5 +137,7 @@ export const db = {
     updateLastRead: (convId, userId) =>
       supabase.from('church_conversation_members')
         .upsert({ conversation_id: convId, user_id: userId, last_read_at: new Date().toISOString() }, { onConflict: 'conversation_id,user_id' }),
+    getGroupInviteCode: (groupId) =>
+      supabase.rpc('get_group_invite_code', { target_group_id: groupId }),
   },
 }

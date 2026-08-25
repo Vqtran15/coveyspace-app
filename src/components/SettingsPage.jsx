@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle, UsersThree, Plus } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle, UsersThree, Plus, Sparkle } from '@phosphor-icons/react'
+import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { swRegistrationRef } from '../lib/swRegistration.js'
@@ -178,6 +179,7 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
   const [joinGroupCode, setJoinGroupCode] = useState('')
   const [joinGroupLoading, setJoinGroupLoading] = useState(false)
   const [joinGroupError, setJoinGroupError] = useState(null)
+  const [createGroupOpen, setCreateGroupOpen] = useState(false)
 
   // App update
   const [updateChecking, setUpdateChecking] = useState(false)
@@ -458,6 +460,18 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
                 </button>
               )
             })}
+
+            {/* Create a new group */}
+            <button
+              onClick={() => setCreateGroupOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors border-b border-stone-100"
+            >
+              <div className="w-4 h-4 rounded-full bg-ember/10 flex items-center justify-center shrink-0">
+                <Sparkle size={9} weight="fill" className="text-ember" />
+              </div>
+              <span className="flex-1 text-left">Create a new group</span>
+              <CaretRight size={14} className="text-stone-300 shrink-0" />
+            </button>
 
             {/* Join another group */}
             <button
@@ -939,6 +953,13 @@ export default function SettingsPage({ onClose, onRevisitGuide }) {
         displayName={displayName}
         email={email}
         onClose={() => setFeedbackOpen(false)}
+      />
+    )}
+
+    {createGroupOpen && (
+      <CreateGroupFlow
+        onDone={() => setCreateGroupOpen(false)}
+        onClose={() => setCreateGroupOpen(false)}
       />
     )}
   </>
