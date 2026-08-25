@@ -99,7 +99,27 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
   const [confirmOpen, setConfirmOpen]           = useState(false)
   const [linkBarOpen, setLinkBarOpen]           = useState(false)
   const [linkUrl, setLinkUrl]                   = useState('')
-  const linkInputRef = useRef(null)
+  const [viewportH, setViewportH]               = useState(() => window.visualViewport?.height ?? window.innerHeight)
+  const linkInputRef  = useRef(null)
+  const scrollBodyRef = useRef(null)
+
+  useEffect(() => {
+    const vp = window.visualViewport
+    if (!vp) return
+    const handler = () => {
+      setViewportH(prev => {
+        if (vp.height < prev) {
+          // Keyboard opened — scroll editor card into view
+          setTimeout(() => {
+            scrollBodyRef.current?.scrollTo({ top: scrollBodyRef.current.scrollHeight, behavior: 'smooth' })
+          }, 80)
+        }
+        return vp.height
+      })
+    }
+    vp.addEventListener('resize', handler)
+    return () => vp.removeEventListener('resize', handler)
+  }, [])
 
   const editor = useEditor({
     extensions: [
@@ -173,8 +193,8 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
 
   return (
     <div
-      className={`fixed inset-0 lg:left-56 z-[35] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className={`fixed top-0 inset-x-0 lg:left-56 z-[35] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)', height: `${viewportH}px` }}
     >
       {/* Header */}
       <div className="shrink-0 py-3">
@@ -199,7 +219,7 @@ function BroadcastComposer({ churchId, convId, groupsInChurch, displayName, user
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div ref={scrollBodyRef} className="flex-1 overflow-y-auto overscroll-contain">
         <div
           className="max-w-2xl mx-auto px-4 py-4 space-y-4"
           style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
