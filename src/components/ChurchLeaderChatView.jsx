@@ -1,10 +1,58 @@
-import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, UsersThree, PaperPlaneTilt } from '@phosphor-icons/react'
+import { lazy, Suspense, useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ArrowLeft, UsersThree, PaperPlaneTilt,
+  Image as ImageIcon, Smiley, Plus as PlusIcon, X,
+} from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { formatListTime } from '../utils/format.js'
 
+const EmojiPicker = lazy(() => import('emoji-picker-react'))
+
+// ── Image compression (same algorithm as ChatView) ────────────────────────────
+function compressImage(file) {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload  = () => { URL.revokeObjectURL(url); resolve({ file, width: img.naturalWidth, height: img.naturalHeight }) }
+      img.onerror = () => { URL.revokeObjectURL(url); resolve({ file, width: null, height: null }) }
+      img.src = url
+    })
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      function tryEncode(maxDim, quality) {
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight))
+        const w = Math.round(img.naturalWidth * scale)
+        const h = Math.round(img.naturalHeight * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        canvas.toBlob(blob => {
+          if (blob) {
+            resolve({ file: new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h })
+          } else if (maxDim > 600) {
+            tryEncode(Math.round(maxDim / 2), quality)
+          } else {
+            reject(new Error('Image compression failed'))
+          }
+        }, 'image/jpeg', quality)
+      }
+      tryEncode(1200, 0.82)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
+    img.src = url
+  })
+}
+
+// ── Message bubble ─────────────────────────────────────────────────────────────
 function Message({ msg, myId }) {
   const isOwn = msg.user_id === myId
   return (
@@ -18,28 +66,47 @@ function Message({ msg, myId }) {
         {!isOwn && (
           <span className="text-xs text-stone-400 px-1">{msg.display_name}</span>
         )}
-        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isOwn ? 'bg-ember text-white rounded-br-md' : 'bg-white border border-stone-100 text-stone-800 rounded-bl-md shadow-sm'}`}>
-          {msg.body}
-        </div>
+        {msg.image_url ? (
+          <img
+            src={msg.image_url}
+            alt="image"
+            className={`rounded-2xl max-w-full ${isOwn ? 'rounded-br-md' : 'rounded-bl-md'}`}
+            style={{ maxHeight: 300 }}
+          />
+        ) : (
+          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isOwn ? 'bg-ember text-white rounded-br-md' : 'bg-white border border-stone-100 text-stone-800 rounded-bl-md shadow-sm'}`}>
+            {msg.body}
+          </div>
+        )}
         <span className="text-[11px] text-stone-400 px-1">{formatListTime(msg.created_at)}</span>
       </div>
     </div>
   )
 }
 
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function ChurchLeaderChatView({ conversation, onBack }) {
   const { userId, displayName, churchId } = useAppContext()
-  const [messages, setMessages] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [text, setText] = useState('')
-  const [sending, setSending] = useState(false)
+  const [messages, setMessages]         = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [text, setText]                 = useState('')
+  const [sending, setSending]           = useState(false)
   const [keyboardOpen, setKeyboardOpen] = useState(false)
-  const bottomRef = useRef(null)
-  const textareaRef = useRef(null)
+  const [imagePreviews, setImagePreviews] = useState([]) // [{ file, previewUrl }]
+  const [showAttachMenu, setShowAttachMenu] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+
+  const bottomRef        = useRef(null)
+  const textareaRef      = useRef(null)
+  const fileInputRef     = useRef(null)
+  const attachBtnRef     = useRef(null)
+  const attachMenuRef    = useRef(null)
+  const emojiPickerRef   = useRef(null)
+  const savedSelectionRef = useRef(null)
 
   const convId = conversation.id
 
-  // Prevent iOS from scrolling the page when keyboard opens (same mechanism as ChatView)
+  // ── Keyboard tracking (same as ChatView) ─────────────────────────────────────
   useEffect(() => {
     function measure() {
       const el = document.createElement('div')
@@ -56,7 +123,6 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  // Track keyboard via visualViewport — sets --vvh and chat-keyboard-open class
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
@@ -94,6 +160,28 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
     }
   }, [])
 
+  // ── Outside-click handlers ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!showAttachMenu) return
+    function onPointerDown(e) {
+      if (!attachMenuRef.current?.contains(e.target) && !attachBtnRef.current?.contains(e.target)) {
+        setShowAttachMenu(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [showAttachMenu])
+
+  useEffect(() => {
+    if (!showEmojiPicker) return
+    function onPointerDown(e) {
+      if (!emojiPickerRef.current?.contains(e.target)) closeEmojiPicker()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [showEmojiPicker])
+
+  // ── Message fetch ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!convId) return
     setLoading(true)
@@ -104,12 +192,11 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
     db.churches.updateLastRead(convId, userId).then()
   }, [convId, userId])
 
-  // Scroll to bottom when messages load or new message arrives
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: loading ? 'instant' : 'smooth' })
   }, [messages, loading])
 
-  // Realtime subscription
+  // ── Realtime ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!convId) return
     const ch = supabase
@@ -129,25 +216,51 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
     return () => supabase.removeChannel(ch)
   }, [convId, userId])
 
-  async function handleSend() {
-    const body = text.trim()
-    if (!body || sending) return
-    setSending(true)
-    setText('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
+  // ── Input helpers ─────────────────────────────────────────────────────────────
+  function handleTextInput(e) {
+    setText(e.target.value)
+    e.target.style.height = 'auto'
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+  }
+
+  function closeEmojiPicker() {
+    setShowEmojiPicker(false)
+    const el = textareaRef.current
+    if (!el) return
+    const { start = el.value.length, end = el.value.length } = savedSelectionRef.current ?? {}
+    el.focus()
+    try { el.setSelectionRange(start, end) } catch (_) {}
+  }
+
+  function insertEmoji(emoji) {
+    const el = textareaRef.current
+    const { start = text.length, end = text.length } = savedSelectionRef.current ?? {}
+    const next = text.slice(0, start) + emoji + text.slice(end)
+    setText(next)
+    savedSelectionRef.current = { start: start + emoji.length, end: start + emoji.length }
+  }
+
+  function openEmoji() {
+    const el = textareaRef.current
+    if (el) {
+      savedSelectionRef.current = { start: el.selectionStart ?? text.length, end: el.selectionEnd ?? text.length }
+      el.blur()
     }
-    const { data, error } = await db.churches.sendMessage({
-      churchId,
-      convId,
-      userId,
-      displayName,
-      body,
-      audience: 'admins_only',
-      targetGroupIds: null,
-    })
-    setSending(false)
-    if (!error && data) setMessages(prev => [...prev, data])
+    setShowEmojiPicker(true)
+    setShowAttachMenu(false)
+  }
+
+  function handleFileChange(e) {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (!files.length) return
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue
+      if (file.size > 10 * 1024 * 1024) continue
+      const reader = new FileReader()
+      reader.onload = ev => setImagePreviews(prev => [...prev, { file, previewUrl: ev.target.result }])
+      reader.readAsDataURL(file)
+    }
   }
 
   function handleKeyDown(e) {
@@ -157,11 +270,55 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
     }
   }
 
-  function handleTextInput(e) {
-    setText(e.target.value)
-    e.target.style.height = 'auto'
-    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+  async function sendImage(file, previewUrl) {
+    try {
+      const { file: compressed } = await compressImage(file)
+      const ext = compressed.name.split('.').pop()
+      const path = `${userId}/${convId}_${Date.now()}.${ext}`
+      const { data: uploaded, error: upErr } = await supabase.storage
+        .from('chat-images')
+        .upload(path, compressed, { contentType: compressed.type })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
+      const { data } = await db.churches.sendMessage({
+        churchId, convId, userId, displayName,
+        body: null, audience: 'admins_only', targetGroupIds: null, imageUrl: publicUrl,
+      })
+      if (data) setMessages(prev => prev.some(m => m.id === data.id) ? prev : [...prev, data])
+    } catch (err) {
+      console.error('Image send failed:', err)
+    }
   }
+
+  async function handleSend() {
+    const body = text.trim()
+    const hasImages = imagePreviews.length > 0
+    if (!body && !hasImages) return
+    if (sending) return
+    setSending(true)
+    setText('')
+    const previews = imagePreviews
+    setImagePreviews([])
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+
+    // Send images
+    for (const { file, previewUrl } of previews) {
+      await sendImage(file, previewUrl)
+    }
+
+    // Send text
+    if (body) {
+      const { data } = await db.churches.sendMessage({
+        churchId, convId, userId, displayName,
+        body, audience: 'admins_only', targetGroupIds: null,
+      })
+      if (data) setMessages(prev => prev.some(m => m.id === data.id) ? prev : [...prev, data])
+    }
+
+    setSending(false)
+  }
+
+  const canSend = (text.trim().length > 0 || imagePreviews.length > 0) && !sending
 
   return (
     <div className="chat-container relative flex flex-col bg-sunrise-50">
@@ -208,13 +365,133 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
         )}
       </div>
 
-      {/* Input — pill style matching the main group chat */}
+      {/* Emoji picker portal */}
+      {createPortal(
+        <AnimatePresence>
+          {showEmojiPicker && (
+            <motion.div
+              ref={emojiPickerRef}
+              key="leaders-emoji"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
+            >
+              <div className="relative">
+                <style dangerouslySetInnerHTML={{ __html: '.covey-picker { border: none !important; --epr-picker-border-radius: 0 !important; } .covey-picker .epr-header { padding-right: 48px !important; } .covey-picker .epr-emoji-category-content { margin-left: 0 !important; margin-right: 0 !important; }' }} />
+                <Suspense fallback={null}>
+                  <EmojiPicker
+                    className="covey-picker"
+                    onEmojiClick={emojiData => insertEmoji(emojiData.emoji)}
+                    width="100%"
+                    height={350}
+                    searchPlaceholder="Search emojis…"
+                    previewConfig={{ showPreview: false }}
+                    autoFocusSearch={false}
+                    defaultSkinTone={localStorage.getItem('emoji-skin-tone') || 'neutral'}
+                    onSkinToneChange={tone => localStorage.setItem('emoji-skin-tone', tone)}
+                  />
+                </Suspense>
+                <button
+                  type="button"
+                  onPointerDown={closeEmojiPicker}
+                  className="absolute w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                  style={{ top: 19, right: 8, zIndex: 10 }}
+                >
+                  <X size={14} weight="bold" />
+                </button>
+              </div>
+              <div className="bg-white" style={{ height: 'env(safe-area-inset-bottom)' }} />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Input bar */}
       <div
         className="shrink-0 px-4 py-2"
         style={{ paddingBottom: keyboardOpen ? '8px' : 'max(8px, var(--sab, env(safe-area-inset-bottom)))' }}
       >
-        <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-100 px-3 py-3">
-          <div className="flex items-end gap-2">
+        <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-100 px-3 pt-3 pb-3 relative">
+
+          {/* Image previews */}
+          {imagePreviews.length > 0 && (
+            <div className="flex gap-2 mb-2 overflow-x-auto pt-2 pb-0.5">
+              {imagePreviews.map((preview, i) => (
+                <div key={preview.previewUrl} className="relative shrink-0">
+                  <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
+                  <button
+                    onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
+                  >
+                    <X size={10} weight="bold" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Attach menu popup */}
+          <AnimatePresence>
+            {showAttachMenu && (
+              <motion.div
+                key="leaders-attach"
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+                className="absolute bottom-full left-0 pb-2 z-[8]"
+              >
+                <div ref={attachMenuRef} className="bg-white rounded-2xl shadow-lg border border-stone-100 py-1 min-w-[148px] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachMenu(false)
+                      if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click() }
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
+                  >
+                    <ImageIcon size={18} className="text-stone-500 shrink-0" />
+                    <span className="text-sm font-medium text-stone-700">Photo</span>
+                  </button>
+                  <div className="mx-4 h-px bg-stone-100" />
+                  <button
+                    type="button"
+                    onClick={() => { setShowAttachMenu(false); openEmoji() }}
+                    className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
+                  >
+                    <Smiley size={18} className="text-stone-500 shrink-0" />
+                    <span className="text-sm font-medium text-stone-700">Emoji</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex items-end gap-2 relative z-10">
+            {/* + button */}
+            <button
+              ref={attachBtnRef}
+              type="button"
+              onClick={() => {
+                const opening = !showAttachMenu
+                setShowAttachMenu(v => !v)
+                if (opening && showEmojiPicker) closeEmojiPicker()
+              }}
+              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0 ${showAttachMenu ? 'text-ember bg-ember/10' : 'text-stone-400 hover:text-ember hover:bg-stone-100'}`}
+            >
+              <motion.div
+                animate={{ rotate: showAttachMenu ? 45 : 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              >
+                <PlusIcon size={22} weight="bold" />
+              </motion.div>
+            </button>
+
+            <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+
             <textarea
               ref={textareaRef}
               value={text}
@@ -225,9 +502,10 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
               className="flex-1 resize-none bg-stone-100 border-0 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
               style={{ maxHeight: '120px', overflowY: 'auto' }}
             />
+
             <button
               onClick={handleSend}
-              disabled={!text.trim() || sending}
+              disabled={!canSend}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40"
               aria-label="Send"
             >

@@ -121,13 +121,14 @@ export const db = {
         .eq('church_conversation_id', convId)
         .order('created_at', { ascending: true })
         .limit(100),
-    sendMessage: ({ churchId, convId, userId, displayName, body, audience, targetGroupIds = null }) =>
+    sendMessage: ({ churchId, convId, userId, displayName, body, audience, targetGroupIds = null, imageUrl = null }) =>
       supabase.from('church_messages').insert({
         church_id: churchId,
         church_conversation_id: convId,
         user_id: userId,
         display_name: displayName,
         body,
+        image_url: imageUrl,
         audience,
         target_group_ids: targetGroupIds,
       }).select().single(),
