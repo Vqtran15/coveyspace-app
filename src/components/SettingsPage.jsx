@@ -128,7 +128,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const toast = useToast()
 
   // Sheet state — one sheet open at a time
-  const [openSheet, setOpenSheet] = useState(null) // 'name' | 'legal' | 'birthday' | 'password'
+  const [openSheet, setOpenSheet] = useState(null) // 'profile' | 'password'
 
   // Avatar
   const [avatarIcon, setAvatarIcon] = useState(null)
@@ -137,21 +137,15 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
   const [email, setEmail] = useState('')
 
-  // Display name form
+  // Profile form (display name + legal name + birthday — all in one sheet)
   const [nameValue, setNameValue] = useState('')
-  const [nameSaving, setNameSaving] = useState(false)
-
-  // First & last name form
   const [legalFirst, setLegalFirst] = useState('')
   const [legalLast, setLegalLast] = useState('')
   const [editFirst, setEditFirst] = useState('')
   const [editLast, setEditLast] = useState('')
-  const [legalNameSaving, setLegalNameSaving] = useState(false)
-
-  // Birthday
   const [bdMonth, setBdMonth] = useState(null)
   const [bdDay, setBdDay] = useState(null)
-  const [bdSaving, setBdSaving] = useState(false)
+  const [profileSaving, setProfileSaving] = useState(false)
 
   // Password form
   const [currentPw, setCurrentPw] = useState('')
@@ -274,59 +268,31 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
 
   const { dragHandleProps, dragY } = useSheetDrag(closeSettingsSheet)
 
-  async function handleChangeName(e) {
+  async function handleSaveProfile(e) {
     e.preventDefault()
-    const trimmed = nameValue.trim()
-    if (!trimmed) return
-    setNameSaving(true)
-    const { error } = await db.profiles.updateDisplayName(userId, trimmed)
-    if (error) {
-      toast('Failed to update name', 'error')
-    } else {
-      onDisplayNameChange?.(trimmed)
-      toast('Name updated', 'success')
-      closeSettingsSheet()
-    }
-    setNameSaving(false)
-  }
-
-  async function handleChangeLegalName(e) {
-    e.preventDefault()
+    const trimmedName = nameValue.trim()
     const trimmedFirst = editFirst.trim()
     const trimmedLast = editLast.trim()
-    if (!trimmedFirst) return
-    setLegalNameSaving(true)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ first_name: trimmedFirst, last_name: trimmedLast || null })
-      .eq('user_id', userId)
+    if (!trimmedName) return
+    setProfileSaving(true)
+    const mm = bdMonth ? String(bdMonth).padStart(2, '0') : null
+    const dd = bdDay ? String(bdDay).padStart(2, '0') : null
+    const { error } = await supabase.from('profiles').update({
+      display_name: trimmedName,
+      first_name: trimmedFirst || null,
+      last_name: trimmedLast || null,
+      birthday: mm && dd ? `2000-${mm}-${dd}` : null,
+    }).eq('user_id', userId)
     if (error) {
-      toast('Failed to update name', 'error')
+      toast('Failed to save profile', 'error')
     } else {
+      onDisplayNameChange?.(trimmedName)
       setLegalFirst(trimmedFirst)
       setLegalLast(trimmedLast)
-      toast('Name updated', 'success')
+      toast('Profile saved', 'success')
       closeSettingsSheet()
     }
-    setLegalNameSaving(false)
-  }
-
-  async function handleSaveBirthday() {
-    if (!bdMonth || !bdDay) return
-    setBdSaving(true)
-    const mm = String(bdMonth).padStart(2, '0')
-    const dd = String(bdDay).padStart(2, '0')
-    const { error } = await supabase
-      .from('profiles')
-      .update({ birthday: `2000-${mm}-${dd}` })
-      .eq('user_id', userId)
-    if (error) {
-      toast('Failed to save birthday', 'error')
-    } else {
-      toast('Birthday saved', 'success')
-      closeSettingsSheet()
-    }
-    setBdSaving(false)
+    setProfileSaving(false)
   }
 
   async function handleChangePassword(e) {
@@ -369,442 +335,406 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
     <>
     <main className="max-w-md mx-auto px-4 pt-8 pb-12">
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-1 min-w-0 -ml-2">
-            <button
-              onClick={onClose}
-              aria-label="Back"
-              className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
-            >
-              <ArrowLeft size={20} weight="bold" />
-            </button>
-            <h1 className="text-3xl font-bold text-stone-800">Settings</h1>
-          </div>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-1 min-w-0 -ml-2">
+          <button
+            onClick={onClose}
+            aria-label="Back"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
+          >
+            <ArrowLeft size={20} weight="bold" />
+          </button>
+          <h1 className="text-3xl font-bold text-stone-800">Settings</h1>
         </div>
+      </div>
 
-        <InstallBanner />
-
-        {/* Church Settings — church admins only */}
-        {isChurchAdmin && (
-          <div className="mb-4">
+      {/* Profile identity card */}
+      <div className="mb-4">
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4">
+          <div className="relative shrink-0">
+            <AvatarCircle icon={avatarIcon} name={displayName} userId={userId} colorKey={avatarColorKey} size="lg" imageUrl={avatarImageUrl} />
             <button
-              onClick={() => navigate('/church-settings')}
-              className="w-full flex items-center gap-3 px-4 py-3.5 bg-white border border-stone-100 shadow-sm hover:bg-stone-50 active:scale-[0.98] rounded-2xl transition-all"
+              onClick={() => setAvatarPickerOpen(o => !o)}
+              aria-label="Edit avatar"
+              className="absolute -bottom-0.5 -right-0.5 w-7 h-7 rounded-full bg-ember text-white flex items-center justify-center shadow-sm"
             >
-              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                <Church size={18} weight="fill" className="text-ember" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-stone-800">Church Settings</p>
-                <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
-              </div>
-              <CaretRight size={14} className="text-stone-300" />
+              <PencilSimple size={11} weight="bold" />
             </button>
           </div>
-        )}
-
-        {/* Admin */}
-        {isAdmin && (
-          <div className="mb-4">
-            <button
-              onClick={() => navigate('/admin')}
-              className="w-full flex items-center gap-3 px-4 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] rounded-2xl transition-all"
-            >
-              <ShieldCheck size={20} weight="fill" className="text-white/80 shrink-0" />
-              <div className="flex-1 text-left">
-                <p className="text-sm font-semibold text-white">Admin settings</p>
-                <p className="text-xs text-white/70">Members, features &amp; schedules</p>
+          <div className="flex-1 min-w-0">
+            {displayName && <p className="text-base font-semibold text-stone-800 truncate">{displayName}</p>}
+            {legalFirst && (
+              <p className="text-sm text-stone-500 truncate">{legalFirst}{legalLast ? ' ' + legalLast : ''}</p>
+            )}
+            {email && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <EnvelopeSimple size={11} className="text-stone-400 shrink-0" />
+                <p className="text-xs text-stone-400 truncate">{email}</p>
               </div>
-              <CaretRight size={14} className="text-white/40" />
-            </button>
+            )}
+            {bdMonth && bdDay && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <Cake size={11} className="text-stone-400 shrink-0" />
+                <p className="text-xs text-stone-400">{MONTHS[bdMonth - 1]} {bdDay}</p>
+              </div>
+            )}
           </div>
-        )}
+          <button
+            onClick={() => { setNameValue(displayName); setEditFirst(legalFirst); setEditLast(legalLast); openSettingsSheet('profile') }}
+            className="shrink-0 text-sm font-medium text-ember"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
 
-        {/* My Groups */}
-        <div className="mb-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">My Groups</p>
-          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-            {allMemberships.map((m, i) => {
-              const isActive = m.community_group_id === groupId
-              const isSwitching = switchingGroupId === m.community_group_id
-              const isLast = i === allMemberships.length - 1
-              return (
-                <button
-                  key={m.community_group_id}
-                  onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
-                  disabled={isActive || !!switchingGroupId}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors ${
-                    !isLast ? 'border-b border-stone-100' : ''
-                  } ${isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'}`}
-                >
-                  <UsersThree
-                    size={16}
-                    weight={isActive ? 'fill' : 'regular'}
-                    className={`shrink-0 ${isActive ? 'text-ember' : 'text-stone-400'}`}
+      {avatarPickerOpen && createPortal(
+        <AvatarPicker
+          userId={userId}
+          currentIcon={avatarIcon}
+          currentColor={avatarColorKey}
+          currentImageUrl={avatarImageUrl}
+          onSave={({ icon, color, imageUrl }) => {
+            setAvatarIcon(icon)
+            setAvatarColorKey(color)
+            setAvatarImageUrl(imageUrl)
+            onAvatarChange?.({ icon, color, imageUrl })
+          }}
+          onClose={() => setAvatarPickerOpen(false)}
+        />,
+        document.body
+      )}
+
+      <InstallBanner />
+
+      {/* Groups */}
+      <div className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Groups</p>
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+          {allMemberships.map((m) => {
+            const isActive = m.community_group_id === groupId
+            const isSwitching = switchingGroupId === m.community_group_id
+            return (
+              <button
+                key={m.community_group_id}
+                onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
+                disabled={isActive || !!switchingGroupId}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors border-b border-stone-100 ${
+                  isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'
+                }`}
+              >
+                <UsersThree
+                  size={16}
+                  weight={isActive ? 'fill' : 'regular'}
+                  className={`shrink-0 ${isActive ? 'text-ember' : 'text-stone-400'}`}
+                />
+                <span className={`flex-1 text-left font-medium ${isActive ? 'text-ember' : 'text-stone-700'}`}>
+                  {m.community_groups?.name ?? 'Group'}
+                </span>
+                {isActive && (
+                  <span className="text-[10px] font-semibold text-ember uppercase tracking-wide shrink-0">Active</span>
+                )}
+                {!isActive && m.role === 'admin' && !isSwitching && (
+                  <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide shrink-0">Admin</span>
+                )}
+                {isSwitching && (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-stone-400 border-t-transparent animate-spin shrink-0" />
+                )}
+                {!isActive && !isSwitching && (
+                  <CaretRight size={14} className="text-stone-300 shrink-0" />
+                )}
+              </button>
+            )
+          })}
+
+          <button
+            onClick={() => setCreateGroupOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
+          >
+            <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+              <Sparkle size={15} weight="fill" className="text-ember" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-stone-800">Create a new group</p>
+              <p className="text-xs text-stone-400">Start a group and invite members</p>
+            </div>
+            <CaretRight size={14} className="text-stone-300 shrink-0" />
+          </button>
+
+          <button
+            onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+              <Plus size={15} weight="bold" className="text-stone-500" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-stone-800">Join another group</p>
+              <p className="text-xs text-stone-400">Enter an invite code to join</p>
+            </div>
+            <CaretRight
+              size={14}
+              className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
+            />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {joinGroupExpanded && (
+              <motion.div
+                key="join-form"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
+                  <input
+                    type="text"
+                    value={joinGroupCode}
+                    onChange={e => {
+                      setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
+                      setJoinGroupError(null)
+                    }}
+                    placeholder="Invite code (e.g. A3B7C2)"
+                    className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
                   />
-                  <span className={`flex-1 text-left font-medium ${isActive ? 'text-ember' : 'text-stone-700'}`}>
-                    {m.community_groups?.name ?? 'Group'}
-                  </span>
-                  {isActive && (
-                    <span className="text-[10px] font-semibold text-ember uppercase tracking-wide shrink-0">Active</span>
+                  {joinGroupError && (
+                    <p className="text-xs text-red-500">{joinGroupError}</p>
                   )}
-                  {!isActive && m.role === 'admin' && !isSwitching && (
-                    <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide shrink-0">Admin</span>
-                  )}
-                  {isSwitching && (
-                    <span className="w-3.5 h-3.5 rounded-full border-2 border-stone-400 border-t-transparent animate-spin shrink-0" />
-                  )}
-                  {!isActive && !isSwitching && (
-                    <CaretRight size={14} className="text-stone-300 shrink-0" />
-                  )}
-                </button>
-              )
-            })}
-          </div>
+                  <button
+                    onClick={handleJoinGroup}
+                    disabled={joinGroupCode.length < 6 || joinGroupLoading}
+                    className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+                  >
+                    {joinGroupLoading ? 'Joining…' : 'Join Group'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+      </div>
 
-        {/* Group actions */}
-        <div className="mb-4">
-          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-            {/* Create a new group */}
-            <button
-              onClick={() => setCreateGroupOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
-            >
-              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                <Sparkle size={15} weight="fill" className="text-ember" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-stone-800">Create a new group</p>
-                <p className="text-xs text-stone-400">Start a group and invite members</p>
-              </div>
-              <CaretRight size={14} className="text-stone-300 shrink-0" />
-            </button>
-
-            {/* Join another group */}
-            <button
-              onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-                <Plus size={15} weight="bold" className="text-stone-500" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-stone-800">Join another group</p>
-                <p className="text-xs text-stone-400">Enter an invite code to join</p>
-              </div>
-              <CaretRight
-                size={14}
-                className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
-              />
-            </button>
-
-            <AnimatePresence initial={false}>
-              {joinGroupExpanded && (
-                <motion.div
-                  key="join-form"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
-                    <input
-                      type="text"
-                      value={joinGroupCode}
-                      onChange={e => {
-                        setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
-                        setJoinGroupError(null)
-                      }}
-                      placeholder="Invite code (e.g. A3B7C2)"
-                      className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                    />
-                    {joinGroupError && (
-                      <p className="text-xs text-red-500">{joinGroupError}</p>
-                    )}
-                    <button
-                      onClick={handleJoinGroup}
-                      disabled={joinGroupCode.length < 6 || joinGroupLoading}
-                      className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
-                    >
-                      {joinGroupLoading ? 'Joining…' : 'Join Group'}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Notifications */}
-        {push.supported && (
-          <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Notifications</p>
-            <div className="bg-white border border-stone-100 rounded-2xl shadow-sm px-4">
-              {push.permission === 'denied' ? (
-                <p className="text-xs text-stone-500 py-3.5">
+      {/* Preferences */}
+      <div className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Preferences</p>
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+          {push.supported && (
+            push.permission === 'denied' ? (
+              <div className="px-4 py-3.5 border-b border-stone-100">
+                <p className="text-xs text-stone-500">
                   Notifications are blocked. Enable them in your browser settings.
                 </p>
-              ) : (
-                <button
-                  onClick={push.toggle}
-                  disabled={push.toggling}
-                  className="w-full flex items-center gap-3 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
-                >
-                  {push.subscribed
-                    ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
-                    : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
-                  }
-                  <span className="flex-1 text-left font-medium">
-                    {push.toggling ? 'Updating…' : push.subscribed ? 'Chat notifications on' : 'Chat notifications off'}
-                  </span>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Profile */}
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Profile</p>
-          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-
-            {/* Avatar */}
-            <div className="flex items-center gap-4 px-4 py-4 border-b border-stone-100">
-              <div className="relative shrink-0">
-                <AvatarCircle icon={avatarIcon} name={displayName} userId={userId} colorKey={avatarColorKey} size="lg" imageUrl={avatarImageUrl} />
-                <button
-                  onClick={() => setAvatarPickerOpen(o => !o)}
-                  aria-label="Edit avatar"
-                  className="absolute -bottom-0.5 -right-0.5 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center shadow-sm"
-                >
-                  <PencilSimple size={11} weight="bold" />
-                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                {displayName && <p className="text-sm font-medium text-stone-700 truncate">{displayName}</p>}
-                {email && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <EnvelopeSimple size={11} className="text-stone-400 shrink-0" />
-                    <p className="text-xs text-stone-400 truncate">{email}</p>
-                  </div>
-                )}
-                <button
-                  onClick={() => setAvatarPickerOpen(o => !o)}
-                  className="text-xs text-ember font-medium mt-0.5"
-                >
-                  {avatarPickerOpen ? 'Close' : 'Edit photo'}
-                </button>
-              </div>
-            </div>
-
-            {avatarPickerOpen && createPortal(
-              <AvatarPicker
-                userId={userId}
-                currentIcon={avatarIcon}
-                currentColor={avatarColorKey}
-                currentImageUrl={avatarImageUrl}
-                onSave={({ icon, color, imageUrl }) => {
-                  setAvatarIcon(icon)
-                  setAvatarColorKey(color)
-                  setAvatarImageUrl(imageUrl)
-                  onAvatarChange?.({ icon, color, imageUrl })
-                }}
-                onClose={() => setAvatarPickerOpen(false)}
-              />,
-              document.body
-            )}
-
-            <button
-              onClick={() => { setNameValue(displayName); openSettingsSheet('name') }}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
-            >
-              <PencilSimple size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">Change display name</span>
-              <CaretRight size={14} className="text-stone-300 shrink-0" />
-            </button>
-
-            <button
-              onClick={() => { setEditFirst(legalFirst); setEditLast(legalLast); openSettingsSheet('legal') }}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
-            >
-              <PencilSimple size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">
-                {legalFirst ? `${legalFirst}${legalLast ? ' ' + legalLast : ''}` : 'Add first & last name'}
-              </span>
-              <CaretRight size={14} className="text-stone-300 shrink-0" />
-            </button>
-
-            <button
-              onClick={() => openSettingsSheet('birthday')}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-            >
-              <Cake size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">
-                {bdMonth && bdDay ? `Birthday: ${MONTHS[bdMonth - 1]} ${bdDay}` : 'Add birthday'}
-              </span>
-              <CaretRight size={14} className="text-stone-300 shrink-0" />
-            </button>
-          </div>
-        </div>
-
-        {/* Account */}
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Account</p>
-          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-            <button
-              onClick={() => openSettingsSheet('password')}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
-            >
-              <Lock size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">Change password</span>
-              <CaretRight size={14} className="text-stone-300 shrink-0" />
-            </button>
-
-            {onRevisitGuide && (
+            ) : (
               <button
-                onClick={onRevisitGuide}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+                onClick={push.toggle}
+                disabled={push.toggling}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40 border-b border-stone-100"
               >
-                <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
-                <span className="flex-1 text-left">View setup guide</span>
-                <CaretRight size={14} className="text-stone-300 shrink-0" />
+                {push.subscribed
+                  ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
+                  : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
+                }
+                <span className="flex-1 text-left font-medium">
+                  {push.toggling ? 'Updating…' : push.subscribed ? 'Chat notifications on' : 'Chat notifications off'}
+                </span>
+              </button>
+            )
+          )}
+          <button
+            onClick={checkForUpdates}
+            disabled={updateChecking}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-60"
+          >
+            {updateChecked
+              ? <CheckCircle size={16} weight="bold" className="text-jade-600 shrink-0" />
+              : <ArrowsClockwise size={16} weight="bold" className={`text-stone-400 shrink-0 ${updateChecking ? 'animate-spin' : ''}`} />
+            }
+            <span className="flex-1 text-left">
+              {updateChecking ? 'Checking…' : updateChecked ? 'You\'re up to date' : 'Check for updates'}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Account */}
+      <div className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Account</p>
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+          <button
+            onClick={() => openSettingsSheet('password')}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+          >
+            <Lock size={16} weight="bold" className="text-stone-400 shrink-0" />
+            <span className="flex-1 text-left">Change password</span>
+            <CaretRight size={14} className="text-stone-300 shrink-0" />
+          </button>
+
+          {onRevisitGuide && (
+            <button
+              onClick={onRevisitGuide}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+            >
+              <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
+              <span className="flex-1 text-left">View setup guide</span>
+              <CaretRight size={14} className="text-stone-300 shrink-0" />
+            </button>
+          )}
+
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors"
+          >
+            <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
+            <span className="flex-1 text-left">Sign out</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Feedback — footer link */}
+      <button
+        onClick={() => setFeedbackOpen(true)}
+        className="w-full flex items-center justify-center gap-1.5 py-3 mb-4 text-sm text-stone-400 hover:text-ember transition-colors"
+      >
+        <ChatTeardropDots size={15} weight="fill" />
+        <span>Send feedback</span>
+      </button>
+
+      {/* Danger zone */}
+      <button
+        onClick={() => setDangerZoneOpen(o => !o)}
+        className="w-full flex items-center justify-between px-1 mb-2 group"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Danger Zone</p>
+        <CaretRight size={12} weight="bold" className={`text-stone-400 transition-transform duration-200 ${dangerZoneOpen ? 'rotate-90' : ''}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {dangerZoneOpen && (
+          <motion.div
+            key="danger-content"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2 pb-4">
+              <AnimatePresence initial={false}>
+                {leaveConfirm ? (
+                  <motion.div
+                    key="leave-confirm"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                    className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3"
+                  >
+                    <p className="text-sm font-semibold text-stone-700">Leave this group?</p>
+                    <p className="text-xs text-stone-500">
+                      You'll lose access to all group content. Your account stays active — you'd need a new invite to rejoin.
+                    </p>
+                    {leaveError && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{leaveError}</p>}
+                    <div className="flex gap-2">
+                      <button onClick={() => { setLeaveConfirm(false); setLeaveError(null) }} className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
+                      <button onClick={handleLeaveGroup} disabled={leaving} className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-xl transition-colors disabled:opacity-40">{leaving ? 'Leaving…' : 'Leave'}</button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="leave-btn"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    onClick={() => setLeaveConfirm(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-400 hover:text-stone-600 hover:bg-stone-50 bg-white border border-stone-100 rounded-2xl transition-colors"
+                  >
+                    <UserMinus size={15} weight="bold" />
+                    <span>Leave group</span>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence initial={false}>
+                {showDeleteConfirm ? (
+                  <motion.div
+                    key="delete-confirm"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                    className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3"
+                  >
+                    <p className="text-sm font-semibold text-red-700">Delete your account?</p>
+                    <p className="text-xs text-red-600">This permanently deletes your account and all your data. This cannot be undone.</p>
+                    {deleteError && <p className="text-xs text-red-700 bg-red-100 rounded-lg px-3 py-2">{deleteError}</p>}
+                    <div className="flex gap-2">
+                      <button onClick={() => { setShowDeleteConfirm(false); setDeleteError(null) }} className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
+                      <button onClick={handleDeleteAccount} disabled={deleting} className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-40">{deleting ? 'Deleting…' : 'Delete Forever'}</button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="delete-btn"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 bg-white border border-red-100 rounded-2xl transition-colors"
+                  >
+                    <Trash size={15} weight="bold" />
+                    <span>Delete my account</span>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Administration — church admins / group admins, low-chrome, at bottom */}
+      {(isChurchAdmin || isAdmin) && (
+        <div className="mt-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">Administration</p>
+          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+            {isChurchAdmin && (
+              <button
+                onClick={() => navigate('/church-settings')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                  <Church size={18} weight="fill" className="text-ember" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-stone-800">Church Settings</p>
+                  <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
+                </div>
+                <CaretRight size={14} className="text-stone-300" />
               </button>
             )}
-
-            <button
-              onClick={() => setFeedbackOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-ember hover:bg-ember/5 transition-colors border-b border-stone-100"
-            >
-              <ChatTeardropDots size={16} weight="fill" className="text-ember shrink-0" />
-              <span className="flex-1 text-left">Send feedback</span>
-              <CaretRight size={14} className="text-ember/40 shrink-0" />
-            </button>
-
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors"
-            >
-              <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">Sign out</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all"
+              >
+                <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={18} weight="fill" className="text-stone-500" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-stone-700">Admin settings</p>
+                  <p className="text-xs text-stone-400">Members, features &amp; schedules</p>
+                </div>
+                <CaretRight size={14} className="text-stone-300" />
+              </button>
+            )}
           </div>
         </div>
+      )}
 
-        {/* App */}
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">App</p>
-          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-            <button
-              onClick={checkForUpdates}
-              disabled={updateChecking}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-60"
-            >
-              {updateChecked
-                ? <CheckCircle size={16} weight="bold" className="text-jade-600 shrink-0" />
-                : <ArrowsClockwise size={16} weight="bold" className={`text-stone-400 shrink-0 ${updateChecking ? 'animate-spin' : ''}`} />
-              }
-              <span className="flex-1 text-left">
-                {updateChecking ? 'Checking…' : updateChecked ? 'You\'re up to date' : 'Check for updates'}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Danger zone */}
-        <button
-          onClick={() => setDangerZoneOpen(o => !o)}
-          className="w-full flex items-center justify-between px-1 mb-2 group"
-        >
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Danger Zone</p>
-          <CaretRight size={12} weight="bold" className={`text-stone-400 transition-transform duration-200 ${dangerZoneOpen ? 'rotate-90' : ''}`} />
-        </button>
-        <AnimatePresence initial={false}>
-        {dangerZoneOpen && (
-        <motion.div
-          key="danger-content"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.18 }}
-          className="overflow-hidden"
-        >
-        <div className="space-y-2 pb-1">
-          <AnimatePresence initial={false}>
-            {leaveConfirm ? (
-              <motion.div
-                key="leave-confirm"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3"
-              >
-                <p className="text-sm font-semibold text-stone-700">Leave this group?</p>
-                <p className="text-xs text-stone-500">
-                  You'll lose access to all group content. Your account stays active — you'd need a new invite to rejoin.
-                </p>
-                {leaveError && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{leaveError}</p>}
-                <div className="flex gap-2">
-                  <button onClick={() => { setLeaveConfirm(false); setLeaveError(null) }} className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
-                  <button onClick={handleLeaveGroup} disabled={leaving} className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-xl transition-colors disabled:opacity-40">{leaving ? 'Leaving…' : 'Leave'}</button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.button
-                key="leave-btn"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.12 }}
-                onClick={() => setLeaveConfirm(true)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-400 hover:text-stone-600 hover:bg-stone-50 bg-white border border-stone-100 rounded-2xl transition-colors"
-              >
-                <UserMinus size={15} weight="bold" />
-                <span>Leave group</span>
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence initial={false}>
-            {showDeleteConfirm ? (
-              <motion.div
-                key="delete-confirm"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3"
-              >
-                <p className="text-sm font-semibold text-red-700">Delete your account?</p>
-                <p className="text-xs text-red-600">This permanently deletes your account and all your data. This cannot be undone.</p>
-                {deleteError && <p className="text-xs text-red-700 bg-red-100 rounded-lg px-3 py-2">{deleteError}</p>}
-                <div className="flex gap-2">
-                  <button onClick={() => { setShowDeleteConfirm(false); setDeleteError(null) }} className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
-                  <button onClick={handleDeleteAccount} disabled={deleting} className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-40">{deleting ? 'Deleting…' : 'Delete Forever'}</button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.button
-                key="delete-btn"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.12 }}
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 bg-white border border-red-100 rounded-2xl transition-colors"
-              >
-                <Trash size={15} weight="bold" />
-                <span>Delete my account</span>
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
-        </motion.div>
-        )}
-        </AnimatePresence>
     </main>
 
     {/* Editing bottom sheets */}
@@ -838,35 +768,22 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
               <div className="w-8 h-1 rounded-full bg-stone-200" />
             </div>
 
-            {openSheet === 'name' && (
-              <form onSubmit={handleChangeName} className="px-5 pt-3 pb-6 space-y-4">
-                <p className="text-base font-semibold text-stone-800">Display Name</p>
+            {openSheet === 'profile' && (
+              <form onSubmit={handleSaveProfile} className="px-5 pt-3 pb-6 space-y-4">
+                <p className="text-base font-semibold text-stone-800">Edit Profile</p>
                 <FloatingInput
-                  label="Your name"
+                  label="Display name"
                   value={nameValue}
                   onChange={e => setNameValue(e.target.value)}
                   maxLength={40}
                   required
                 />
-                <div className="flex gap-3">
-                  <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                  <button type="submit" disabled={nameSaving || !nameValue.trim()} className={saveCls}>
-                    {nameSaving ? 'Saving…' : 'Save'}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {openSheet === 'legal' && (
-              <form onSubmit={handleChangeLegalName} className="px-5 pt-3 pb-6 space-y-4">
-                <p className="text-base font-semibold text-stone-800">First &amp; Last Name</p>
                 <div className="flex gap-2">
                   <FloatingInput
                     label="First"
                     value={editFirst}
                     onChange={e => setEditFirst(e.target.value)}
                     maxLength={40}
-                    required
                     autoComplete="given-name"
                     className="flex-1 min-w-0"
                   />
@@ -879,45 +796,36 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
                     className="flex-1 min-w-0"
                   />
                 </div>
+                <div>
+                  <p className="text-xs text-stone-400 mb-2">Birthday (optional)</p>
+                  <div className="flex gap-2">
+                    <select
+                      value={bdMonth ?? ''}
+                      onChange={e => { setBdMonth(Number(e.target.value) || null); setBdDay(null) }}
+                      className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                    >
+                      <option value="">Month</option>
+                      {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+                    </select>
+                    <select
+                      value={bdDay ?? ''}
+                      onChange={e => setBdDay(Number(e.target.value) || null)}
+                      className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
+                    >
+                      <option value="">Day</option>
+                      {Array.from({ length: daysInMonth(bdMonth) }, (_, i) => i + 1).map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div className="flex gap-3">
                   <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                  <button type="submit" disabled={legalNameSaving || !editFirst.trim()} className={saveCls}>
-                    {legalNameSaving ? 'Saving…' : 'Save'}
+                  <button type="submit" disabled={profileSaving || !nameValue.trim()} className={saveCls}>
+                    {profileSaving ? 'Saving…' : 'Save'}
                   </button>
                 </div>
               </form>
-            )}
-
-            {openSheet === 'birthday' && (
-              <div className="px-5 pt-3 pb-6 space-y-4">
-                <p className="text-base font-semibold text-stone-800">Birthday</p>
-                <div className="flex gap-2">
-                  <select
-                    value={bdMonth ?? ''}
-                    onChange={e => { setBdMonth(Number(e.target.value) || null); setBdDay(null) }}
-                    className="flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
-                  >
-                    <option value="">Month</option>
-                    {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-                  </select>
-                  <select
-                    value={bdDay ?? ''}
-                    onChange={e => setBdDay(Number(e.target.value) || null)}
-                    className="w-24 shrink-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800"
-                  >
-                    <option value="">Day</option>
-                    {Array.from({ length: daysInMonth(bdMonth) }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={closeSettingsSheet} className={cancelCls}>Cancel</button>
-                  <button type="button" onClick={handleSaveBirthday} disabled={!bdMonth || !bdDay || bdSaving} className={saveCls}>
-                    {bdSaving ? 'Saving…' : 'Save'}
-                  </button>
-                </div>
-              </div>
             )}
 
             {openSheet === 'password' && (
