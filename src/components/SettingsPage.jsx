@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle } from '@phosphor-icons/react'
+import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -155,15 +155,6 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [pwSaving, setPwSaving] = useState(false)
   const [pwError, setPwError] = useState(null)
 
-  // Danger zone
-  const [dangerZoneOpen, setDangerZoneOpen] = useState(false)
-  const [leaveConfirm, setLeaveConfirm] = useState(false)
-  const [leaving, setLeaving] = useState(false)
-  const [leaveError, setLeaveError] = useState(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState(null)
-
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // Group switcher
@@ -291,22 +282,6 @@ useEffect(() => {
     toast('Password updated', 'success')
     closeSettingsSheet()
     setPwSaving(false)
-  }
-
-  async function handleLeaveGroup() {
-    setLeaving(true)
-    setLeaveError(null)
-    const { error } = await supabase.rpc('leave_group')
-    if (error) { setLeaveError(error.message); setLeaving(false); return }
-    await supabase.auth.signOut()
-  }
-
-  async function handleDeleteAccount() {
-    setDeleting(true)
-    setDeleteError(null)
-    const { error } = await supabase.rpc('delete_current_user')
-    if (error) { setDeleteError(error.message); setDeleting(false); return }
-    await supabase.auth.signOut()
   }
 
   const cancelCls = 'flex-1 py-3 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors'
@@ -560,6 +535,21 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* Danger Zone */}
+      <div className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Danger Zone</p>
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+          <button
+            onClick={() => navigate('/danger-zone')}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
+          >
+            <Warning size={16} weight="fill" className="text-red-400 shrink-0" />
+            <span className="flex-1 text-left text-stone-600">Leave group or delete account</span>
+            <CaretRight size={14} className="text-stone-300 shrink-0" />
+          </button>
+        </div>
+      </div>
+
       {/* Feedback — footer link */}
       <button
         onClick={() => setFeedbackOpen(true)}
@@ -568,99 +558,6 @@ useEffect(() => {
         <ChatTeardropDots size={15} weight="fill" />
         <span>Send feedback</span>
       </button>
-
-      {/* Danger zone */}
-      <button
-        onClick={() => setDangerZoneOpen(o => !o)}
-        className="w-full flex items-center justify-between px-1 mb-2 group"
-      >
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Danger Zone</p>
-        <CaretRight size={12} weight="bold" className={`text-stone-400 transition-transform duration-200 ${dangerZoneOpen ? 'rotate-90' : ''}`} />
-      </button>
-      <AnimatePresence initial={false}>
-        {dangerZoneOpen && (
-          <motion.div
-            key="danger-content"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18 }}
-            className="overflow-hidden"
-          >
-            <div className="space-y-2 pb-4">
-              <AnimatePresence initial={false}>
-                {leaveConfirm ? (
-                  <motion.div
-                    key="leave-confirm"
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                    className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3"
-                  >
-                    <p className="text-sm font-semibold text-stone-700">Leave this group?</p>
-                    <p className="text-xs text-stone-500">
-                      You'll lose access to all group content. Your account stays active — you'd need a new invite to rejoin.
-                    </p>
-                    {leaveError && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{leaveError}</p>}
-                    <div className="flex gap-2">
-                      <button onClick={() => { setLeaveConfirm(false); setLeaveError(null) }} className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
-                      <button onClick={handleLeaveGroup} disabled={leaving} className="flex-1 py-2 text-sm font-medium text-white bg-stone-700 hover:bg-stone-800 rounded-xl transition-colors disabled:opacity-40">{leaving ? 'Leaving…' : 'Leave'}</button>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="leave-btn"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.12 }}
-                    onClick={() => setLeaveConfirm(true)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-400 hover:text-stone-600 hover:bg-stone-50 bg-white border border-stone-100 rounded-2xl transition-colors"
-                  >
-                    <UserMinus size={15} weight="bold" />
-                    <span>Leave group</span>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence initial={false}>
-                {showDeleteConfirm ? (
-                  <motion.div
-                    key="delete-confirm"
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                    className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3"
-                  >
-                    <p className="text-sm font-semibold text-red-700">Delete your account?</p>
-                    <p className="text-xs text-red-600">This permanently deletes your account and all your data. This cannot be undone.</p>
-                    {deleteError && <p className="text-xs text-red-700 bg-red-100 rounded-lg px-3 py-2">{deleteError}</p>}
-                    <div className="flex gap-2">
-                      <button onClick={() => { setShowDeleteConfirm(false); setDeleteError(null) }} className="flex-1 py-2 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
-                      <button onClick={handleDeleteAccount} disabled={deleting} className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-40">{deleting ? 'Deleting…' : 'Delete Forever'}</button>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="delete-btn"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.12 }}
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 bg-white border border-red-100 rounded-2xl transition-colors"
-                  >
-                    <Trash size={15} weight="bold" />
-                    <span>Delete my account</span>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Administration — church admins / group admins, low-chrome, at bottom */}
       {(isChurchAdmin || isAdmin) && (
