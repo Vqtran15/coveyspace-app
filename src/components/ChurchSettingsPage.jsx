@@ -134,6 +134,8 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     }
   }, [])
 
+  const [editorEmpty, setEditorEmpty] = useState(true)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2] } }),
@@ -147,6 +149,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     editorProps: {
       attributes: { class: 'broadcast-editor outline-none min-h-[240px] text-sm text-stone-800 leading-relaxed' },
     },
+    onUpdate: ({ editor }) => setEditorEmpty(editor.isEmpty),
   })
 
   function handleClose() {
@@ -191,8 +194,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     })
   }
 
-  const isEmpty = !editor || editor.isEmpty
-  const sendDisabled = isEmpty || sending || (targetMode === 'select' && selectedGroupIds.size === 0)
+  const sendDisabled = editorEmpty || sending || (targetMode === 'select' && selectedGroupIds.size === 0)
 
   const headingLevel = editor?.isActive('heading', { level: 1 }) ? '1'
     : editor?.isActive('heading', { level: 2 }) ? '2'

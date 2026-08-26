@@ -28,8 +28,6 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdmin
     ? msg.target_group_ids.map(id => groupsInChurch.find(g => g.id === id)?.name).filter(Boolean)
     : null
 
-  const isHtml = msg.body?.trimStart().startsWith('<')
-
   return (
     <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 animate-fade-up">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -44,14 +42,10 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdmin
           <span className="text-xs text-stone-400 whitespace-nowrap">{formatListTime(msg.created_at)}</span>
         </div>
       </div>
-      {isHtml ? (
-        <div
-          className="broadcast-html text-sm text-stone-700 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body) }}
-        />
-      ) : (
-        <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{msg.body}</p>
-      )}
+      <div
+        className="broadcast-html text-sm text-stone-700 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(msg.body ?? '') }}
+      />
       {isChurchAdmin && (
         <p className="text-xs text-stone-400 mt-2">
           {targetedGroups?.length > 0 ? `${targetedGroups.join(', ')} · ` : ''}
