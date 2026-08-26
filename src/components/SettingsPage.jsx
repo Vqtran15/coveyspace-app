@@ -6,6 +6,7 @@ import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, L
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
+import { setCookie } from '../lib/cookies.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -167,6 +168,9 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
 
 async function handleSwitchGroup(targetGroupId) {
     setSwitchingGroupId(targetGroupId)
+    // Pre-set the welcome cookie so WelcomeSplash doesn't fire after switching —
+    // GroupWelcomeBack already handles the greeting for existing-member group switches.
+    setCookie(`cg_welcomed_${userId}_${targetGroupId}`)
     try {
       await switchGroup(targetGroupId)
       const name = allMemberships.find(m => m.community_group_id === targetGroupId)?.community_groups?.name
@@ -367,18 +371,21 @@ useEffect(() => {
       {/* Groups */}
       <div className="mb-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Groups</p>
-        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-          {allMemberships.map((m) => {
+
+        {/* Existing memberships */}
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden mb-2">
+          {allMemberships.map((m, idx) => {
             const isActive = m.community_group_id === groupId
             const isSwitching = switchingGroupId === m.community_group_id
+            const isLast = idx === allMemberships.length - 1
             return (
               <button
                 key={m.community_group_id}
                 onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
                 disabled={isActive || !!switchingGroupId}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors border-b border-stone-100 ${
-                  isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors ${
+                  isLast ? '' : 'border-b border-stone-100'
+                } ${isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'}`}
               >
                 <UsersThree
                   size={16}
@@ -403,7 +410,10 @@ useEffect(() => {
               </button>
             )
           })}
+        </div>
 
+        {/* Create / Join actions */}
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
           <button
             onClick={() => setCreateGroupOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
@@ -501,6 +511,45 @@ useEffect(() => {
         </div>
       )}
 
+      {/* Administration — church admins / group admins */}
+      {(isChurchAdmin || isAdmin) && (
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Administration</p>
+          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+            {isChurchAdmin && (
+              <button
+                onClick={() => navigate('/church-settings')}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                  <Church size={18} weight="fill" className="text-ember" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-stone-800">Church Settings</p>
+                  <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
+                </div>
+                <CaretRight size={14} className="text-stone-300" />
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all"
+              >
+                <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={18} weight="fill" className="text-stone-500" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-stone-700">Admin settings</p>
+                  <p className="text-xs text-stone-400">Members, features &amp; schedules</p>
+                </div>
+                <CaretRight size={14} className="text-stone-300" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Account */}
       <div className="mb-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Account</p>
@@ -552,45 +601,6 @@ useEffect(() => {
         <ChatTeardropDots size={15} weight="fill" />
         <span>Send feedback</span>
       </button>
-
-      {/* Administration — church admins / group admins, low-chrome, at bottom */}
-      {(isChurchAdmin || isAdmin) && (
-        <div className="mt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">Administration</p>
-          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-            {isChurchAdmin && (
-              <button
-                onClick={() => navigate('/church-settings')}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                  <Church size={18} weight="fill" className="text-ember" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold text-stone-800">Church Settings</p>
-                  <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
-                </div>
-                <CaretRight size={14} className="text-stone-300" />
-              </button>
-            )}
-            {isAdmin && (
-              <button
-                onClick={() => navigate('/admin')}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all"
-              >
-                <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-                  <ShieldCheck size={18} weight="fill" className="text-stone-500" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold text-stone-700">Admin settings</p>
-                  <p className="text-xs text-stone-400">Members, features &amp; schedules</p>
-                </div>
-                <CaretRight size={14} className="text-stone-300" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
     </main>
 
