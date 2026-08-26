@@ -2,11 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, Trash, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, ArrowsClockwise, CheckCircle, UsersThree, Plus, Sparkle } from '@phosphor-icons/react'
+import { GearSix, SignOut, Trash, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, UserMinus, CaretRight, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
-import { swRegistrationRef } from '../lib/swRegistration.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
@@ -175,11 +174,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [joinGroupError, setJoinGroupError] = useState(null)
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
 
-  // App update
-  const [updateChecking, setUpdateChecking] = useState(false)
-  const [updateChecked, setUpdateChecked] = useState(false)
-
-  async function handleSwitchGroup(targetGroupId) {
+async function handleSwitchGroup(targetGroupId) {
     setSwitchingGroupId(targetGroupId)
     try {
       await switchGroup(targetGroupId)
@@ -219,21 +214,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
     setJoinGroupLoading(false)
   }
 
-  async function checkForUpdates() {
-    setUpdateChecking(true)
-    setUpdateChecked(false)
-    try {
-      await swRegistrationRef.current?.update()
-      // If an update was found, UpdatePrompt auto-applies it → page reloads.
-      // If we reach here, there's no update waiting.
-      setUpdateChecked(true)
-      setTimeout(() => setUpdateChecked(false), 3000)
-    } finally {
-      setUpdateChecking(false)
-    }
-  }
-
-  useEffect(() => {
+useEffect(() => {
     if (!userId) return
     supabase
       .from('profiles')
@@ -518,21 +499,19 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
       </div>
 
       {/* Preferences */}
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Preferences</p>
-        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-          {push.supported && (
-            push.permission === 'denied' ? (
-              <div className="px-4 py-3.5 border-b border-stone-100">
-                <p className="text-xs text-stone-500">
-                  Notifications are blocked. Enable them in your browser settings.
-                </p>
-              </div>
+      {push.supported && (
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Preferences</p>
+          <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+            {push.permission === 'denied' ? (
+              <p className="text-xs text-stone-500 px-4 py-3.5">
+                Notifications are blocked. Enable them in your browser settings.
+              </p>
             ) : (
               <button
                 onClick={push.toggle}
                 disabled={push.toggling}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40 border-b border-stone-100"
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
               >
                 {push.subscribed
                   ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
@@ -542,23 +521,10 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
                   {push.toggling ? 'Updating…' : push.subscribed ? 'Chat notifications on' : 'Chat notifications off'}
                 </span>
               </button>
-            )
-          )}
-          <button
-            onClick={checkForUpdates}
-            disabled={updateChecking}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-60"
-          >
-            {updateChecked
-              ? <CheckCircle size={16} weight="bold" className="text-jade-600 shrink-0" />
-              : <ArrowsClockwise size={16} weight="bold" className={`text-stone-400 shrink-0 ${updateChecking ? 'animate-spin' : ''}`} />
-            }
-            <span className="flex-1 text-left">
-              {updateChecking ? 'Checking…' : updateChecked ? 'You\'re up to date' : 'Check for updates'}
-            </span>
-          </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Account */}
       <div className="mb-4">
