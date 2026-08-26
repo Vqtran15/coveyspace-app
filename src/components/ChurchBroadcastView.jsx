@@ -68,19 +68,22 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
   useEffect(() => {
     if (!convId) return
     setLoading(true)
-    const doFetch = isAdmin && adminsOnlyConvId
+    const hasSecondConv = isAdmin && adminsOnlyConvId && adminsOnlyConvId !== convId
+    const doFetch = hasSecondConv
       ? Promise.all([db.churches.fetchMessages(convId), db.churches.fetchMessages(adminsOnlyConvId)])
           .then(([r1, r2]) =>
             [...(r1.data ?? []).map(m => ({ ...m, _isAdminOnly: false })),
              ...(r2.data ?? []).map(m => ({ ...m, _isAdminOnly: true }))]
               .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           )
-      : db.churches.fetchMessages(convId).then(r => (r.data ?? []).map(m => ({ ...m, _isAdminOnly: false })))
+      : db.churches.fetchMessages(convId).then(r =>
+          (r.data ?? []).map(m => ({ ...m, _isAdminOnly: conversation.type === 'admins_only' }))
+        )
 
     doFetch.then(msgs => { setMessages(msgs); setLoading(false) })
     db.churches.updateLastRead(convId, userId).then()
-    if (isAdmin && adminsOnlyConvId) db.churches.updateLastRead(adminsOnlyConvId, userId).then()
-  }, [convId, adminsOnlyConvId, userId, isAdmin])
+    if (hasSecondConv) db.churches.updateLastRead(adminsOnlyConvId, userId).then()
+  }, [convId, adminsOnlyConvId, userId, isAdmin, conversation.type])
 
   useEffect(() => {
     if (!convId) return
@@ -100,8 +103,8 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         .subscribe()
       channels.push(ch)
     }
-    subscribe(convId, false)
-    if (isAdmin && adminsOnlyConvId) subscribe(adminsOnlyConvId, true)
+    subscribe(convId, conversation.type === 'admins_only')
+    if (isAdmin && adminsOnlyConvId && adminsOnlyConvId !== convId) subscribe(adminsOnlyConvId, true)
     return () => channels.forEach(ch => supabase.removeChannel(ch))
   }, [convId, adminsOnlyConvId, isAdmin])
 
