@@ -1324,7 +1324,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
                         onClick={() => setChurchBroadcastOpen(true)}
                         className="border-t border-stone-100 w-full px-4 py-3 text-xs text-ember font-medium text-left hover:bg-stone-50 transition-colors"
                       >
-                        View previous broadcasts
+                        View all announcements
                       </button>
                     </>
                   )}
