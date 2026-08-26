@@ -104,15 +104,20 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
 
     const vp = window.visualViewport
     if (!vp) {
-      if (composerRef.current) composerRef.current.style.height = `${window.innerHeight}px`
+      if (composerRef.current) {
+        composerRef.current.style.top = '0px'
+        composerRef.current.style.height = `${window.innerHeight}px`
+      }
       return () => { document.body.style.overflow = prevBodyOverflow }
     }
 
     let prevH = vp.height
     const sync = () => {
       if (!composerRef.current) return
-      // Height is set exclusively via JS — never via JSX style — so React
-      // re-renders triggered by the editor don't overwrite it
+      // top and height are both set via JS so that no conflicting CSS bottom:0
+      // constraint interferes, and so that offsetTop (the visual viewport's
+      // position within the layout viewport) is tracked when the keyboard opens.
+      composerRef.current.style.top = `${vp.offsetTop}px`
       composerRef.current.style.height = `${vp.height}px`
       if (vp.height < prevH) {
         scrollBodyRef.current?.scrollTo({ top: scrollBodyRef.current.scrollHeight })
@@ -203,8 +208,8 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
   return createPortal(
     <div
       ref={composerRef}
-      className={`fixed inset-0 z-[70] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className={`fixed left-0 right-0 z-[70] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)', top: 0, height: '100dvh' }}
     >
       {/* Header */}
       <div className="shrink-0 py-3">
@@ -476,7 +481,7 @@ export default function ChurchSettingsPage() {
 
   // Load broadcasts from both conversations merged by date
   useEffect(() => {
-    if (!churchId) return
+    if (!churchId) { setBroadcastLoading(false); return }
     setBroadcastLoading(true)
     const convIdList = [allMembersConv?.id, adminsOnlyConv?.id].filter(Boolean)
     if (!convIdList.length) { setBroadcastLoading(false); return }
@@ -507,7 +512,7 @@ export default function ChurchSettingsPage() {
     supabase.rpc('get_pco_connection').then(({ data }) => setPcoConnection(data?.[0] ?? null))
     supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
     if (groupId) setSelectedCoveyGroupId(groupId)
-  }, [groupId])
+  }, [groupId, isChurchAdmin])
 
   // Fetch invite code for the selected Coveyspace target group
   useEffect(() => {
