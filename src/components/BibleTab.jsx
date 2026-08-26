@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
-  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise,
+  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { db } from '../lib/db.js'
 import { haptic } from '../lib/haptic.js'
 import { useToast } from '../lib/toast.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
@@ -723,10 +724,21 @@ const pageVariants = {
   }),
 }
 
+function relativeTime(dateStr) {
+  const diffMin = Math.round((Date.now() - new Date(dateStr)) / 60000)
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`
+  const days = Math.floor(diffMin / 1440)
+  if (days === 1) return 'yesterday'
+  if (days < 7) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 // ─── Main BibleTab ────────────────────────────────────────────────────────
 
-export default function BibleTab() {
-  const { userId } = useAppContext()
+export default function BibleTab({ onOpenGuide, onOpenGiving }) {
+  const { userId, churchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
@@ -762,6 +774,15 @@ export default function BibleTab() {
   const [recentChapters, setRecentChapters] = useState([])
   // typeahead: book pre-selected when opening Browser from a suggestion
   const [suggestedBook, setSuggestedBook] = useState(null)
+
+  // hub state
+  const [hubOpen, setHubOpen] = useState(true)
+  const [hubClosing, setHubClosing] = useState(false)
+  const [broadcasts, setBroadcasts] = useState([])
+  const [broadcastsLoading, setBroadcastsLoading] = useState(false)
+  const [lastChapterLabel, setLastChapterLabel] = useState(null)
+  const [lastChapterRef, setLastChapterRef] = useState(null)
+
   // verse selection mode
   const [selectMode, setSelectMode] = useState(false)
   const [verseSelectAnchor, setVerseSelectAnchor] = useState(null)
@@ -833,19 +854,44 @@ export default function BibleTab() {
     } catch {}
   }, [userId])
 
-  // ── Restore last-viewed chapter when navigating back to this tab ──────
+  // ── Initialise last-chapter label from localStorage (for hub card) ────
   useEffect(() => {
     if (!userId) return
     try {
       const saved = localStorage.getItem(`bible_chapter_${userId}`)
       if (!saved) return
       const ref = JSON.parse(saved)
-      openPassage(ref)
-    } catch {
-      localStorage.removeItem(`bible_chapter_${userId}`)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      const book = ALL_BOOKS.find(b => b.id === ref.bookId)
+      if (book) {
+        setLastChapterLabel(`${book.name} ${ref.chapter}`)
+        setLastChapterRef(ref)
+      }
+    } catch {}
   }, [userId])
+
+  // ── Keep last-chapter label in sync when reading in this session ──────
+  useEffect(() => {
+    if (!openChapter) return
+    setLastChapterLabel(`${openChapter.bookName} ${openChapter.chapterNum}`)
+    setLastChapterRef({
+      bookId: openChapter.bookId,
+      chapter: openChapter.chapterNum,
+      startVerse: openChapter.startVerse ?? null,
+      endVerse: openChapter.endVerse ?? null,
+    })
+  }, [openChapter])
+
+  // ── Load church broadcasts for hub ────────────────────────────────────
+  useEffect(() => {
+    if (!churchId || !churchConversations?.length) return
+    const conv = churchConversations.find(c => c.type === 'all_members')
+    if (!conv) return
+    setBroadcastsLoading(true)
+    db.churches.fetchMessages(conv.id).then(({ data }) => {
+      setBroadcasts((data ?? []).slice(0, 5))
+      setBroadcastsLoading(false)
+    })
+  }, [churchId, churchConversations])
 
   // ── Persist current chapter so it survives tab navigation ────────────
   useEffect(() => {
@@ -1086,6 +1132,19 @@ export default function BibleTab() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state?.tabReset])
 
+  function openReader() {
+    setHubClosing(true)
+    setTimeout(() => {
+      setHubOpen(false)
+      setHubClosing(false)
+      if (lastChapterRef) openPassage(lastChapterRef)
+    }, 200)
+  }
+
+  function backToHub() {
+    setHubOpen(true)
+  }
+
   function handleCopySelection() {
     if (!openChapter || !selectionRange) return
     const { start, end } = selectionRange
@@ -1173,9 +1232,126 @@ export default function BibleTab() {
   return (
     <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
 
+      {/* ── Hub overlay ──────────────────────────────────────────────────── */}
+      {hubOpen && (
+        <div
+          className={`fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto ${hubClosing ? 'animate-slide-out-right' : ''}`}
+          style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'var(--sab, env(safe-area-inset-bottom))' }}
+        >
+          <main className="max-w-md mx-auto px-4 pt-8 pb-12">
+            <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
+
+            {/* Bible hero card */}
+            <div className="mb-6">
+              <button
+                onClick={openReader}
+                className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+              >
+                <div className="w-14 h-14 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                  <BookOpen size={28} weight="fill" className="text-ember" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">Bible · BSB</p>
+                  <p className="text-base font-semibold text-stone-800 truncate">
+                    {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
+                  </p>
+                  <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
+                </div>
+                <CaretRight size={16} className="text-stone-300 shrink-0" />
+              </button>
+            </div>
+
+            {/* Church broadcasts */}
+            {churchId && (
+              <div className="mb-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
+                  From {churchName ?? 'Your Church'}
+                </p>
+                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                  {broadcastsLoading ? (
+                    <div className="p-4 space-y-3">
+                      {[0, 1].map(i => (
+                        <div key={i} className="space-y-1.5 animate-pulse">
+                          <div className="h-2.5 bg-stone-100 rounded w-1/3" />
+                          <div className="h-3.5 bg-stone-200 rounded w-4/5" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : broadcasts.length === 0 ? (
+                    <p className="px-4 py-4 text-sm text-stone-400 italic">No broadcasts yet</p>
+                  ) : (
+                    broadcasts.map((msg, i) => (
+                      <div key={msg.id} className={`px-4 py-3.5 ${i < broadcasts.length - 1 ? 'border-b border-stone-100' : ''}`}>
+                        <div className="flex items-baseline justify-between gap-2 mb-1">
+                          <p className="text-xs font-semibold text-stone-600">{msg.display_name}</p>
+                          <p className="text-xs text-stone-400 shrink-0">{relativeTime(msg.created_at)}</p>
+                        </div>
+                        {msg.body && <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{msg.body}</p>}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Guide & Giving */}
+            {(guideEnabled || givingEnabled) && (
+              <div className="mb-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Church Resources</p>
+                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                  {guideEnabled && (
+                    <button
+                      onClick={onOpenGuide}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors ${givingEnabled ? 'border-b border-stone-100' : ''}`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-sunrise/10 flex items-center justify-center shrink-0">
+                        <BookOpen size={16} weight="fill" className="text-sunrise" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-stone-800">Community Guide</p>
+                        {isAdmin && !groupSettings?.guide_type && !groupSettings?.guide_url && (
+                          <p className="text-xs text-stone-400">Tap to set up</p>
+                        )}
+                      </div>
+                      <CaretRight size={14} className="text-stone-300 shrink-0" />
+                    </button>
+                  )}
+                  {givingEnabled && (
+                    <button
+                      onClick={onOpenGiving}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
+                        <Coins size={16} weight="fill" className="text-sage-700" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-stone-800">Monthly Giving</p>
+                        {isAdmin && !groupSettings?.giving_url && (
+                          <p className="text-xs text-stone-400">Tap to set up</p>
+                        )}
+                      </div>
+                      <CaretRight size={14} className="text-stone-300 shrink-0" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
+        <div className="flex items-center gap-1 -ml-2">
+          <button
+            onClick={backToHub}
+            aria-label="Back to Resources"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
+          >
+            <ArrowLeft size={20} weight="bold" />
+          </button>
+          <h1 className="text-3xl font-bold text-stone-800">Bible</h1>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => {

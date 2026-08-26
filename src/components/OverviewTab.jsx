@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, BookOpen, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, Coins, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -157,19 +157,16 @@ function AnnouncementEditModal({ value, onClose, onSave }) {
   )
 }
 
-export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettings, onOpenGiving, greetingReady = false }) {
+export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingReady = false }) {
   const {
     displayName, groupName, groupId, isAdmin, userId,
     avatarIcon, avatarColorKey, avatarImageUrl,
     birthdays,
-    mealsEnabled, servicesEnabled, guideEnabled, birthdaysEnabled,
-    prayerEnabled, givingEnabled, eventsEnabled, chatEnabled,
+    mealsEnabled, servicesEnabled, birthdaysEnabled,
+    prayerEnabled, eventsEnabled, chatEnabled,
     groupSettings,
     unreadChatCount: chatUnreadCount,
   } = useAppContext()
-  const givingUrl = groupSettings?.giving_url ?? null
-  const guideUrl  = groupSettings?.guide_url  ?? null
-  const guideType = groupSettings?.guide_type ?? null
   const navigate = useNavigate()
   const toast = useToast()
   const [nextMeal, setNextMeal]             = useState(undefined)
@@ -409,8 +406,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
             {chatEnabled      && <CardSkeleton delay={isAdmin ? 160 : 120} />}
             {prayerEnabled    && <CardSkeleton delay={isAdmin ? 200 : 160} />}
             {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 240 : 200} />}
-            {guideEnabled     && <CardSkeleton delay={isAdmin ? 280 : 240} />}
-            {givingEnabled    && <CardSkeleton delay={isAdmin ? 320 : 280} />}
           </>
         ) : (
           <>
@@ -545,24 +540,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenGuide, onOpenSettin
                   primary: birthdayPrimary,
                   secondary: nextBirthday ? formatBirthdayDate(nextBirthday.birthday) : 'Tap to view all',
                   confetti: !!nextBirthday && nextBirthday.days <= 30,
-                },
-                guideEnabled && {
-                  key: 'guide',
-                  onClick: onOpenGuide,
-                  icon: <BookOpen size={24} weight="fill" className="text-sunrise" />,
-                  iconBg: 'bg-sunrise/10',
-                  label: 'Guide',
-                  primary: 'Community Guide',
-                  secondary: isAdmin && !guideType && !guideUrl ? 'Tap to set up' : 'Tap to open',
-                },
-                givingEnabled && {
-                  key: 'giving',
-                  onClick: onOpenGiving,
-                  icon: <Coins size={24} weight="fill" className="text-sage-700" />,
-                  iconBg: 'bg-sage-50',
-                  label: 'Giving',
-                  primary: 'Monthly Giving',
-                  secondary: isAdmin && !givingUrl ? 'Tap to set up' : 'Tap to open',
                 },
               ].filter(Boolean)
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion, LayoutGroup } from 'framer-motion'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, BookOpen, ShieldCheck } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { useAnimatedOverlay } from './hooks/useAnimatedOverlay.js'
@@ -70,7 +70,7 @@ const TABS = [
   { path: '/events',   shortLabel: 'Events',   Icon: CalendarHeart },
   { path: '/chat',     shortLabel: 'Chat',     Icon: ChatCircleDots },
   { path: '/prayer',   shortLabel: 'Prayer',   Icon: HandsPraying },
-  { path: '/bible',    shortLabel: 'Bible',    Icon: BookOpen },
+  { path: '/bible',    shortLabel: 'Resources', Icon: Books },
 ]
 
 const PATHS = TABS.map(t => t.path)
@@ -296,7 +296,7 @@ function AppContent() {
     if (t.path === '/events')   return eventsEnabled
     if (t.path === '/chat')     return chatEnabled
     if (t.path === '/prayer')   return prayerEnabled
-    if (t.path === '/bible')    return bibleEnabled
+    if (t.path === '/bible')    return bibleEnabled || guideEnabled || givingEnabled
     return true
   })
 
@@ -450,8 +450,6 @@ function AppContent() {
                 <Route path="/home"     element={
                   <OverviewTab
                     onOpenBirthdays={() => birthday.setOpen(true)}
-                    onOpenGuide={() => guide.setOpen(true)}
-                    onOpenGiving={() => giving.setOpen(true)}
                     onOpenSettings={navigateToSettings}
                     greetingReady={!splashVisible && !showWelcome}
                   />
@@ -459,7 +457,7 @@ function AppContent() {
                 <Route path="/schedule" element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} />} />
                 <Route path="/events"   element={<EventsTab />} />
                 <Route path="/prayer"   element={<PrayerTab />} />
-                <Route path="/bible"    element={<BibleTab />} />
+                <Route path="/bible"    element={<BibleTab onOpenGuide={() => guide.setOpen(true)} onOpenGiving={() => giving.setOpen(true)} />} />
                 <Route path="/admin"           element={<AdminPage />} />
                 <Route path="/church-settings" element={<ChurchSettingsPage />} />
                 <Route path="/danger-zone"     element={<DangerZonePage />} />
