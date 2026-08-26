@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
-  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins,
+  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -778,8 +778,10 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
   // hub state
   const [hubOpen, setHubOpen] = useState(true)
   const [hubClosing, setHubClosing] = useState(false)
-  const [broadcasts, setBroadcasts] = useState([])
+  const [allBroadcasts, setAllBroadcasts] = useState([])
+  const [adminBroadcasts, setAdminBroadcasts] = useState([])
   const [broadcastsLoading, setBroadcastsLoading] = useState(false)
+  const [prevOpen, setPrevOpen] = useState(false)
   const [lastChapterLabel, setLastChapterLabel] = useState(null)
   const [lastChapterRef, setLastChapterRef] = useState(null)
 
@@ -884,14 +886,19 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
   // ── Load church broadcasts for hub ────────────────────────────────────
   useEffect(() => {
     if (!churchId || !churchConversations?.length) return
-    const conv = churchConversations.find(c => c.type === 'all_members')
-    if (!conv) return
+    const convAll   = churchConversations.find(c => c.type === 'all_members')
+    const convAdmin = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
+    if (!convAll && !convAdmin) return
     setBroadcastsLoading(true)
-    db.churches.fetchMessages(conv.id).then(({ data }) => {
-      setBroadcasts((data ?? []).slice(0, 5))
+    Promise.all([
+      convAll   ? db.churches.fetchMessages(convAll.id)   : Promise.resolve({ data: [] }),
+      convAdmin ? db.churches.fetchMessages(convAdmin.id) : Promise.resolve({ data: [] }),
+    ]).then(([{ data: allData }, { data: adminData }]) => {
+      setAllBroadcasts((allData ?? []).slice(0, 6))
+      setAdminBroadcasts((adminData ?? []).slice(0, 6))
       setBroadcastsLoading(false)
     })
-  }, [churchId, churchConversations])
+  }, [churchId, churchConversations, isAdmin])
 
   // ── Persist current chapter so it survives tab navigation ────────────
   useEffect(() => {
@@ -1241,26 +1248,6 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
           <main className="max-w-md mx-auto px-4 pt-8 pb-12">
             <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
 
-            {/* Bible hero card */}
-            <div className="mb-6">
-              <button
-                onClick={openReader}
-                className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
-              >
-                <div className="w-14 h-14 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                  <BookOpen size={28} weight="fill" className="text-ember" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">Bible · BSB</p>
-                  <p className="text-base font-semibold text-stone-800 truncate">
-                    {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
-                  </p>
-                  <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
-                </div>
-                <CaretRight size={16} className="text-stone-300 shrink-0" />
-              </button>
-            </div>
-
             {/* Church broadcasts */}
             {churchId && (
               <div className="mb-6">
@@ -1269,30 +1256,105 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
                 </p>
                 <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                   {broadcastsLoading ? (
-                    <div className="p-4 space-y-3">
+                    <div className="p-4 space-y-4">
                       {[0, 1].map(i => (
                         <div key={i} className="space-y-1.5 animate-pulse">
                           <div className="h-2.5 bg-stone-100 rounded w-1/3" />
                           <div className="h-3.5 bg-stone-200 rounded w-4/5" />
+                          <div className="h-3 bg-stone-100 rounded w-2/3" />
                         </div>
                       ))}
                     </div>
-                  ) : broadcasts.length === 0 ? (
-                    <p className="px-4 py-4 text-sm text-stone-400 italic">No broadcasts yet</p>
+                  ) : !adminBroadcasts[0] && !allBroadcasts[0] ? (
+                    <p className="px-4 py-4 text-sm text-stone-500 italic">No broadcasts yet</p>
                   ) : (
-                    broadcasts.map((msg, i) => (
-                      <div key={msg.id} className={`px-4 py-3.5 ${i < broadcasts.length - 1 ? 'border-b border-stone-100' : ''}`}>
-                        <div className="flex items-baseline justify-between gap-2 mb-1">
-                          <p className="text-xs font-semibold text-stone-600">{msg.display_name}</p>
-                          <p className="text-xs text-stone-400 shrink-0">{relativeTime(msg.created_at)}</p>
+                    <>
+                      {/* Latest admin broadcast */}
+                      {adminBroadcasts[0] && (
+                        <div className="px-4 py-3.5">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <ShieldCheck size={12} weight="fill" className="text-ember shrink-0" />
+                              <p className="text-xs font-semibold text-stone-600 truncate">{adminBroadcasts[0].display_name}</p>
+                            </div>
+                            <p className="text-xs text-stone-400 shrink-0">{relativeTime(adminBroadcasts[0].created_at)}</p>
+                          </div>
+                          {adminBroadcasts[0].body && (
+                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{adminBroadcasts[0].body}</p>
+                          )}
                         </div>
-                        {msg.body && <p className="text-sm text-stone-700 leading-relaxed line-clamp-3">{msg.body}</p>}
-                      </div>
-                    ))
+                      )}
+
+                      {/* Latest all-members broadcast */}
+                      {allBroadcasts[0] && (
+                        <div className={`px-4 py-3.5 ${adminBroadcasts[0] ? 'border-t border-stone-100' : ''}`}>
+                          <div className="flex items-baseline justify-between gap-2 mb-1">
+                            <p className="text-xs font-semibold text-stone-600 truncate">{allBroadcasts[0].display_name}</p>
+                            <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
+                          </div>
+                          {allBroadcasts[0].body && (
+                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{allBroadcasts[0].body}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Expanded previous broadcasts */}
+                      {prevOpen && (() => {
+                        const prev = [
+                          ...adminBroadcasts.slice(1).map(m => ({ ...m, _isAdmin: true })),
+                          ...allBroadcasts.slice(1),
+                        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                        return prev.map(msg => (
+                          <div key={msg.id} className="px-4 py-3.5 border-t border-stone-100">
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {msg._isAdmin && <ShieldCheck size={12} weight="fill" className="text-ember shrink-0" />}
+                                <p className="text-xs font-semibold text-stone-600 truncate">{msg.display_name}</p>
+                              </div>
+                              <p className="text-xs text-stone-400 shrink-0">{relativeTime(msg.created_at)}</p>
+                            </div>
+                            {msg.body && (
+                              <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{msg.body}</p>
+                            )}
+                          </div>
+                        ))
+                      })()}
+
+                      {/* View previous / hide */}
+                      {(adminBroadcasts.length > 1 || allBroadcasts.length > 1) && (
+                        <button
+                          onClick={() => setPrevOpen(p => !p)}
+                          className="border-t border-stone-100 w-full px-4 py-3 text-xs text-ember font-medium text-left hover:bg-stone-50 transition-colors"
+                        >
+                          {prevOpen ? 'Hide previous broadcasts' : 'View previous broadcasts'}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
             )}
+
+            {/* Bible hero card */}
+            <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Bible</p>
+              <button
+                onClick={openReader}
+                className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+              >
+                <div className="w-14 h-14 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                  <BookOpen size={28} weight="fill" className="text-ember" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">BSB</p>
+                  <p className="text-base font-semibold text-stone-800 truncate">
+                    {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
+                  </p>
+                  <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
+                </div>
+                <CaretRight size={16} className="text-stone-300 shrink-0" />
+              </button>
+            </div>
 
             {/* Guide & Giving */}
             {(guideEnabled || givingEnabled) && (
