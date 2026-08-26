@@ -1296,7 +1296,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                     ))
                   ) : (
                     <>
-                      {/* Church Announcements — all members */}
+                      {/* Church Bulletin — all members */}
                       {allMembersConv && (
                         <button
                           onClick={() => openBroadcast(allMembersConv)}

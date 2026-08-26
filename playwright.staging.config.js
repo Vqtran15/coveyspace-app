@@ -49,5 +49,11 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
       testMatch: /staging-double-splash\.spec\.js/,
     },
+    // Broadcasts + PCO QA — own login (church admin account)
+    {
+      name: 'broadcasts',
+      use: { ...devices['Pixel 5'] },
+      testMatch: /staging-broadcasts\.spec\.js/,
+    },
   ],
 })
