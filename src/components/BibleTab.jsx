@@ -11,6 +11,14 @@ import { db } from '../lib/db.js'
 import { haptic } from '../lib/haptic.js'
 import { useToast } from '../lib/toast.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
+import ChurchBroadcastView from './ChurchBroadcastView.jsx'
+
+function stripHtml(html) {
+  try {
+    const doc = new DOMParser().parseFromString(html ?? '', 'text/html')
+    return doc.body.textContent ?? ''
+  } catch { return '' }
+}
 
 const BIBLE_API = 'https://bible.helloao.org/api'
 const TRANSLATION = 'BSB'
@@ -781,7 +789,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
   const [allBroadcasts, setAllBroadcasts] = useState([])
   const [adminBroadcasts, setAdminBroadcasts] = useState([])
   const [broadcastsLoading, setBroadcastsLoading] = useState(false)
-  const [prevOpen, setPrevOpen] = useState(false)
+  const [churchBroadcastOpen, setChurchBroadcastOpen] = useState(false)
   const [lastChapterLabel, setLastChapterLabel] = useState(null)
   const [lastChapterRef, setLastChapterRef] = useState(null)
 
@@ -1239,6 +1247,19 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
   return (
     <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
 
+      {/* ── Church broadcast overlay (slides over the hub) ───────────────── */}
+      {churchBroadcastOpen && (() => {
+        const allMembersConv = churchConversations?.find(c => c.type === 'all_members')
+        return allMembersConv ? (
+          <div className="fixed inset-0 lg:left-56 z-20">
+            <ChurchBroadcastView
+              conversation={allMembersConv}
+              onBack={() => setChurchBroadcastOpen(false)}
+            />
+          </div>
+        ) : null
+      })()}
+
       {/* ── Hub overlay ──────────────────────────────────────────────────── */}
       {hubOpen && (
         <div
@@ -1280,7 +1301,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
                             <p className="text-xs text-stone-400 shrink-0">{relativeTime(adminBroadcasts[0].created_at)}</p>
                           </div>
                           {adminBroadcasts[0].body && (
-                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{adminBroadcasts[0].body}</p>
+                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{stripHtml(adminBroadcasts[0].body)}</p>
                           )}
                         </div>
                       )}
@@ -1293,42 +1314,18 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
                             <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
                           </div>
                           {allBroadcasts[0].body && (
-                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{allBroadcasts[0].body}</p>
+                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{stripHtml(allBroadcasts[0].body)}</p>
                           )}
                         </div>
                       )}
 
-                      {/* Expanded previous broadcasts */}
-                      {prevOpen && (() => {
-                        const prev = [
-                          ...adminBroadcasts.slice(1).map(m => ({ ...m, _isAdmin: true })),
-                          ...allBroadcasts.slice(1),
-                        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                        return prev.map(msg => (
-                          <div key={msg.id} className="px-4 py-3.5 border-t border-stone-100">
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {msg._isAdmin && <ShieldCheck size={12} weight="fill" className="text-ember shrink-0" />}
-                                <p className="text-xs font-semibold text-stone-600 truncate">{msg.display_name}</p>
-                              </div>
-                              <p className="text-xs text-stone-400 shrink-0">{relativeTime(msg.created_at)}</p>
-                            </div>
-                            {msg.body && (
-                              <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{msg.body}</p>
-                            )}
-                          </div>
-                        ))
-                      })()}
-
-                      {/* View previous / hide */}
-                      {(adminBroadcasts.length > 1 || allBroadcasts.length > 1) && (
-                        <button
-                          onClick={() => setPrevOpen(p => !p)}
-                          className="border-t border-stone-100 w-full px-4 py-3 text-xs text-ember font-medium text-left hover:bg-stone-50 transition-colors"
-                        >
-                          {prevOpen ? 'Hide previous broadcasts' : 'View previous broadcasts'}
-                        </button>
-                      )}
+                      {/* View all broadcasts */}
+                      <button
+                        onClick={() => setChurchBroadcastOpen(true)}
+                        className="border-t border-stone-100 w-full px-4 py-3 text-xs text-ember font-medium text-left hover:bg-stone-50 transition-colors"
+                      >
+                        View previous broadcasts
+                      </button>
                     </>
                   )}
                 </div>

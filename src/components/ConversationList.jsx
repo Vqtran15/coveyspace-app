@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, Megaphone, UsersThree } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -133,7 +133,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   )
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null, churchName = null, churchConversations = [], isAdmin = false, isChurchAdmin = false, onSelectChurchConv = null }) {
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -153,8 +153,6 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [actionSheetClosing, closeActionSheet, resetActionSheet] = useModalClose(() => setActionSheetConv(null))
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
-  const [churchLastMsgAt, setChurchLastMsgAt]   = useState({})
-  const [churchLastReadAt, setChurchLastReadAt] = useState({})
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
@@ -272,41 +270,6 @@ export default function ConversationList({ session, groupId, members, enterClass
     return () => supabase.removeChannel(ch)
   }, [groupId])
 
-  useEffect(() => {
-    if (!churchConversations.length || !myId) return
-    const convIds = churchConversations.map(c => c.id)
-    Promise.all([
-      supabase.from('church_messages')
-        .select('church_conversation_id, created_at')
-        .in('church_conversation_id', convIds)
-        .order('created_at', { ascending: false })
-        .limit(convIds.length * 3),
-      supabase.from('church_conversation_members')
-        .select('conversation_id, last_read_at')
-        .in('conversation_id', convIds)
-        .eq('user_id', myId),
-    ]).then(([{ data: msgs }, { data: reads }]) => {
-      const msgMap = {}
-      for (const m of msgs ?? []) {
-        if (!msgMap[m.church_conversation_id]) msgMap[m.church_conversation_id] = m.created_at
-      }
-      setChurchLastMsgAt(msgMap)
-      const readMap = {}
-      for (const r of reads ?? []) readMap[r.conversation_id] = r.last_read_at
-      setChurchLastReadAt(readMap)
-    })
-
-    const ch = supabase
-      .channel(`church-unread:${myId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'church_messages',
-      }, ({ new: msg }) => {
-        setChurchLastMsgAt(prev => ({ ...prev, [msg.church_conversation_id]: msg.created_at }))
-      })
-      .subscribe()
-
-    return () => supabase.removeChannel(ch)
-  }, [churchConversations, myId])
 
   function convName(conv) {
     if (conv.type === 'direct') {
@@ -553,57 +516,6 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* List */}
       <div className="flex-1 overflow-y-auto">
         {/* Church section — shown when group belongs to a church */}
-        {!loading && !searchQuery && churchName && churchConversations.length > 0 && (() => {
-          const allMembersConv  = churchConversations.find(c => c.type === 'all_members')
-          const adminsOnlyConv  = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
-          if (!allMembersConv) return null
-          const isActive = activeConvId === `church:${allMembersConv.id}`
-          const amMsgAt  = churchLastMsgAt[allMembersConv.id]
-          const amReadAt = churchLastReadAt[allMembersConv.id]
-          const aoMsgAt  = adminsOnlyConv ? churchLastMsgAt[adminsOnlyConv.id]  : null
-          const aoReadAt = adminsOnlyConv ? churchLastReadAt[adminsOnlyConv.id] : null
-          const isUnread = !isActive && (
-            (!!amMsgAt && (!amReadAt || new Date(amMsgAt) > new Date(amReadAt))) ||
-            (!!aoMsgAt && (!aoReadAt || new Date(aoMsgAt) > new Date(aoReadAt)))
-          )
-          const subtitle = isChurchAdmin
-            ? 'Broadcast to members'
-            : isAdmin
-              ? 'Includes admin-only messages'
-              : 'Read-only announcements'
-          return (
-            <div className="max-w-3xl mx-auto w-full px-4 pt-3 pb-1">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-2 px-1">{churchName}</p>
-              <motion.button
-                onClick={() => {
-                  setChurchLastReadAt(prev => {
-                    const next = { ...prev, [allMembersConv.id]: new Date().toISOString() }
-                    if (adminsOnlyConv) next[adminsOnlyConv.id] = new Date().toISOString()
-                    return next
-                  })
-                  onSelectChurchConv?.(allMembersConv)
-                }}
-                className={`w-full rounded-2xl border p-4 text-left transition-colors flex items-center gap-3 animate-fade-up ${isActive ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
-                whileTap={{ scale: 0.975 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              >
-                <div className="relative w-11 h-11 shrink-0">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center bg-ember/10">
-                    <Megaphone size={22} weight="fill" className="text-ember" />
-                  </div>
-                  {isUnread && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-ember rounded-full border-2 border-white" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm truncate ${isUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
-                    Church Updates
-                  </p>
-                  <p className="text-xs text-stone-400 mt-0.5 truncate">{subtitle}</p>
-                </div>
-                <CaretRight size={16} className="text-stone-300 shrink-0" />
-              </motion.button>
-            </div>
-          )
-        })()}
 
         {loading ? (
           <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">

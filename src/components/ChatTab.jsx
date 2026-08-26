@@ -3,12 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import ConversationList from './ConversationList.jsx'
 import ChatView from './ChatView.jsx'
-import ChurchBroadcastView from './ChurchBroadcastView.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useBackButton } from '../hooks/useBackButton.js'
 
 export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthdayBannerClosing, onDismissBirthdayBanner, onOpenBirthdays, onConvOpen }) {
-  const { session, displayName, groupId, isAdmin, push, setUnreadChatCount, churchName, isChurchAdmin, churchConversations } = useAppContext()
+  const { session, displayName, groupId, isAdmin, push, setUnreadChatCount } = useAppContext()
   const onRead = () => setUnreadChatCount(0)
   const location = useLocation()
   const locationState = location.state
@@ -25,12 +24,11 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
   const [pinnedGroupId, setPinnedGroupId]     = useState(null)
-  const [activeChurchConv, setActiveChurchConv] = useState(null)
 
   useEffect(() => {
-    onConvOpen?.(!!(activeConv || activeChurchConv))
+    onConvOpen?.(!!activeConv)
     return () => onConvOpen?.(false)
-  }, [activeConv, activeChurchConv])
+  }, [activeConv])
 
   // Scroll to top synchronously before paint so the body-lock below applies at
   // offset 0. Without this, navigating here from a scrolled home screen would
@@ -78,17 +76,10 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   function openConv(conv) {
     setOpenedWithLastReadAt(localStorage.getItem(`readAt:${conv.id}`))
     setListClass('')
-    setActiveChurchConv(null)
     setActiveConv(conv)
   }
 
   const goBack = useCallback(() => {
-    if (activeChurchConv) {
-      setActiveChurchConv(null)
-      setListClass('animate-slide-in-left')
-      setTimeout(() => setListClass(''), 250)
-      return
-    }
     setChatExiting(true)
     setTimeout(() => {
       setChatExiting(false)
@@ -96,17 +87,16 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
       setListClass('animate-slide-in-left')
       setTimeout(() => setListClass(''), 250)
     }, 200)
-  }, [activeChurchConv])
+  }, [])
 
   // Android back button: close the open conversation instead of leaving the app
-  useBackButton(!!(activeConv || activeChurchConv), goBack)
+  useBackButton(!!activeConv, goBack)
 
   useEffect(() => {
     const reset = location.state?.tabReset
     if (reset && reset !== tabResetRef.current) {
       tabResetRef.current = reset
-      if (activeChurchConv) { setActiveChurchConv(null) }
-      else if (activeConv) goBack()
+      if (activeConv) goBack()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state?.tabReset])
@@ -135,17 +125,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
     onPushToggle: push.toggle,
     pinnedGroupId,
     onPinGroup: setPinnedGroupId,
-    activeConvId: activeChurchConv ? `church:${activeChurchConv.id}` : (activeConv?.id ?? null),
-    // Church
-    churchName,
-    churchConversations,
-    isAdmin,
-    isChurchAdmin,
-    onSelectChurchConv: (conv) => {
-      setListClass('')
-      setActiveConv(null)
-      setActiveChurchConv(conv)
-    },
+    activeConvId: activeConv?.id ?? null,
   }
 
   return (
@@ -153,16 +133,12 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
        Mobile: show ConvList OR ChatView, never both */
     <div className="lg:flex lg:h-[calc(var(--dvh)+var(--sat))] lg:overflow-hidden">
       {/* Conversation list panel */}
-      <div className={`${(activeConv || activeChurchConv) ? 'hidden' : ''} lg:block lg:w-64 lg:shrink-0 lg:border-r lg:border-stone-200 lg:bg-white lg:overflow-y-auto lg:h-full`}>
+      <div className={`${activeConv ? 'hidden' : ''} lg:block lg:w-64 lg:shrink-0 lg:border-r lg:border-stone-200 lg:bg-white lg:overflow-y-auto lg:h-full`}>
         <ConversationList {...convListProps} />
       </div>
 
       {/* Chat area */}
-      {activeChurchConv ? (
-        <div className="lg:flex-1 lg:overflow-hidden lg:min-w-0">
-          <ChurchBroadcastView conversation={activeChurchConv} onBack={goBack} />
-        </div>
-      ) : activeConv ? (
+      {activeConv ? (
         <div className="lg:flex-1 lg:overflow-hidden lg:min-w-0">
           <ChatView
             conversation={activeConv}
