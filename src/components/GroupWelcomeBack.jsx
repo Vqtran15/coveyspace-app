@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Confetti } from '@phosphor-icons/react'
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom'
 export default function GroupWelcomeBack({ name, onDone }) {
   const [exiting, setExiting] = useState(false)
   const navigate = useNavigate()
+  const onDoneRef = useRef(onDone)
+  onDoneRef.current = onDone
 
   useEffect(() => {
     const hold = setTimeout(() => setExiting(true), 1800)
@@ -15,9 +17,9 @@ export default function GroupWelcomeBack({ name, onDone }) {
   useEffect(() => {
     if (!exiting) return
     navigate('/home')
-    const exit = setTimeout(() => onDone?.(), 400)
+    const exit = setTimeout(() => onDoneRef.current?.(), 400)
     return () => clearTimeout(exit)
-  }, [exiting, navigate, onDone])
+  }, [exiting, navigate])
 
   return createPortal(
     <div

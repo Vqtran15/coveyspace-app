@@ -43,5 +43,11 @@ export default defineConfig({
       dependencies: ['setup'],
       testMatch: /staging-(events|compress)\.spec\.js/,
     },
+    // Double-splash QA — has its own login, no shared auth state needed
+    {
+      name: 'double-splash',
+      use: { ...devices['Pixel 5'] },
+      testMatch: /staging-double-splash\.spec\.js/,
+    },
   ],
 })
