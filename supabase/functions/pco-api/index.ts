@@ -50,15 +50,14 @@ Deno.serve(async (req) => {
     )
     if (authErr || !user) return new Response('Unauthorized', { status: 401 })
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('community_group_id, role')
+    // Auth: caller must be a church admin (independent of their active group)
+    const { data: churchRole } = await supabase
+      .from('church_roles')
+      .select('church_id')
       .eq('user_id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
-      return new Response('Forbidden', { status: 403 })
-    }
+    if (!churchRole) return new Response('Forbidden', { status: 403 })
 
     const { path, method = 'GET', body: reqBody } = await req.json()
 
@@ -66,10 +65,24 @@ Deno.serve(async (req) => {
       return new Response('Invalid path', { status: 400 })
     }
 
+    // Find the PCO connection for any group in this admin's church
+    const { data: churchGroups } = await supabase
+      .from('community_groups')
+      .select('id')
+      .eq('church_id', churchRole.church_id)
+
+    const groupIds = (churchGroups ?? []).map((g: any) => g.id)
+    if (!groupIds.length) {
+      return new Response(JSON.stringify({ error: 'No groups found for this church' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json', ...cors },
+      })
+    }
+
     const { data: conn } = await supabase
       .from('planning_center_connections')
       .select('*')
-      .eq('community_group_id', profile.community_group_id)
+      .in('community_group_id', groupIds)
       .single()
 
     if (!conn) {

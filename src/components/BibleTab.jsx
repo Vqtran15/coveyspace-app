@@ -789,7 +789,8 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
   const [allBroadcasts, setAllBroadcasts] = useState([])
   const [adminBroadcasts, setAdminBroadcasts] = useState([])
   const [broadcastsLoading, setBroadcastsLoading] = useState(false)
-  const [churchBroadcastOpen, setChurchBroadcastOpen] = useState(false)
+  const [churchBroadcastOpen, setChurchBroadcastOpen]     = useState(false)
+  const [churchBroadcastClosing, setChurchBroadcastClosing] = useState(false)
   const [lastChapterLabel, setLastChapterLabel] = useState(null)
   const [lastChapterRef, setLastChapterRef] = useState(null)
 
@@ -1251,10 +1252,16 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
       {churchBroadcastOpen && (() => {
         const allMembersConv = churchConversations?.find(c => c.type === 'all_members')
         return allMembersConv ? (
-          <div className="fixed inset-0 lg:left-56 z-20">
+          <div className={`fixed inset-0 lg:left-56 z-20 ${churchBroadcastClosing ? 'animate-slide-out-right' : ''}`}>
             <ChurchBroadcastView
               conversation={allMembersConv}
-              onBack={() => setChurchBroadcastOpen(false)}
+              onBack={() => {
+                setChurchBroadcastClosing(true)
+                setTimeout(() => {
+                  setChurchBroadcastOpen(false)
+                  setChurchBroadcastClosing(false)
+                }, 200)
+              }}
             />
           </div>
         ) : null

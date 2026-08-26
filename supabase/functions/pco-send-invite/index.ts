@@ -26,11 +26,18 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('community_group_id, role, display_name')
+      .select('display_name')
       .eq('user_id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
+    // Auth: caller must be a church admin (independent of their active group)
+    const { data: churchRole } = await supabase
+      .from('church_roles')
+      .select('church_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!profile || !churchRole) {
       return new Response('Forbidden', { status: 403 })
     }
 
