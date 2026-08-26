@@ -14,10 +14,8 @@ export default function GroupWelcomeBack({ name, onDone }) {
 
   useEffect(() => {
     if (!exiting) return
-    const exit = setTimeout(() => {
-      navigate('/home')
-      onDone?.()
-    }, 400)
+    navigate('/home')
+    const exit = setTimeout(() => onDone?.(), 400)
     return () => clearTimeout(exit)
   }, [exiting, navigate, onDone])
 
