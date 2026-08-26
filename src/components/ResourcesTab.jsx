@@ -1307,7 +1307,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-0.5">
-                              <p className="text-base font-semibold text-stone-800">Church Announcements</p>
+                              <p className="text-base font-semibold text-stone-800">Church Bulletin</p>
                               {allBroadcasts[0] && (
                                 <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
                               )}

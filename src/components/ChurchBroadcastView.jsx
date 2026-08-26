@@ -114,7 +114,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-base font-bold text-stone-800 truncate">
-            {isAdminOnly ? 'Leadership Bulletin' : 'Church Announcements'}
+            {isAdminOnly ? 'Leadership Bulletin' : 'Church Bulletin'}
           </p>
         </div>
       </div>
