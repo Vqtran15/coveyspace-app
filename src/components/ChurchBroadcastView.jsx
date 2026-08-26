@@ -57,56 +57,40 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdmin
 }
 
 export default function ChurchBroadcastView({ conversation, onBack }) {
-  const { userId, isChurchAdmin, isAdmin, churchConversations } = useAppContext()
+  const { userId, isChurchAdmin } = useAppContext()
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const convId        = conversation.id
-  const adminsOnlyConv   = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
-  const adminsOnlyConvId = adminsOnlyConv?.id ?? null
+  const convId      = conversation.id
+  const isAdminOnly = conversation.type === 'admins_only'
 
   useEffect(() => {
     if (!convId) return
     setLoading(true)
-    const hasSecondConv = isAdmin && adminsOnlyConvId && adminsOnlyConvId !== convId
-    const doFetch = hasSecondConv
-      ? Promise.all([db.churches.fetchMessages(convId), db.churches.fetchMessages(adminsOnlyConvId)])
-          .then(([r1, r2]) =>
-            [...(r1.data ?? []).map(m => ({ ...m, _isAdminOnly: false })),
-             ...(r2.data ?? []).map(m => ({ ...m, _isAdminOnly: true }))]
-              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          )
-      : db.churches.fetchMessages(convId).then(r =>
-          (r.data ?? []).map(m => ({ ...m, _isAdminOnly: conversation.type === 'admins_only' }))
-        )
-
-    doFetch.then(msgs => { setMessages(msgs); setLoading(false) })
+    db.churches.fetchMessages(convId)
+      .then(r => {
+        setMessages((r.data ?? []).map(m => ({ ...m, _isAdminOnly: isAdminOnly })))
+        setLoading(false)
+      })
     db.churches.updateLastRead(convId, userId).then()
-    if (hasSecondConv) db.churches.updateLastRead(adminsOnlyConvId, userId).then()
-  }, [convId, adminsOnlyConvId, userId, isAdmin, conversation.type])
+  }, [convId, userId, isAdminOnly])
 
   useEffect(() => {
     if (!convId) return
-    const channels = []
-    const subscribe = (id, adminOnly) => {
-      const ch = supabase
-        .channel(`church-broadcast:${id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'church_messages',
-          filter: `church_conversation_id=eq.${id}`,
-        }, ({ new: msg }) => {
-          const tagged = { ...msg, _isAdminOnly: adminOnly }
-          setMessages(prev => prev.some(m => m.id === tagged.id) ? prev : [tagged, ...prev])
-        })
-        .subscribe()
-      channels.push(ch)
-    }
-    subscribe(convId, conversation.type === 'admins_only')
-    if (isAdmin && adminsOnlyConvId && adminsOnlyConvId !== convId) subscribe(adminsOnlyConvId, true)
-    return () => channels.forEach(ch => supabase.removeChannel(ch))
-  }, [convId, adminsOnlyConvId, isAdmin])
+    const ch = supabase
+      .channel(`church-broadcast:${convId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'church_messages',
+        filter: `church_conversation_id=eq.${convId}`,
+      }, ({ new: msg }) => {
+        const tagged = { ...msg, _isAdminOnly: isAdminOnly }
+        setMessages(prev => prev.some(m => m.id === tagged.id) ? prev : [tagged, ...prev])
+      })
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  }, [convId, isAdminOnly])
 
   return (
     <div className="flex flex-col bg-sunrise-50" style={{ height: '100dvh' }}>
@@ -123,10 +107,15 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
           <ArrowLeft size={22} weight="bold" />
         </button>
         <div className="w-10 h-10 rounded-full bg-ember/10 flex items-center justify-center shrink-0">
-          <Megaphone size={20} weight="fill" className="text-ember" />
+          {isAdminOnly
+            ? <ShieldCheck size={20} weight="fill" className="text-ember" />
+            : <Megaphone size={20} weight="fill" className="text-ember" />
+          }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-base font-bold text-stone-800 truncate">Church Updates</p>
+          <p className="text-base font-bold text-stone-800 truncate">
+            {isAdminOnly ? 'Leadership Bulletin' : 'Church Announcements'}
+          </p>
         </div>
       </div>
 
