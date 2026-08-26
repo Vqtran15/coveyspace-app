@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
-  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck, Users,
+  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck, Users, Megaphone,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -743,9 +743,9 @@ function relativeTime(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-// ─── Main BibleTab ────────────────────────────────────────────────────────
+// ─── Main ResourcesTab ────────────────────────────────────────────────────────
 
-export default function BibleTab({ onOpenGuide, onOpenGiving }) {
+export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const { userId, churchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin } = useAppContext()
   const toast = useToast()
   const location = useLocation()
@@ -789,8 +789,14 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
   const [allBroadcasts, setAllBroadcasts] = useState([])
   const [adminBroadcasts, setAdminBroadcasts] = useState([])
   const [broadcastsLoading, setBroadcastsLoading] = useState(false)
-  const [churchBroadcastOpen, setChurchBroadcastOpen]     = useState(false)
+  const [churchBroadcastConv, setChurchBroadcastConv]       = useState(null)
   const [churchBroadcastClosing, setChurchBroadcastClosing] = useState(false)
+
+  function openBroadcast(conv) { setChurchBroadcastConv(conv) }
+  function closeBroadcast() {
+    setChurchBroadcastClosing(true)
+    setTimeout(() => { setChurchBroadcastConv(null); setChurchBroadcastClosing(false) }, 200)
+  }
   const [lastChapterLabel, setLastChapterLabel] = useState(null)
   const [lastChapterRef, setLastChapterRef] = useState(null)
 
@@ -829,7 +835,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
       .eq('user_id', userId)
       .single()
       .then(({ data, error }) => {
-        if (error) console.error('[BibleTab] load error:', error.message)
+        if (error) console.error('[ResourcesTab] load error:', error.message)
         if (data?.bible_passages != null) {
           setUserPassages(data.bible_passages)
           localStorage.setItem(storageKey, JSON.stringify(data.bible_passages))
@@ -844,7 +850,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
         }
       })
       .catch(err => {
-        console.error('[BibleTab] load failed:', err)
+        console.error('[ResourcesTab] load failed:', err)
         const cached = localStorage.getItem(storageKey)
         if (cached) {
           try { setUserPassages(JSON.parse(cached)) }
@@ -1023,7 +1029,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
           clearTimeout(saveTimerRef.current)
           saveTimerRef.current = setTimeout(() => {
             if (userId) supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
-              .then(({ error }) => { if (error) console.error('[BibleTab] save error:', error.message) })
+              .then(({ error }) => { if (error) console.error('[ResourcesTab] save error:', error.message) })
           }, 600)
           return next
         })
@@ -1044,7 +1050,7 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
     if (!userId) return
     localStorage.setItem(`bible_passages_${userId}`, JSON.stringify(next))
     supabase.from('profiles').update({ bible_passages: next }).eq('user_id', userId)
-      .then(({ error }) => { if (error) console.error('[BibleTab] save error:', error.message) })
+      .then(({ error }) => { if (error) console.error('[ResourcesTab] save error:', error.message) })
   }
 
   // ── Recent chapters ────────────────────────────────────────────────────
@@ -1245,27 +1251,21 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
     : null
 
   // ── Render ─────────────────────────────────────────────────────────────
+  const allMembersConv = churchConversations?.find(c => c.type === 'all_members') ?? null
+  const adminOnlyConv  = (isAdmin && churchConversations?.find(c => c.type === 'admins_only')) || null
+
   return (
     <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
 
       {/* ── Church broadcast overlay (slides over the hub) ───────────────── */}
-      {churchBroadcastOpen && (() => {
-        const allMembersConv = churchConversations?.find(c => c.type === 'all_members')
-        return allMembersConv ? (
-          <div className={`fixed inset-0 lg:left-56 z-20 ${churchBroadcastClosing ? 'animate-slide-out-right' : ''}`}>
-            <ChurchBroadcastView
-              conversation={allMembersConv}
-              onBack={() => {
-                setChurchBroadcastClosing(true)
-                setTimeout(() => {
-                  setChurchBroadcastOpen(false)
-                  setChurchBroadcastClosing(false)
-                }, 200)
-              }}
-            />
-          </div>
-        ) : null
-      })()}
+      {churchBroadcastConv && (
+        <div className={`fixed inset-0 lg:left-56 z-20 ${churchBroadcastClosing ? 'animate-slide-out-right' : ''}`}>
+          <ChurchBroadcastView
+            conversation={churchBroadcastConv}
+            onBack={closeBroadcast}
+          />
+        </div>
+      )}
 
       {/* ── Hub overlay ──────────────────────────────────────────────────── */}
       {hubOpen && (
@@ -1276,66 +1276,77 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
           <main className="max-w-md mx-auto px-4 pt-8 pb-12">
             <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
 
-            {/* Church broadcasts */}
-            {churchId && (
+            {/* Church broadcasts — two separate cards per audience */}
+            {churchId && (allMembersConv || adminOnlyConv) && (
               <div className="mb-6">
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
                   From {churchName ?? 'Your Church'}
                 </p>
-                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="space-y-3">
                   {broadcastsLoading ? (
-                    <div className="p-4 space-y-4">
-                      {[0, 1].map(i => (
-                        <div key={i} className="space-y-1.5 animate-pulse">
-                          <div className="h-2.5 bg-stone-100 rounded w-1/3" />
-                          <div className="h-3.5 bg-stone-200 rounded w-4/5" />
-                          <div className="h-3 bg-stone-100 rounded w-2/3" />
+                    [0, adminOnlyConv ? 1 : null].filter(i => i !== null).map(i => (
+                      <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                        <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-stone-200 rounded w-2/5" />
+                          <div className="h-3 bg-stone-100 rounded w-3/4" />
+                          <div className="h-3 bg-stone-100 rounded w-1/2" />
                         </div>
-                      ))}
-                    </div>
-                  ) : !adminBroadcasts[0] && !allBroadcasts[0] ? (
-                    <p className="px-4 py-4 text-sm text-stone-500 italic">No broadcasts yet</p>
+                      </div>
+                    ))
                   ) : (
                     <>
-                      {/* Latest admin broadcast */}
-                      {adminBroadcasts[0] && (
-                        <div className="px-4 py-3.5">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <ShieldCheck size={12} weight="fill" className="text-ember shrink-0" />
-                              <p className="text-xs font-semibold text-stone-600 truncate">{adminBroadcasts[0].display_name}</p>
-                            </div>
-                            <p className="text-xs text-stone-400 shrink-0">{relativeTime(adminBroadcasts[0].created_at)}</p>
+                      {/* Church Announcements — all members */}
+                      {allMembersConv && (
+                        <button
+                          onClick={() => openBroadcast(allMembersConv)}
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                            <Megaphone size={22} weight="fill" className="text-stone-500" />
                           </div>
-                          {adminBroadcasts[0].body && (
-                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{stripHtml(adminBroadcasts[0].body)}</p>
-                          )}
-                        </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                              <p className="text-base font-semibold text-stone-800">Church Announcements</p>
+                              {allBroadcasts[0] && (
+                                <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
+                              )}
+                            </div>
+                            {allBroadcasts[0]?.body ? (
+                              <p className="text-sm text-stone-500 line-clamp-2 leading-relaxed">{stripHtml(allBroadcasts[0].body)}</p>
+                            ) : (
+                              <p className="text-xs text-stone-400">No announcements yet</p>
+                            )}
+                          </div>
+                          <CaretRight size={16} className="text-stone-300 shrink-0" />
+                        </button>
                       )}
 
-                      {/* Latest all-members broadcast */}
-                      {allBroadcasts[0] && (
-                        <div className={`px-4 py-3.5 ${adminBroadcasts[0] ? 'border-t border-stone-100' : ''}`}>
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <Users size={12} weight="fill" className="text-stone-400 shrink-0" />
-                              <p className="text-xs font-semibold text-stone-600 truncate">{allBroadcasts[0].display_name}</p>
-                            </div>
-                            <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
+                      {/* Leadership Bulletin — admins only */}
+                      {adminOnlyConv && (
+                        <button
+                          onClick={() => openBroadcast(adminOnlyConv)}
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                            <ShieldCheck size={22} weight="fill" className="text-ember" />
                           </div>
-                          {allBroadcasts[0].body && (
-                            <p className="text-sm text-stone-700 leading-relaxed line-clamp-2">{stripHtml(allBroadcasts[0].body)}</p>
-                          )}
-                        </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                              <p className="text-base font-semibold text-stone-800">Leadership Bulletin</p>
+                              {adminBroadcasts[0] && (
+                                <p className="text-xs text-stone-400 shrink-0">{relativeTime(adminBroadcasts[0].created_at)}</p>
+                              )}
+                            </div>
+                            {adminBroadcasts[0]?.body ? (
+                              <p className="text-sm text-stone-500 line-clamp-2 leading-relaxed">{stripHtml(adminBroadcasts[0].body)}</p>
+                            ) : (
+                              <p className="text-xs text-stone-400">No messages yet</p>
+                            )}
+                          </div>
+                          <CaretRight size={16} className="text-stone-300 shrink-0" />
+                        </button>
                       )}
-
-                      {/* View all broadcasts */}
-                      <button
-                        onClick={() => setChurchBroadcastOpen(true)}
-                        className="border-t border-stone-100 w-full px-4 py-3 text-xs text-ember font-medium text-left hover:bg-stone-50 transition-colors"
-                      >
-                        View all announcements
-                      </button>
                     </>
                   )}
                 </div>

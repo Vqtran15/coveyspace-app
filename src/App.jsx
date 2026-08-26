@@ -27,7 +27,7 @@ const GuideTab          = lazy(() => import('./components/GuideTab.jsx'))
 const GivingTab         = lazy(() => import('./components/GivingTab.jsx'))
 const OverviewTab       = lazy(() => import('./components/OverviewTab.jsx'))
 const EventsTab         = lazy(() => import('./components/EventsTab.jsx'))
-const BibleTab          = lazy(() => import('./components/BibleTab.jsx'))
+const ResourcesTab      = lazy(() => import('./components/ResourcesTab.jsx'))
 const AuthPage          = lazy(() => import('./components/AuthPage.jsx'))
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'))
 const WelcomeSplash     = lazy(() => import('./components/WelcomeSplash.jsx'))
@@ -457,7 +457,7 @@ function AppContent() {
                 <Route path="/schedule" element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} />} />
                 <Route path="/events"   element={<EventsTab />} />
                 <Route path="/prayer"   element={<PrayerTab />} />
-                <Route path="/bible"    element={<BibleTab onOpenGuide={() => guide.setOpen(true)} onOpenGiving={() => giving.setOpen(true)} />} />
+                <Route path="/bible"    element={<ResourcesTab onOpenGuide={() => guide.setOpen(true)} onOpenGiving={() => giving.setOpen(true)} />} />
                 <Route path="/admin"           element={<AdminPage />} />
                 <Route path="/church-settings" element={<ChurchSettingsPage />} />
                 <Route path="/danger-zone"     element={<DangerZonePage />} />
