@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
-  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck,
+  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck, Users,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -1316,8 +1316,11 @@ export default function BibleTab({ onOpenGuide, onOpenGiving }) {
                       {/* Latest all-members broadcast */}
                       {allBroadcasts[0] && (
                         <div className={`px-4 py-3.5 ${adminBroadcasts[0] ? 'border-t border-stone-100' : ''}`}>
-                          <div className="flex items-baseline justify-between gap-2 mb-1">
-                            <p className="text-xs font-semibold text-stone-600 truncate">{allBroadcasts[0].display_name}</p>
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Users size={12} weight="fill" className="text-stone-400 shrink-0" />
+                              <p className="text-xs font-semibold text-stone-600 truncate">{allBroadcasts[0].display_name}</p>
+                            </div>
                             <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
                           </div>
                           {allBroadcasts[0].body && (
