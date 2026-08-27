@@ -370,7 +370,7 @@ useEffect(() => {
 
       {/* Groups */}
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Groups</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Current Groups</p>
 
         {/* Existing memberships */}
         <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden mb-2">
@@ -413,6 +413,7 @@ useEffect(() => {
         </div>
 
         {/* Create / Join actions */}
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">New Group</p>
         <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
           <button
             onClick={() => setCreateGroupOpen(true)}

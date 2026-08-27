@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
   Plus, PencilSimple, Trash, DotsSixVertical, PenNib, DotsThreeVertical,
-  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck, Users, Megaphone,
+  CaretLeft, CaretRight, Bookmark, ClockCounterClockwise, Coins, ShieldCheck, Users, Megaphone, Star,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -1329,7 +1329,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                         >
                           <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                            <ShieldCheck size={22} weight="fill" className="text-ember" />
+                            <Star size={22} weight="fill" className="text-ember" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-0.5">
@@ -1360,8 +1360,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 onClick={openReader}
                 className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
               >
-                <div className="w-14 h-14 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                  <BookOpen size={28} weight="fill" className="text-ember" />
+                <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                  <BookOpen size={22} weight="fill" className="text-ember" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">BSB</p>

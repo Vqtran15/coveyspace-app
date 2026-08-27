@@ -56,7 +56,7 @@ function ConfirmSendModal({ sending, summary, onCancel, onConfirm }) {
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
-        <h3 className="text-lg font-bold text-stone-800 mb-1">Send Broadcast?</h3>
+        <h3 className="text-lg font-bold text-stone-800 mb-1">Send Announcement?</h3>
         <p className="text-sm text-stone-500 mb-5">{summary}</p>
         <div className="flex gap-3">
           <button
@@ -261,7 +261,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           >
             <ArrowLeft size={22} weight="bold" />
           </button>
-          <h2 className="flex-1 text-lg font-bold text-stone-800">New Broadcast</h2>
+          <h2 className="flex-1 text-lg font-bold text-stone-800">New Announcement</h2>
           <button
             onClick={() => setPreviewMode(p => !p)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors shrink-0"
@@ -819,7 +819,7 @@ export default function ChurchSettingsPage() {
       {/* Tab nav */}
       <div className="flex bg-stone-100 rounded-xl p-1 mb-6">
         {[
-          { id: 'broadcasts',      label: 'Broadcasts'      },
+          { id: 'broadcasts',      label: 'Announcements'   },
           { id: 'planning_center', label: 'Planning Center' },
         ].map(tab => (
           <button
@@ -840,14 +840,14 @@ export default function ChurchSettingsPage() {
       {activeTab === 'broadcasts' && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Broadcasts</p>
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Announcements</p>
             {convIds.allMembers && (
               <button
                 onClick={() => setComposerOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-ember text-white text-xs font-semibold hover:bg-ember-700 transition-colors"
               >
                 <PaperPlaneRight size={13} weight="fill" />
-                New Broadcast
+                New Announcement
               </button>
             )}
           </div>
@@ -870,8 +870,8 @@ export default function ChurchSettingsPage() {
           ) : broadcastMessages.length === 0 ? (
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-8 text-center">
               <Megaphone size={36} weight="thin" className="text-stone-300 mx-auto mb-2" />
-              <p className="text-sm text-stone-500">No broadcasts sent yet</p>
-              <p className="text-xs text-stone-400 mt-1">Tap "New Broadcast" to send your first message</p>
+              <p className="text-sm text-stone-500">No announcements sent yet</p>
+              <p className="text-xs text-stone-400 mt-1">Tap "New Announcement" to send your first message</p>
             </div>
           ) : (
             <div className="space-y-3">
