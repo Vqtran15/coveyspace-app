@@ -60,8 +60,7 @@ Deno.serve(async (req) => {
     const plainBody = msg.body
       ? msg.body
           .replace(/<br\s*\/?>/gi, ' ')
-          .replace(/<\/p>/gi, ' ')
-          .replace(/<\/div>/gi, ' ')
+          .replace(/<\/(p|div|h[1-6]|li|blockquote|pre)>/gi, ' ')
           .replace(/<[^>]*>/g, '')
           .replace(/\s+/g, ' ')
           .trim()

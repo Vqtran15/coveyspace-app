@@ -17,8 +17,7 @@ function stripHtml(html) {
   try {
     const spaced = (html ?? '')
       .replace(/<br\s*\/?>/gi, ' ')
-      .replace(/<\/p>/gi, ' ')
-      .replace(/<\/div>/gi, ' ')
+      .replace(/<\/(p|div|h[1-6]|li|blockquote|pre)>/gi, ' ')
     const doc = new DOMParser().parseFromString(spaced, 'text/html')
     return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim()
   } catch { return '' }
