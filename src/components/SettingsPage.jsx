@@ -396,16 +396,11 @@ useEffect(() => {
             className={`text-stone-400 transition-transform duration-200 ${groupsOpen ? 'rotate-180' : ''}`}
           />
         </button>
-        <AnimatePresence initial={false}>
-          {groupsOpen && (
-            <motion.div
-              key="groups-section"
-              initial={{ height: 0 }}
-              animate={{ height: 'auto' }}
-              exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
-              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              className="overflow-hidden"
-            >
+        <div
+          className="grid"
+          style={{ gridTemplateRows: groupsOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+        >
+          <div className="overflow-hidden min-h-0">
               <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                 {allMemberships.map((m, idx) => {
                   const isActive = m.community_group_id === groupId
@@ -444,9 +439,8 @@ useEffect(() => {
                   )
                 })}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
 
       {/* New Group */}
@@ -466,16 +460,11 @@ useEffect(() => {
             className={`text-stone-400 transition-transform duration-200 ${newGroupOpen ? 'rotate-180' : ''}`}
           />
         </button>
-        <AnimatePresence initial={false}>
-          {newGroupOpen && (
-            <motion.div
-              key="new-group-section"
-              initial={{ height: 0 }}
-              animate={{ height: 'auto' }}
-              exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
-              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              className="overflow-hidden"
-            >
+        <div
+          className="grid"
+          style={{ gridTemplateRows: newGroupOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+        >
+          <div className="overflow-hidden min-h-0">
               <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   onClick={() => setCreateGroupOpen(true)}
@@ -508,16 +497,11 @@ useEffect(() => {
                   />
                 </button>
 
-                <AnimatePresence initial={false}>
-                  {joinGroupExpanded && (
-                    <motion.div
-                      key="join-form"
-                      initial={{ height: 0 }}
-                      animate={{ height: 'auto' }}
-                      exit={{ height: 0, transition: { duration: 0.15, ease: [0.4, 0, 1, 1] } }}
-                      transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-                      className="overflow-hidden"
-                    >
+                <div
+                  className="grid"
+                  style={{ gridTemplateRows: joinGroupExpanded ? '1fr' : '0fr', transition: 'grid-template-rows 180ms cubic-bezier(0.4,0,0.2,1)' }}
+                >
+                  <div className="overflow-hidden min-h-0">
                       <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
                         <input
                           type="text"
@@ -540,13 +524,11 @@ useEffect(() => {
                           {joinGroupLoading ? 'Joining…' : 'Join Group'}
                         </button>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
 
       </div>{/* end left column */}
@@ -572,16 +554,11 @@ useEffect(() => {
               className={`text-stone-400 transition-transform duration-200 ${prefsOpen ? 'rotate-180' : ''}`}
             />
           </button>
-          <AnimatePresence initial={false}>
-            {prefsOpen && (
-              <motion.div
-                key="prefs-section"
-                initial={{ height: 0 }}
-                animate={{ height: 'auto' }}
-                exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-                className="overflow-hidden"
-              >
+          <div
+            className="grid"
+            style={{ gridTemplateRows: prefsOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+          >
+            <div className="overflow-hidden min-h-0">
                 <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                   {push.permission === 'denied' ? (
                     <p className="text-xs text-stone-500 px-4 py-3.5">
@@ -603,9 +580,8 @@ useEffect(() => {
                     </button>
                   )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </div>
+          </div>
         </div>
       )}
 
@@ -627,16 +603,11 @@ useEffect(() => {
               className={`text-stone-400 transition-transform duration-200 ${adminSectionOpen ? 'rotate-180' : ''}`}
             />
           </button>
-          <AnimatePresence initial={false}>
-            {adminSectionOpen && (
-              <motion.div
-                key="admin-section"
-                initial={{ height: 0 }}
-                animate={{ height: 'auto' }}
-                exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-                className="overflow-hidden"
-              >
+          <div
+            className="grid"
+            style={{ gridTemplateRows: adminSectionOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+          >
+            <div className="overflow-hidden min-h-0">
                 <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                   {isChurchAdmin && (
                     <button
@@ -669,9 +640,8 @@ useEffect(() => {
                     </button>
                   )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </div>
+          </div>
         </div>
       )}
 
@@ -692,16 +662,11 @@ useEffect(() => {
             className={`text-stone-400 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
           />
         </button>
-        <AnimatePresence initial={false}>
-          {accountOpen && (
-            <motion.div
-              key="account-section"
-              initial={{ height: 0 }}
-              animate={{ height: 'auto' }}
-              exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
-              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              className="overflow-hidden"
-            >
+        <div
+          className="grid"
+          style={{ gridTemplateRows: accountOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+        >
+          <div className="overflow-hidden min-h-0">
               <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                 <button
                   onClick={() => openSettingsSheet('password')}
@@ -740,9 +705,8 @@ useEffect(() => {
                   <CaretRight size={14} className="text-stone-300 shrink-0" />
                 </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
 
       {/* Feedback */}

@@ -131,23 +131,24 @@ Inactive tab: `text-stone-500 hover:text-stone-700`
 - Sheet: `bg-white rounded-2xl shadow-xl`
 - Use `animate-modal-in` / `animate-modal-out` and `animate-overlay-in` / `animate-overlay-out` for transitions
 
-### Framer Motion accordion/collapse animations
-**Never animate `opacity` and `height: 'auto'` on the same `motion.div`.** Framer Motion must do a DOM layout read to resolve `height: auto`, and a simultaneous opacity transition forces competing paint passes — the result is visibly rough/choppy.
+### Accordion/collapse animations
+**Use the CSS `grid-template-rows` trick — not Framer Motion `height: 'auto'`.** Framer Motion resolves `height: auto` via a JavaScript DOM measurement on every frame (layout read + repaint), which causes visible jank. The CSS grid approach is GPU-accelerated and has zero JS per frame.
 
-**Correct pattern** — height-only on the outer clip div; `overflow-hidden` handles the clean clip:
+**Correct pattern:**
 ```jsx
-<motion.div
-  initial={{ height: 0 }}
-  animate={{ height: 'auto' }}
-  exit={{ height: 0 }}
-  transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-  className="overflow-hidden"
+// Outer: always rendered — no conditional mount/unmount needed
+<div
+  className="grid"
+  style={{ gridTemplateRows: isOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
 >
-  {children}
-</motion.div>
+  {/* Inner: min-h-0 is required — without it, grid items default to min-height:auto which defeats the collapse */}
+  <div className="overflow-hidden min-h-0">
+    {children}
+  </div>
+</div>
 ```
 
-If a fade is needed, put `opacity` on an **inner** wrapper `motion.div`, not the height-animating one.
+If a fade is needed, add `opacity` and `transition-opacity` on the inner div, keyed off the same `isOpen` state.
 
 ### Inputs
 `border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent`
