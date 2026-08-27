@@ -58,7 +58,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
       setCreating(false)
       return
     }
-    await Promise.all([refreshProfile(), refreshMemberships()])
+    await Promise.all([refreshProfile(), refreshMemberships()]).catch(() => {})
     toast(`"${data.group_name}" created!`, 'success')
     sessionStorage.setItem('cg_created_from_settings', '1')
     sessionStorage.setItem('cg_settings_create_features', JSON.stringify(features))

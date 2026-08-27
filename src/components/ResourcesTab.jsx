@@ -795,6 +795,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const [churchLastRead, setChurchLastRead] = useState({})
   const [churchBroadcastConv, setChurchBroadcastConv]       = useState(null)
   const [churchBroadcastClosing, setChurchBroadcastClosing] = useState(false)
+  const closeBroadcastTimer = useRef(null)
 
   function openBroadcast(conv) {
     setChurchBroadcastConv(conv)
@@ -802,7 +803,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   }
   function closeBroadcast() {
     setChurchBroadcastClosing(true)
-    setTimeout(() => { setChurchBroadcastConv(null); setChurchBroadcastClosing(false) }, 200)
+    clearTimeout(closeBroadcastTimer.current)
+    closeBroadcastTimer.current = setTimeout(() => { setChurchBroadcastConv(null); setChurchBroadcastClosing(false) }, 200)
   }
   const [lastChapterLabel, setLastChapterLabel] = useState(null)
   const [lastChapterRef, setLastChapterRef] = useState(null)
@@ -927,8 +929,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       readData?.forEach(r => { readMap[r.conversation_id] = r.last_read_at })
       setChurchLastRead(readMap)
       setBroadcastsLoading(false)
-    })
-  }, [churchId, churchConversations, isAdmin])
+    }).catch(() => setBroadcastsLoading(false))
+  }, [churchId, churchConversations, isAdmin, userId])
 
   // ── Persist current chapter so it survives tab navigation ────────────
   useEffect(() => {
@@ -1169,9 +1171,11 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state?.tabReset])
 
+  const openReaderTimer = useRef(null)
   function openReader() {
     setHubClosing(true)
-    setTimeout(() => {
+    clearTimeout(openReaderTimer.current)
+    openReaderTimer.current = setTimeout(() => {
       setHubOpen(false)
       setHubClosing(false)
       if (lastChapterRef) openPassage(lastChapterRef)

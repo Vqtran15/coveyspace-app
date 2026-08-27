@@ -633,7 +633,8 @@ export default function ChurchSettingsPage() {
   // Auto-load PCO groups when connected
   useEffect(() => {
     if (pcoConnection) loadPcoGroups()
-  }, [!!pcoConnection])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pcoConnection])
 
   // Handle OAuth callback ?pco= param
   useEffect(() => {

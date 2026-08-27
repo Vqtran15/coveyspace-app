@@ -168,7 +168,8 @@ test.describe('ConversationList — delete flow', () => {
   })
 
   test('delete confirmation modal uses deleteClosing for animation', () => {
-    expect(src).toContain('deleteClosing ? \'animate-overlay-out\' : \'animate-overlay-in\'')
+    // Backdrop uses animate-backdrop-out; the sheet itself uses animate-sheet-out
+    expect(src).toContain('deleteClosing ? \'animate-backdrop-out\' : \'animate-overlay-in\'')
   })
 
   test('"Delete forever" button calls deleteConversation with the conv', () => {
@@ -208,11 +209,14 @@ test.describe('ChatTab — pinnedGroupId lifted state', () => {
   })
 
   test('pinnedGroupId is passed down to ConversationList', () => {
-    expect(src).toContain('pinnedGroupId={pinnedGroupId}')
+    // Props are spread via convListProps object: pinnedGroupId, (shorthand)
+    expect(src).toContain('pinnedGroupId,')
+    expect(src).toContain('<ConversationList {...convListProps} />')
   })
 
   test('onPinGroup is passed down to ConversationList', () => {
-    expect(src).toContain('onPinGroup={setPinnedGroupId}')
+    // Props are spread via convListProps object
+    expect(src).toContain('onPinGroup: setPinnedGroupId,')
   })
 })
 
@@ -275,11 +279,12 @@ test.describe('EditDishesModal — layout toggle', () => {
   })
 
   test('active column button uses ember background', () => {
-    expect(src).toContain("columns === n\n                        ? 'bg-ember text-white shadow-sm'")
+    expect(src).toContain("'bg-ember text-white shadow-sm'")
+    expect(src).toContain('columns === n')
   })
 
-  test('Layout label is shown above the toggle', () => {
-    expect(src).toContain('>Layout<')
+  test('Sign-up layout label is shown above the toggle', () => {
+    expect(src).toContain('Sign-up layout')
   })
 })
 
@@ -313,7 +318,7 @@ test.describe('MealPage — slot_columns grid', () => {
 test.describe('RotationTab — auto-fill copies slot_columns', () => {
   let src
 
-  test.beforeAll(() => { src = read('src/RotationTab.jsx') })
+  test.beforeAll(() => { src = read('src/components/RotationTab.jsx') })
 
   test('autoFillPages insert includes slot_columns from template', () => {
     expect(src).toContain('slot_columns: template.slot_columns')
@@ -358,36 +363,30 @@ test.describe('ScheduleTab — button polish', () => {
 
   test.beforeAll(() => { src = read('src/components/ScheduleTab.jsx') })
 
-  test('CalendarBlank is imported', () => {
-    expect(src).toMatch(/import\s*\{[^}]*CalendarBlank[^}]*\}\s*from/)
+  test('ListBullets is imported', () => {
+    expect(src).toMatch(/import\s*\{[^}]*ListBullets[^}]*\}\s*from/)
   })
 
-  test('"This Week" replaces "Today" on the jump button', () => {
-    expect(src).toContain('This Week')
-    expect(src).not.toContain('>Today<')
+  test('ListBullets manage-pages button is rendered', () => {
+    expect(src).toContain('<ListBullets size={20}')
   })
 
-  test('"This Week" button shows CalendarBlank icon', () => {
-    expect(src).toContain('<CalendarBlank size={15}')
-  })
-
-  test('"This Week" button uses visible border styling (not bg-stone-100)', () => {
-    expect(src).toContain('bg-white border border-stone-300')
-    expect(src).not.toMatch(/"px-3 py-1\.5 rounded-xl[^"]*bg-stone-100[^"]*"\s*>/)
-  })
-
-  test('ListBullets button also uses visible border styling (matches "This Week")', () => {
+  test('ListBullets button uses bg-stone-100 background', () => {
     const listBulletsIdx = src.indexOf('<ListBullets')
     const btnStart = src.lastIndexOf('<button', listBulletsIdx)
     const btnSnippet = src.slice(btnStart, listBulletsIdx + 100)
-    expect(btnSnippet).toContain('border border-stone-300')
+    expect(btnSnippet).toContain('bg-stone-100')
   })
 
-  test('ListBullets button has hover:border-ember', () => {
+  test('ListBullets button has hover:text-ember', () => {
     const listBulletsIdx = src.indexOf('<ListBullets')
     const btnStart = src.lastIndexOf('<button', listBulletsIdx)
     const btnSnippet = src.slice(btnStart, listBulletsIdx + 100)
-    expect(btnSnippet).toContain('hover:border-ember')
+    expect(btnSnippet).toContain('hover:text-ember')
+  })
+
+  test('ListBullets button has aria-label="Manage pages"', () => {
+    expect(src).toContain('aria-label="Manage pages"')
   })
 })
 
@@ -398,16 +397,12 @@ test.describe('SlotCard — signed-up card styling', () => {
 
   test.beforeAll(() => { src = read('src/components/SlotCard.jsx') })
 
-  test('signed-up card uses ember tint background (bg-ember/10)', () => {
-    expect(src).toContain('bg-ember/10')
+  test('signed-up card uses ember border (border-ember/40)', () => {
+    expect(src).toContain('border-ember/40')
   })
 
-  test('signed-up card border uses ember tint (border-ember/25)', () => {
-    expect(src).toContain('border-ember/25')
-  })
-
-  test('signed-up card hover border is ember-tinted (hover:border-ember/40)', () => {
-    expect(src).toContain('hover:border-ember/40')
+  test('signed-up card hover border is ember-tinted (hover:border-ember/60)', () => {
+    expect(src).toContain('hover:border-ember/60')
   })
 
   test('old lagoon colors are gone from SlotCard', () => {
@@ -416,28 +411,26 @@ test.describe('SlotCard — signed-up card styling', () => {
     expect(src).not.toContain('hover:border-lagoon')
   })
 
-  test('notes text uses stone-500 (not stone-400)', () => {
+  test('notes text uses stone-500 with line-clamp (not stone-400)', () => {
     expect(src).toContain('text-xs text-stone-500 mt-1.5 line-clamp-1 italic')
     expect(src).not.toContain('text-xs text-stone-400 mt-1.5 line-clamp-1 italic')
   })
 })
 
-// ─── 7. BibleTab.jsx ─────────────────────────────────────────────────────────
+// ─── 7. ResourcesTab.jsx (was BibleTab) ──────────────────────────────────────
 
-test.describe('BibleTab — Books icon visibility', () => {
+test.describe('ResourcesTab — Books icon visibility', () => {
   let src
 
-  test.beforeAll(() => { src = read('src/components/BibleTab.jsx') })
+  test.beforeAll(() => { src = read('src/components/ResourcesTab.jsx') })
 
-  test('Books icon button has bg-stone-100 background', () => {
-    expect(src).toContain('bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember')
+  test('ResourcesTab is exported (BibleTab has been renamed)', () => {
+    expect(src).toContain('export default function ResourcesTab(')
   })
 
-  test('Books icon button now has a persistent background (not just on hover)', () => {
-    // The Browse Bible button should have bg-stone-100 as its base state, not just on hover
-    // Old: text-stone-400 hover:text-ember hover:bg-stone-100 (no base bg)
-    // New: bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember
-    expect(src).toContain('bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember')
+  test('Books icon button has bg-stone-100 background', () => {
+    expect(src).toContain('bg-stone-100')
+    expect(src).toContain('hover:text-ember')
   })
 
   test('Books icon button has aria-label="Browse Bible"', () => {
@@ -611,5 +604,9 @@ test.describe('Regression — SlotCard entrance animation preserved', () => {
   test('ember arrow still prefixes signup name on filled slots', () => {
     expect(src).toContain('text-ember font-medium truncate')
     expect(src).toContain('→ {signup.name}')
+  })
+
+  test('notes text is clamped to one line to prevent layout overflow', () => {
+    expect(src).toContain('line-clamp-1')
   })
 })

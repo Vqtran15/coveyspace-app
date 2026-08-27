@@ -69,7 +69,8 @@ export function AppProvider({ children }) {
 
   // ── Group settings ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!groupId) return
+    if (!groupId) { setGroupSettings(null); return }
+    setGroupSettings(null)
     db.groupSettings.fetch(groupId).then(({ data }) => setGroupSettings(data ?? {}))
   }, [groupId])
 
@@ -81,7 +82,7 @@ export function AppProvider({ children }) {
 
   // ── Church data ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!userId) return
+    if (!userId) { setIsChurchAdmin(false); return }
     db.churches.fetchRole(userId).then(({ data }) => {
       setIsChurchAdmin((data ?? []).length > 0)
     })
@@ -89,6 +90,7 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     if (!churchId) { setChurchConversations([]); return }
+    setChurchConversations([])
     db.churches.fetchConversations(churchId).then(({ data }) => {
       setChurchConversations(data ?? [])
     })
@@ -96,8 +98,9 @@ export function AppProvider({ children }) {
 
   // ── Birthdays ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!groupId) return
-    supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
+    if (!groupId) { setBirthdays([]); return }
+    setBirthdays([])
+    supabase.from('birthdays').select('id, name, birthday, profile_user_id').eq('community_group_id', groupId).then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
 
     const channel = supabase
       .channel(`birthdays:${groupId}`)

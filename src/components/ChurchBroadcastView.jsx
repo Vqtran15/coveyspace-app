@@ -75,7 +75,8 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         setMessages((r.data ?? []).map(m => ({ ...m, _isAdminOnly: isAdminOnly })))
         setLoading(false)
       })
-    db.churches.updateLastRead(convId, userId).then()
+      .catch(() => setLoading(false))
+    db.churches.updateLastRead(convId, userId).then().catch(() => {})
   }, [convId, userId, isAdminOnly])
 
   useEffect(() => {
