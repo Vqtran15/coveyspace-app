@@ -88,14 +88,18 @@ export default function WelcomeSplash({ onDone }) {
     window.matchMedia?.('(display-mode: standalone)').matches ||
     ('standalone' in window.navigator && window.navigator.standalone === true)
 
+  const isDesktop = window.matchMedia?.('(min-width: 1024px)').matches ?? false
+
   const visibleTourCards = TOUR_CARDS.filter(c => groupSettings == null || groupSettings[c.key] !== false)
+
+  const skipInstall = isStandalone || isDesktop
 
   const steps = useRef(
     isAdmin
       ? (createdFromSettings
-          ? ['welcome', 'setup', 'invite', ...(isStandalone ? [] : ['install'])]
-          : ['welcome', 'personalize', 'features', 'setup', 'invite', ...(isStandalone ? [] : ['install'])])
-      : ['welcome', 'personalize', 'tour', ...(isStandalone ? [] : ['install'])]
+          ? ['welcome', 'setup', 'invite', ...(skipInstall ? [] : ['install'])]
+          : ['welcome', 'personalize', 'features', 'setup', 'invite', ...(skipInstall ? [] : ['install'])])
+      : ['welcome', 'personalize', 'tour', ...(skipInstall ? [] : ['install'])]
   ).current
 
   const [step, setStep] = useState(() => {
@@ -864,10 +868,10 @@ export default function WelcomeSplash({ onDone }) {
           )}
 
           <button
-            onClick={() => isStandalone ? close() : setStep('install')}
+            onClick={() => skipInstall ? close() : setStep('install')}
             className="w-full py-3.5 bg-stone-100 hover:bg-stone-200 active:scale-[0.98] text-stone-600 font-semibold rounded-xl transition-all text-sm"
           >
-            {isStandalone ? 'Go to my group' : 'Continue →'}
+            {skipInstall ? 'Go to my group' : 'Continue →'}
           </button>
         </div>
       </div>
@@ -884,7 +888,7 @@ export default function WelcomeSplash({ onDone }) {
               <p className="text-stone-400 text-sm">Swipe to explore what your group can do.</p>
             </div>
             <button
-              onClick={() => isStandalone ? close() : setStep('install')}
+              onClick={() => skipInstall ? close() : setStep('install')}
               className="text-stone-400 text-sm font-medium pt-1 shrink-0"
             >
               Skip
@@ -930,12 +934,12 @@ export default function WelcomeSplash({ onDone }) {
             <button
               onClick={() => {
                 if (!isLastSlide) { setTourSlide(s => s + 1); return }
-                if (isStandalone) memberCta ? closeAndNavigate(memberCta.path, memberCta.state) : close()
+                if (skipInstall) memberCta ? closeAndNavigate(memberCta.path, memberCta.state) : close()
                 else setStep('install')
               }}
               className="w-full max-w-xs py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
-              {isLastSlide ? (isStandalone && memberCta ? memberCta.label : 'Got it') : 'Next'}
+              {isLastSlide ? (skipInstall && memberCta ? memberCta.label : 'Got it') : 'Next'}
             </button>
           </div>
         </div>
