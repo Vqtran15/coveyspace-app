@@ -157,7 +157,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [pwError, setPwError] = useState(null)
 
   const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [groupsOpen, setGroupsOpen] = useState(false)
+  const [groupsOpen, setGroupsOpen] = useState(true)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [adminSectionOpen, setAdminSectionOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)

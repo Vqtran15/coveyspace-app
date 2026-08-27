@@ -182,7 +182,10 @@ export default function AdminPage() {
         </button>
         <div className="flex items-center gap-2">
           <ShieldCheck size={20} weight="fill" className="text-ember" />
-          <h1 className="text-2xl font-bold text-stone-800">Admin</h1>
+          <h1 className="text-2xl font-bold text-stone-800">
+            <span className="lg:hidden">Admin</span>
+            <span className="hidden lg:inline">Group Settings</span>
+          </h1>
         </div>
       </div>
 
