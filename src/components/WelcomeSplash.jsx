@@ -144,9 +144,9 @@ export default function WelcomeSplash({ onDone }) {
       prayer_enabled:    groupSettings?.prayer_enabled    !== false,
       birthdays_enabled: groupSettings?.birthdays_enabled !== false,
       guide_enabled:     groupSettings?.guide_enabled     !== false,
-      events_enabled:    groupSettings?.events_enabled    === true,
-      giving_enabled:    groupSettings?.giving_enabled    === true,
-      bible_enabled:     groupSettings?.bible_enabled     === true,
+      events_enabled:    groupSettings?.events_enabled    !== false,
+      giving_enabled:    groupSettings?.giving_enabled    !== false,
+      bible_enabled:     groupSettings?.bible_enabled     !== false,
     }
   })
   const [savingFeatures, setSavingFeatures] = useState(false)
