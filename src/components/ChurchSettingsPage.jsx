@@ -570,6 +570,7 @@ export default function ChurchSettingsPage() {
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
   const [pcoGroups, setPcoGroups]                 = useState([])
   const [pcoGroupsLoading, setPcoGroupsLoading]   = useState(false)
+  const [pcoGroupsError, setPcoGroupsError]       = useState(null)
   const [selectedPcoGroup, setSelectedPcoGroup]   = useState(null)
   const [pcoMembers, setPcoMembers]               = useState([])
   const [pcoMembersLoading, setPcoMembersLoading] = useState(false)
@@ -657,10 +658,16 @@ export default function ChurchSettingsPage() {
 
   async function loadPcoGroups() {
     setPcoGroupsLoading(true)
+    setPcoGroupsError(null)
     try {
-      const { data } = await supabase.functions.invoke('pco-api', {
+      const { data, error } = await supabase.functions.invoke('pco-api', {
         body: { path: '/groups/v2/groups?per_page=100&order=name' },
       })
+      if (error) {
+        console.error('[PCO] groups load error:', error)
+        setPcoGroupsError(error?.message ?? 'Failed to load groups')
+        return
+      }
       if (data?.data) {
         const groups = data.data.map(g => ({ id: g.id, name: g.attributes.name }))
         setPcoGroups(groups)
@@ -669,6 +676,10 @@ export default function ChurchSettingsPage() {
           setSelectedPcoGroup(syncId)
           loadPcoMembers(syncId)
         }
+      } else if (data?.errors) {
+        const msg = data.errors?.[0]?.title ?? 'PCO API error'
+        console.error('[PCO] API error:', data.errors)
+        setPcoGroupsError(msg)
       }
     } finally {
       setPcoGroupsLoading(false)
@@ -938,8 +949,26 @@ export default function ChurchSettingsPage() {
                   <p className="text-xs font-semibold text-stone-500 mb-2">Import members from a PCO Group</p>
                   {pcoGroupsLoading ? (
                     <div className="h-10 bg-stone-100 rounded-xl animate-pulse" />
+                  ) : pcoGroupsError ? (
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-red-500 flex-1">{pcoGroupsError}</p>
+                      <button
+                        onClick={loadPcoGroups}
+                        className="shrink-0 text-xs text-ember font-semibold hover:underline"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   ) : pcoGroups.length === 0 ? (
-                    <p className="text-xs text-stone-400">No PCO Groups found. Make sure the Groups product is enabled in Planning Center.</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-stone-400 flex-1">No PCO Groups found. Make sure the Groups product is enabled in Planning Center.</p>
+                      <button
+                        onClick={loadPcoGroups}
+                        className="shrink-0 text-xs text-ember font-semibold hover:underline"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   ) : (
                     <div className="flex gap-2">
                       <div className="relative flex-1">
