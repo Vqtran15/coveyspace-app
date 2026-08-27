@@ -657,19 +657,22 @@ export default function ChurchSettingsPage() {
 
   async function loadPcoGroups() {
     setPcoGroupsLoading(true)
-    const { data } = await supabase.functions.invoke('pco-api', {
-      body: { path: '/groups/v2/groups?per_page=100&order=name' },
-    })
-    if (data?.data) {
-      const groups = data.data.map(g => ({ id: g.id, name: g.attributes.name }))
-      setPcoGroups(groups)
-      const syncId = pcoConnection?.pco_sync_group_id
-      if (syncId && groups.some(g => g.id === syncId)) {
-        setSelectedPcoGroup(syncId)
-        loadPcoMembers(syncId)
+    try {
+      const { data } = await supabase.functions.invoke('pco-api', {
+        body: { path: '/groups/v2/groups?per_page=100&order=name' },
+      })
+      if (data?.data) {
+        const groups = data.data.map(g => ({ id: g.id, name: g.attributes.name }))
+        setPcoGroups(groups)
+        const syncId = pcoConnection?.pco_sync_group_id
+        if (syncId && groups.some(g => g.id === syncId)) {
+          setSelectedPcoGroup(syncId)
+          loadPcoMembers(syncId)
+        }
       }
+    } finally {
+      setPcoGroupsLoading(false)
     }
-    setPcoGroupsLoading(false)
   }
 
   async function loadPcoMembers(pcoGroupId) {

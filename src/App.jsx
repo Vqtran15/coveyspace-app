@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion, LayoutGroup } from 'framer-motion'
-import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck, Church } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { useAnimatedOverlay } from './hooks/useAnimatedOverlay.js'
@@ -85,7 +85,7 @@ function AppContent() {
   const location = useLocation()
   const {
     session, userId, authLoading, isRecovery, clearRecovery,
-    displayName, groupId, groupName, isAdmin,
+    displayName, groupId, groupName, isAdmin, isChurchAdmin,
     avatarIcon, avatarColorKey, avatarImageUrl,
     groupSettings, setGroupSettings,
     mealsEnabled, servicesEnabled, chatEnabled, prayerEnabled,
@@ -561,7 +561,18 @@ function AppContent() {
               }`}
             >
               <ShieldCheck size={20} weight={location.pathname === '/admin' ? 'fill' : 'regular'} />
-              Admin
+              Group Settings
+            </button>
+          )}
+          {isChurchAdmin && (
+            <button
+              onClick={() => navigate('/church-settings')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors mt-1 ${
+                location.pathname === '/church-settings' ? 'bg-ember text-white' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-800'
+              }`}
+            >
+              <Church size={20} weight={location.pathname === '/church-settings' ? 'fill' : 'regular'} />
+              Church Settings
             </button>
           )}
         </nav>
