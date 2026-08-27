@@ -12,6 +12,7 @@ import {
   TextAlignLeft, TextAlignCenter, TextAlignRight,
   TextB, TextItalic, TextUnderline, TextStrikethrough,
   TextIndent, TextOutdent, ArrowsClockwise, CheckCircle, Copy, Envelope,
+  Eye, PencilSimple,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -90,11 +91,15 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
   const [sending, setSending]                   = useState(false)
   const [exiting, setExiting]                   = useState(false)
   const [confirmOpen, setConfirmOpen]           = useState(false)
-  const [linkBarOpen, setLinkBarOpen]           = useState(false)
+  const [previewMode, setPreviewMode]           = useState(false)
+  const [linkDialogOpen, setLinkDialogOpen]     = useState(false)
   const [linkUrl, setLinkUrl]                   = useState('')
-  const linkInputRef  = useRef(null)
-  const composerRef   = useRef(null)
-  const scrollBodyRef = useRef(null)
+  const [linkText, setLinkText]                 = useState('')
+  const [savedRange, setSavedRange]             = useState(null)
+  const linkTextInputRef = useRef(null)
+  const linkUrlInputRef  = useRef(null)
+  const composerRef      = useRef(null)
+  const scrollBodyRef    = useRef(null)
 
   useEffect(() => {
     // Lock body scroll so iOS doesn't scroll the underlying page into view
@@ -171,19 +176,52 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     if (!error && data) { onSent(data); handleClose() }
   }
 
-  function openLinkBar() {
-    setLinkUrl(editor?.getAttributes('link').href ?? '')
-    setLinkBarOpen(true)
-    setTimeout(() => linkInputRef.current?.focus(), 40)
+  function openLinkDialog() {
+    if (!editor) return
+    const { from, to } = editor.state.selection
+    const selectedText = editor.state.doc.textBetween(from, to, ' ')
+    const existingHref = editor.getAttributes('link').href ?? ''
+    setLinkText(selectedText)
+    setLinkUrl(existingHref)
+    setSavedRange({ from, to })
+    setLinkDialogOpen(true)
+    setTimeout(() => {
+      if (selectedText) linkUrlInputRef.current?.focus()
+      else linkTextInputRef.current?.focus()
+    }, 40)
   }
 
-  function applyLink() {
-    if (!editor) return
-    const url = linkUrl.trim()
-    if (url) editor.chain().focus().setLink({ href: url }).run()
-    else editor.chain().focus().unsetLink().run()
-    setLinkBarOpen(false)
+  function closeLinkDialog() {
+    setLinkDialogOpen(false)
     setLinkUrl('')
+    setLinkText('')
+    setSavedRange(null)
+  }
+
+  function applyLinkDialog() {
+    if (!editor || !savedRange) return
+    const url  = linkUrl.trim()
+    const text = linkText.trim()
+    const normalizedUrl = url && !url.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//) ? `https://${url}` : url
+
+    if (!normalizedUrl) {
+      editor.chain().focus().setTextSelection(savedRange).unsetLink().run()
+    } else if (text) {
+      editor.chain()
+        .focus()
+        .setTextSelection(savedRange)
+        .insertContent({ type: 'text', text, marks: [{ type: 'link', attrs: { href: normalizedUrl, target: '_blank', rel: 'noopener noreferrer' } }] })
+        .run()
+    } else {
+      editor.chain().focus().setTextSelection(savedRange).setLink({ href: normalizedUrl }).run()
+    }
+    closeLinkDialog()
+  }
+
+  function removeLinkDialog() {
+    if (!editor || !savedRange) return
+    editor.chain().focus().setTextSelection(savedRange).unsetLink().run()
+    closeLinkDialog()
   }
 
   function toggleGroup(id) {
@@ -225,9 +263,16 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           </button>
           <h2 className="flex-1 text-lg font-bold text-stone-800">New Broadcast</h2>
           <button
+            onClick={() => setPreviewMode(p => !p)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors shrink-0"
+          >
+            {previewMode ? <PencilSimple size={15} /> : <Eye size={15} />}
+            {previewMode ? 'Edit' : 'Preview'}
+          </button>
+          <button
             onClick={() => !sendDisabled && setConfirmOpen(true)}
             disabled={sendDisabled}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40 shrink-0"
           >
             <PaperPlaneRight size={15} weight="fill" />
             Send
@@ -306,46 +351,32 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
             </div>
           </div>
 
-          {/* Editor card — toolbar on top, content below */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
-
-            {/* Link bar — replaces toolbar when open */}
-            {linkBarOpen ? (
-              <div className="border-b border-stone-100 px-3 py-2.5 flex items-center gap-2">
-                <LinkSimple size={15} className="text-stone-400 shrink-0" />
-                <input
-                  ref={linkInputRef}
-                  type="url"
-                  value={linkUrl}
-                  onChange={e => setLinkUrl(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') { e.preventDefault(); applyLink() }
-                    if (e.key === 'Escape') setLinkBarOpen(false)
+          {/* Editor / Preview toggle */}
+          {previewMode ? (
+            <div>
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Preview</p>
+              {editorEmpty ? (
+                <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-8 text-center">
+                  <p className="text-sm text-stone-500">Nothing to preview yet — write something first.</p>
+                </div>
+              ) : (
+                <BroadcastCard
+                  msg={{
+                    display_name: displayName,
+                    body: editor?.getHTML() ?? '',
+                    created_at: new Date().toISOString(),
+                    audience,
+                    target_group_ids: targetMode === 'select' ? [...selectedGroupIds] : null,
                   }}
-                  placeholder="https://example.com"
-                  className="flex-1 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none min-w-0"
+                  isChurchAdmin={true}
+                  groupsInChurch={groupsInChurch}
+                  isAdminOnly={audience === 'admins_only'}
                 />
-                {editor?.isActive('link') && (
-                  <button
-                    type="button"
-                    onClick={() => { editor.chain().focus().unsetLink().run(); setLinkBarOpen(false) }}
-                    className="text-xs font-medium text-red-500 hover:text-red-700 px-2 py-1 shrink-0 transition-colors"
-                  >
-                    Remove
-                  </button>
-                )}
-                <button type="button" onClick={applyLink} className="text-xs font-semibold text-ember px-2 py-1 shrink-0">
-                  Apply
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLinkBarOpen(false)}
-                  className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 shrink-0 transition-colors"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
+              )}
+            </div>
+          ) : (
+            /* Editor card — toolbar on top, content below */
+            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
               <div className="border-b border-stone-100 overflow-x-auto scrollbar-hide">
                 <div className="flex items-center gap-0.5 px-3 py-1.5 min-w-max">
                   <select
@@ -412,20 +443,90 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
                     <TextAlignRight size={15} />
                   </TBtn>
                   <TSep />
-                  <TBtn active={editor?.isActive('link') || linkBarOpen} onActivate={openLinkBar} title="Link">
+                  <TBtn active={editor?.isActive('link') || linkDialogOpen} onActivate={openLinkDialog} title="Link">
                     <LinkSimple size={15} />
                   </TBtn>
                 </div>
               </div>
-            )}
 
-            <div className="px-4 pt-3 pb-4">
-              <EditorContent editor={editor} />
+              <div className="px-4 pt-3 pb-4">
+                <EditorContent editor={editor} />
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>
+
+      {/* Link dialog */}
+      {linkDialogOpen && (
+        <>
+          <div className="fixed inset-0 z-[80] bg-black/40" onClick={closeLinkDialog} />
+          <div
+            className="fixed inset-x-4 z-[81] bg-white rounded-2xl shadow-xl p-5 space-y-4"
+            style={{ top: '50%', transform: 'translateY(-50%)' }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-stone-800">Insert Link</h3>
+              <button
+                type="button"
+                onClick={closeLinkDialog}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors"
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Text</label>
+                <input
+                  ref={linkTextInputRef}
+                  type="text"
+                  value={linkText}
+                  onChange={e => setLinkText(e.target.value)}
+                  placeholder="Display text"
+                  className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">URL</label>
+                <input
+                  ref={linkUrlInputRef}
+                  type="url"
+                  value={linkUrl}
+                  onChange={e => setLinkUrl(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); applyLinkDialog() }
+                    if (e.key === 'Escape') closeLinkDialog()
+                  }}
+                  placeholder="https://example.com"
+                  className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              {editor?.isActive('link') && (
+                <button
+                  type="button"
+                  onClick={removeLinkDialog}
+                  className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={applyLinkDialog}
+                disabled={!linkUrl.trim() && !linkText.trim()}
+                className="flex-1 py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {confirmOpen && (
         <ConfirmSendModal
