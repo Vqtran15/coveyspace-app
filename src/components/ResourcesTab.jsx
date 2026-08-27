@@ -792,10 +792,14 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const [allBroadcasts, setAllBroadcasts] = useState([])
   const [adminBroadcasts, setAdminBroadcasts] = useState([])
   const [broadcastsLoading, setBroadcastsLoading] = useState(false)
+  const [churchLastRead, setChurchLastRead] = useState({})
   const [churchBroadcastConv, setChurchBroadcastConv]       = useState(null)
   const [churchBroadcastClosing, setChurchBroadcastClosing] = useState(false)
 
-  function openBroadcast(conv) { setChurchBroadcastConv(conv) }
+  function openBroadcast(conv) {
+    setChurchBroadcastConv(conv)
+    setChurchLastRead(prev => ({ ...prev, [conv.id]: new Date().toISOString() }))
+  }
   function closeBroadcast() {
     setChurchBroadcastClosing(true)
     setTimeout(() => { setChurchBroadcastConv(null); setChurchBroadcastClosing(false) }, 200)
@@ -908,12 +912,20 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
     const convAdmin = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
     if (!convAll && !convAdmin) return
     setBroadcastsLoading(true)
+    const convIdList = [convAll?.id, convAdmin?.id].filter(Boolean)
     Promise.all([
       convAll   ? db.churches.fetchMessages(convAll.id)   : Promise.resolve({ data: [] }),
       convAdmin ? db.churches.fetchMessages(convAdmin.id) : Promise.resolve({ data: [] }),
-    ]).then(([{ data: allData }, { data: adminData }]) => {
+      supabase.from('church_conversation_members')
+        .select('conversation_id, last_read_at')
+        .eq('user_id', userId)
+        .in('conversation_id', convIdList),
+    ]).then(([{ data: allData }, { data: adminData }, { data: readData }]) => {
       setAllBroadcasts((allData ?? []).slice(0, 6))
       setAdminBroadcasts((adminData ?? []).slice(0, 6))
+      const readMap = {}
+      readData?.forEach(r => { readMap[r.conversation_id] = r.last_read_at })
+      setChurchLastRead(readMap)
       setBroadcastsLoading(false)
     })
   }, [churchId, churchConversations, isAdmin])
@@ -1300,58 +1312,74 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   ) : (
                     <>
                       {/* Church Bulletin — all members */}
-                      {allMembersConv && (
-                        <button
-                          onClick={() => openBroadcast(allMembersConv)}
-                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                          style={{ animationDelay: '0ms' }}
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-                            <Megaphone size={22} weight="fill" className="text-stone-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-0.5">
-                              <p className="text-base font-semibold text-stone-800">Church Bulletin</p>
-                              {allBroadcasts[0] && (
-                                <p className="text-xs text-stone-400 shrink-0">{relativeTime(allBroadcasts[0].created_at)}</p>
+                      {allMembersConv && (() => {
+                        const latest = allBroadcasts[0]
+                        const lastRead = churchLastRead[allMembersConv.id]
+                        const hasUnread = !!latest && (!lastRead || new Date(latest.created_at) > new Date(lastRead))
+                        return (
+                          <button
+                            onClick={() => openBroadcast(allMembersConv)}
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                            style={{ animationDelay: '0ms' }}
+                          >
+                            <div className="relative shrink-0">
+                              <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center">
+                                <Megaphone size={22} weight="fill" className="text-stone-500" />
+                              </div>
+                              {hasUnread && <div className="absolute -top-1 -right-1 w-3 h-3 bg-ember rounded-full border-2 border-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <p className={`text-base truncate ${hasUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>Church Bulletin</p>
+                                {latest && (
+                                  <p className={`text-xs shrink-0 ${hasUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{relativeTime(latest.created_at)}</p>
+                                )}
+                              </div>
+                              {latest?.body ? (
+                                <p className={`text-sm line-clamp-2 leading-relaxed ${hasUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{stripHtml(latest.body)}</p>
+                              ) : (
+                                <p className="text-xs text-stone-400">No announcements yet</p>
                               )}
                             </div>
-                            {allBroadcasts[0]?.body ? (
-                              <p className="text-sm text-stone-500 line-clamp-2 leading-relaxed">{stripHtml(allBroadcasts[0].body)}</p>
-                            ) : (
-                              <p className="text-xs text-stone-400">No announcements yet</p>
-                            )}
-                          </div>
-                          <CaretRight size={16} className="text-stone-300 shrink-0" />
-                        </button>
-                      )}
+                            <CaretRight size={16} className="text-stone-300 shrink-0" />
+                          </button>
+                        )
+                      })()}
 
                       {/* Leadership Bulletin — admins only */}
-                      {adminOnlyConv && (
-                        <button
-                          onClick={() => openBroadcast(adminOnlyConv)}
-                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                          style={{ animationDelay: '40ms' }}
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                            <Star size={22} weight="fill" className="text-ember" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-0.5">
-                              <p className="text-base font-semibold text-stone-800">Leadership Bulletin</p>
-                              {adminBroadcasts[0] && (
-                                <p className="text-xs text-stone-400 shrink-0">{relativeTime(adminBroadcasts[0].created_at)}</p>
+                      {adminOnlyConv && (() => {
+                        const latest = adminBroadcasts[0]
+                        const lastRead = churchLastRead[adminOnlyConv.id]
+                        const hasUnread = !!latest && (!lastRead || new Date(latest.created_at) > new Date(lastRead))
+                        return (
+                          <button
+                            onClick={() => openBroadcast(adminOnlyConv)}
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                            style={{ animationDelay: '40ms' }}
+                          >
+                            <div className="relative shrink-0">
+                              <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center">
+                                <Star size={22} weight="fill" className="text-ember" />
+                              </div>
+                              {hasUnread && <div className="absolute -top-1 -right-1 w-3 h-3 bg-ember rounded-full border-2 border-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <p className={`text-base truncate ${hasUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>Leadership Bulletin</p>
+                                {latest && (
+                                  <p className={`text-xs shrink-0 ${hasUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{relativeTime(latest.created_at)}</p>
+                                )}
+                              </div>
+                              {latest?.body ? (
+                                <p className={`text-sm line-clamp-2 leading-relaxed ${hasUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{stripHtml(latest.body)}</p>
+                              ) : (
+                                <p className="text-xs text-stone-400">No messages yet</p>
                               )}
                             </div>
-                            {adminBroadcasts[0]?.body ? (
-                              <p className="text-sm text-stone-500 line-clamp-2 leading-relaxed">{stripHtml(adminBroadcasts[0].body)}</p>
-                            ) : (
-                              <p className="text-xs text-stone-400">No messages yet</p>
-                            )}
-                          </div>
-                          <CaretRight size={16} className="text-stone-300 shrink-0" />
-                        </button>
-                      )}
+                            <CaretRight size={16} className="text-stone-300 shrink-0" />
+                          </button>
+                        )
+                      })()}
                     </>
                   )}
                 </div>
