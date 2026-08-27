@@ -128,7 +128,7 @@ export default function AuthPage() {
           switchMode('signin')
           setNotice(
             joinMode === 'create'
-              ? 'Group created! Check your email to confirm, then sign in. Find your invite code in Admin settings.'
+              ? 'Group created! Check your email to confirm, then sign in. Find your invite code in Group Settings.'
               : 'Account created! Check your email to confirm, then sign in.'
           )
         }
@@ -300,7 +300,7 @@ export default function AuthPage() {
                           className={inputClass}
                         />
                         <p className="text-xs text-stone-400 mt-1.5">
-                          Once signed in, find your invite code in Admin settings to share with members.
+                          Once signed in, find your invite code in Group Settings to share with members.
                         </p>
                       </div>
                       <div>
@@ -353,7 +353,7 @@ export default function AuthPage() {
                       <button
                         type="button"
                         onClick={() => switchMode('forgot')}
-                        className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+                        className="text-sm text-stone-500 hover:text-stone-700 transition-colors"
                       >
                         Forgot password?
                       </button>
@@ -418,7 +418,7 @@ export default function AuthPage() {
                 </div>
               )}
               {notice && (
-                <div className="text-sm text-ember bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                   {notice}
                 </div>
               )}

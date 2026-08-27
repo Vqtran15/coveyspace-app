@@ -78,7 +78,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
     <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
       {mainConv && (
         <>
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pb-1 px-1">Group Chat</p>
+          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide pb-1 px-1">Group Chat</p>
           <motion.button
             onClick={() => onSelect(mainConv)}
             className={`w-full rounded-2xl border shadow p-5 lg:p-3 text-left active:bg-stone-50 transition-colors animate-fade-up ${mainConv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-ember/20'}`}

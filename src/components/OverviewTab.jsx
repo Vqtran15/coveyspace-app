@@ -51,7 +51,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
         {dot && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-ember rounded-full border-2 border-white" />}
       </div>
       <div className="relative flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-stone-500 uppercase tracking-wide mb-0.5">{label}</p>
+        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-0.5">{label}</p>
         <p className="text-base font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
@@ -448,7 +448,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                     <div className="flex items-start gap-4">
                       <Megaphone size={34} weight="fill" className="text-white/90 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-white/90 uppercase tracking-wide mb-1.5">Announcement</p>
+                        <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1.5">Announcement</p>
                         <p className="text-base text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
                       </div>
                       {isAdmin && (
@@ -474,7 +474,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                       <Megaphone size={20} weight="fill" className="text-ember/50" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold text-ember uppercase tracking-wide mb-0.5">Announcement</p>
+                      <p className="text-xs font-semibold text-ember uppercase tracking-wide mb-0.5">Announcement</p>
                       <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
                     </div>
                   </div>

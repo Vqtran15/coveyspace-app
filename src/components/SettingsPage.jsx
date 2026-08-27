@@ -347,7 +347,7 @@ useEffect(() => {
           </div>
           <button
             onClick={() => { setNameValue(displayName); setEditFirst(legalFirst); setEditLast(legalLast); openSettingsSheet('profile') }}
-            className="shrink-0 text-sm font-medium text-ember"
+            className="shrink-0 px-3 py-2 text-sm font-medium text-ember rounded-lg hover:bg-ember/5 transition-colors"
           >
             Edit
           </button>
@@ -394,9 +394,9 @@ useEffect(() => {
           {groupsOpen && (
             <motion.div
               key="groups-section"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
@@ -453,7 +453,7 @@ useEffect(() => {
           <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
             <Plus size={15} weight="bold" className="text-stone-500" />
           </div>
-          <span className="flex-1 text-left text-sm font-medium text-stone-800">New Group</span>
+          <span className="flex-1 text-left text-sm font-medium text-stone-800">Join or Start a Group</span>
           <CaretDown
             size={15}
             weight="bold"
@@ -464,9 +464,9 @@ useEffect(() => {
           {newGroupOpen && (
             <motion.div
               key="new-group-section"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
@@ -506,9 +506,9 @@ useEffect(() => {
                   {joinGroupExpanded && (
                     <motion.div
                       key="join-form"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
+                      initial={{ height: 0 }}
+                      animate={{ height: 'auto' }}
+                      exit={{ height: 0 }}
                       transition={{ duration: 0.18 }}
                       className="overflow-hidden"
                     >
@@ -554,7 +554,7 @@ useEffect(() => {
             <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
               <Bell size={16} weight="fill" className="text-stone-500" />
             </div>
-            <span className="flex-1 text-left text-sm font-medium text-stone-800">Preferences</span>
+            <span className="flex-1 text-left text-sm font-medium text-stone-800">Notifications</span>
             <CaretDown
               size={15}
               weight="bold"
@@ -565,9 +565,9 @@ useEffect(() => {
             {prefsOpen && (
               <motion.div
                 key="prefs-section"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
                 transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
                 className="overflow-hidden"
               >
@@ -620,9 +620,9 @@ useEffect(() => {
             {adminSectionOpen && (
               <motion.div
                 key="admin-section"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
                 transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
                 className="overflow-hidden"
               >
@@ -651,7 +651,7 @@ useEffect(() => {
                         <ShieldCheck size={18} weight="fill" className="text-stone-500" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-stone-700">Admin settings</p>
+                        <p className="text-sm font-semibold text-stone-800">Group Settings</p>
                         <p className="text-xs text-stone-400">Members, features &amp; schedules</p>
                       </div>
                       <CaretRight size={14} className="text-stone-300" />
@@ -685,9 +685,9 @@ useEffect(() => {
           {accountOpen && (
             <motion.div
               key="account-section"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
@@ -707,7 +707,7 @@ useEffect(() => {
                     className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
                   >
                     <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
-                    <span className="flex-1 text-left">View setup guide</span>
+                    <span className="flex-1 text-left">Revisit setup guide</span>
                     <CaretRight size={14} className="text-stone-300 shrink-0" />
                   </button>
                 )}

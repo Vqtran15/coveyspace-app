@@ -557,7 +557,7 @@ function AppContent() {
             <button
               onClick={() => navigate('/admin')}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors mt-1 ${
-                location.pathname === '/admin' ? 'bg-ember text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-stone-700'
+                location.pathname === '/admin' ? 'bg-ember text-white' : 'text-stone-500 hover:bg-stone-100 hover:text-stone-800'
               }`}
             >
               <ShieldCheck size={20} weight={location.pathname === '/admin' ? 'fill' : 'regular'} />
@@ -615,7 +615,7 @@ function AppContent() {
                     />
                   </motion.span>
                   {showLabel && (
-                    <span className={`relative z-10 text-[11px] font-medium leading-none ${active ? 'text-white' : 'text-stone-400'}`}>
+                    <span className={`relative z-10 text-[13px] font-medium leading-none ${active ? 'text-white' : 'text-stone-400'}`}>
                       {t.shortLabel}
                     </span>
                   )}

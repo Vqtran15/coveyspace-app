@@ -508,7 +508,7 @@ export default function WelcomeSplash({ onDone }) {
         <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
           <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Set up features</h1>
           <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            Turn on what your group needs. You can change these anytime in Admin settings.
+            Turn on what your group needs. You can change these anytime in Group Settings.
           </p>
 
           <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
@@ -803,7 +803,7 @@ export default function WelcomeSplash({ onDone }) {
 
             {!showMeals && !showServices && (
               <div className="bg-white border border-stone-100 rounded-2xl p-6 shadow-sm text-center mb-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
-                <p className="text-stone-400 text-sm">No schedule to configure — you can always enable features later in Admin settings.</p>
+                <p className="text-stone-400 text-sm">No schedule to configure — you can always enable features later in Group Settings.</p>
               </div>
             )}
 
