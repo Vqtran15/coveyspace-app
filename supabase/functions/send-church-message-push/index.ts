@@ -57,8 +57,11 @@ Deno.serve(async (req) => {
     if (!subs?.length) return new Response('No push subscriptions', { status: 200 })
 
     const senderName = msg.display_name ?? 'Someone'
-    const msgPreview = msg.body
-      ? (msg.body.length > 100 ? msg.body.slice(0, 97) + '…' : msg.body)
+    const plainBody = msg.body
+      ? msg.body.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+      : ''
+    const msgPreview = plainBody
+      ? (plainBody.length > 100 ? plainBody.slice(0, 97) + '…' : plainBody)
       : '📷 Photo'
 
     const title = msg.audience === 'admins_only'
