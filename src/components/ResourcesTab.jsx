@@ -1255,7 +1255,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const adminOnlyConv  = (isAdmin && churchConversations?.find(c => c.type === 'admins_only')) || null
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
+    <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-4">
 
       {/* ── Church broadcast overlay (slides over the hub) ───────────────── */}
       {churchBroadcastConv && (
@@ -1273,7 +1273,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
           className={`fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto ${hubClosing ? 'animate-slide-out-right' : ''}`}
           style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'var(--sab, env(safe-area-inset-bottom))' }}
         >
-          <main className="max-w-md mx-auto px-4 pt-8 pb-12">
+          <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
             <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
 
             {/* Church broadcasts — two separate cards per audience */}

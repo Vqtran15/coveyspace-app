@@ -321,11 +321,11 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   const showAnnouncement = isAdmin || !!announcement
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pt-8 pb-12">
+    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div
-          className="fixed inset-x-0 z-30 flex justify-center transition-transform"
+          className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
           <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>

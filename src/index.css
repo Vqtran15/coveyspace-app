@@ -67,6 +67,13 @@ a:focus:not(:focus-visible),
   display: none !important;
 }
 
+/* On desktop the mobile pill nav is hidden, so remove its 68px bottom clearance */
+@media (min-width: 1024px) {
+  .tab-scroll-content {
+    padding-bottom: 24px !important;
+  }
+}
+
 /* Emoji picker: increase horizontal padding so the rightmost column has
    clearance from the viewport edge. The picker's own .epr-main sets 10px;
    !important here wins the cascade regardless of injection order. */

@@ -438,6 +438,7 @@ function AppContent() {
           >
             <div
               ref={setScrollRef}
+              className="tab-scroll-content"
               style={{
                 height: '100%',
                 overflowY: 'auto',
@@ -641,61 +642,85 @@ function AppContent() {
       )}
 
       {guide.open && (
-        <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${guide.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'var(--sat)' }}
-        >
-          <GuideTab
-            onClose={guide.close}
-            guideUrl={groupSettings?.guide_url}
-            guideType={groupSettings?.guide_type}
-            guideContent={groupSettings?.guide_content}
-            isAdmin={isAdmin}
-            groupId={groupId}
-            onGuideSave={async ({ type, url, content }) => {
-              const normalized = type === 'url' && url
-                ? (!/^https?:\/\//i.test(url.trim()) ? `https://${url.trim()}` : url.trim())
-                : (url ?? null)
-              const { error } = await supabase
-                .from('group_settings')
-                .upsert({ group_id: groupId, guide_type: type, guide_url: normalized, guide_content: content ?? null }, { onConflict: 'group_id' })
-              if (!error) setGroupSettings(prev => ({ ...prev, guide_type: type, guide_url: normalized, guide_content: content ?? null }))
-              return { error }
-            }}
+        <>
+          <div
+            className={`hidden lg:block fixed inset-0 lg:left-56 z-[29] bg-black/40 ${guide.closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+            onClick={guide.close}
           />
-        </div>
+          <div
+            className={`fixed inset-0 lg:left-56 z-30 overflow-y-auto lg:overflow-hidden bg-sunrise-50 lg:bg-transparent lg:flex lg:items-start lg:justify-center lg:py-12 ${guide.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+            style={{ paddingTop: 'var(--sat)' }}
+          >
+            <div className="w-full min-h-full bg-sunrise-50 lg:min-h-0 lg:max-w-3xl lg:rounded-2xl lg:shadow-2xl lg:overflow-y-auto lg:max-h-full">
+              <GuideTab
+                onClose={guide.close}
+                guideUrl={groupSettings?.guide_url}
+                guideType={groupSettings?.guide_type}
+                guideContent={groupSettings?.guide_content}
+                isAdmin={isAdmin}
+                groupId={groupId}
+                onGuideSave={async ({ type, url, content }) => {
+                  const normalized = type === 'url' && url
+                    ? (!/^https?:\/\//i.test(url.trim()) ? `https://${url.trim()}` : url.trim())
+                    : (url ?? null)
+                  const { error } = await supabase
+                    .from('group_settings')
+                    .upsert({ group_id: groupId, guide_type: type, guide_url: normalized, guide_content: content ?? null }, { onConflict: 'group_id' })
+                  if (!error) setGroupSettings(prev => ({ ...prev, guide_type: type, guide_url: normalized, guide_content: content ?? null }))
+                  return { error }
+                }}
+              />
+            </div>
+          </div>
+        </>
       )}
 
       {birthday.open && (
-        <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 ${birthday.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-        >
-          <BirthdayTab
-            birthdays={birthdays}
-            revealKey="birthdays"
-            onClose={birthday.close}
+        <>
+          <div
+            className={`hidden lg:block fixed inset-0 lg:left-56 z-[29] bg-black/40 ${birthday.closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+            onClick={birthday.close}
           />
-        </div>
+          <div
+            className={`fixed inset-0 lg:left-56 z-30 lg:flex lg:items-start lg:justify-center lg:py-12 lg:bg-transparent ${birthday.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+          >
+            <div className="w-full h-full bg-sunrise-50 lg:h-auto lg:max-h-full lg:max-w-xl lg:rounded-2xl lg:shadow-2xl lg:overflow-hidden">
+              <BirthdayTab
+                birthdays={birthdays}
+                revealKey="birthdays"
+                onClose={birthday.close}
+              />
+            </div>
+          </div>
+        </>
       )}
 
       {giving.open && (
-        <div
-          className={`fixed inset-0 lg:left-56 z-30 bg-sunrise-50 overflow-y-auto ${giving.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'var(--sat)' }}
-        >
-          <GivingTab
-            onClose={giving.close}
-            givingUrl={groupSettings?.giving_url}
-            isAdmin={isAdmin}
-            onGivingSave={async (url) => {
-              const { error } = await supabase
-                .from('group_settings')
-                .upsert({ group_id: groupId, giving_url: url }, { onConflict: 'group_id' })
-              if (!error) setGroupSettings(prev => ({ ...prev, giving_url: url }))
-              return { error }
-            }}
+        <>
+          <div
+            className={`hidden lg:block fixed inset-0 lg:left-56 z-[29] bg-black/40 ${giving.closing ? 'animate-overlay-out' : 'animate-overlay-in'}`}
+            onClick={giving.close}
           />
-        </div>
+          <div
+            className={`fixed inset-0 lg:left-56 z-30 overflow-y-auto lg:overflow-hidden bg-sunrise-50 lg:bg-transparent lg:flex lg:items-start lg:justify-center lg:py-12 ${giving.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+            style={{ paddingTop: 'var(--sat)' }}
+          >
+            <div className="w-full min-h-full bg-sunrise-50 lg:min-h-0 lg:max-w-2xl lg:rounded-2xl lg:shadow-2xl lg:overflow-y-auto lg:max-h-full">
+              <GivingTab
+                onClose={giving.close}
+                givingUrl={groupSettings?.giving_url}
+                isAdmin={isAdmin}
+                onGivingSave={async (url) => {
+                  const { error } = await supabase
+                    .from('group_settings')
+                    .upsert({ group_id: groupId, giving_url: url }, { onConflict: 'group_id' })
+                  if (!error) setGroupSettings(prev => ({ ...prev, giving_url: url }))
+                  return { error }
+                }}
+              />
+            </div>
+          </div>
+        </>
       )}
 
       <UpdatePrompt />

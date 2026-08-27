@@ -809,14 +809,14 @@ export default function ChurchSettingsPage() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-3xl lg:max-w-2xl mx-auto px-4 pt-8 pb-12">
+    <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 pt-8 pb-12">
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => navigate(-1)}
           aria-label="Back"
-          className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          className="lg:hidden w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
         >
           <ArrowLeft size={20} weight="bold" />
         </button>
@@ -827,7 +827,7 @@ export default function ChurchSettingsPage() {
       </div>
 
       {churchName && (
-        <p className="text-sm text-stone-500 -mt-6 mb-6 pl-[52px]">{churchName}</p>
+        <p className="text-sm text-stone-500 -mt-6 mb-6 pl-[52px] lg:pl-7">{churchName}</p>
       )}
 
       {/* Tab nav */}

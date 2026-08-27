@@ -298,21 +298,27 @@ useEffect(() => {
 
   return (
     <>
-    <main className="max-w-md mx-auto px-4 pt-8 pb-12">
+    <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
 
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-1 min-w-0 -ml-2">
+        <div className="flex items-center gap-1 min-w-0 -ml-2 lg:ml-0">
           <button
             onClick={onClose}
             aria-label="Back"
-            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
+            className="lg:hidden w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
           >
             <ArrowLeft size={20} weight="bold" />
           </button>
           <h1 className="text-3xl font-bold text-stone-800">Settings</h1>
         </div>
       </div>
+
+      {/* Desktop two-column / mobile single-column */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+
+      {/* ── Left column: identity ── */}
+      <div>
 
       {/* Profile identity card */}
       <div className="mb-4">
@@ -543,6 +549,11 @@ useEffect(() => {
         </AnimatePresence>
       </div>
 
+      </div>{/* end left column */}
+
+      {/* ── Right column: settings ── */}
+      <div>
+
       {/* Preferences */}
       {push.supported && (
         <div className="mb-4">
@@ -742,6 +753,9 @@ useEffect(() => {
         <ChatTeardropDots size={15} weight="fill" />
         <span>Send feedback</span>
       </button>
+
+      </div>{/* end right column */}
+      </div>{/* end grid */}
 
     </main>
 
