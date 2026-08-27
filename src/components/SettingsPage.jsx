@@ -745,14 +745,17 @@ useEffect(() => {
         </AnimatePresence>
       </div>
 
-      {/* Feedback — footer link */}
-      <button
-        onClick={() => setFeedbackOpen(true)}
-        className="w-full flex items-center justify-center gap-1.5 py-3 mb-4 text-sm text-stone-400 hover:text-ember transition-colors"
-      >
-        <ChatTeardropDots size={15} weight="fill" />
-        <span>Send feedback</span>
-      </button>
+      {/* Feedback */}
+      <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden mb-4">
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+        >
+          <ChatTeardropDots size={16} weight="fill" className="text-stone-400 shrink-0" />
+          <span className="flex-1 text-left">Send feedback</span>
+          <CaretRight size={14} className="text-stone-300 shrink-0" />
+        </button>
+      </div>
 
       </div>{/* end right column */}
       </div>{/* end grid */}

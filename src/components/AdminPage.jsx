@@ -170,7 +170,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 pt-8 pb-12">
+    <div className="max-w-2xl mx-auto px-4 pt-8 pb-12">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
