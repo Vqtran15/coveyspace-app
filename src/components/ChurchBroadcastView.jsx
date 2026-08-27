@@ -150,7 +150,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         ) : (
           <div
             className="max-w-2xl mx-auto px-4 py-6 space-y-3"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
+            style={{ paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px + 24px)' }}
           >
             {messages.map((msg, i) => (
               <BroadcastCard key={msg.id} msg={msg} isChurchAdmin={isChurchAdmin} isAdminOnly={msg._isAdminOnly} idx={i} />

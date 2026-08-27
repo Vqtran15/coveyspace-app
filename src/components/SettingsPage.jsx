@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning } from '@phosphor-icons/react'
+import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, UserCircle } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -158,6 +158,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
 
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [newGroupOpen, setNewGroupOpen] = useState(false)
 
   // Group switcher
   const [switchingGroupId, setSwitchingGroupId] = useState(null)
@@ -414,75 +415,102 @@ useEffect(() => {
         </div>
 
         {/* Create / Join actions */}
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">New Group</p>
-        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-          <button
-            onClick={() => setCreateGroupOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
-          >
-            <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-              <Sparkle size={15} weight="fill" className="text-ember" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-stone-800">Create a new group</p>
-              <p className="text-xs text-stone-400">Start a group and invite members</p>
-            </div>
-            <CaretRight size={14} className="text-stone-300 shrink-0" />
-          </button>
+        <button
+          onClick={() => setNewGroupOpen(v => !v)}
+          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
+          aria-expanded={newGroupOpen}
+        >
+          <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+            <Plus size={15} weight="bold" className="text-stone-500" />
+          </div>
+          <span className="flex-1 text-left text-sm font-medium text-stone-800">New Group</span>
+          <CaretDown
+            size={15}
+            weight="bold"
+            className={`text-stone-400 transition-transform duration-200 ${newGroupOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+        <AnimatePresence initial={false}>
+          {newGroupOpen && (
+            <motion.div
+              key="new-group-section"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setCreateGroupOpen(true)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                    <Sparkle size={15} weight="fill" className="text-ember" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-stone-800">Create a new group</p>
+                    <p className="text-xs text-stone-400">Start a group and invite members</p>
+                  </div>
+                  <CaretRight size={14} className="text-stone-300 shrink-0" />
+                </button>
 
-          <button
-            onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
-          >
-            <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-              <Plus size={15} weight="bold" className="text-stone-500" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-stone-800">Join another group</p>
-              <p className="text-xs text-stone-400">Enter an invite code to join</p>
-            </div>
-            <CaretRight
-              size={14}
-              className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
-            />
-          </button>
-
-          <AnimatePresence initial={false}>
-            {joinGroupExpanded && (
-              <motion.div
-                key="join-form"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                className="overflow-hidden"
-              >
-                <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
-                  <input
-                    type="text"
-                    value={joinGroupCode}
-                    onChange={e => {
-                      setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
-                      setJoinGroupError(null)
-                    }}
-                    placeholder="Invite code (e.g. A3B7C2)"
-                    className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                <button
+                  onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                    <Plus size={15} weight="bold" className="text-stone-500" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-stone-800">Join another group</p>
+                    <p className="text-xs text-stone-400">Enter an invite code to join</p>
+                  </div>
+                  <CaretRight
+                    size={14}
+                    className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
                   />
-                  {joinGroupError && (
-                    <p className="text-xs text-red-500">{joinGroupError}</p>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {joinGroupExpanded && (
+                    <motion.div
+                      key="join-form"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
+                        <input
+                          type="text"
+                          value={joinGroupCode}
+                          onChange={e => {
+                            setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
+                            setJoinGroupError(null)
+                          }}
+                          placeholder="Invite code (e.g. A3B7C2)"
+                          className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                        />
+                        {joinGroupError && (
+                          <p className="text-xs text-red-500">{joinGroupError}</p>
+                        )}
+                        <button
+                          onClick={handleJoinGroup}
+                          disabled={joinGroupCode.length < 6 || joinGroupLoading}
+                          className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+                        >
+                          {joinGroupLoading ? 'Joining…' : 'Join Group'}
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
-                  <button
-                    onClick={handleJoinGroup}
-                    disabled={joinGroupCode.length < 6 || joinGroupLoading}
-                    className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
-                  >
-                    {joinGroupLoading ? 'Joining…' : 'Join Group'}
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Preferences */}
@@ -556,12 +584,15 @@ useEffect(() => {
       <div className="mb-4">
         <button
           onClick={() => setAccountOpen(v => !v)}
-          className="w-full flex items-center justify-between mb-2"
+          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
           aria-expanded={accountOpen}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Account</p>
+          <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+            <UserCircle size={17} weight="fill" className="text-ember" />
+          </div>
+          <span className="flex-1 text-left text-sm font-medium text-stone-800">Account</span>
           <CaretDown
-            size={14}
+            size={15}
             weight="bold"
             className={`text-stone-400 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
           />

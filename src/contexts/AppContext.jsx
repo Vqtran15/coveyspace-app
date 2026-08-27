@@ -28,7 +28,12 @@ export function AppProvider({ children }) {
   const groupId       = profile?.community_group_id ?? null
   const displayName   = profile?.display_name ?? ''
   const groupName     = profile?.community_groups?.name ?? session?.user?.user_metadata?.community_group_name ?? ''
-  const isAdmin       = profile?.role === 'admin'
+  // Derive isAdmin from group_memberships (per-group) rather than profiles.role
+  // (profiles.role is a denormalized cache that can lag on group switches).
+  // Fall back to profiles.role only before memberships have loaded.
+  const isAdmin = (
+    (allMemberships.find(m => m.community_group_id === groupId)?.role ?? profile?.role) === 'admin'
+  )
   const avatarIcon     = profile?.avatar_icon ?? null
   const avatarColorKey = profile?.avatar_color ?? null
   const avatarImageUrl = profile?.avatar_image_url ?? null
