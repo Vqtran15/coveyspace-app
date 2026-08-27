@@ -1300,7 +1300,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       {allMembersConv && (
                         <button
                           onClick={() => openBroadcast(allMembersConv)}
-                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                          style={{ animationDelay: '0ms' }}
                         >
                           <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
                             <Megaphone size={22} weight="fill" className="text-stone-500" />
@@ -1326,7 +1327,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       {adminOnlyConv && (
                         <button
                           onClick={() => openBroadcast(adminOnlyConv)}
-                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                          style={{ animationDelay: '40ms' }}
                         >
                           <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                             <Star size={22} weight="fill" className="text-ember" />
@@ -1358,7 +1360,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Bible</p>
               <button
                 onClick={openReader}
-                className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                style={{ animationDelay: '80ms' }}
               >
                 <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                   <BookOpen size={22} weight="fill" className="text-ember" />
@@ -1378,7 +1381,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             {(guideEnabled || givingEnabled) && (
               <div className="mb-6">
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Church Resources</p>
-                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-stack-in" style={{ animationDelay: '120ms' }}>
                   {guideEnabled && (
                     <button
                       onClick={onOpenGuide}

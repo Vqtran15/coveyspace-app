@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning } from '@phosphor-icons/react'
+import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -157,6 +157,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [pwError, setPwError] = useState(null)
 
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
 
   // Group switcher
   const [switchingGroupId, setSwitchingGroupId] = useState(null)
@@ -553,45 +554,69 @@ useEffect(() => {
 
       {/* Account */}
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Account</p>
-        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-          <button
-            onClick={() => openSettingsSheet('password')}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
-          >
-            <Lock size={16} weight="bold" className="text-stone-400 shrink-0" />
-            <span className="flex-1 text-left">Change password</span>
-            <CaretRight size={14} className="text-stone-300 shrink-0" />
-          </button>
-
-          {onRevisitGuide && (
-            <button
-              onClick={onRevisitGuide}
-              className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+        <button
+          onClick={() => setAccountOpen(v => !v)}
+          className="w-full flex items-center justify-between mb-2"
+          aria-expanded={accountOpen}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Account</p>
+          <CaretDown
+            size={14}
+            weight="bold"
+            className={`text-stone-400 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+        <AnimatePresence initial={false}>
+          {accountOpen && (
+            <motion.div
+              key="account-section"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              className="overflow-hidden"
             >
-              <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">View setup guide</span>
-              <CaretRight size={14} className="text-stone-300 shrink-0" />
-            </button>
+              <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => openSettingsSheet('password')}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+                >
+                  <Lock size={16} weight="bold" className="text-stone-400 shrink-0" />
+                  <span className="flex-1 text-left">Change password</span>
+                  <CaretRight size={14} className="text-stone-300 shrink-0" />
+                </button>
+
+                {onRevisitGuide && (
+                  <button
+                    onClick={onRevisitGuide}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+                  >
+                    <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
+                    <span className="flex-1 text-left">View setup guide</span>
+                    <CaretRight size={14} className="text-stone-300 shrink-0" />
+                  </button>
+                )}
+
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors border-b border-stone-100"
+                >
+                  <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
+                  <span className="flex-1 text-left">Sign out</span>
+                </button>
+
+                <button
+                  onClick={() => navigate('/danger-zone')}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
+                >
+                  <Warning size={16} weight="fill" className="text-red-400 shrink-0" />
+                  <span className="flex-1 text-left text-stone-500">Danger Zone</span>
+                  <CaretRight size={14} className="text-stone-300 shrink-0" />
+                </button>
+              </div>
+            </motion.div>
           )}
-
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors border-b border-stone-100"
-          >
-            <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
-            <span className="flex-1 text-left">Sign out</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/danger-zone')}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
-          >
-            <Warning size={16} weight="fill" className="text-red-400 shrink-0" />
-            <span className="flex-1 text-left text-stone-500">Danger Zone</span>
-            <CaretRight size={14} className="text-stone-300 shrink-0" />
-          </button>
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* Feedback — footer link */}

@@ -875,12 +875,13 @@ export default function ChurchSettingsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {broadcastMessages.map(msg => (
+              {broadcastMessages.map((msg, i) => (
                 <BroadcastCard
                   key={msg.id}
                   msg={msg}
                   isChurchAdmin
                   groupsInChurch={groupsInChurch}
+                  idx={i}
                 />
               ))}
             </div>
