@@ -203,8 +203,8 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
     await page.waitForTimeout(2000)
 
     await expect(page.locator('h1:has-text("Church Settings")')).toBeVisible({ timeout: 8000 })
-    // Broadcasts tab should be active by default
-    await expect(page.locator('button[aria-pressed="true"]:has-text("Broadcasts")')).toBeVisible({ timeout: 5000 })
+    // Announcements tab should be active by default
+    await expect(page.locator('button[aria-pressed="true"]:has-text("Announcements")')).toBeVisible({ timeout: 5000 })
   })
 
   test('"New Broadcast" button is visible', async ({ page }) => {
@@ -212,7 +212,7 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
     await page.goto(BASE + '/church-settings', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000)
 
-    await expect(page.locator('button:has-text("New Broadcast")')).toBeVisible({ timeout: 8000 })
+    await expect(page.locator('button:has-text("New Announcement")')).toBeVisible({ timeout: 8000 })
   })
 
   test('Broadcast composer opens when New Broadcast is tapped', async ({ page }) => {
@@ -220,10 +220,10 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
     await page.goto(BASE + '/church-settings', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000)
 
-    await page.locator('button:has-text("New Broadcast")').click()
+    await page.locator('button:has-text("New Announcement")').click()
     await page.waitForTimeout(500)
 
-    await expect(page.locator('h2:has-text("New Broadcast")')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('h2:has-text("New Announcement")')).toBeVisible({ timeout: 5000 })
     await expect(page.locator('button:has-text("Send")')).toBeVisible()
   })
 
@@ -231,7 +231,7 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
     await loginAndReady(page)
     await page.goto(BASE + '/church-settings', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000)
-    await page.locator('button:has-text("New Broadcast")').click()
+    await page.locator('button:has-text("New Announcement")').click()
     await page.waitForTimeout(500)
 
     const sendBtn = page.locator('button:has-text("Send")').first()
@@ -242,17 +242,17 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
     await loginAndReady(page)
     await page.goto(BASE + '/church-settings', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000)
-    await page.locator('button:has-text("New Broadcast")').click()
+    await page.locator('button:has-text("New Announcement")').click()
     await page.waitForTimeout(500)
 
-    await expect(page.locator('h2:has-text("New Broadcast")')).toBeVisible()
+    await expect(page.locator('h2:has-text("New Announcement")')).toBeVisible()
 
     const cancelBtn = page.locator('button[aria-label="Cancel"]').first()
     await expect(cancelBtn).toBeVisible()
     await cancelBtn.click()
     await page.waitForTimeout(400)
 
-    await expect(page.locator('h2:has-text("New Broadcast")')).not.toBeVisible()
+    await expect(page.locator('h2:has-text("New Announcement")')).not.toBeVisible()
     // Settings page restored
     await expect(page.locator('h1:has-text("Church Settings")')).toBeVisible()
   })
@@ -261,7 +261,7 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
     await loginAndReady(page)
     await page.goto(BASE + '/church-settings', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000)
-    await page.locator('button:has-text("New Broadcast")').click()
+    await page.locator('button:has-text("New Announcement")').click()
     await page.waitForTimeout(500)
 
     // Scroll down in the composer to reveal the Audience section
@@ -284,7 +284,7 @@ test.describe('ChurchSettingsPage — Broadcasts tab', () => {
 
     // Either a broadcast card or the empty-state text
     const hasBroadcasts = await page.locator('.bg-white.rounded-2xl:not(.animate-pulse)').count() > 0
-    const hasEmptyState = await page.locator('text=No broadcasts sent yet').isVisible()
+    const hasEmptyState = await page.locator('text=No announcements sent yet').isVisible()
 
     expect(hasBroadcasts || hasEmptyState).toBe(true)
   })
