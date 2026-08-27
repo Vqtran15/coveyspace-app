@@ -52,7 +52,7 @@ function ConfirmSendModal({ sending, summary, onCancel, onConfirm }) {
     <>
       <div className="fixed inset-0 bg-black/40 z-[45]" onClick={onCancel} />
       <div
-        className="fixed inset-x-4 bottom-4 z-[46] bg-white rounded-2xl shadow-xl px-5 pt-5 animate-modal-in"
+        className="fixed inset-x-4 bottom-4 lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2 lg:w-full lg:max-w-sm lg:bottom-8 z-[46] bg-white rounded-2xl shadow-xl px-5 pt-5 animate-modal-in"
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />

@@ -65,6 +65,16 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
     }).catch(() => setSegment(p => p ?? 'meals'))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [isDesktop, setIsDesktop] = useState(
+    () => window.matchMedia('(min-width: 1024px)').matches
+  )
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const handler = (e) => setIsDesktop(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   const [animClass, setAnimClass] = useState('animate-slide-in-right')
   const [localRefreshKey, setLocalRefreshKey] = useState(0)
   const switchingRef     = useRef(false)
@@ -154,9 +164,9 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
         )}
       </div>
 
-      {/* Mobile: single animated panel (hidden on desktop when both enabled) */}
-      {segment && (
-        <div className={`${bothEnabled ? 'lg:hidden' : ''} ${animClass}`}>
+      {/* Single panel: mobile always, desktop only when not showing both side-by-side */}
+      {segment && (!bothEnabled || !isDesktop) && (
+        <div className={animClass}>
           <RotationTab
             key={`${segment}-${localRefreshKey}`}
             ref={rotationRef}
@@ -172,8 +182,8 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
       )}
 
       {/* Desktop: side-by-side panels when both are enabled */}
-      {bothEnabled && (
-        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6 max-w-5xl mx-auto px-4">
+      {bothEnabled && isDesktop && (
+        <div className="lg:grid lg:grid-cols-2 lg:gap-6 max-w-5xl mx-auto px-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-3 px-1">Meals</p>
             <RotationTab
