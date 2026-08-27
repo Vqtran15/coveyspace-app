@@ -58,7 +58,13 @@ Deno.serve(async (req) => {
 
     const senderName = msg.display_name ?? 'Someone'
     const plainBody = msg.body
-      ? msg.body.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+      ? msg.body
+          .replace(/<br\s*\/?>/gi, ' ')
+          .replace(/<\/p>/gi, ' ')
+          .replace(/<\/div>/gi, ' ')
+          .replace(/<[^>]*>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
       : ''
     const msgPreview = plainBody
       ? (plainBody.length > 100 ? plainBody.slice(0, 97) + '…' : plainBody)

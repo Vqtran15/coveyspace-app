@@ -15,8 +15,12 @@ import ChurchBroadcastView from './ChurchBroadcastView.jsx'
 
 function stripHtml(html) {
   try {
-    const doc = new DOMParser().parseFromString(html ?? '', 'text/html')
-    return doc.body.textContent ?? ''
+    const spaced = (html ?? '')
+      .replace(/<br\s*\/?>/gi, ' ')
+      .replace(/<\/p>/gi, ' ')
+      .replace(/<\/div>/gi, ' ')
+    const doc = new DOMParser().parseFromString(spaced, 'text/html')
+    return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim()
   } catch { return '' }
 }
 
