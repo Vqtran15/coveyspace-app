@@ -402,7 +402,7 @@ useEffect(() => {
               key="groups-section"
               initial={{ height: 0 }}
               animate={{ height: 'auto' }}
-              exit={{ height: 0 }}
+              exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
@@ -472,7 +472,7 @@ useEffect(() => {
               key="new-group-section"
               initial={{ height: 0 }}
               animate={{ height: 'auto' }}
-              exit={{ height: 0 }}
+              exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
@@ -514,8 +514,8 @@ useEffect(() => {
                       key="join-form"
                       initial={{ height: 0 }}
                       animate={{ height: 'auto' }}
-                      exit={{ height: 0 }}
-                      transition={{ duration: 0.18 }}
+                      exit={{ height: 0, transition: { duration: 0.15, ease: [0.4, 0, 1, 1] } }}
+                      transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
@@ -578,7 +578,7 @@ useEffect(() => {
                 key="prefs-section"
                 initial={{ height: 0 }}
                 animate={{ height: 'auto' }}
-                exit={{ height: 0 }}
+                exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
                 transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
                 className="overflow-hidden"
               >
@@ -633,7 +633,7 @@ useEffect(() => {
                 key="admin-section"
                 initial={{ height: 0 }}
                 animate={{ height: 'auto' }}
-                exit={{ height: 0 }}
+                exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
                 transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
                 className="overflow-hidden"
               >
@@ -698,7 +698,7 @@ useEffect(() => {
               key="account-section"
               initial={{ height: 0 }}
               animate={{ height: 'auto' }}
-              exit={{ height: 0 }}
+              exit={{ height: 0, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
               className="overflow-hidden"
             >
