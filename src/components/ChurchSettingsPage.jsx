@@ -12,7 +12,6 @@ import {
   TextAlignLeft, TextAlignCenter, TextAlignRight,
   TextB, TextItalic, TextUnderline, TextStrikethrough,
   TextIndent, TextOutdent, ArrowsClockwise, CheckCircle, Copy, Envelope,
-  Eye, PencilSimple,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -246,6 +245,12 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
   }`
 
   return createPortal(
+    <>
+    <div
+      className="fixed left-0 right-0 bg-sunrise-50 z-[69]"
+      style={{ top: 0, height: 'calc(100dvh + 400px)' }}
+      aria-hidden="true"
+    />
     <div
       ref={composerRef}
       className={`fixed left-0 right-0 z-[70] bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
@@ -262,21 +267,6 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
             <ArrowLeft size={22} weight="bold" />
           </button>
           <h2 className="flex-1 text-lg font-bold text-stone-800">New Announcement</h2>
-          <button
-            onClick={() => setPreviewMode(p => !p)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors shrink-0"
-          >
-            {previewMode ? <PencilSimple size={15} /> : <Eye size={15} />}
-            {previewMode ? 'Edit' : 'Preview'}
-          </button>
-          <button
-            onClick={() => !sendDisabled && setConfirmOpen(true)}
-            disabled={sendDisabled}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40 shrink-0"
-          >
-            <PaperPlaneRight size={15} weight="fill" />
-            Send
-          </button>
         </div>
       </div>
 
@@ -351,10 +341,28 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
             </div>
           </div>
 
-          {/* Editor / Preview toggle */}
+          {/* Edit / Preview toggle */}
+          <div className="flex bg-stone-100 rounded-xl p-1">
+            <button
+              type="button"
+              onClick={() => setPreviewMode(false)}
+              aria-pressed={!previewMode}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${!previewMode ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewMode(true)}
+              aria-pressed={previewMode}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${previewMode ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+            >
+              Preview
+            </button>
+          </div>
+
           {previewMode ? (
-            <div>
-              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Preview</p>
+            <>
               {editorEmpty ? (
                 <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-8 text-center">
                   <p className="text-sm text-stone-500">Nothing to preview yet — write something first.</p>
@@ -373,7 +381,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
                   isAdminOnly={audience === 'admins_only'}
                 />
               )}
-            </div>
+            </>
           ) : (
             /* Editor card — toolbar on top, content below */
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
@@ -458,6 +466,23 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
         </div>
       </div>
 
+      {/* Send footer */}
+      <div
+        className="shrink-0 bg-sunrise-50 border-t border-stone-100 px-4 pt-3"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => !sendDisabled && setConfirmOpen(true)}
+            disabled={sendDisabled}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+          >
+            <PaperPlaneRight size={16} weight="fill" />
+            Send Announcement
+          </button>
+        </div>
+      </div>
+
       {/* Link dialog */}
       {linkDialogOpen && (
         <>
@@ -536,7 +561,8 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           onConfirm={doSend}
         />
       )}
-    </div>,
+    </div>
+    </>,
     document.body
   )
 }
