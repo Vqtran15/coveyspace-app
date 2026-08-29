@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { motion, LayoutGroup } from 'framer-motion'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import UnderlineExt from '@tiptap/extension-underline'
@@ -267,6 +268,14 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
             <ArrowLeft size={22} weight="bold" />
           </button>
           <h2 className="flex-1 text-lg font-bold text-stone-800">New Announcement</h2>
+          <button
+            onClick={() => !sendDisabled && setConfirmOpen(true)}
+            disabled={sendDisabled}
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-ember hover:bg-ember/10 transition-colors disabled:opacity-40"
+            aria-label="Send announcement"
+          >
+            <PaperPlaneRight size={22} weight="fill" />
+          </button>
         </div>
       </div>
 
@@ -281,22 +290,38 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           {groupsInChurch.length > 1 && (
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
               <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Send to</p>
-              <div className="bg-stone-100 rounded-xl p-1 flex">
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('all')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'all' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-                >
-                  All groups
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTargetMode('select')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'select' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-                >
-                  Select groups
-                </button>
-              </div>
+              <LayoutGroup id="broadcast-target">
+                <div className="bg-stone-100 rounded-xl p-1 flex">
+                  <button
+                    type="button"
+                    onClick={() => setTargetMode('all')}
+                    className={`flex-1 relative flex items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'all' ? 'text-white' : 'text-stone-500'}`}
+                  >
+                    {targetMode === 'all' && (
+                      <motion.span
+                        layoutId="broadcast-target-pill"
+                        className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <span className="relative z-10">All groups</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTargetMode('select')}
+                    className={`flex-1 relative flex items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${targetMode === 'select' ? 'text-white' : 'text-stone-500'}`}
+                  >
+                    {targetMode === 'select' && (
+                      <motion.span
+                        layoutId="broadcast-target-pill"
+                        className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <span className="relative z-10">Select groups</span>
+                  </button>
+                </div>
+              </LayoutGroup>
               {targetMode === 'select' && (
                 <div className="space-y-0.5 -mx-1">
                   {groupsInChurch.map(g => {
@@ -323,43 +348,75 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           {/* Audience */}
           <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
             <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Audience</p>
-            <div className="bg-stone-100 rounded-xl p-1 flex">
-              <button
-                type="button"
-                onClick={() => setAudience('all_members')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'all_members' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-              >
-                All members
-              </button>
-              <button
-                type="button"
-                onClick={() => setAudience('admins_only')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'admins_only' ? 'bg-ember text-white shadow-sm' : 'text-stone-500'}`}
-              >
-                Group Admins only
-              </button>
-            </div>
+            <LayoutGroup id="broadcast-audience">
+              <div className="bg-stone-100 rounded-xl p-1 flex">
+                <button
+                  type="button"
+                  onClick={() => setAudience('all_members')}
+                  className={`flex-1 relative flex items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'all_members' ? 'text-white' : 'text-stone-500'}`}
+                >
+                  {audience === 'all_members' && (
+                    <motion.span
+                      layoutId="broadcast-audience-pill"
+                      className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">All members</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAudience('admins_only')}
+                  className={`flex-1 relative flex items-center justify-center py-2 text-sm font-medium rounded-lg transition-colors ${audience === 'admins_only' ? 'text-white' : 'text-stone-500'}`}
+                >
+                  {audience === 'admins_only' && (
+                    <motion.span
+                      layoutId="broadcast-audience-pill"
+                      className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">Group Admins only</span>
+                </button>
+              </div>
+            </LayoutGroup>
           </div>
 
           {/* Edit / Preview toggle */}
-          <div className="flex bg-stone-100 rounded-xl p-1">
-            <button
-              type="button"
-              onClick={() => setPreviewMode(false)}
-              aria-pressed={!previewMode}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${!previewMode ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewMode(true)}
-              aria-pressed={previewMode}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${previewMode ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              Preview
-            </button>
-          </div>
+          <LayoutGroup id="broadcast-preview">
+            <div className="flex bg-stone-100 rounded-xl p-1">
+              <button
+                type="button"
+                onClick={() => setPreviewMode(false)}
+                aria-pressed={!previewMode}
+                className={`flex-1 relative flex items-center justify-center py-2 text-sm font-semibold rounded-lg transition-colors ${!previewMode ? 'text-white' : 'text-stone-500 hover:text-stone-700'}`}
+              >
+                {!previewMode && (
+                  <motion.span
+                    layoutId="broadcast-preview-pill"
+                    className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">Edit</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewMode(true)}
+                aria-pressed={previewMode}
+                className={`flex-1 relative flex items-center justify-center py-2 text-sm font-semibold rounded-lg transition-colors ${previewMode ? 'text-white' : 'text-stone-500 hover:text-stone-700'}`}
+              >
+                {previewMode && (
+                  <motion.span
+                    layoutId="broadcast-preview-pill"
+                    className="absolute inset-0 bg-ember rounded-lg shadow-sm"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">Preview</span>
+              </button>
+            </div>
+          </LayoutGroup>
 
           {previewMode ? (
             <>
@@ -463,23 +520,6 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
             </div>
           )}
 
-        </div>
-      </div>
-
-      {/* Send footer */}
-      <div
-        className="shrink-0 bg-sunrise-50 border-t border-stone-100 px-4 pt-3"
-        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
-      >
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => !sendDisabled && setConfirmOpen(true)}
-            disabled={sendDisabled}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
-          >
-            <PaperPlaneRight size={16} weight="fill" />
-            Send Announcement
-          </button>
         </div>
       </div>
 
