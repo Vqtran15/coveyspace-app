@@ -626,7 +626,7 @@ function AppContent() {
                   {active && (
                     <motion.span
                       layoutId="pill-active"
-                      className="absolute bg-ember rounded-full inset-1"
+                      className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`}
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
