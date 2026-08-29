@@ -128,15 +128,6 @@ function AppContent() {
   const [prayerBanner, setPrayerBanner]           = useState(null)
   const [prayerBannerClosing, setPrayerBannerClosing] = useState(false)
 
-  // ── Birthday confetti — fires once when a group member has a birthday today ──
-  const confettiFiredRef = useRef(false)
-  useEffect(() => {
-    if (hasTodayBirthday && !confettiFiredRef.current && !splashVisible) {
-      confettiFiredRef.current = true
-      setShowConfetti(true)
-    }
-  }, [hasTodayBirthday, splashVisible])
-
   // ── Splash screen ──────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setSplashMinDone(true), 1200)
@@ -299,6 +290,16 @@ function AppContent() {
   // ── Derived ────────────────────────────────────────────────────────────────
   const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
   const hasTodayBirthday = birthdaysEnabled && upcoming.some(b => b.daysUntil === 0)
+
+  // ── Birthday confetti — fires once when a group member has a birthday today ──
+  const confettiFiredRef = useRef(false)
+  useEffect(() => {
+    if (hasTodayBirthday && !confettiFiredRef.current && !splashVisible) {
+      confettiFiredRef.current = true
+      setShowConfetti(true)
+    }
+  }, [hasTodayBirthday, splashVisible])
+
   const isChat = location.pathname === '/chat'
   const isFullHeight = isChat
   const [chatViewOpen, setChatViewOpen] = useState(false)
