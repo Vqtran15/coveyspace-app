@@ -621,7 +621,7 @@ function AppContent() {
                 <button
                   key={t.path}
                   onClick={() => handleTabChange(t.path)}
-                  className={`relative flex flex-col items-center justify-center rounded-full touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5' : 'w-14 h-12'}`}
+                  className={`relative flex flex-col items-center justify-center touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5 rounded-2xl' : 'w-14 h-12 rounded-full'}`}
                 >
                   {active && (
                     <motion.span
