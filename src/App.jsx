@@ -611,7 +611,7 @@ function AppContent() {
       {!chatViewOpen && (
         <LayoutGroup id="floating-pill">
           <nav
-            className="pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center px-2 py-1.5"
+            className={`pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 rounded-full flex items-center py-1.5 ${visibleTabs.length <= 3 ? 'px-3 gap-2' : 'px-2'}`}
             style={{ bottom: 'max(16px, calc(var(--sab) + 8px))' }}
           >
             {visibleTabs.map(t => {
