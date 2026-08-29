@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
-import { ListBullets } from '@phosphor-icons/react'
+import { ListBullets, ArrowsClockwise } from '@phosphor-icons/react'
 import RotationTab from './RotationTab.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { mealCutoffDate, toDateString } from '../utils/dates.js'
@@ -105,8 +105,16 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
           className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
-          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          <div className="w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center">
+            <ArrowsClockwise
+              size={16}
+              weight="bold"
+              className={`text-ember ${refreshing ? 'animate-spin' : ''}`}
+              style={{
+                opacity: Math.min(pullDistance / threshold, 1),
+                transform: refreshing ? undefined : `rotate(${(pullDistance / threshold) * 270}deg)`,
+              }}
+            />
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
-import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check } from '@phosphor-icons/react'
+import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check, ArrowsClockwise } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
@@ -70,7 +70,7 @@ function MemberCard({ member, index, onClick }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {lastUpdated && <span className="text-xs text-stone-400">{lastUpdated}</span>}
-          <CaretRight size={14} weight="bold" className="text-stone-300" />
+          <CaretRight size={14} weight="bold" className="text-stone-400" />
         </div>
       </div>
     </motion.button>
@@ -127,7 +127,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs text-stone-400">{formatRelativeDate(groupPrayer.created_at)}</span>
-          <CaretRight size={14} weight="bold" className="text-stone-300" />
+          <CaretRight size={14} weight="bold" className="text-stone-400" />
         </div>
       </div>
     </motion.button>
@@ -588,8 +588,16 @@ export default function PrayerTab() {
           className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
-          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          <div className="w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center">
+            <ArrowsClockwise
+              size={16}
+              weight="bold"
+              className={`text-ember ${refreshing ? 'animate-spin' : ''}`}
+              style={{
+                opacity: Math.min(pullDistance / threshold, 1),
+                transform: refreshing ? undefined : `rotate(${(pullDistance / threshold) * 270}deg)`,
+              }}
+            />
           </div>
         </div>
       )}
@@ -716,7 +724,7 @@ export default function PrayerTab() {
       ) : members.length === 0 ? (
         <div className="text-center py-16 text-stone-500">
           <div className="flex justify-center mb-3">
-            <HandsPraying size={48} weight="fill" className="text-stone-300" />
+            <HandsPraying size={48} weight="fill" className="text-stone-400" />
           </div>
           <p className="text-sm">No members in this group yet</p>
         </div>

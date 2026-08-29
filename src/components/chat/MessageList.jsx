@@ -410,7 +410,7 @@ export default function MessageList() {
                                     className={`relative w-full text-left px-3 py-2.5 rounded-xl border-2 overflow-hidden transition-colors ${voted ? 'border-ember' : 'border-stone-200 hover:border-stone-300'}`}
                                   >
                                     <div
-                                      className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-ember/10' : 'bg-stone-50'}`}
+                                      className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-ember/10' : 'bg-stone-200'}`}
                                       style={{ width: `${Math.max(pct, 4)}%` }}
                                     />
                                     <div className="relative flex items-center justify-between">

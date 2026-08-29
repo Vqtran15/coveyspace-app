@@ -1345,7 +1345,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                                 <p className="text-xs text-stone-400">No announcements yet</p>
                               )}
                             </div>
-                            <CaretRight size={16} className="text-stone-300 shrink-0" />
+                            <CaretRight size={16} className="text-stone-400 shrink-0" />
                           </button>
                         )
                       })()}
@@ -1380,7 +1380,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                                 <p className="text-xs text-stone-400">No messages yet</p>
                               )}
                             </div>
-                            <CaretRight size={16} className="text-stone-300 shrink-0" />
+                            <CaretRight size={16} className="text-stone-400 shrink-0" />
                           </button>
                         )
                       })()}
@@ -1408,7 +1408,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   </p>
                   <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
                 </div>
-                <CaretRight size={16} className="text-stone-300 shrink-0" />
+                <CaretRight size={16} className="text-stone-400 shrink-0" />
               </button>
             </div>
 
@@ -1431,7 +1431,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           <p className="text-xs text-stone-400">Tap to set up</p>
                         )}
                       </div>
-                      <CaretRight size={14} className="text-stone-300 shrink-0" />
+                      <CaretRight size={14} className="text-stone-400 shrink-0" />
                     </button>
                   )}
                   {givingEnabled && (
@@ -1448,7 +1448,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           <p className="text-xs text-stone-400">Tap to set up</p>
                         )}
                       </div>
-                      <CaretRight size={14} className="text-stone-300 shrink-0" />
+                      <CaretRight size={14} className="text-stone-400 shrink-0" />
                     </button>
                   )}
                 </div>

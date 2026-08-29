@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots } from '@phosphor-icons/react'
+import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots, ArrowsClockwise } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -9,6 +9,7 @@ import { useToast } from '../lib/toast.jsx'
 import { haptic } from '../lib/haptic.js'
 import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
+import AnimatedCount from '../lib/AnimatedCount.jsx'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
@@ -49,24 +50,6 @@ function formatDateShort(dateStr, timeStr) {
 }
 
 // Animated slot-machine counter — flips vertically when value changes
-function AnimatedCount({ value }) {
-  return (
-    <span className="relative inline-flex overflow-hidden leading-none align-baseline">
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.span
-          key={value}
-          initial={{ y: '110%', opacity: 0 }}
-          animate={{ y: '0%',   opacity: 1 }}
-          exit={{    y: '-110%', opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
-          className="inline-block"
-        >
-          {value}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  )
-}
 
 function GoingAvatars({ rsvps }) {
   const going = (rsvps ?? []).filter(r => r.status === 'going')
@@ -335,24 +318,33 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
-                { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',       inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white',  inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white',   inactive: 'bg-stone-100 text-stone-500' },
-              ].map(({ status, label, Icon, active, inactive }) => (
-                <motion.button
-                  key={`${status}-${myRsvp?.status === status}`}
-                  initial={myRsvp?.status === status ? { scale: 0.82 } : false}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 520, damping: 15 }}
-                  whileTap={{ scale: 0.87 }}
-                  aria-pressed={myRsvp?.status === status}
-                  onClick={() => onRsvp(event.id, status, myRsvp?.status)}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
-                >
-                  <Icon size={18} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
-                  {label}
-                </motion.button>
-              ))}
+                { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+              ].map(({ status, label, Icon, fillColor, active, inactive }) => {
+                const isActive = myRsvp?.status === status
+                return (
+                  <motion.button
+                    key={status}
+                    whileTap={{ scale: 0.87 }}
+                    aria-pressed={isActive}
+                    onClick={() => onRsvp(event.id, status, myRsvp?.status)}
+                    className={`relative overflow-hidden flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-semibold ${isActive ? active : inactive}`}
+                  >
+                    <motion.span
+                      className={`absolute inset-0 rounded-xl ${fillColor}`}
+                      initial={false}
+                      animate={{ scale: isActive ? 1 : 0 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                      style={{ transformOrigin: 'center' }}
+                    />
+                    <span className="relative z-10 flex flex-col items-center gap-1.5">
+                      <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
+                      {label}
+                    </span>
+                  </motion.button>
+                )
+              })}
             </div>
           </div>
 
@@ -462,24 +454,33 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
         <div className="px-4 pt-3 pb-3.5">
           <div className="flex gap-2 mb-2.5">
             {[
-              { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',      inactive: 'bg-stone-100 text-stone-500' },
-              { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-500' },
-              { status: 'not_going', label: "Can't go", Icon: XIcon,       active: 'bg-stone-500 text-white',  inactive: 'bg-stone-100 text-stone-500' },
-            ].map(({ status, label, Icon, active, inactive }) => (
-              <motion.button
-                key={`${status}-${myRsvp?.status === status}`}
-                initial={myRsvp?.status === status ? { scale: 0.82 } : false}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 520, damping: 15 }}
-                whileTap={{ scale: 0.87 }}
-                onClick={() => { haptic(); onRsvp(event.id, status, myRsvp?.status) }}
-                aria-pressed={myRsvp?.status === status}
-                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${myRsvp?.status === status ? active : inactive}`}
-              >
-                <Icon size={16} weight={myRsvp?.status === status ? 'fill' : 'regular'} />
-                {label}
-              </motion.button>
-            ))}
+              { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+              { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+              { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+            ].map(({ status, label, Icon, fillColor, active, inactive }) => {
+              const isActive = myRsvp?.status === status
+              return (
+                <motion.button
+                  key={status}
+                  whileTap={{ scale: 0.87 }}
+                  onClick={() => { haptic(); onRsvp(event.id, status, myRsvp?.status) }}
+                  aria-pressed={isActive}
+                  className={`relative overflow-hidden flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-sm font-semibold ${isActive ? active : inactive}`}
+                >
+                  <motion.span
+                    className={`absolute inset-0 rounded-xl ${fillColor}`}
+                    initial={false}
+                    animate={{ scale: isActive ? 1 : 0 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                    style={{ transformOrigin: 'center' }}
+                  />
+                  <span className="relative z-10 flex flex-col items-center gap-1">
+                    <Icon size={16} weight={isActive ? 'fill' : 'regular'} />
+                    {label}
+                  </span>
+                </motion.button>
+              )
+            })}
           </div>
           <div className="flex items-center gap-2">
             <GoingAvatars rsvps={eventRsvps} />
@@ -689,8 +690,16 @@ export default function EventsTab() {
           className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
-          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          <div className="w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center">
+            <ArrowsClockwise
+              size={16}
+              weight="bold"
+              className={`text-ember ${refreshing ? 'animate-spin' : ''}`}
+              style={{
+                opacity: Math.min(pullDistance / threshold, 1),
+                transform: refreshing ? undefined : `rotate(${(pullDistance / threshold) * 270}deg)`,
+              }}
+            />
           </div>
         </div>
       )}

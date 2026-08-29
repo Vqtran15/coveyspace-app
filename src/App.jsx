@@ -14,6 +14,7 @@ import { AvatarCircle } from './lib/avatarIcons.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 
 import BirthdayBanner       from './components/BirthdayBanner.jsx'
+import FullScreenConfetti   from './components/FullScreenConfetti.jsx'
 import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 import UpdatePrompt         from './components/UpdatePrompt.jsx'
 import AnnouncementBanner   from './components/AnnouncementBanner.jsx'
@@ -121,10 +122,20 @@ function AppContent() {
 
   const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
   const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
   const [announcement, setAnnouncement]           = useState(null)
   const [announcementClosing, setAnnouncementClosing] = useState(false)
   const [prayerBanner, setPrayerBanner]           = useState(null)
   const [prayerBannerClosing, setPrayerBannerClosing] = useState(false)
+
+  // ── Birthday confetti — fires once when a group member has a birthday today ──
+  const confettiFiredRef = useRef(false)
+  useEffect(() => {
+    if (hasTodayBirthday && !confettiFiredRef.current && !splashVisible) {
+      confettiFiredRef.current = true
+      setShowConfetti(true)
+    }
+  }, [hasTodayBirthday, splashVisible])
 
   // ── Splash screen ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -287,6 +298,7 @@ function AppContent() {
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const upcoming = session && !authLoading ? getUpcomingBirthdays(birthdays) : []
+  const hasTodayBirthday = birthdaysEnabled && upcoming.some(b => b.daysUntil === 0)
   const isChat = location.pathname === '/chat'
   const isFullHeight = isChat
   const [chatViewOpen, setChatViewOpen] = useState(false)
@@ -402,6 +414,9 @@ function AppContent() {
         >
           {/* Banners are flex children — they push the scroll area down while the
               container stays viewport-height. */}
+          {showConfetti && (
+            <FullScreenConfetti onDone={() => setShowConfetti(false)} />
+          )}
           {(announcement || announcementClosing) && (
             <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
           )}
@@ -610,7 +625,7 @@ function AppContent() {
                   {active && (
                     <motion.span
                       layoutId="pill-active"
-                      className={`absolute bg-ember rounded-full ${showLabel ? 'inset-1' : 'top-1 bottom-1 left-0 right-0 mx-auto w-10'}`}
+                      className="absolute bg-ember rounded-full inset-1"
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -621,7 +636,7 @@ function AppContent() {
                     transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                   >
                     <t.Icon
-                      size={24}
+                      size={26}
                       weight={active ? 'fill' : 'regular'}
                       className={active ? 'text-white' : 'text-stone-400'}
                     />
@@ -632,7 +647,10 @@ function AppContent() {
                     </span>
                   )}
                   {t.path === '/chat' && unreadChatCount > 0 && (
-                    <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
+                    <>
+                      <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral/50 rounded-full animate-ping" />
+                      <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
+                    </>
                   )}
                 </button>
               )

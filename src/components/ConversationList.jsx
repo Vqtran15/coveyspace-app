@@ -103,7 +103,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
                 <p className={`text-xs truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
                 <p className="text-xs text-stone-400 lg:hidden">{members.length} members</p>
               </div>
-              <CaretRight size={16} className="text-stone-300 shrink-0" />
+              <CaretRight size={16} className="text-stone-400 shrink-0" />
             </div>
           </motion.button>
         </>

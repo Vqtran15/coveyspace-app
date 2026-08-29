@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley,
+  PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check,
 } from '@phosphor-icons/react'
 import { useChatContext } from './ChatContext.jsx'
 
@@ -27,9 +27,20 @@ export default function MessageInput() {
   } = useChatContext()
 
   const [showAttachMenu, setShowAttachMenu] = useState(false)
+  const [justSent, setJustSent] = useState(false)
   const attachMenuRef = useRef(null)
   const attachBtnRef = useRef(null)
   const emojiPickerRef = useRef(null)
+  const prevSendingRef = useRef(false)
+
+  useEffect(() => {
+    if (prevSendingRef.current && !sending) {
+      setJustSent(true)
+      const t = setTimeout(() => setJustSent(false), 700)
+      return () => clearTimeout(t)
+    }
+    prevSendingRef.current = sending
+  }, [sending])
 
   // Capture-phase pointerdown listener: closes the attach menu when the user taps
   // anywhere outside the menu card or the + button. Fixed backdrop divs don't work
@@ -339,9 +350,31 @@ export default function MessageInput() {
           type="button"
           onClick={handleSend}
           disabled={sending || (!text.trim() && imagePreviews.length === 0)}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
         >
-          <PaperPlaneTilt size={18} weight="fill" />
+          <AnimatePresence mode="wait" initial={false}>
+            {justSent ? (
+              <motion.span
+                key="check"
+                initial={{ scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 22 }}
+              >
+                <Check size={18} weight="bold" />
+              </motion.span>
+            ) : (
+              <motion.span
+                key="plane"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 22 }}
+              >
+                <PaperPlaneTilt size={18} weight="fill" />
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
       </div>
     </div>

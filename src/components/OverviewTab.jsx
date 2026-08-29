@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ForkKnife, HandHeart, Cake, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, GearSix, CalendarHeart, ChatCircleDots, X } from '@phosphor-icons/react'
+import { ForkKnife, HandHeart, Cake, CaretRight, Megaphone, PencilSimple, HandsPraying, ShareNetwork, GearSix, CalendarHeart, ChatCircleDots, X, ArrowsClockwise } from '@phosphor-icons/react'
 import { AvatarCircle } from '../lib/avatarDisplay.jsx'
 import { supabase } from '../lib/supabase.js'
 import { toDateString, mealCutoffDate } from '../utils/dates.js'
@@ -55,7 +55,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
         <p className="text-base font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
         {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
       </div>
-      <CaretRight size={16} className="text-stone-300 shrink-0 relative" />
+      <CaretRight size={16} className="text-stone-400 shrink-0 relative" />
     </motion.button>
   )
 }
@@ -328,8 +328,16 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
           className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)', transform: `translateY(${Math.min(pullDistance, threshold) * 0.6}px)` }}
         >
-          <div className={`w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}>
-            <div className="w-3 h-3 rounded-full border-2 border-ember border-t-transparent" style={{ opacity: pullDistance / threshold }} />
+          <div className="w-8 h-8 rounded-full bg-white shadow-md border border-stone-200 flex items-center justify-center">
+            <ArrowsClockwise
+              size={16}
+              weight="bold"
+              className={`text-ember ${refreshing ? 'animate-spin' : ''}`}
+              style={{
+                opacity: Math.min(pullDistance / threshold, 1),
+                transform: refreshing ? undefined : `rotate(${(pullDistance / threshold) * 270}deg)`,
+              }}
+            />
           </div>
         </div>
       )}
