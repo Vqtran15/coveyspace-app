@@ -1296,14 +1296,15 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
 
             {/* Church broadcasts — two separate cards per audience */}
-            {churchId && (allMembersConv || adminOnlyConv) && (
+            {/* Gate on churchId only so space is reserved before conversations load, preventing layout shift */}
+            {churchId && (
               <div className="mb-6">
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
                   From {churchName ?? 'Your Church'}
                 </p>
                 <div className="space-y-3">
-                  {broadcastsLoading ? (
-                    [0, adminOnlyConv ? 1 : null].filter(i => i !== null).map(i => (
+                  {!allMembersConv && !adminOnlyConv || broadcastsLoading ? (
+                    [0, (adminOnlyConv || isAdmin) ? 1 : null].filter(i => i !== null).map(i => (
                       <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
                         <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
                         <div className="flex-1 space-y-2">
