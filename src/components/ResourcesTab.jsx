@@ -1303,7 +1303,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
           style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'var(--sab, env(safe-area-inset-bottom))' }}
         >
           <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
-            <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
+            <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-stack-in">Resources</h1>
 
             {/* Church broadcasts — two separate cards per audience */}
             {/* Show when churchId is known, OR while profile is still loading (optimistic, prevents cold-start CLS).
@@ -1337,8 +1337,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         return (
                           <button
                             onClick={() => openBroadcast(allMembersConv)}
-                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                            style={{ animationDelay: '0ms' }}
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-fade-in"
                           >
                             <div className="relative shrink-0">
                               <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center">
@@ -1372,7 +1371,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         return (
                           <button
                             onClick={() => openBroadcast(adminOnlyConv)}
-                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-fade-in"
                             style={{ animationDelay: '40ms' }}
                           >
                             <div className="relative shrink-0">
