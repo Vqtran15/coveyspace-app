@@ -749,7 +749,7 @@ function relativeTime(dateStr) {
 // ─── Main ResourcesTab ────────────────────────────────────────────────────────
 
 export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
-  const { userId, churchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin } = useAppContext()
+  const { userId, churchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin, profileLoaded } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
@@ -789,9 +789,9 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   // hub state
   const [hubOpen, setHubOpen] = useState(true)
   const [hubClosing, setHubClosing] = useState(false)
-  const [allBroadcasts, setAllBroadcasts] = useState([])
-  const [adminBroadcasts, setAdminBroadcasts] = useState([])
-  const [broadcastsLoading, setBroadcastsLoading] = useState(false)
+  // null = not yet fetched (show skeleton); [] = fetched but empty; [...] = real data
+  const [allBroadcasts, setAllBroadcasts] = useState(null)
+  const [adminBroadcasts, setAdminBroadcasts] = useState(null)
   const [churchLastRead, setChurchLastRead] = useState({})
   const [churchBroadcastConv, setChurchBroadcastConv]       = useState(null)
   const [churchBroadcastClosing, setChurchBroadcastClosing] = useState(false)
@@ -909,11 +909,19 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
   // ── Load church broadcasts for hub ────────────────────────────────────
   useEffect(() => {
+    // Reset to null (skeleton) on every dependency change — prevents stale data
+    // from showing between the render where allMembersConv arrives and the
+    // render where the fetch completes. This eliminates the empty→skeleton→real cycle.
+    setAllBroadcasts(null)
+    setAdminBroadcasts(null)
     if (!churchId || !churchConversations?.length) return
     const convAll   = churchConversations.find(c => c.type === 'all_members')
     const convAdmin = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
-    if (!convAll && !convAdmin) return
-    setBroadcastsLoading(true)
+    if (!convAll && !convAdmin) {
+      setAllBroadcasts([])
+      setAdminBroadcasts([])
+      return
+    }
     const convIdList = [convAll?.id, convAdmin?.id].filter(Boolean)
     Promise.all([
       convAll   ? db.churches.fetchMessages(convAll.id)   : Promise.resolve({ data: [] }),
@@ -928,8 +936,10 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       const readMap = {}
       readData?.forEach(r => { readMap[r.conversation_id] = r.last_read_at })
       setChurchLastRead(readMap)
-      setBroadcastsLoading(false)
-    }).catch(() => setBroadcastsLoading(false))
+    }).catch(() => {
+      setAllBroadcasts([])
+      setAdminBroadcasts([])
+    })
   }, [churchId, churchConversations, isAdmin, userId])
 
   // ── Persist current chapter so it survives tab navigation ────────────
@@ -1296,15 +1306,18 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
 
             {/* Church broadcasts — two separate cards per audience */}
-            {/* Gate on churchId only so space is reserved before conversations load, preventing layout shift */}
-            {churchId && (
+            {/* Show when churchId is known, OR while profile is still loading (optimistic, prevents cold-start CLS).
+                When profile finishes and churchId is null, the section disappears (one-time first-visit shift only). */}
+            {(!!churchId || (!profileLoaded && !!userId)) && (
               <div className="mb-6">
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
                   From {churchName ?? 'Your Church'}
                 </p>
                 <div className="space-y-3">
-                  {!allMembersConv && !adminOnlyConv || broadcastsLoading ? (
-                    [0, (adminOnlyConv || isAdmin) ? 1 : null].filter(i => i !== null).map(i => (
+                  {/* allBroadcasts === null means not yet fetched — show skeleton.
+                      This prevents the mount→empty→skeleton→data cycle on tab re-navigation. */}
+                  {allBroadcasts === null ? (
+                    Array.from({ length: isAdmin ? 2 : 1 }, (_, i) => (
                       <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
                         <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
                         <div className="flex-1 space-y-2">

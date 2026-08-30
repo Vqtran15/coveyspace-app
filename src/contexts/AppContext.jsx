@@ -16,6 +16,7 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true)
   const [isRecovery, setIsRecovery]   = useState(false)
   const [profile, setProfile]         = useState(null)
+  const [profileLoaded, setProfileLoaded] = useState(false)
   const [groupSettings, setGroupSettings] = useState(null)
   const [birthdays, setBirthdays]         = useState([])
   const [unreadChatCount, setUnreadChatCount] = useState(0)
@@ -64,6 +65,7 @@ export function AppProvider({ children }) {
     if (!session) return
     db.profiles.fetch(session.user.id).then(({ data }) => {
       if (data) setProfile(data)
+      setProfileLoaded(true)
     })
   }, [session])
 
@@ -203,7 +205,7 @@ export function AppProvider({ children }) {
   const existingBirthday = profile?.birthday ?? null
 
   const value = {
-    session, userId, authLoading, isRecovery, clearRecovery,
+    session, userId, authLoading, isRecovery, clearRecovery, profileLoaded,
     displayName, groupId, groupName, isAdmin,
     avatarIcon, avatarColorKey, avatarImageUrl,
     existingBirthday,
