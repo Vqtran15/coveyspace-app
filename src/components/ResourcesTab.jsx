@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -1309,14 +1310,17 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
         </div>
       )}
 
-      {/* ── Hub overlay ──────────────────────────────────────────────────── */}
-      {hubOpen && (
+      {/* ── Hub overlay — portaled to document.body so the tab wrapper's
+           animate-slide-in-right transform doesn't create a containing block
+           for this fixed element (which would double-count --sat and cause a
+           ~47px positional shift when the transform is removed). ───────────── */}
+      {hubOpen && createPortal(
         <div
-          className={`fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto ${hubClosing ? 'animate-slide-out-right' : ''}`}
+          className={`fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto ${hubClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
           style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'var(--sab, env(safe-area-inset-bottom))' }}
         >
           <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
-            <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
+            <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-stack-in" style={{ animationDelay: '0ms' }}>Resources</h1>
 
             {!bulletinReady ? (
               /* ── Loading: hold all slots as skeletons so no card animates in early ── */
@@ -1522,7 +1526,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               </>
             )}
           </main>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Header */}
