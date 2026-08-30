@@ -909,12 +909,17 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
   // ── Load church broadcasts for hub ────────────────────────────────────
   useEffect(() => {
-    // Reset to null (skeleton) on every dependency change — prevents stale data
-    // from showing between the render where allMembersConv arrives and the
-    // render where the fetch completes. This eliminates the empty→skeleton→real cycle.
     setAllBroadcasts(null)
     setAdminBroadcasts(null)
-    if (!churchId || !churchConversations?.length) return
+    if (!churchId) {
+      // Once profile is loaded and there's no church, mark ready with empty so cards animate in
+      if (profileLoaded) {
+        setAllBroadcasts([])
+        setAdminBroadcasts([])
+      }
+      return
+    }
+    if (!churchConversations?.length) return
     const convAll   = churchConversations.find(c => c.type === 'all_members')
     const convAdmin = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
     if (!convAll && !convAdmin) {
@@ -940,7 +945,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       setAllBroadcasts([])
       setAdminBroadcasts([])
     })
-  }, [churchId, churchConversations, isAdmin, userId])
+  }, [churchId, churchConversations, isAdmin, userId, profileLoaded])
 
   // ── Persist current chapter so it survives tab navigation ────────────
   useEffect(() => {
@@ -1283,6 +1288,14 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const allMembersConv = churchConversations?.find(c => c.type === 'all_members') ?? null
   const adminOnlyConv  = (isAdmin && churchConversations?.find(c => c.type === 'admins_only')) || null
 
+  // Gate all cards behind a single ready state — skeletons for every slot until async data
+  // resolves, then stagger everything in together. Prevents translateY animation from firing
+  // on Bible/Guide while bulletin cards are still loading (the "loads low, shifts up" bug).
+  const bulletinReady = allBroadcasts !== null
+  const bulletinCardCount = (allMembersConv ? 1 : 0) + (adminOnlyConv ? 1 : 0)
+  const bibleDelay = churchId ? bulletinCardCount * 40 : 0
+  const guideDelay = bibleDelay + 40
+
   return (
     <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-4">
 
@@ -1305,30 +1318,70 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
           <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
             <h1 className="text-3xl font-bold text-stone-800 mb-6">Resources</h1>
 
-            {/* Church broadcasts — two separate cards per audience */}
-            {/* Show when churchId is known, OR while profile is still loading (optimistic, prevents cold-start CLS).
-                When profile finishes and churchId is null, the section disappears (one-time first-visit shift only). */}
-            {(!!churchId || (!profileLoaded && !!userId)) && (
-              <div className="mb-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
-                  From {churchName ?? 'Your Church'}
-                </p>
-                <div className="space-y-3">
-                  {/* allBroadcasts === null means not yet fetched — show skeleton.
-                      This prevents the mount→empty→skeleton→data cycle on tab re-navigation. */}
-                  {allBroadcasts === null ? (
-                    Array.from({ length: isAdmin ? 2 : 1 }, (_, i) => (
-                      <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
-                        <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-stone-200 rounded w-2/5" />
-                          <div className="h-3 bg-stone-100 rounded w-3/4" />
-                          <div className="h-3 bg-stone-100 rounded w-1/2" />
+            {!bulletinReady ? (
+              /* ── Loading: hold all slots as skeletons so no card animates in early ── */
+              <div className="space-y-6">
+                {/* Bulletin skeletons — shown while profile or church data is loading */}
+                {(!profileLoaded || !!churchId) && (
+                  <div>
+                    <div className="h-3.5 bg-stone-200 rounded w-32 mb-2 animate-pulse" />
+                    <div className="space-y-3">
+                      {Array.from({ length: isAdmin ? 2 : 1 }, (_, i) => (
+                        <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                          <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-stone-200 rounded w-2/5" />
+                            <div className="h-3 bg-stone-100 rounded w-3/4" />
+                            <div className="h-3 bg-stone-100 rounded w-1/2" />
+                          </div>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Bible skeleton */}
+                <div>
+                  <div className="h-3.5 bg-stone-200 rounded w-16 mb-2 animate-pulse" />
+                  <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                    <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 bg-stone-100 rounded w-1/4" />
+                      <div className="h-4 bg-stone-200 rounded w-3/5" />
+                      <div className="h-3 bg-stone-100 rounded w-2/5" />
+                    </div>
+                  </div>
+                </div>
+                {/* Guide/Giving skeleton */}
+                {(guideEnabled || givingEnabled) && (
+                  <div>
+                    <div className="h-3.5 bg-stone-200 rounded w-36 mb-2 animate-pulse" />
+                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-pulse">
+                      {guideEnabled && (
+                        <div className={`p-4 flex items-center gap-3 ${givingEnabled ? 'border-b border-stone-50' : ''}`}>
+                          <div className="w-8 h-8 rounded-xl bg-stone-100 shrink-0" />
+                          <div className="h-4 bg-stone-200 rounded w-2/5" />
+                        </div>
+                      )}
+                      {givingEnabled && (
+                        <div className="p-4 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-stone-100 shrink-0" />
+                          <div className="h-4 bg-stone-200 rounded w-2/5" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Loaded: all cards stagger in together ── */
+              <>
+                {/* Church broadcasts — two separate cards per audience */}
+                {!!churchId && (
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
+                      From {churchName ?? 'Your Church'}
+                    </p>
+                    <div className="space-y-3">
                       {/* Church Bulletin — all members */}
                       {allMembersConv && (() => {
                         const latest = allBroadcasts[0]
@@ -1398,75 +1451,75 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           </button>
                         )
                       })()}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+                    </div>
+                  </div>
+                )}
 
-            {/* Bible hero card */}
-            <div className="mb-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Bible</p>
-              <button
-                onClick={openReader}
-                className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                style={{ animationDelay: '0ms' }}
-              >
-                <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                  <BookOpen size={22} weight="fill" className="text-ember" />
+                {/* Bible hero card */}
+                <div className="mb-6">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Bible</p>
+                  <button
+                    onClick={openReader}
+                    className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
+                    style={{ animationDelay: `${bibleDelay}ms` }}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                      <BookOpen size={22} weight="fill" className="text-ember" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">BSB</p>
+                      <p className="text-base font-semibold text-stone-800 truncate">
+                        {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
+                      </p>
+                      <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
+                    </div>
+                    <CaretRight size={16} className="text-stone-400 shrink-0" />
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">BSB</p>
-                  <p className="text-base font-semibold text-stone-800 truncate">
-                    {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
-                  </p>
-                  <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
-                </div>
-                <CaretRight size={16} className="text-stone-400 shrink-0" />
-              </button>
-            </div>
 
-            {/* Guide & Giving */}
-            {(guideEnabled || givingEnabled) && (
-              <div className="mb-6">
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Church Resources</p>
-                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-stack-in" style={{ animationDelay: '40ms' }}>
-                  {guideEnabled && (
-                    <button
-                      onClick={onOpenGuide}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors ${givingEnabled ? 'border-b border-stone-100' : ''}`}
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-sunrise/10 flex items-center justify-center shrink-0">
-                        <BookOpen size={16} weight="fill" className="text-sunrise" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-stone-800">Community Guide</p>
-                        {isAdmin && !groupSettings?.guide_type && !groupSettings?.guide_url && (
-                          <p className="text-xs text-stone-400">Tap to set up</p>
-                        )}
-                      </div>
-                      <CaretRight size={14} className="text-stone-400 shrink-0" />
-                    </button>
-                  )}
-                  {givingEnabled && (
-                    <button
-                      onClick={onOpenGiving}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
-                        <Coins size={16} weight="fill" className="text-sage-700" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-stone-800">Monthly Giving</p>
-                        {isAdmin && !groupSettings?.giving_url && (
-                          <p className="text-xs text-stone-400">Tap to set up</p>
-                        )}
-                      </div>
-                      <CaretRight size={14} className="text-stone-400 shrink-0" />
-                    </button>
-                  )}
-                </div>
-              </div>
+                {/* Guide & Giving */}
+                {(guideEnabled || givingEnabled) && (
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Church Resources</p>
+                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-stack-in" style={{ animationDelay: `${guideDelay}ms` }}>
+                      {guideEnabled && (
+                        <button
+                          onClick={onOpenGuide}
+                          className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors ${givingEnabled ? 'border-b border-stone-100' : ''}`}
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-sunrise/10 flex items-center justify-center shrink-0">
+                            <BookOpen size={16} weight="fill" className="text-sunrise" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-stone-800">Community Guide</p>
+                            {isAdmin && !groupSettings?.guide_type && !groupSettings?.guide_url && (
+                              <p className="text-xs text-stone-400">Tap to set up</p>
+                            )}
+                          </div>
+                          <CaretRight size={14} className="text-stone-400 shrink-0" />
+                        </button>
+                      )}
+                      {givingEnabled && (
+                        <button
+                          onClick={onOpenGiving}
+                          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
+                            <Coins size={16} weight="fill" className="text-sage-700" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-stone-800">Monthly Giving</p>
+                            {isAdmin && !groupSettings?.giving_url && (
+                              <p className="text-xs text-stone-400">Tap to set up</p>
+                            )}
+                          </div>
+                          <CaretRight size={14} className="text-stone-400 shrink-0" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </main>
         </div>
