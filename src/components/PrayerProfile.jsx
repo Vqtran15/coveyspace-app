@@ -520,7 +520,11 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                     const [yr, mo, dy] = r.date.split('-').map(Number)
                     const mon = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })
                     return (
-                      <div key={r.id} className={`flex ${newId === r.id ? 'animate-fade-up' : ''}`}>
+                      <div
+                        key={r.id}
+                        className={`flex ${newId === r.id ? 'animate-fade-up' : 'animate-stack-in'}`}
+                        style={newId === r.id ? undefined : { animationDelay: `${idx * 60}ms` }}
+                      >
                         {/* Date column */}
                         <div className="w-16 shrink-0 flex items-center justify-end pr-2">
                           <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-2 py-1.5">
