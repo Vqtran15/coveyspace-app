@@ -5,6 +5,7 @@ import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, N
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
 import { useAnimatedOverlay } from './hooks/useAnimatedOverlay.js'
+import { useSwipeNavigation } from './hooks/useSwipeNavigation.js'
 import { getUpcomingBirthdays } from './utils/birthdays.js'
 import { supabase } from './lib/supabase.js'
 import { getCookie, setCookie, removeCookie } from './lib/cookies.js'
@@ -371,6 +372,19 @@ function AppContent() {
   }
 
   function navigateToSettings() { navigate('/settings') }
+
+  // ── Swipe navigation ───────────────────────────────────────────────────────
+  useSwipeNavigation({
+    enabled: !chatViewOpen && !showWelcome && !guide.open && !giving.open && !birthday.open && !OFF_NAV_PATHS.includes(location.pathname),
+    onSwipeLeft: () => {
+      const idx = visibleTabs.findIndex(t => t.path === location.pathname)
+      if (idx >= 0 && idx < visibleTabs.length - 1) handleTabChange(visibleTabs[idx + 1].path)
+    },
+    onSwipeRight: () => {
+      const idx = visibleTabs.findIndex(t => t.path === location.pathname)
+      if (idx > 0) handleTabChange(visibleTabs[idx - 1].path)
+    },
+  })
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
