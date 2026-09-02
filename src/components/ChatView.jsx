@@ -1185,9 +1185,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }
 
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
+  function handleKeyDown() {}
 
   // ── Send ──────────────────────────────────────────────────────────────────
   async function handleSend(e) {
