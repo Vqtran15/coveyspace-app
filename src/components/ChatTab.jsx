@@ -20,6 +20,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   const consumeAutoOpenMain = useCallback(() => setAutoOpenMainChat(false), [])
   const [activeConv, setActiveConv]           = useState(null)
   const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
+  const [otherUnreadCount, setOtherUnreadCount] = useState(0)
   const [members, setMembers]                 = useState([])
   const [chatExiting, setChatExiting]         = useState(false)
   const [listClass, setListClass]             = useState('')
@@ -126,6 +127,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
     pinnedGroupId,
     onPinGroup: setPinnedGroupId,
     activeConvId: activeConv?.id ?? null,
+    onOtherUnreadChange: setOtherUnreadCount,
   }
 
   return (
@@ -151,6 +153,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
             onBack={goBack}
             onRead={onRead}
             openedWithLastReadAt={openedWithLastReadAt}
+            otherUnreadCount={otherUnreadCount}
           />
         </div>
       ) : (

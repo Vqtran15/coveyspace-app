@@ -2,8 +2,9 @@ import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check,
+  PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check, VideoCamera,
 } from '@phosphor-icons/react'
+import { AvatarIcon, avatarColor } from '../../lib/avatarIcons.jsx'
 import { useChatContext } from './ChatContext.jsx'
 
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
@@ -24,6 +25,7 @@ export default function MessageInput() {
     handleTextInput, handleKeyDown, handleSend, handleFileChange,
     closeEmojiPicker, insertEmoji, createPoll,
     senderName,
+    mentionSearch, setMentionSearch, insertMention, members, myId,
   } = useChatContext()
 
   const [showAttachMenu, setShowAttachMenu] = useState(false)
@@ -115,7 +117,15 @@ export default function MessageInput() {
         <div className="flex gap-2 mb-2 overflow-x-auto pt-2 pb-0.5">
           {imagePreviews.map((preview, i) => (
             <div key={preview.previewUrl} className="relative shrink-0">
-              <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
+              {preview.isVideo
+                ? (
+                  <div className="h-20 w-20 rounded-xl border border-stone-200 bg-stone-100 overflow-hidden flex items-center justify-center">
+                    <video src={preview.previewUrl} className="h-full w-full object-cover" muted playsInline />
+                    <VideoCamera size={20} className="absolute text-white drop-shadow" weight="fill" />
+                  </div>
+                )
+                : <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
+              }
               <button
                 onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
                 className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
@@ -126,6 +136,44 @@ export default function MessageInput() {
           ))}
         </div>
       )}
+      {/* @mention picker */}
+      {mentionSearch !== null && (() => {
+        const filtered = members.filter(m =>
+          m.user_id !== myId &&
+          m.display_name.toLowerCase().startsWith(mentionSearch.toLowerCase())
+        )
+        if (!filtered.length) return null
+        return (
+          <div className="absolute bottom-full left-0 right-0 pb-1 z-[8]">
+            <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden max-h-48 overflow-y-auto">
+              {filtered.map(member => (
+                <button
+                  key={member.user_id}
+                  type="button"
+                  onPointerDown={e => { e.preventDefault(); insertMention(member) }}
+                  className="flex items-center gap-3 px-4 py-2.5 w-full text-left hover:bg-stone-50 transition-colors"
+                >
+                  <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${member.avatar_image_url ? 'bg-stone-200' : avatarColor(member.user_id, member.avatar_color)}`}>
+                    {member.avatar_image_url
+                      ? <img src={member.avatar_image_url} alt="" className="w-full h-full object-cover" />
+                      : member.avatar_icon
+                        ? <AvatarIcon name={member.avatar_icon} size={16} />
+                        : <span className="text-white text-xs font-bold">{member.display_name.charAt(0).toUpperCase()}</span>
+                    }
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-stone-800">@{member.display_name.split(' ')[0]}</p>
+                    {member.display_name.includes(' ') && (
+                      <p className="text-xs text-stone-400 truncate">{member.display_name}</p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       {pollCreating && !pollSubmitting && (
         <div
           className="fixed inset-0 z-[7] pointer-events-auto"
@@ -283,7 +331,7 @@ export default function MessageInput() {
                 className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
               >
                 <ImageIcon size={18} className="text-stone-500 shrink-0" />
-                <span className="text-sm font-medium text-stone-700">Photo</span>
+                <span className="text-sm font-medium text-stone-700">Photo / GIF</span>
               </button>
               <div className="mx-4 h-px bg-stone-100" />
               <button
@@ -302,12 +350,17 @@ export default function MessageInput() {
                 type="button"
                 onClick={() => {
                   setShowAttachMenu(false)
-                  openEmoji()
+                  if (fileInputRef.current) {
+                    fileInputRef.current.setAttribute('accept', 'video/*')
+                    fileInputRef.current.value = ''
+                    fileInputRef.current.click()
+                    setTimeout(() => fileInputRef.current?.setAttribute('accept', 'image/*,video/*'), 500)
+                  }
                 }}
                 className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
               >
-                <Smiley size={18} className="text-stone-500 shrink-0" />
-                <span className="text-sm font-medium text-stone-700">Emoji</span>
+                <VideoCamera size={18} className="text-stone-500 shrink-0" />
+                <span className="text-sm font-medium text-stone-700">Video</span>
               </button>
             </div>
           </motion.div>
@@ -335,7 +388,7 @@ export default function MessageInput() {
             <PlusIcon size={22} weight="bold" />
           </motion.div>
         </button>
-        <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+        <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileChange} />
         <textarea
           ref={textareaRef}
           value={text}
@@ -346,6 +399,14 @@ export default function MessageInput() {
           className="flex-1 resize-none bg-stone-100 border-0 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
           style={{ maxHeight: 120, overflowY: 'auto' }}
         />
+        <button
+          type="button"
+          onClick={openEmoji}
+          className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0 ${showEmojiPicker ? 'text-ember bg-ember/10' : 'text-stone-400 hover:text-ember hover:bg-stone-100'}`}
+          aria-label="Emoji"
+        >
+          <Smiley size={20} />
+        </button>
         <button
           type="button"
           onClick={handleSend}

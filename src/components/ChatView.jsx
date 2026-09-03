@@ -69,7 +69,7 @@ function formatEventDate(dateStr, timeStr) {
   return `${mon} ${day} · ${hour12}${mins} ${suffix}`
 }
 
-export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null }) {
+export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null, otherUnreadCount = 0 }) {
   const [messages, setMessages]         = useState([])
   const [loading, setLoading]           = useState(true)
   const [hasMore, setHasMore]           = useState(false)
@@ -117,6 +117,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [lightboxClosing, setLightboxClosing] = useState(false)
   const [convImageUrl, setConvImageUrl]       = useState(conversation.image_url ?? null)
   const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false)
+  const [mentionSearch, setMentionSearch]     = useState(null)
   const [polls, setPolls]                     = useState({})
   const [chatEvents, setChatEvents]           = useState({})
   const [chatPrayers, setChatPrayers]         = useState({})
@@ -1183,6 +1184,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         presenceChannelRef.current?.track({ display_name: displayName, typing: false })
       }, 3000)
     }
+    // @mention detection
+    const cursor = e.target.selectionStart ?? val.length
+    const textBefore = val.slice(0, cursor)
+    const match = textBefore.match(/@(\w*)$/)
+    setMentionSearch(match ? match[1] : null)
+  }
+
+  function insertMention(member) {
+    const el = textareaRef.current
+    const cursor = el ? (el.selectionStart ?? text.length) : text.length
+    const textBefore = text.slice(0, cursor)
+    const mentionStart = textBefore.lastIndexOf('@')
+    const firstName = member.display_name.split(' ')[0]
+    const mention = `@${firstName}`
+    const newText = textBefore.slice(0, mentionStart) + mention + ' ' + text.slice(cursor)
+    setText(newText)
+    setMentionSearch(null)
+    localStorage.setItem(DRAFT_KEY(convId), newText)
+    setTimeout(() => {
+      if (!el) return
+      el.focus()
+      const pos = mentionStart + mention.length + 1
+      el.setSelectionRange(pos, pos)
+      el.style.height = 'auto'
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+    }, 0)
   }
 
   function handleKeyDown() {}
@@ -1195,6 +1222,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (!trimmed && imagePreviews.length === 0) return
     clearTimeout(typingTimeoutRef.current)
     presenceChannelRef.current?.track({ display_name: displayName, typing: false })
+    setMentionSearch(null)
 
     const replyId = replyingTo?.id ?? null
     const replyMsg = replyingTo
@@ -1211,6 +1239,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         _pending: true,
         _file: preview.file,
         _textBody: null,
+        _isVideo: preview.isVideo ?? false,
         id: `temp-${now}-${i}`,
         conversation_id: convId,
         user_id: myId,
@@ -1378,12 +1407,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
     try {
-      const { file: compressed, width: imgWidth, height: imgHeight } = await compressImage(file)
-      const ext = compressed.name.split('.').pop()
+      const isVid = file.type.startsWith('video/')
+      let uploadFile = file
+      let imgWidth = null
+      let imgHeight = null
+      if (!isVid) {
+        const result = await compressImage(file)
+        uploadFile = result.file
+        imgWidth = result.width
+        imgHeight = result.height
+      }
+      const ext = uploadFile.name.split('.').pop()
       const path = `${myId}/${convId}_${Date.now()}.${ext}`
       const { data: uploaded, error: upErr } = await supabase.storage
         .from('chat-images')
-        .upload(path, compressed, { contentType: compressed.type })
+        .upload(path, uploadFile, { contentType: uploadFile.type })
       if (upErr) throw upErr
       const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
 
@@ -1400,18 +1438,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
 
       if (newMsg) {
-        trackEvent('chat_message_sent', { type: 'image', conv_type: conversation.type })
-        await new Promise(resolve => {
-          const img = new window.Image()
-          img.onload = resolve
-          img.onerror = resolve
-          img.src = publicUrl
-        })
+        trackEvent('chat_message_sent', { type: isVid ? 'video' : 'image', conv_type: conversation.type })
+        if (!isVid) {
+          await new Promise(resolve => {
+            const img = new window.Image()
+            img.onload = resolve
+            img.onerror = resolve
+            img.src = publicUrl
+          })
+        }
         setMessages(prev => {
           const without = prev.filter(m => m._tempId !== tempId)
           return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
         })
-
       }
     } catch (err) {
       console.error('Image send failed:', err)
@@ -1459,11 +1498,19 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     e.target.value = ''
     if (!files.length) return
     for (const file of files) {
-      if (!file.type.startsWith('image/')) { toast('Only image files are supported', 'error'); continue }
-      if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); continue }
-      const reader = new FileReader()
-      reader.onload = ev => setImagePreviews(prev => [...prev, { file, previewUrl: ev.target.result }])
-      reader.readAsDataURL(file)
+      const isVid = file.type.startsWith('video/')
+      const isImg = file.type.startsWith('image/')
+      if (!isVid && !isImg) { toast('Only images and videos are supported', 'error'); continue }
+      if (isVid) {
+        if (file.size > 50 * 1024 * 1024) { toast('Video must be under 50 MB', 'error'); continue }
+        const previewUrl = URL.createObjectURL(file)
+        setImagePreviews(prev => [...prev, { file, previewUrl, isVideo: true }])
+      } else {
+        if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); continue }
+        const reader = new FileReader()
+        reader.onload = ev => setImagePreviews(prev => [...prev, { file, previewUrl: ev.target.result, isVideo: false }])
+        reader.readAsDataURL(file)
+      }
     }
   }
 
@@ -1789,6 +1836,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     firstUnreadId, setFirstUnreadId, openUnreadCount,
     lightboxImg, setLightboxImg,
     convImageUrl, uploadingGroupIcon,
+    mentionSearch, setMentionSearch, insertMention,
     polls, chatEvents, chatPrayers,
     pollCreating, setPollCreating,
     pollQuestion, setPollQuestion,
@@ -1835,6 +1883,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     lightboxImg, convImageUrl, uploadingGroupIcon, polls, chatEvents,
     pollCreating, pollQuestion, pollOptions, pollSubmitting, pollMenuOpenId,
     deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending, chatPrayers,
+    mentionSearch,
     headerH, inputH,
   ])
 
@@ -1859,9 +1908,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       <div className="max-w-3xl mx-auto w-full px-3 pt-6 pb-3 flex items-center gap-2">
         <button
           onClick={onBack}
-          className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0"
+          aria-label="Back"
         >
           <ArrowLeft size={20} weight="bold" />
+          {otherUnreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center px-1 leading-none pointer-events-none">
+              {otherUnreadCount > 9 ? '9+' : otherUnreadCount}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setInfoOpen(true)}

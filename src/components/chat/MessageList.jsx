@@ -1,14 +1,18 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowDown, MagnifyingGlass, ChartBar,
   CalendarHeart, CheckCircle, Minus, MapPin,
   PencilSimple, Trash, Check, X, DotsThreeVertical,
-  Plus as PlusIcon, HandsPraying,
+  Plus as PlusIcon, HandsPraying, ArrowBendUpLeft,
 } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../../utils/format.js'
 import { useChatContext } from './ChatContext.jsx'
+import { haptic } from '../../lib/haptic.js'
+
+const VIDEO_URL_RE = /\.(mp4|mov|webm|m4v|avi|mkv)(\?.*)?$/i
+function isVideoUrl(url) { return url ? VIDEO_URL_RE.test(url) : false }
 
 const GROUP_TIME_GAP = 5 * 60 * 1000
 
@@ -52,6 +56,17 @@ function highlightText(text, query) {
   )
 }
 
+function renderTextSegment(text, query, keyPrefix) {
+  const MENTION_RE = /(@\w+)/g
+  const segments = text.split(MENTION_RE)
+  return segments.map((seg, i) => {
+    if (seg.startsWith('@') && seg.length > 1) {
+      return <span key={`${keyPrefix}-m${i}`} className="font-semibold text-ember">{seg}</span>
+    }
+    return <span key={`${keyPrefix}-t${i}`}>{query ? highlightText(seg, query) : seg}</span>
+  })
+}
+
 function renderMessageBody(body, query) {
   // eslint-disable-next-line no-useless-escape
   const URL_RE = /https?:\/\/[^\s<>'"]+[^\s<>'".,!?;:)\]']*/g
@@ -63,7 +78,7 @@ function renderMessageBody(body, query) {
     last = m.index + m[0].length
   }
   if (last < body.length) parts.push({ type: 'text', value: body.slice(last) })
-  if (!parts.length) return query ? highlightText(body, query) : body
+  if (!parts.length) return renderTextSegment(body, query, 'b')
   return parts.map((part, i) =>
     part.type === 'url'
       ? <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
@@ -71,7 +86,7 @@ function renderMessageBody(body, query) {
             className="underline break-all text-inherit opacity-80 active:opacity-60">
             {part.value}
           </a>
-      : <span key={i}>{query ? highlightText(part.value, query) : part.value}</span>
+      : renderTextSegment(part.value, query, String(i))
   )
 }
 
@@ -101,10 +116,67 @@ export default function MessageList() {
     toggleReaction,
     handleImageTap, onMessageImageLoad,
     retryMessage,
+    setReplyingTo, textareaRef,
     conversation,
     headerH,
     inputH,
   } = useChatContext()
+
+  const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
+
+  function onMsgTouchStart(e, msg, isOwn) {
+    handleLongPressStart(e, msg.id, isOwn)
+    const t = e.touches[0]
+    swipeRef.current = {
+      startX: t.clientX, startY: t.clientY,
+      el: e.currentTarget.querySelector('[data-bubble]'),
+      iconEl: e.currentTarget.querySelector('[data-swipe-icon]'),
+      triggered: false, active: false,
+    }
+  }
+
+  function onMsgTouchMove(e, msg) {
+    handleLongPressEnd()
+    const s = swipeRef.current
+    if (!s.el) return
+    const t = e.touches[0]
+    const dx = t.clientX - s.startX
+    const dy = t.clientY - s.startY
+    if (!s.active) {
+      if (Math.abs(dy) > Math.abs(dx)) return
+      if (dx < 5) return
+      s.active = true
+    }
+    const clamped = Math.max(0, Math.min(dx, 72))
+    s.el.style.transition = 'none'
+    s.el.style.transform = `translateX(${clamped}px)`
+    if (s.iconEl) {
+      s.iconEl.style.transition = 'none'
+      s.iconEl.style.opacity = Math.min(clamped / 48, 1)
+      s.iconEl.style.transform = `scale(${0.6 + 0.4 * Math.min(clamped / 48, 1)})`
+    }
+  }
+
+  function onMsgTouchEnd(e, msg) {
+    handleLongPressEnd()
+    const s = swipeRef.current
+    if (!s.active || !s.el) return
+    const dx = e.changedTouches[0].clientX - s.startX
+    s.el.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)'
+    s.el.style.transform = 'translateX(0)'
+    if (s.iconEl) {
+      s.iconEl.style.transition = 'opacity 0.2s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)'
+      s.iconEl.style.opacity = 0
+      s.iconEl.style.transform = 'scale(0.6)'
+    }
+    if (dx >= 50 && !s.triggered) {
+      s.triggered = true
+      setReplyingTo(msg)
+      setTimeout(() => textareaRef.current?.focus(), 50)
+      haptic()
+    }
+    swipeRef.current = { startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false }
+  }
 
   // Pre-parse every message body so the URL regex doesn't run on every render
   const renderedBodies = useMemo(() => {
@@ -567,13 +639,21 @@ export default function MessageList() {
                 <div
                   id={`msg-${msg.id}`}
                   key={msg.id}
-                  className={`flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? '!mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
+                  className={`relative flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? '!mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
                   onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
                   onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
-                  onTouchStart={e => { if (msg._pending || msg._failed) return; handleLongPressStart(e, msg.id, isOwn) }}
-                  onTouchEnd={handleLongPressEnd}
-                  onTouchMove={handleLongPressEnd}
+                  onTouchStart={e => { if (msg._pending || msg._failed) return; onMsgTouchStart(e, msg, isOwn) }}
+                  onTouchEnd={e => { if (msg._pending || msg._failed) return; onMsgTouchEnd(e, msg) }}
+                  onTouchMove={e => { if (msg._pending || msg._failed) return; onMsgTouchMove(e, msg) }}
                 >
+                  {/* Swipe-to-reply icon — revealed on swipe right */}
+                  <div
+                    data-swipe-icon=""
+                    className="absolute inset-y-0 left-0 flex items-center text-stone-400 pointer-events-none"
+                    style={{ opacity: 0, transform: 'scale(0.6)', transformOrigin: 'center left' }}
+                  >
+                    <ArrowBendUpLeft size={18} weight="bold" />
+                  </div>
                   {isOwn && selectedMsgId === msg.id && !editingMsgId && (
                     <div className="self-center flex items-center gap-2 animate-overlay-in">
                       {msg.body && (
@@ -615,7 +695,7 @@ export default function MessageList() {
                     </div>
                   )}
 
-                  <div className={`flex flex-col min-w-0 max-w-[75%] ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
+                  <div data-bubble="" className={`flex flex-col min-w-0 max-w-[75%] ${msg._isNew ? (isOwn ? 'animate-msg-in-right' : 'animate-msg-in-left') : ''}`}>
                     {!isOwn && isFirstInGroup && (
                       <p className="text-xs font-semibold text-stone-500 mb-2 ml-1">{senderName(msg.user_id, msg.display_name)}</p>
                     )}
@@ -637,7 +717,9 @@ export default function MessageList() {
                               {senderName(msg.reply_message.user_id, msg.reply_message.display_name)}
                             </p>
                             <p className={`text-[11px] truncate ${isOwn ? 'text-white/90' : 'text-stone-500'}`}>
-                              {msg.reply_message.image_url && !msg.reply_message.body ? '📷 Photo' : msg.reply_message.body}
+                              {msg.reply_message.image_url && !msg.reply_message.body
+                                ? isVideoUrl(msg.reply_message.image_url) ? '🎬 Video' : '📷 Photo'
+                                : msg.reply_message.body}
                             </p>
                           </div>
                         </button>
@@ -645,7 +727,10 @@ export default function MessageList() {
                       {msg.image_url && (
                         msg._pending || msg._failed ? (
                           <div className="relative">
-                            <img src={msg.image_url} alt="shared" className="block" style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto' }} loading="lazy" />
+                            {msg._isVideo
+                              ? <video src={msg.image_url} className="block" style={{ maxWidth: '100%', maxHeight: 280 }} muted playsInline />
+                              : <img src={msg.image_url} alt="shared" className="block" style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto' }} loading="lazy" />
+                            }
                             {msg._pending && (
                               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -661,6 +746,15 @@ export default function MessageList() {
                               </button>
                             )}
                           </div>
+                        ) : isVideoUrl(msg.image_url) ? (
+                          <video
+                            src={msg.image_url}
+                            controls
+                            playsInline
+                            className="block"
+                            style={{ maxWidth: '100%', maxHeight: 280 }}
+                            onContextMenu={e => e.preventDefault()}
+                          />
                         ) : (
                           <img
                             src={msg.image_url}

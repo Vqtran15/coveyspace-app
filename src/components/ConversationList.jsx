@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -133,7 +133,9 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   )
 }
 
-export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null }) {
+const VIDEO_PREVIEW_RE = /\.(mp4|mov|webm|m4v|avi|mkv)(\?.*)?$/i
+
+export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null, onOtherUnreadChange }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
@@ -292,9 +294,12 @@ export default function ConversationList({ session, groupId, members, enterClass
   function lastPreview(conv) {
     const msg = lastMessages[conv.id]
     if (!msg) return 'No messages yet'
-    const body = msg.image_url && !msg.body ? '📷 Photo'
-      : msg.image_url ? `📷 ${msg.body}`
-      : (msg.body || '')
+    const isVideo = msg.image_url ? VIDEO_PREVIEW_RE.test(msg.image_url) : false
+    const body = msg.image_url && !msg.body
+      ? (isVideo ? '🎬 Video' : '📷 Photo')
+      : msg.image_url
+        ? (isVideo ? `🎬 ${msg.body}` : `📷 ${msg.body}`)
+        : (msg.body || '')
     if (conv.type === 'group') {
       const name = members.find(m => m.user_id === msg.user_id)?.display_name || msg.display_name
       return `${name}: ${body}`
@@ -314,6 +319,16 @@ export default function ConversationList({ session, groupId, members, enterClass
   function isMainGroupChat(conv) {
     return conv.id === pinnedGroupId
   }
+
+  const otherUnreadCount = useMemo(() => {
+    if (!lastReadAt) return 0
+    return conversations.filter(c => c.id !== activeConvId && isUnread(c)).length
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations, lastMessages, lastReadAt, activeConvId])
+
+  useEffect(() => {
+    onOtherUnreadChange?.(otherUnreadCount)
+  }, [otherUnreadCount])
 
   async function deleteConversation(conv) {
     setDeletingConvId(conv.id)
