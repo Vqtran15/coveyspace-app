@@ -533,7 +533,7 @@ export default function MessageList() {
                             <HandsPraying size={11} weight="bold" />
                             Prayer Request
                           </div>
-                          <CaretRight size={13} className="text-stone-300" />
+                          <CaretRight size={15} weight="bold" className="text-stone-400" />
                         </div>
                         {/* Who the prayer is for */}
                         {pr.member && (
