@@ -1,10 +1,11 @@
 import { useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowDown, MagnifyingGlass, ChartBar,
   CalendarHeart, CheckCircle, Minus, MapPin,
   PencilSimple, Trash, Check, X, DotsThreeVertical,
-  Plus as PlusIcon, HandsPraying, ArrowBendUpLeft,
+  Plus as PlusIcon, HandsPraying, ArrowBendUpLeft, CaretRight,
 } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../../lib/avatarIcons.jsx'
 import { initials, formatMessageTime } from '../../utils/format.js'
@@ -91,6 +92,7 @@ function renderMessageBody(body, query) {
 }
 
 export default function MessageList() {
+  const navigate = useNavigate()
   const {
     scrollRef, messagesContainerRef, handleScroll,
     loadingMore, visible, contentReady, loading, fetchingFresh,
@@ -520,11 +522,18 @@ export default function MessageList() {
                 return (
                   <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
                     <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-                      {/* Header */}
-                      <div className="px-4 pt-3 pb-2.5 border-b border-stone-100">
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">
-                          <HandsPraying size={11} weight="bold" />
-                          {`Prayer Request · ${senderName(msg.user_id, msg.display_name)}`}
+                      {/* Tappable header + body — navigates to prayer profile */}
+                      <button
+                        type="button"
+                        onClick={() => navigate('/prayer', { state: { featuredUserId: pr.member_user_id } })}
+                        className="w-full text-left px-4 pt-3 pb-2.5 border-b border-stone-100 active:bg-stone-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                            <HandsPraying size={11} weight="bold" />
+                            Prayer Request
+                          </div>
+                          <CaretRight size={13} className="text-stone-300" />
                         </div>
                         {/* Who the prayer is for */}
                         {pr.member && (
@@ -541,7 +550,7 @@ export default function MessageList() {
                           </div>
                         )}
                         <p className="text-sm text-stone-700 leading-relaxed line-clamp-4">{pr.request}</p>
-                      </div>
+                      </button>
                       {/* Pray button + timestamp */}
                       <div className="px-4 py-2.5 flex items-center gap-3">
                         <button
