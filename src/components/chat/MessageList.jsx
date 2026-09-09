@@ -526,7 +526,7 @@ export default function MessageList() {
                       <button
                         type="button"
                         onClick={() => navigate('/prayer', { state: { featuredUserId: pr.member_user_id } })}
-                        className="w-full text-left px-4 pt-3 pb-2.5 border-b border-stone-100 active:bg-stone-50 transition-colors"
+                        className="block w-full text-left px-4 pt-3 pb-2.5 border-b border-stone-100 active:bg-stone-50 transition-colors"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
