@@ -17,7 +17,7 @@ export default function ManagePagesPage({
   onReorder, onAddPage, onDeletePage, onRenamePage, onEditPage, onClose,
 }) {
   const [exiting, setExiting] = useState(false)
-  const [list, setList] = useState(pages)
+  const [list, setList] = useState([...pages].reverse())
   const [draggingId, setDraggingId] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
   const [renamingId, setRenamingId] = useState(null)
@@ -32,15 +32,15 @@ export default function ManagePagesPage({
 
   useEffect(() => {
     if (!suppressSync.current) {
-      setList(pages)
+      setList([...pages].reverse())
       // Truncate stale refs left over from deleted rows
       rowRefs.current.length = pages.length
     }
   }, [pages])
 
-  // Fixed date anchors — position 0 is always the earliest date
+  // Fixed date anchors — newest first, mirrors the reversed list order
   const sortedDates = [...pages]
-    .sort((a, b) => a.week_date.localeCompare(b.week_date))
+    .sort((a, b) => b.week_date.localeCompare(a.week_date))
     .map(p => p.week_date)
 
   function handleClose() {
@@ -111,9 +111,9 @@ export default function ManagePagesPage({
     })
 
     try {
-      await onReorder(info.startIndex, targetIndex)
+      await onReorder(pages.length - 1 - info.startIndex, pages.length - 1 - targetIndex)
     } catch {
-      setList(pages)
+      setList([...pages].reverse())
     } finally {
       suppressSync.current = false
     }
