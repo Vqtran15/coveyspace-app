@@ -51,12 +51,12 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
     const { data: newPage, error } = await supabase
       .from(tables.pages)
       .insert({
-        title: defaultTitle(nextDateStr),
+        title: template.title || defaultTitle(nextDateStr),
         week_date: nextDateStr,
         slot_count: template.slot_count,
         slot_dishes: template.slot_dishes ?? [],
+        slot_columns: template.slot_columns ?? 1,
         ...(Array.isArray(template.slot_categories) && { slot_categories: template.slot_categories }),
-        ...(template.slot_columns && template.slot_columns !== 1 && { slot_columns: template.slot_columns }),
         position: result.length,
       })
       .select()
