@@ -52,7 +52,9 @@ export default function CreateGroupFlow({ onDone, onClose }) {
       toast(
         error.message === 'group name cannot be empty'
           ? 'Please enter a group name.'
-          : 'Failed to create group. Please try again.',
+          : error.message?.includes('already exists')
+            ? 'A group with that name already exists. Try a different group name.'
+            : 'Failed to create group. Please try again.',
         'error'
       )
       setCreating(false)
