@@ -19,7 +19,7 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
   return (
     <motion.div
       className={`flex items-stretch rounded-2xl border overflow-hidden animate-fade-up ${conv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
-      style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
+      style={{ animationDelay: '0ms' }}
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >

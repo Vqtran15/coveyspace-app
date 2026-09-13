@@ -743,7 +743,7 @@ export default function EventsTab() {
                   key={event.id}
                   event={event}
                   isFeatured={i === 0}
-                  delay={i * 80}
+                  delay={0}
                   eventRsvps={rsvps[event.id] ?? []}
                   userId={userId}
                   onOpenDetail={() => setSelectedEvent(event)}
