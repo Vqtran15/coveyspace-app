@@ -745,16 +745,8 @@ export default function EventsTab() {
           ))}
         </div>
       ) : loading ? (
-        <div className="space-y-3">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="bg-white border border-stone-200 rounded-2xl p-4 animate-pulse flex gap-3" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="w-12 h-14 bg-stone-100 rounded-xl shrink-0" />
-              <div className="flex-1 space-y-2 pt-1">
-                <div className="h-3.5 bg-stone-100 rounded w-3/5" />
-                <div className="h-3 bg-stone-100 rounded w-2/5" />
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-center py-16">
+          <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -864,10 +856,8 @@ export default function EventsTab() {
               </div>
               <div className="px-4 py-3 max-h-80 overflow-y-auto">
                 {pickerLoading ? (
-                  <div className="space-y-2">
-                    {[0, 1, 2].map(i => (
-                      <div key={i} className="h-[60px] bg-stone-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
-                    ))}
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
                   </div>
                 ) : pickerConvs.length === 0 ? (
                   <p className="text-sm text-stone-400 text-center py-6">No conversations found</p>
