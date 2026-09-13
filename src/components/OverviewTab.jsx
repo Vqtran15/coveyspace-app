@@ -305,8 +305,16 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
   const showAnnouncement = isAdmin || !!announcement
 
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+    <main className="animate-fade-in max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {/* Pull-to-refresh indicator */}
       {pullDistance > 0 && (
         <div
@@ -390,12 +398,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
       <InstallBanner />
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
-        {!loaded ? (
-          <div className="lg:col-span-2 flex items-center justify-center py-16">
-            <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-          </div>
-        ) : (
-          <>
+        <>
+
             {/* Solo-admin nudge — shown until someone joins */}
             {soloAdmin && (
               <div className="w-full animate-stack-in lg:col-span-2">
@@ -536,8 +540,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                 />
               ))
             })()}
-          </>
-        )}
+        </>
       </div>
 
       {editingAnnouncement && (

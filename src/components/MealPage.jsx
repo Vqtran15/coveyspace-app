@@ -224,8 +224,16 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
   })()
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <main className="max-w-3xl mx-auto px-4" style={{ paddingBottom: 'max(80px, calc(var(--sab) + 72px))' }}>
+    <main className="animate-fade-in max-w-3xl mx-auto px-4" style={{ paddingBottom: 'max(80px, calc(var(--sab) + 72px))' }}>
       <div className={`mb-6 bg-white rounded-2xl shadow border border-stone-100 ${headerEntranceClass}`}>
         <div className="p-4 flex items-start gap-4">
           {Icon && (
@@ -332,10 +340,6 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           <p className="text-sm text-stone-400 mt-1">
             {formatDate(page.week_date)}
           </p>
-        </div>
-      ) : loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
         </div>
       ) : (
         <>

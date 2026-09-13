@@ -271,13 +271,7 @@ export default function MessageList() {
               // ── Poll card ──────────────────────────────────────────────────
               if (msg.poll_id) {
                 const poll = polls[msg.poll_id] ?? msg._poll
-                if (!poll) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="h-28 rounded-2xl bg-stone-50 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-                    </div>
-                  </div>
-                )
+                if (!poll) return null
                 const isEditing = editingPollId === msg.poll_id
                 const myVote = poll.votes.find(v => v.user_id === myId)?.option_index ?? null
                 const totalVotes = poll.votes.length
@@ -456,13 +450,7 @@ export default function MessageList() {
 
               if (msg.prayer_request_id) {
                 const pr = chatPrayers[msg.prayer_request_id]
-                if (!pr) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="h-24 rounded-2xl bg-stone-50 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-                    </div>
-                  </div>
-                )
+                if (!pr) return null
                 const hasReacted = pr.reactions.some(rx => rx.user_id === myId)
                 const reactionCount = pr.reactions.length
                 return (
@@ -516,13 +504,7 @@ export default function MessageList() {
 
               if (msg.event_id) {
                 const ev = chatEvents[msg.event_id]
-                if (!ev) return (
-                  <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="h-28 rounded-2xl bg-stone-50 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-                    </div>
-                  </div>
-                )
+                if (!ev) return null
                 const myEvRsvp = ev.rsvps.find(r => r.user_id === myId)
                 const { goingCount, maybeCount, notGoingCount, goingRsvps } = ev.rsvps.reduce(
                   (acc, r) => {

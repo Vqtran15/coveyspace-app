@@ -690,8 +690,16 @@ export default function EventsTab() {
 
 
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+    <main className="animate-fade-in max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {pullDistance > 0 && (
         <div
           className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
@@ -743,10 +751,6 @@ export default function EventsTab() {
               onRsvp={handleRsvp}
             />
           ))}
-        </div>
-      ) : loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">

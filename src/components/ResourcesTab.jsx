@@ -1314,7 +1314,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-stack-in" style={{ animationDelay: '0ms' }}>Resources</h1>
 
             {!bulletinReady ? (
-              <div className="flex items-center justify-center py-16">
+              <div className="flex items-center justify-center" style={{ minHeight: '60vh' }}>
                 <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
               </div>
             ) : (

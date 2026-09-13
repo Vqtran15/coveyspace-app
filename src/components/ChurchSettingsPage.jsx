@@ -1003,11 +1003,7 @@ export default function ChurchSettingsPage() {
                 {/* Group picker */}
                 <div className="px-4 pt-4 pb-3">
                   <p className="text-xs font-semibold text-stone-500 mb-2">Import members from a PCO Group</p>
-                  {pcoGroupsLoading ? (
-                    <div className="h-10 flex items-center justify-center">
-                      <div className="w-5 h-5 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-                    </div>
-                  ) : pcoGroupsError ? (
+                  {pcoGroupsLoading ? null : pcoGroupsError ? (
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-red-500 flex-1">{pcoGroupsError}</p>
                       <button
@@ -1115,11 +1111,7 @@ export default function ChurchSettingsPage() {
                 {/* Member list */}
                 {selectedPcoGroup && (
                   <div className="px-4 pb-4">
-                    {pcoMembersLoading ? (
-                      <div className="flex items-center justify-center py-4">
-                        <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-                      </div>
-                    ) : pcoMembers.length === 0 ? (
+                    {pcoMembersLoading ? null : pcoMembers.length === 0 ? (
                       <p className="text-xs text-stone-500 py-3 text-center">No members found in this PCO Group.</p>
                     ) : (
                       <>

@@ -249,7 +249,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 pb-12 flex items-center justify-center py-16">
+      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
         <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
       </div>
     )
@@ -273,7 +273,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
   }
 
   return (
-    <>
+    <div className="animate-fade-in">
       {!compact && (
         <div className="max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
@@ -401,7 +401,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           supportsCategories={supportsCategories}
         />
       )}
-    </>
+    </div>
   )
 })
 

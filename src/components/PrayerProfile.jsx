@@ -490,8 +490,8 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             <div className="px-4 pt-4 space-y-3">
               {/* Request list */}
               {loading || !animDone ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-7 h-7 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+                <div className="flex items-center justify-center" style={{ minHeight: '40vh' }}>
+                  <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
                 </div>
               ) : filteredRequests.length === 0 ? (
                 <p className="text-sm text-stone-400 text-center py-6">

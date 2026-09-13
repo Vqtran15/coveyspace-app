@@ -581,8 +581,16 @@ export default function PrayerTab() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+      </div>
+    )
+  }
+
   return (
-    <main className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
+    <main className="animate-fade-in max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-12">
       {pullDistance > 0 && (
         <div
           className="fixed inset-x-0 lg:left-56 z-30 flex justify-center transition-transform"
@@ -605,7 +613,7 @@ export default function PrayerTab() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
-        {!loading && members.length > 0 && (
+        {members.length > 0 && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -631,7 +639,7 @@ export default function PrayerTab() {
       </div>
 
       {/* View toggle */}
-      {!loading && members.length > 0 && (
+      {members.length > 0 && (
         <LayoutGroup id="prayer-tabs">
           <div className="flex bg-stone-100 rounded-xl p-1 mb-4">
             <button
@@ -699,11 +707,7 @@ export default function PrayerTab() {
 
       {/* Content */}
       <div key={viewMode} className={contentAnimClass}>
-      {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
-        </div>
-      ) : loadError ? (
+      {loadError ? (
         <div className="text-center py-16">
           <HandsPraying size={40} weight="fill" className="text-stone-300 mx-auto mb-3" />
           <p className="text-sm text-stone-500 mb-4">Couldn't load prayer requests. Check your connection and try again.</p>
