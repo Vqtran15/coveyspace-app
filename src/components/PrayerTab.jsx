@@ -700,18 +700,8 @@ export default function PrayerTab() {
       {/* Content */}
       <div key={viewMode} className={contentAnimClass}>
       {loading ? (
-        <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-          {[0, 1, 2, 3].map(i => (
-            <div key={i} className="bg-white border border-stone-100 rounded-2xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-stone-200 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3.5 bg-stone-200 rounded w-2/5" />
-                </div>
-                <div className="h-3 bg-stone-100 rounded w-12" />
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-center py-16">
+          <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
         </div>
       ) : loadError ? (
         <div className="text-center py-16">

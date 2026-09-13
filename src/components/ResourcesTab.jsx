@@ -680,14 +680,8 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                   )}
                 </>
               ) : (
-                <div className="space-y-2 pt-1">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-10 bg-stone-100 rounded-xl animate-pulse"
-                      style={{ animationDelay: `${i * 25}ms` }}
-                    />
-                  ))}
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-7 h-7 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
                 </div>
               )}
             </div>
@@ -1320,58 +1314,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-stack-in" style={{ animationDelay: '0ms' }}>Resources</h1>
 
             {!bulletinReady ? (
-              /* ── Loading: hold all slots as skeletons so no card animates in early ── */
-              <div className="space-y-6">
-                {/* Bulletin skeletons — shown while profile or church data is loading */}
-                {(!profileLoaded || !!churchId) && (
-                  <div>
-                    <div className="h-3.5 bg-stone-200 rounded w-32 mb-2 animate-pulse" />
-                    <div className="space-y-3">
-                      {Array.from({ length: isAdmin ? 2 : 1 }, (_, i) => (
-                        <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
-                          <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-4 bg-stone-200 rounded w-2/5" />
-                            <div className="h-3 bg-stone-100 rounded w-3/4" />
-                            <div className="h-3 bg-stone-100 rounded w-1/2" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {/* Bible skeleton */}
-                <div>
-                  <div className="h-3.5 bg-stone-200 rounded w-16 mb-2 animate-pulse" />
-                  <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
-                    <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-stone-100 rounded w-1/4" />
-                      <div className="h-4 bg-stone-200 rounded w-3/5" />
-                      <div className="h-3 bg-stone-100 rounded w-2/5" />
-                    </div>
-                  </div>
-                </div>
-                {/* Guide/Giving skeleton */}
-                {(guideEnabled || givingEnabled) && (
-                  <div>
-                    <div className="h-3.5 bg-stone-200 rounded w-36 mb-2 animate-pulse" />
-                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-pulse">
-                      {guideEnabled && (
-                        <div className={`p-4 flex items-center gap-3 ${givingEnabled ? 'border-b border-stone-50' : ''}`}>
-                          <div className="w-8 h-8 rounded-xl bg-stone-100 shrink-0" />
-                          <div className="h-4 bg-stone-200 rounded w-2/5" />
-                        </div>
-                      )}
-                      {givingEnabled && (
-                        <div className="p-4 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-stone-100 shrink-0" />
-                          <div className="h-4 bg-stone-200 rounded w-2/5" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+              <div className="flex items-center justify-center py-16">
+                <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
               </div>
             ) : (
               /* ── Loaded: all cards stagger in together ── */
@@ -1666,13 +1610,10 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             </div>
           </div>
 
-          {/* Loading skeleton */}
+          {/* Loading */}
           {userPassages === null && (
-            <div className="grid grid-cols-2 gap-2">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className="h-[92px] bg-stone-100 rounded-2xl animate-pulse"
-                  style={{ animationDelay: `${i * 60}ms` }} />
-              ))}
+            <div className="flex items-center justify-center py-8">
+              <div className="w-7 h-7 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
             </div>
           )}
 

@@ -208,68 +208,10 @@ export default function MessageList() {
           </div>
         )}
 
-        {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
+        {/* Spinner — shown until messages are loaded and we've scrolled to bottom */}
         {!visible && (
-          <div className="flex flex-col py-4 gap-3">
-            {[
-              { side: 'left',  w: 'w-48' },
-              { side: 'right', w: 'w-36' },
-              { side: 'left',  w: 'w-56' },
-              { side: 'left',  w: 'w-40' },
-              { side: 'right', w: 'w-52' },
-              { side: 'right', w: 'w-32' },
-              { side: 'left',  w: 'w-44' },
-              { side: 'right', w: 'w-60' },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className={`flex items-end gap-2 ${item.side === 'right' ? 'justify-end animate-msg-in-right' : 'justify-start animate-msg-in-left'}`}
-                style={{ animationDelay: `${i * 70}ms` }}
-              >
-                {item.side === 'left' && (
-                  <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
-                    style={{
-                      background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
-                      backgroundSize: '200% 100%',
-                      animation: `skeleton-shimmer 1.6s ease-in-out infinite`,
-                      animationDelay: `${i * 70}ms`,
-                    }}
-                  />
-                )}
-                <div
-                  className={`${item.w} h-10 rounded-2xl ${item.side === 'right' ? 'rounded-br-sm' : 'rounded-bl-sm'} overflow-hidden`}
-                  style={{
-                    background: item.side === 'right'
-                      ? 'linear-gradient(90deg, rgba(196,98,45,0.12) 25%, rgba(196,98,45,0.25) 50%, rgba(196,98,45,0.12) 75%)'
-                      : 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
-                    backgroundSize: '200% 100%',
-                    animation: `skeleton-shimmer 1.6s ease-in-out infinite`,
-                    animationDelay: `${i * 70 + 80}ms`,
-                  }}
-                />
-              </div>
-            ))}
-
-            {/* Typing indicator */}
-            <div className="flex items-end gap-2 animate-msg-in-left" style={{ animationDelay: '620ms' }}>
-              <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
-                style={{
-                  background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'skeleton-shimmer 1.6s ease-in-out infinite',
-                  animationDelay: '700ms',
-                }}
-              />
-              <div className="flex items-center gap-1 bg-stone-100 rounded-2xl rounded-bl-sm px-3.5 py-3">
-                {[0, 1, 2].map(j => (
-                  <div
-                    key={j}
-                    className="w-1.5 h-1.5 rounded-full bg-stone-400 animate-dot-bounce"
-                    style={{ animationDelay: `${j * 180}ms` }}
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="flex items-center justify-center py-16">
+            <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
           </div>
         )}
 
@@ -331,7 +273,9 @@ export default function MessageList() {
                 const poll = polls[msg.poll_id] ?? msg._poll
                 if (!poll) return (
                   <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
+                    <div className="h-28 rounded-2xl bg-stone-50 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+                    </div>
                   </div>
                 )
                 const isEditing = editingPollId === msg.poll_id
@@ -514,7 +458,9 @@ export default function MessageList() {
                 const pr = chatPrayers[msg.prayer_request_id]
                 if (!pr) return (
                   <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="bg-stone-100 rounded-2xl h-24 animate-pulse" />
+                    <div className="h-24 rounded-2xl bg-stone-50 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+                    </div>
                   </div>
                 )
                 const hasReacted = pr.reactions.some(rx => rx.user_id === myId)
@@ -572,7 +518,9 @@ export default function MessageList() {
                 const ev = chatEvents[msg.event_id]
                 if (!ev) return (
                   <div key={msg.id} id={`msg-${msg.id}`} className="!mt-3 !mb-5">
-                    <div className="bg-stone-100 rounded-2xl h-28 animate-pulse" />
+                    <div className="h-28 rounded-2xl bg-stone-50 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+                    </div>
                   </div>
                 )
                 const myEvRsvp = ev.rsvps.find(r => r.user_id === myId)

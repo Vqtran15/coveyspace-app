@@ -934,19 +934,8 @@ export default function ChurchSettingsPage() {
           </div>
 
           {broadcastLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl border border-stone-100 px-5 py-4 animate-pulse">
-                  <div className="flex justify-between mb-2">
-                    <div className="h-3.5 bg-stone-200 rounded w-24" />
-                    <div className="h-3 bg-stone-100 rounded w-14" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="h-3 bg-stone-100 rounded w-full" />
-                    <div className="h-3 bg-stone-100 rounded w-4/5" />
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center justify-center py-8">
+              <div className="w-7 h-7 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
             </div>
           ) : broadcastMessages.length === 0 ? (
             <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-8 text-center">
@@ -1015,7 +1004,9 @@ export default function ChurchSettingsPage() {
                 <div className="px-4 pt-4 pb-3">
                   <p className="text-xs font-semibold text-stone-500 mb-2">Import members from a PCO Group</p>
                   {pcoGroupsLoading ? (
-                    <div className="h-10 bg-stone-100 rounded-xl animate-pulse" />
+                    <div className="h-10 flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+                    </div>
                   ) : pcoGroupsError ? (
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-red-500 flex-1">{pcoGroupsError}</p>
@@ -1125,10 +1116,8 @@ export default function ChurchSettingsPage() {
                 {selectedPcoGroup && (
                   <div className="px-4 pb-4">
                     {pcoMembersLoading ? (
-                      <div className="space-y-2 pt-1">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="h-11 bg-stone-100 rounded-xl animate-pulse" />
-                        ))}
+                      <div className="flex items-center justify-center py-4">
+                        <div className="w-6 h-6 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
                       </div>
                     ) : pcoMembers.length === 0 ? (
                       <p className="text-xs text-stone-500 py-3 text-center">No members found in this PCO Group.</p>

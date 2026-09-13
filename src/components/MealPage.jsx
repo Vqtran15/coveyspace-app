@@ -334,10 +334,8 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           </p>
         </div>
       ) : loading ? (
-        <div className={`grid ${page.slot_columns === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'} gap-3`}>
-          {slots.map(n => (
-            <div key={n} className="h-24 bg-stone-100 rounded-xl animate-pulse" />
-          ))}
+        <div className="flex items-center justify-center py-12">
+          <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
         </div>
       ) : (
         <>

@@ -490,23 +490,8 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             <div className="px-4 pt-4 space-y-3">
               {/* Request list */}
               {loading || !animDone ? (
-                <div>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} className="flex animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
-                      <div className="w-16 shrink-0 flex items-center justify-end pr-2">
-                        <div className="h-12 w-11 bg-stone-200 rounded-xl" />
-                      </div>
-                      <div className="flex flex-col items-center w-5 shrink-0">
-                        <div className={`w-px flex-1 bg-stone-200 mb-1 ${i === 0 ? 'opacity-0' : ''}`} />
-                        <div className="w-2.5 h-2.5 rounded-full bg-stone-200 shrink-0" />
-                        <div className={`w-px flex-1 bg-stone-200 mt-1 ${i === 2 ? 'opacity-0' : ''}`} />
-                      </div>
-                      <div className="flex-1 pl-2 py-2.5">
-                        <div className="h-3 bg-stone-200 rounded w-full mb-2" />
-                        <div className="h-3 bg-stone-200 rounded w-4/5" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-7 h-7 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
                 </div>
               ) : filteredRequests.length === 0 ? (
                 <p className="text-sm text-stone-400 text-center py-6">

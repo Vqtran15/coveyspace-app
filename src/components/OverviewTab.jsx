@@ -60,21 +60,6 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, con
   )
 }
 
-function CardSkeleton({ delay = 0 }) {
-  return (
-    <div
-      className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-pulse"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
-      <div className="flex-1 space-y-2">
-        <div className="h-2.5 bg-stone-100 rounded w-1/4" />
-        <div className="h-4 bg-stone-200 rounded w-3/5" />
-      </div>
-      <div className="w-4 h-4 rounded bg-stone-100 shrink-0" />
-    </div>
-  )
-}
 
 function AnnouncementEditModal({ value, onClose, onSave }) {
   const [closing, close] = useModalClose(onClose)
@@ -406,15 +391,9 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
         {!loaded ? (
-          <>
-            {isAdmin && <div className="lg:col-span-2"><CardSkeleton /></div>}
-            {mealsEnabled     && <CardSkeleton />}
-            {servicesEnabled  && <CardSkeleton />}
-            {eventsEnabled    && <CardSkeleton />}
-            {chatEnabled      && <CardSkeleton />}
-            {prayerEnabled    && <CardSkeleton />}
-            {birthdaysEnabled && <CardSkeleton />}
-          </>
+          <div className="lg:col-span-2 flex items-center justify-center py-16">
+            <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
+          </div>
         ) : (
           <>
             {/* Solo-admin nudge — shown until someone joins */}
