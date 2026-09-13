@@ -252,7 +252,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpen(m => !m)}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                   >
                     <DotsThreeVertical size={18} weight="bold" />
                   </button>

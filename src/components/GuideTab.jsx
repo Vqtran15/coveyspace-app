@@ -213,7 +213,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
               type="button"
               title={title}
               onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, format, setContent) }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors"
             >
               <Icon size={16} weight="bold" />
             </button>

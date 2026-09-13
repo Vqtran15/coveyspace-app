@@ -30,7 +30,7 @@ function TBtn({ active, disabled, onActivate, title, children }) {
       title={title}
       aria-label={title}
       disabled={disabled}
-      className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors select-none shrink-0 ${
+      className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors select-none shrink-0 ${
         active
           ? 'bg-ember text-white'
           : 'text-stone-500 hover:bg-stone-100 active:bg-stone-200 disabled:opacity-25 disabled:pointer-events-none'
@@ -536,7 +536,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
               <button
                 type="button"
                 onClick={closeLinkDialog}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors"
                 aria-label="Close"
               >
                 <X size={16} />
@@ -1165,7 +1165,7 @@ export default function ChurchSettingsPage() {
                                         toast('Invite link copied', 'success')
                                       }}
                                       aria-label="Copy invite link"
-                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 transition-colors"
+                                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 transition-colors"
                                     >
                                       <Copy size={14} />
                                     </button>

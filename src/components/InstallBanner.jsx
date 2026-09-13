@@ -108,7 +108,7 @@ export default function InstallBanner() {
           <button
             onClick={handleDismiss}
             aria-label="Dismiss"
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors"
           >
             <X size={14} weight="bold" />
           </button>

@@ -278,6 +278,9 @@ export default function AuthPage() {
                         placeholder="e.g. A3B7C2"
                         required
                         autoComplete="off"
+                        autoCapitalize="characters"
+                        autoCorrect="off"
+                        spellCheck={false}
                         className={`${inputClass} font-mono tracking-widest text-center text-base`}
                       />
                       <p className="text-xs text-stone-400 mt-1.5">

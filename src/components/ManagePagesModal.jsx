@@ -223,13 +223,13 @@ export default function ManagePagesPage({
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
                       onPointerCancel={handlePointerUp}
-                      className="shrink-0 w-8 h-8 flex items-center justify-center text-stone-300 hover:text-stone-500 cursor-grab active:cursor-grabbing touch-none"
+                      className="shrink-0 w-10 h-10 flex items-center justify-center text-stone-300 hover:text-stone-500 cursor-grab active:cursor-grabbing touch-none"
                       aria-label="Drag to reorder"
                     >
                       <DotsSixVertical size={18} weight="bold" />
                     </button>
                   ) : (
-                    <div className="shrink-0 w-8 h-8" />
+                    <div className="shrink-0 w-10 h-10" />
                   )}
 
                   {/* Date badge */}
@@ -260,7 +260,7 @@ export default function ManagePagesPage({
                       <button
                         onClick={submitRename}
                         disabled={renaming || !renameValue.trim()}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-ember text-white disabled:opacity-40 transition-colors"
+                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-ember text-white disabled:opacity-40 transition-colors"
                         aria-label="Save name"
                       >
                         {renaming
@@ -270,7 +270,7 @@ export default function ManagePagesPage({
                       </button>
                       <button
                         onClick={() => setRenamingId(null)}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
+                        className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
                         aria-label="Cancel rename"
                       >
                         <X size={14} weight="bold" />
@@ -299,7 +299,7 @@ export default function ManagePagesPage({
                           setMenuOpenId(id => id === page.id ? null : page.id)
                           setConfirmDeleteId(null)
                         }}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors"
+                        className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 active:bg-stone-200 transition-colors"
                         aria-label="Page options"
                       >
                         <DotsThreeVertical size={16} weight="bold" />
@@ -312,7 +312,7 @@ export default function ManagePagesPage({
                             exit={{ opacity: 0, scale: 0.9, y: -4 }}
                             transition={{ duration: 0.12 }}
                             style={{ transformOrigin: 'top right' }}
-                            className="absolute right-0 top-9 z-10 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden w-36"
+                            className="absolute right-0 top-11 z-10 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden w-36"
                             onClick={e => e.stopPropagation()}
                           >
                             {onEditPage && (

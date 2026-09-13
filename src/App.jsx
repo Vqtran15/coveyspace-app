@@ -577,10 +577,9 @@ function AppContent() {
               >
                 <t.Icon size={20} weight={active ? 'fill' : 'regular'} />
                 {t.shortLabel}
-                {t.path === '/chat' && unreadChatCount > 0
-                  ? <span className="ml-auto w-2 h-2 bg-coral rounded-full" />
-                  : <span className={`ml-auto text-[10px] font-medium tabular-nums ${active ? 'text-white/50' : 'text-stone-300'}`}>{i + 1}</span>
-                }
+                {t.path === '/chat' && unreadChatCount > 0 && (
+                  <span className="ml-auto w-2 h-2 bg-coral rounded-full" />
+                )}
               </button>
             )
           })}
@@ -625,12 +624,12 @@ function AppContent() {
       {!chatViewOpen && (
         <LayoutGroup id="floating-pill">
           <nav
-            className={`pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 flex items-center py-1.5 ${visibleTabs.length <= 3 ? 'rounded-3xl px-3 gap-2' : 'rounded-full px-2'}`}
+            className={`pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 flex items-center py-1.5 ${visibleTabs.length <= 4 ? 'rounded-3xl px-3 gap-2' : 'rounded-full px-2'}`}
             style={{ bottom: 'max(16px, calc(var(--sab) + 8px))' }}
           >
             {visibleTabs.map(t => {
               const active = location.pathname === t.path
-              const showLabel = visibleTabs.length <= 3
+              const showLabel = visibleTabs.length <= 4
               return (
                 <button
                   key={t.path}

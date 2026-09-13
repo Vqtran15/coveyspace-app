@@ -309,7 +309,7 @@ export default function AvatarPicker({
               <p className="text-sm font-semibold text-stone-700">Edit photo</p>
               <button
                 onClick={animatedClose}
-                className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200"
+                className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200"
               >
                 <X size={14} weight="bold" />
               </button>

@@ -396,7 +396,7 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
                 <button
                   type="button"
                   onPointerDown={closeEmojiPicker}
-                  className="absolute w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                  className="absolute w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
                   style={{ top: 19, right: 8, zIndex: 10 }}
                 >
                   <X size={14} weight="bold" />
