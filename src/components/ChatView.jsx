@@ -336,7 +336,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       document.removeEventListener('visibilitychange', onVisible)
       document.body.classList.remove('chat-keyboard-open')
       document.documentElement.style.removeProperty('--vvh')
-      setKeyboardOpen(false)
     }
   }, [])
 
