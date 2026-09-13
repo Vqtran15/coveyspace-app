@@ -251,7 +251,14 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   if (showLoader) {
     return (
-      <LoadingDots />
+      <>
+        <LoadingDots />
+        {!compact && (
+          <div className="relative z-[40] max-w-3xl mx-auto px-4 pt-8">
+            <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
+          </div>
+        )}
+      </>
     )
   }
 
@@ -275,7 +282,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
   return (
     <div className="animate-fade-in">
       {!compact && (
-        <div className="max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
+        <div className="relative z-[40] max-w-3xl mx-auto px-4 pt-8 pb-2 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-stone-800">{label}</h1>
           <button
             onClick={() => setShowManagePages(true)}

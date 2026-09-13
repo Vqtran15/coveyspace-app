@@ -228,7 +228,14 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
   if (showLoader) {
     return (
-      <LoadingDots />
+      <>
+        <LoadingDots />
+        {page?.title && (
+          <div className="relative z-[40] max-w-3xl mx-auto px-4 pt-8">
+            <h1 className="text-3xl font-bold text-stone-800">{page.title}</h1>
+          </div>
+        )}
+      </>
     )
   }
 

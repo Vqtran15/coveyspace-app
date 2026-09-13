@@ -585,7 +585,12 @@ export default function PrayerTab() {
 
   if (showLoader) {
     return (
-      <LoadingDots />
+      <>
+        <LoadingDots />
+        <div className="relative z-[40] max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8">
+          <h1 className="text-3xl font-bold text-stone-800">Prayer Requests</h1>
+        </div>
+      </>
     )
   }
 
