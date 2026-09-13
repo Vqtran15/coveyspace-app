@@ -1,4 +1,4 @@
-import LoadingDots from './LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
@@ -141,6 +141,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
   const [loading, setLoading]             = useState(true)
+  const showLoader = useMinLoader(loading)
   const [newDmOpen, setNewDmOpen]         = useState(false)
   const [starting, setStarting]           = useState(false)
   const [dmClosing, closeDm, resetDm]     = useModalClose(() => setNewDmOpen(false))
@@ -533,7 +534,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       <div className="flex-1 overflow-y-auto">
         {/* Church section — shown when group belongs to a church */}
 
-        {loading ? (
+        {showLoader ? (
           <LoadingDots />
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">

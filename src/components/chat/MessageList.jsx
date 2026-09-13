@@ -1,4 +1,4 @@
-import LoadingDots from '../LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from '../LoadingDots.jsx'
 import { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -125,6 +125,7 @@ export default function MessageList() {
     inputH,
   } = useChatContext()
 
+  const showLoader = useMinLoader(!visible)
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
 
   function onMsgTouchStart(e, msg, isOwn) {
@@ -210,7 +211,7 @@ export default function MessageList() {
         )}
 
         {/* Spinner — shown until messages are loaded and we've scrolled to bottom */}
-        {!visible && <LoadingDots />}
+        {showLoader && <LoadingDots />}
 
         {/* Messages — rendered hidden when contentReady so images load in background,
             then revealed after scroll-to-bottom via the visible flag */}

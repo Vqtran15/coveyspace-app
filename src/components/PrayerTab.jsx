@@ -1,4 +1,4 @@
-import LoadingDots from './LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useRef } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
@@ -281,6 +281,7 @@ export default function PrayerTab() {
   const [groupPrayers, setGroupPrayers]     = useState([])
   const [groupReactions, setGroupReactions] = useState({})
   const [loading, setLoading]               = useState(true)
+  const showLoader = useMinLoader(loading)
   const [loadError, setLoadError]           = useState(false)
   const [selectedMember, setSelectedMember] = useState(null)
   const [selectedGroupPrayer, setSelectedGroupPrayer] = useState(null)
@@ -582,7 +583,7 @@ export default function PrayerTab() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (showLoader) {
     return (
       <LoadingDots />
     )

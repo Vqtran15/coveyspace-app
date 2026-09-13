@@ -1,4 +1,4 @@
-import LoadingDots from './LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots, ArrowsClockwise } from '@phosphor-icons/react'
@@ -539,6 +539,7 @@ export default function EventsTab() {
   const [events,       setEvents]       = useState(cached?.events ?? [])
   const [rsvps,        setRsvps]        = useState(cached?.rsvps ?? {})
   const [loading,      setLoading]      = useState(cached === null)
+  const showLoader = useMinLoader(loading)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showForm,     setShowForm]     = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
@@ -691,7 +692,7 @@ export default function EventsTab() {
 
 
 
-  if (loading) {
+  if (showLoader) {
     return (
       <LoadingDots />
     )

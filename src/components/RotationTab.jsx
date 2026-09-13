@@ -1,4 +1,4 @@
-import LoadingDots from './LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -79,6 +79,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
   const [viewIndex, setViewIndex] = useState(0)
   const [homeIdx, setHomeIdx]   = useState(0)
   const [loading, setLoading]   = useState(true)
+  const showLoader = useMinLoader(loading)
   const [error, setError]       = useState(null)
   const [showAddModal, setShowAddModal]       = useState(false)
   const [showManagePages, setShowManagePages] = useState(false)
@@ -248,7 +249,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
     openManagePages() { setShowManagePages(true) },
   }))
 
-  if (loading) {
+  if (showLoader) {
     return (
       <LoadingDots />
     )

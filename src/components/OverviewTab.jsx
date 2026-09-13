@@ -1,4 +1,4 @@
-import LoadingDots from './LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -163,6 +163,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const showLoader = useMinLoader(!loaded)
   const [soloAdmin, setSoloAdmin] = useState(false)
   const realtimeDebounceRef = useRef(null)
   const [shouldAnimate]  = useState(() => !greetingDone)
@@ -306,7 +307,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
   const showAnnouncement = isAdmin || !!announcement
 
-  if (!loaded) {
+  if (showLoader) {
     return (
       <LoadingDots />
     )

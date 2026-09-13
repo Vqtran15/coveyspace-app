@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from 'react'
+
 function Dots() {
   return (
     <div className="flex items-center gap-2">
@@ -8,10 +10,39 @@ function Dots() {
   )
 }
 
-// Page-level: fixed overlay, visually centered in the content area (above nav bar)
+// Ensures the loader stays visible for at least one full dot-bounce cycle (1100ms).
+// Pass the raw loading boolean; returns a derived boolean safe to gate rendering.
+export function useMinLoader(loading, minMs = 1100) {
+  const [showing, setShowing] = useState(loading)
+  const startRef = useRef(loading ? Date.now() : null)
+
+  useEffect(() => {
+    if (loading) {
+      setShowing(true)
+      startRef.current = Date.now()
+      return
+    }
+    if (startRef.current === null) {
+      setShowing(false)
+      return
+    }
+    const elapsed = Date.now() - startRef.current
+    const remaining = Math.max(0, minMs - elapsed)
+    if (remaining <= 0) {
+      setShowing(false)
+      return
+    }
+    const t = setTimeout(() => setShowing(false), remaining)
+    return () => clearTimeout(t)
+  }, [loading, minMs])
+
+  return showing
+}
+
+// Page-level: full-screen overlay with app background — always truly centered
 export default function LoadingDots() {
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ paddingBottom: '68px' }}>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-sunrise-50">
       <Dots />
     </div>
   )

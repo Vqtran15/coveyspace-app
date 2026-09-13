@@ -1,4 +1,4 @@
-import LoadingDots from './LoadingDots.jsx'
+import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical, CaretLeft, CaretRight } from '@phosphor-icons/react'
@@ -17,6 +17,7 @@ const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Desse
 export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false, Icon = null }) {
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
+  const showLoader = useMinLoader(loading)
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [justAddedSlot, setJustAddedSlot] = useState(null)
   const [pausing, setPausing]           = useState(false)
@@ -225,7 +226,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
   })()
 
-  if (loading) {
+  if (showLoader) {
     return (
       <LoadingDots />
     )
