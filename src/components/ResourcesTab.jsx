@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { InlineLoadingDots } from './LoadingDots.jsx'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -1314,9 +1315,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-stack-in" style={{ animationDelay: '0ms' }}>Resources</h1>
 
             {!bulletinReady ? (
-              <div className="flex items-center justify-center" style={{ minHeight: '60vh' }}>
-                <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-              </div>
+              <InlineLoadingDots />
             ) : (
               /* ── Loaded: all cards stagger in together ── */
               <>

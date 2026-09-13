@@ -1,3 +1,4 @@
+import LoadingDots from './LoadingDots.jsx'
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Megaphone, ShieldCheck } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -126,9 +127,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
       {/* Feed */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="fixed inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-          </div>
+          <LoadingDots />
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-stone-400 px-8 text-center">
             <Megaphone size={48} weight="thin" className="text-stone-300 mb-3" />

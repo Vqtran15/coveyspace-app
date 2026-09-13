@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { InlineLoadingDots } from './LoadingDots.jsx'
 import { motion } from 'framer-motion'
 import { HandsPraying, Plus, X, Trash, PencilSimple, MagnifyingGlass, ArrowLeft, CheckCircle, Confetti, DotsThreeVertical, Bell, ChatCircle } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -490,9 +491,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             <div className="px-4 pt-4 space-y-3">
               {/* Request list */}
               {loading || !animDone ? (
-                <div className="flex items-center justify-center" style={{ minHeight: '40vh' }}>
-                  <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-                </div>
+                <InlineLoadingDots />
               ) : filteredRequests.length === 0 ? (
                 <p className="text-sm text-stone-400 text-center py-6">
                   {q ? 'No requests match your search.' : 'No requests yet. Tap + to add one!'}

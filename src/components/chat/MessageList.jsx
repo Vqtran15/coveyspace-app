@@ -1,3 +1,4 @@
+import LoadingDots from '../LoadingDots.jsx'
 import { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -209,11 +210,7 @@ export default function MessageList() {
         )}
 
         {/* Spinner — shown until messages are loaded and we've scrolled to bottom */}
-        {!visible && (
-          <div className="fixed inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-          </div>
-        )}
+        {!visible && <LoadingDots />}
 
         {/* Messages — rendered hidden when contentReady so images load in background,
             then revealed after scroll-to-bottom via the visible flag */}

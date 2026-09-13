@@ -1,3 +1,4 @@
+import LoadingDots from './LoadingDots.jsx'
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots, ArrowsClockwise } from '@phosphor-icons/react'
@@ -692,9 +693,7 @@ export default function EventsTab() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-      </div>
+      <LoadingDots />
     )
   }
 

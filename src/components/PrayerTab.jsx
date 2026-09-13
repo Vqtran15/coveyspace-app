@@ -1,3 +1,4 @@
+import LoadingDots from './LoadingDots.jsx'
 import { useState, useEffect, useRef } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
@@ -583,9 +584,7 @@ export default function PrayerTab() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-      </div>
+      <LoadingDots />
     )
   }
 

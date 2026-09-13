@@ -1,3 +1,4 @@
+import LoadingDots from './LoadingDots.jsx'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical, CaretLeft, CaretRight } from '@phosphor-icons/react'
@@ -226,9 +227,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-      </div>
+      <LoadingDots />
     )
   }
 

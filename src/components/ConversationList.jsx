@@ -1,3 +1,4 @@
+import LoadingDots from './LoadingDots.jsx'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
@@ -533,9 +534,7 @@ export default function ConversationList({ session, groupId, members, enterClass
         {/* Church section — shown when group belongs to a church */}
 
         {loading ? (
-          <div className="fixed inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-          </div>
+          <LoadingDots />
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
             <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />

@@ -1,3 +1,4 @@
+import LoadingDots from './LoadingDots.jsx'
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -249,9 +250,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-stone-200 border-t-ember animate-spin" />
-      </div>
+      <LoadingDots />
     )
   }
 
