@@ -10,6 +10,12 @@
   --dvh: 100svh;
   --sab: env(safe-area-inset-bottom, 0px);
   --sat: env(safe-area-inset-top, 0px);
+  --input-bottom-pad: var(--sab);
+}
+/* Zero the input bottom padding synchronously when keyboard opens,
+   without waiting for a React re-render. */
+body.chat-keyboard-open {
+  --input-bottom-pad: 0px;
 }
 
 body {
