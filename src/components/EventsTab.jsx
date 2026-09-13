@@ -525,14 +525,19 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
   )
 }
 
+// Persists last-fetched events across tab remounts so the skeleton never
+// flashes when returning to a tab the user has already visited this session.
+let _eventsCache = null // { groupId, events, rsvps }
+
 export default function EventsTab() {
   const { groupId, userId, isAdmin, displayName, avatarIcon, avatarColorKey, avatarImageUrl } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
-  const [events,       setEvents]       = useState([])
-  const [rsvps,        setRsvps]        = useState({})
-  const [loading,      setLoading]      = useState(true)
+  const cached = groupId && _eventsCache?.groupId === groupId ? _eventsCache : null
+  const [events,       setEvents]       = useState(cached?.events ?? [])
+  const [rsvps,        setRsvps]        = useState(cached?.rsvps ?? {})
+  const [loading,      setLoading]      = useState(cached === null)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showForm,     setShowForm]     = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
@@ -618,14 +623,16 @@ export default function EventsTab() {
   }
 
   async function load() {
-    setLoading(true)
+    // Show skeleton only when there's no cached data for this group yet
+    if (!_eventsCache || _eventsCache.groupId !== groupId) setLoading(true)
     const { data: evData } = await db.events.fetchAll(groupId)
     const evList = (evData ?? []).map(({ event_rsvps: _, ...ev }) => ev)
-    setEvents(evList)
     const grouped = {}
     for (const ev of evData ?? []) {
       grouped[ev.id] = (ev.event_rsvps ?? []).map(r => ({ user_id: r.user_id, status: r.status, profile: r.profiles }))
     }
+    _eventsCache = { groupId, events: evList, rsvps: grouped }
+    setEvents(evList)
     setRsvps(grouped)
     setLoading(false)
   }
@@ -721,7 +728,23 @@ export default function EventsTab() {
         </div>
       </div>
 
-      {loading ? (
+      {/* Upcoming */}
+      {upcoming.length > 0 ? (
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start mb-6">
+          {upcoming.map((event, i) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              isFeatured={i === 0}
+              delay={0}
+              eventRsvps={rsvps[event.id] ?? []}
+              userId={userId}
+              onOpenDetail={() => setSelectedEvent(event)}
+              onRsvp={handleRsvp}
+            />
+          ))}
+        </div>
+      ) : loading ? (
         <div className="space-y-3">
           {[0, 1, 2].map(i => (
             <div key={i} className="bg-white border border-stone-200 rounded-2xl p-4 animate-pulse flex gap-3" style={{ animationDelay: `${i * 60}ms` }}>
@@ -734,77 +757,57 @@ export default function EventsTab() {
           ))}
         </div>
       ) : (
-        <>
-          {/* Upcoming */}
-          {upcoming.length > 0 ? (
-            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start mb-6">
-              {upcoming.map((event, i) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isFeatured={i === 0}
-                  delay={0}
-                  eventRsvps={rsvps[event.id] ?? []}
-                  userId={userId}
-                  onOpenDetail={() => setSelectedEvent(event)}
-                  onRsvp={handleRsvp}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-ember/10 flex items-center justify-center mb-4">
-                <CalendarHeart size={32} className="text-ember" weight="duotone" />
-              </div>
-              <p className="font-semibold text-stone-700 mb-1">No upcoming events</p>
-              {isAdmin && (
-                <button
-                  onClick={() => { haptic(); setShowForm(true) }}
-                  className="mt-3 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
-                >
-                  Create an event
-                </button>
-              )}
-            </div>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-ember/10 flex items-center justify-center mb-4">
+            <CalendarHeart size={32} className="text-ember" weight="duotone" />
+          </div>
+          <p className="font-semibold text-stone-700 mb-1">No upcoming events</p>
+          {isAdmin && (
+            <button
+              onClick={() => { haptic(); setShowForm(true) }}
+              className="mt-3 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
+            >
+              Create an event
+            </button>
           )}
+        </div>
+      )}
 
-          {/* Past events */}
-          {past.length > 0 && (
-            <div>
-              <button
-                onClick={() => setPastExpanded(e => !e)}
-                className="flex items-center gap-2 text-sm font-semibold text-stone-400 hover:text-stone-600 transition-colors mb-3"
+      {/* Past events */}
+      {past.length > 0 && (
+        <div>
+          <button
+            onClick={() => setPastExpanded(e => !e)}
+            className="flex items-center gap-2 text-sm font-semibold text-stone-400 hover:text-stone-600 transition-colors mb-3"
+          >
+            {pastExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
+            Past events ({past.length})
+          </button>
+          <AnimatePresence>
+            {pastExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {pastExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
-                Past events ({past.length})
-              </button>
-              <AnimatePresence>
-                {pastExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 pb-2 opacity-60">
-                      {past.map(event => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          eventRsvps={rsvps[event.id] ?? []}
-                          userId={userId}
-                          onOpenDetail={() => setSelectedEvent(event)}
-                          onRsvp={handleRsvp}
-                        />
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </>
+                <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 pb-2 opacity-60">
+                  {past.map(event => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      eventRsvps={rsvps[event.id] ?? []}
+                      userId={userId}
+                      onOpenDetail={() => setSelectedEvent(event)}
+                      onRsvp={handleRsvp}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       {/* Event detail sheet */}
