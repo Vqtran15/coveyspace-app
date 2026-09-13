@@ -69,6 +69,12 @@ function formatEventDate(dateStr, timeStr) {
   return `${mon} ${day} · ${hour12}${mins} ${suffix}`
 }
 
+// Persists the maximum observed viewport height across ChatView mounts.
+// When the user navigates between conversations while the keyboard is open,
+// the new ChatView mounts with vv.height already reduced. Without a persisted
+// baseline, kbH ≈ 0 and keyboard detection fails for the entire session.
+let _kbBaseline = 0
+
 export default function ChatView({ conversation, session, displayName, groupId, members, isAdmin, exiting, onBack, onRead, openedWithLastReadAt = null, otherUnreadCount = 0 }) {
   const [messages, setMessages]         = useState([])
   const [loading, setLoading]           = useState(true)
@@ -278,15 +284,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const sat = satEl.offsetHeight
     satEl.remove()
 
-    // Capture baseline before any keyboard interaction. Using vv.height rather than
-    // window.innerHeight because iOS mutates window.innerHeight when the keyboard
-    // appears on some versions, which would make kbH ≈ 0 and prevent detection.
-    const baseline = Math.round(vv.height)
+    // Seed / update the module-level baseline with the largest vv.height seen so far.
+    // On the first mount (keyboard closed), this captures the true full-viewport height.
+    // On remounts while the keyboard is already open, _kbBaseline retains the previously
+    // observed full height so kbH is computed correctly right from the start.
+    const initH = Math.round(vv.height)
+    if (initH > _kbBaseline) _kbBaseline = initH
     let kbOpen = false
 
     function update() {
       const nowVVH = Math.round(vv.height)
-      const kbH = baseline - nowVVH
+      // Keep _kbBaseline at the highest vv.height ever seen — this self-corrects
+      // if it was initialised too low because the keyboard was open at mount time.
+      if (nowVVH > _kbBaseline) _kbBaseline = nowVVH
+      const kbH = _kbBaseline - nowVVH
       const nowOpen = kbH > 120
       // sat + vv.offsetTop + vv.height gives the keyboard top in document
       // coordinates, which is the correct chat container height.
@@ -318,18 +329,22 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       requestAnimationFrame(() => {
         if (!kbOpen) return
         const nowVVH = Math.round(vv.height)
-        if (baseline - nowVVH <= 120) {
+        if (_kbBaseline - nowVVH <= 120) {
           // Keyboard is not open — clear the stuck state.
           kbOpen = false
           document.body.classList.remove('chat-keyboard-open')
           document.documentElement.style.removeProperty('--vvh')
-          }
+        }
       })
     }
 
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
     document.addEventListener('visibilitychange', onVisible)
+    // Run once at mount: if the keyboard is already open when ChatView mounts
+    // (e.g. navigating between conversations), detect it immediately rather than
+    // waiting for the next vv.resize event.
+    update()
     return () => {
       vv.removeEventListener('resize', update)
       vv.removeEventListener('scroll', update)
