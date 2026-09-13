@@ -167,7 +167,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const inputWrapperRef       = useRef(null)
   const [headerH, setHeaderH]     = useState(80)
   const [inputH, setInputH]       = useState(72)
-  const [keyboardOpen, setKeyboardOpen] = useState(false)
 
   useEffect(() => {
     mountedRef.current = true
@@ -301,11 +300,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (nowOpen && !kbOpen) {
         kbOpen = true
         document.body.classList.add('chat-keyboard-open')
-        setKeyboardOpen(true)
       } else if (!nowOpen && kbOpen) {
         kbOpen = false
         document.body.classList.remove('chat-keyboard-open')
-        setKeyboardOpen(false)
         window.scrollTo(0, 0)
       }
     }
@@ -326,8 +323,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           kbOpen = false
           document.body.classList.remove('chat-keyboard-open')
           document.documentElement.style.removeProperty('--vvh')
-          setKeyboardOpen(false)
-        }
+          }
       })
     }
 
