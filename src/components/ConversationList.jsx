@@ -533,7 +533,7 @@ export default function ConversationList({ session, groupId, members, enterClass
         {/* Church section — shown when group belongs to a church */}
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="fixed inset-0 flex items-center justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
           </div>
         ) : conversations.length === 0 ? (

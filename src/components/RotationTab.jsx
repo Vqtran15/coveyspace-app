@@ -249,7 +249,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+      <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-stone-200 border-t-ember animate-spin" />
       </div>
     )
