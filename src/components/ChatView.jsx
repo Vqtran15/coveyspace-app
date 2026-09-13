@@ -1995,9 +1995,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       </div>{/* end inner measured wrapper */}
       </div>{/* end header outer (safe-area extension) */}
 
-      {/* Unread pill — fixed so it stays in viewport coords regardless of parent scroll */}
+      {/* Unread pill — anchored above the input bar so it's near the keyboard.
+          Stacks above the scroll-to-bottom button when both are visible (!isAtBottom). */}
       {firstUnreadId && !searchOpen && (
-        <div className="fixed left-0 right-0 lg:left-56 flex justify-center py-1.5 z-[9] animate-overlay-in" style={{ top: `calc(env(safe-area-inset-top) + ${headerH}px)` }}>
+        <div
+          className="fixed left-0 right-0 lg:left-56 flex justify-center py-1.5 z-[11] animate-overlay-in"
+          style={{ bottom: `${inputH + (isAtBottom ? 12 : 56)}px` }}
+        >
           <button
             onClick={() => {
               document.getElementById(`msg-${firstUnreadId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
