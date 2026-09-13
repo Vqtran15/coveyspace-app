@@ -530,7 +530,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                           <div className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-xl px-2 py-1.5">
                             <span className="text-[10px] font-bold text-ember uppercase tracking-wide leading-none">{mon}</span>
                             <span className="text-xl font-bold text-ember leading-none mt-0.5">{dy}</span>
-                            <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{yr}</span>
+                            <span className="text-[10px] font-medium text-ember/70 leading-none mt-0.5">{yr}</span>
                           </div>
                         </div>
                         {/* Spine */}
@@ -651,7 +651,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             {/* Request preview */}
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
               <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
-              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Prayer request</p>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Prayer request</p>
               <p className="text-sm text-stone-700 line-clamp-2">{actionSheetReq.request}</p>
             </div>
             {/* Action rows */}
@@ -725,7 +725,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           >
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
               <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
-              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Delete request?</p>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Delete request?</p>
               <p className="text-sm text-stone-700 line-clamp-2">{deleteSheetReq.request}</p>
             </div>
             <div className="py-1">
@@ -761,7 +761,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           >
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
               <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
-              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-widest mb-1">Share in Chat?</p>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Share in Chat?</p>
               <p className="text-sm text-stone-700 line-clamp-2">{shareSheetReq.request}</p>
             </div>
             <div className="px-4 pt-3 pb-2 flex flex-col gap-2">

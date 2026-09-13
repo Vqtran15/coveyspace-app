@@ -69,7 +69,7 @@ export default function DangerZonePage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-stone-800">Leave this group</p>
               <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                You'll lose access to all group content including messages, events, and prayer. Your account stays active — you'd need a new invite to rejoin.
+                You'll lose access to all group content including messages, events, and prayer. Your account stays active; you'd need a new invite to rejoin.
               </p>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function DangerZonePage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-red-700">Delete my account</p>
               <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                Permanently deletes your account and all your data — messages, prayer entries, RSVPs, and profile. This cannot be undone.
+                Permanently deletes your account and all your data: messages, prayer entries, RSVPs, and profile. This cannot be undone.
               </p>
             </div>
           </div>

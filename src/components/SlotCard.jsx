@@ -22,7 +22,7 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
     <button
       onClick={onClick}
       style={entranceStyle}
-      className={`relative group text-left w-full p-4 rounded-xl border-2 shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
+      className={`relative group text-left w-full p-4 rounded-xl border shadow transition-all duration-150 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ember ${
         filled
           ? 'bg-white border-ember/40 hover:border-ember/60'
           : 'bg-white border-stone-200 hover:border-ember'
