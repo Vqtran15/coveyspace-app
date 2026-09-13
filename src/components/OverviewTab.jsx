@@ -407,13 +407,13 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
         {!loaded ? (
           <>
-            {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
-            {mealsEnabled     && <CardSkeleton delay={isAdmin ? 40  : 0}   />}
-            {servicesEnabled  && <CardSkeleton delay={isAdmin ? 80  : 40}  />}
-            {eventsEnabled    && <CardSkeleton delay={isAdmin ? 120 : 80}  />}
-            {chatEnabled      && <CardSkeleton delay={isAdmin ? 160 : 120} />}
-            {prayerEnabled    && <CardSkeleton delay={isAdmin ? 200 : 160} />}
-            {birthdaysEnabled && <CardSkeleton delay={isAdmin ? 240 : 200} />}
+            {isAdmin && <div className="lg:col-span-2"><CardSkeleton /></div>}
+            {mealsEnabled     && <CardSkeleton />}
+            {servicesEnabled  && <CardSkeleton />}
+            {eventsEnabled    && <CardSkeleton />}
+            {chatEnabled      && <CardSkeleton />}
+            {prayerEnabled    && <CardSkeleton />}
+            {birthdaysEnabled && <CardSkeleton />}
           </>
         ) : (
           <>
@@ -491,7 +491,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
             )}
 
             {(() => {
-              const baseDelay = showAnnouncement ? 80 : 0
               const cards = [
                 eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
                   key: 'events',
@@ -551,11 +550,10 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                 },
               ].filter(Boolean)
 
-              return cards.map(({ key, ...rest }, i) => (
+              return cards.map(({ key, ...rest }) => (
                 <Card
                   key={key}
                   {...rest}
-                  delay={baseDelay + i * 40}
                 />
               ))
             })()}
