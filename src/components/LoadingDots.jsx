@@ -39,22 +39,6 @@ export function useMinLoader(loading, minMs = 1100) {
   return showing
 }
 
-// Page-level: full-screen overlay with app background — sits below nav (z-40) so nav
-// stays visible; padding offsets match the content area so dots land at visual center.
-export default function LoadingDots() {
-  return (
-    <div
-      className="fixed inset-0 z-[39] flex items-center justify-center bg-sunrise-50"
-      style={{
-        paddingTop: 'var(--sat)',
-        paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)',
-      }}
-    >
-      <Dots />
-    </div>
-  )
-}
-
 // Inline: centered within a constrained panel (PrayerProfile, ResourcesTab sub-panels)
 export function InlineLoadingDots() {
   return (

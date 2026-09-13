@@ -1,4 +1,4 @@
-import LoadingDots, { useMinLoader } from './LoadingDots.jsx'
+import { Dots, useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots, ArrowsClockwise } from '@phosphor-icons/react'
@@ -694,12 +694,15 @@ export default function EventsTab() {
 
   if (showLoader) {
     return (
-      <>
-        <LoadingDots />
-        <div className="relative z-[40] max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8">
-          <h1 className="text-3xl font-bold text-stone-800">Events</h1>
+      <main
+        className="flex flex-col max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8"
+        style={{ minHeight: 'calc(100dvh - var(--sat) - max(16px, calc(var(--sab) + 8px)) - 68px)' }}
+      >
+        <h1 className="text-3xl font-bold text-stone-800 mb-6">Events</h1>
+        <div className="flex-1 flex items-center justify-center">
+          <Dots />
         </div>
-      </>
+      </main>
     )
   }
 

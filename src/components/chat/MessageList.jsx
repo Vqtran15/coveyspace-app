@@ -1,4 +1,4 @@
-import LoadingDots, { useMinLoader } from '../LoadingDots.jsx'
+import { InlineLoadingDots, useMinLoader } from '../LoadingDots.jsx'
 import { useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -211,7 +211,7 @@ export default function MessageList() {
         )}
 
         {/* Spinner — shown until messages are loaded and we've scrolled to bottom */}
-        {showLoader && <LoadingDots />}
+        {showLoader && <InlineLoadingDots />}
 
         {/* Messages — rendered hidden when contentReady so images load in background,
             then revealed after scroll-to-bottom via the visible flag */}
