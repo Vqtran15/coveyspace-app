@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { DotsSixVertical, Plus, ArrowLeft, DotsThreeVertical, NotePencil, PencilSimple, Trash, Check, X } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -153,7 +154,7 @@ export default function ManagePagesPage({
     }
   }
 
-  return (
+  return createPortal(
     <div
       data-overlay="true"
       className={`fixed inset-0 lg:left-56 z-50 bg-sunrise-50 flex flex-col ${exiting ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
@@ -359,6 +360,7 @@ export default function ManagePagesPage({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

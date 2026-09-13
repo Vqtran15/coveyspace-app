@@ -1,4 +1,4 @@
-import { Dots, useMinLoader } from './LoadingDots.jsx'
+import { Dots, InlineLoadingDots, useMinLoader } from './LoadingDots.jsx'
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { ListBullets } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -250,12 +250,13 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
   }))
 
   if (showLoader) {
+    if (compact) return <InlineLoadingDots />
     return (
       <div
         className="flex flex-col max-w-3xl mx-auto px-4 pt-8"
         style={{ minHeight: 'calc(100dvh - var(--sat) - max(16px, calc(var(--sab) + 8px)) - 68px)' }}
       >
-        {!compact && <h1 className="text-3xl font-bold text-stone-800 mb-7">{label}</h1>}
+        <h1 className="text-3xl font-bold text-stone-800 mb-7">{label}</h1>
         <div className="flex-1 flex items-center justify-center">
           <Dots />
         </div>
