@@ -656,7 +656,7 @@ function AppContent() {
                     />
                   </motion.span>
                   {showLabel && (
-                    <span className={`relative z-10 text-[13px] font-medium leading-none ${active ? 'text-white' : 'text-stone-400'}`}>
+                    <span className={`relative z-10 text-[13px] font-medium leading-none whitespace-nowrap ${active ? 'text-white' : 'text-stone-400'}`}>
                       {t.shortLabel}
                     </span>
                   )}
