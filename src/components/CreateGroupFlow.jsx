@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, UsersThree, ChatCircleDots, ForkKnife, HandsPraying, Cake, CalendarCheck, Link, CalendarHeart, BookOpen, Coins } from '@phosphor-icons/react'
+import { ArrowLeft, UsersThree, ChatCircleDots, ForkKnife, HandsPraying, Cake, CalendarCheck, Link, CalendarHeart, BookOpen, Coins, Church, CheckCircle } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import { db } from '../lib/db.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
@@ -33,15 +33,68 @@ export default function CreateGroupFlow({ onDone, onClose }) {
   const { refreshMemberships, refreshProfile } = useAppContext()
   const toast = useToast()
 
-  const [step, setStep]         = useState('name')   // 'name' | 'features'
-  const [direction, setDirection] = useState(null)   // null | 'forward' | 'back'
-  const [closing, setClosing]   = useState(false)
+  const [step, setStep]           = useState('name')  // 'name' | 'church' | 'features'
+  const [direction, setDirection] = useState(null)    // null | 'forward' | 'back'
+  const [closing, setClosing]     = useState(false)
   const [groupName, setGroupName] = useState('')
-  const [features, setFeatures] = useState({ ...DEFAULT_FEATURES })
-  const [creating, setCreating] = useState(false)
+  const [features, setFeatures]   = useState({ ...DEFAULT_FEATURES })
+  const [creating, setCreating]   = useState(false)
+
+  // Church step
+  const [churchCode, setChurchCode]       = useState('')
+  const [churchVerified, setChurchVerified] = useState(null)  // { id, name } once valid
+  const [churchVerifying, setChurchVerifying] = useState(false)
+  const [churchError, setChurchError]     = useState('')
 
   function toggleFeature(key) {
     setFeatures(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  async function handleVerifyChurchCode() {
+    const trimmed = churchCode.trim().toUpperCase()
+    if (!trimmed) return
+    setChurchVerifying(true)
+    setChurchError('')
+    setChurchVerified(null)
+    const { data, error } = await db.churches.verifyJoinCode(trimmed)
+    setChurchVerifying(false)
+    if (error || !data) {
+      setChurchError('Invalid code — check with your church admin.')
+    } else {
+      setChurchVerified(data)
+    }
+  }
+
+  async function handleChurchCodeChange(val) {
+    setChurchCode(val)
+    setChurchVerified(null)
+    setChurchError('')
+  }
+
+  async function handleChurchContinue() {
+    const trimmed = churchCode.trim()
+    if (!trimmed) {
+      setDirection('forward')
+      setStep('features')
+      return
+    }
+    if (churchVerified) {
+      setDirection('forward')
+      setStep('features')
+      return
+    }
+    // Code entered but not yet verified — verify now
+    setChurchVerifying(true)
+    setChurchError('')
+    const { data, error } = await db.churches.verifyJoinCode(trimmed)
+    setChurchVerifying(false)
+    if (error || !data) {
+      setChurchError('Invalid code — check with your church admin.')
+    } else {
+      setChurchVerified(data)
+      setDirection('forward')
+      setStep('features')
+    }
   }
 
   async function handleCreate() {
@@ -60,6 +113,13 @@ export default function CreateGroupFlow({ onDone, onClose }) {
       setCreating(false)
       return
     }
+    // Link church if a code was verified
+    if (churchVerified) {
+      const { error: linkError } = await db.churches.linkGroup(churchCode.trim().toUpperCase())
+      if (linkError) {
+        toast('Group created, but church linking failed. You can link later in Group Settings.', 'error')
+      }
+    }
     await Promise.all([refreshProfile(), refreshMemberships()]).catch(() => {})
     toast(`"${data.group_name}" created!`, 'success')
     sessionStorage.setItem('cg_created_from_settings', '1')
@@ -69,6 +129,9 @@ export default function CreateGroupFlow({ onDone, onClose }) {
 
   function goBack() {
     if (step === 'features') {
+      setDirection('back')
+      setStep('church')
+    } else if (step === 'church') {
       setDirection('back')
       setStep('name')
     } else {
@@ -87,8 +150,8 @@ export default function CreateGroupFlow({ onDone, onClose }) {
         className="absolute left-0 right-0 flex justify-center gap-1.5 pointer-events-none z-10"
         style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }}
       >
-        {['name', 'features'].map((s, i) => {
-          const idx = step === 'name' ? 0 : 1
+        {['name', 'church', 'features'].map((s, i) => {
+          const idx = step === 'name' ? 0 : step === 'church' ? 1 : 2
           return (
             <div
               key={s}
@@ -110,7 +173,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
           <ArrowLeft size={22} weight="bold" />
         </button>
         <h2 className="text-xl font-bold text-stone-800">
-          {step === 'name' ? 'Create a Group' : 'Choose Features'}
+          {step === 'name' ? 'Create a Group' : step === 'church' ? 'Link to a Church' : 'Choose Features'}
         </h2>
       </div>
 
@@ -134,7 +197,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
                 type="text"
                 value={groupName}
                 onChange={e => setGroupName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && groupName.trim().length >= 2) { setDirection('forward'); setStep('features') } }}
+                onKeyDown={e => { if (e.key === 'Enter' && groupName.trim().length >= 2) { setDirection('forward'); setStep('church') } }}
                 placeholder="e.g. West Linn Community Group"
                 maxLength={60}
                 autoFocus
@@ -143,7 +206,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
               <p className="text-xs text-stone-400 mt-1.5 text-right">{groupName.length}/60</p>
             </div>
             <button
-              onClick={() => { setDirection('forward'); setStep('features') }}
+              onClick={() => { setDirection('forward'); setStep('church') }}
               disabled={groupName.trim().length < 2}
               className="w-full py-3.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
             >
@@ -152,7 +215,74 @@ export default function CreateGroupFlow({ onDone, onClose }) {
           </div>
         )}
 
-        {/* ── Step 2: Feature toggles ────────────────────────────────────── */}
+        {/* ── Step 2: Church link ────────────────────────────────────────── */}
+        {step === 'church' && (
+          <div className="max-w-md mx-auto pt-6 space-y-6">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-stone-100 flex items-center justify-center">
+                <Church size={40} weight="duotone" className="text-stone-500" />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-stone-500 text-sm">If your group is part of a church, enter the church invite code. Ask your church admin for the code.</p>
+              <p className="text-xs text-stone-400 mt-1">You can also skip this and link later in Group Settings.</p>
+            </div>
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={churchCode}
+                  onChange={e => handleChurchCodeChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                  onKeyDown={e => { if (e.key === 'Enter') handleChurchContinue() }}
+                  placeholder="Church code (e.g. ABC123)"
+                  maxLength={6}
+                  autoFocus
+                  className="w-full border border-stone-200 rounded-xl px-4 py-3.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent font-mono tracking-widest uppercase"
+                />
+              </div>
+
+              {/* Verification feedback */}
+              {churchVerifying && (
+                <div className="flex items-center gap-2 px-1">
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-stone-400 border-t-transparent animate-spin shrink-0" />
+                  <p className="text-xs text-stone-400">Verifying code…</p>
+                </div>
+              )}
+              {!churchVerifying && churchVerified && (
+                <div className="flex items-center gap-2 px-1">
+                  <CheckCircle size={16} weight="fill" className="text-jade shrink-0" />
+                  <p className="text-xs text-jade font-medium">{churchVerified.name}</p>
+                </div>
+              )}
+              {!churchVerifying && churchError && (
+                <p className="text-xs text-red-500 px-1">{churchError}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={handleChurchContinue}
+                disabled={churchVerifying}
+                className="w-full py-3.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-50"
+              >
+                {churchVerifying ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Verifying…
+                  </span>
+                ) : churchCode.trim() ? 'Verify & Continue' : 'Continue'}
+              </button>
+              <button
+                onClick={() => { setChurchCode(''); setChurchVerified(null); setChurchError(''); setDirection('forward'); setStep('features') }}
+                className="w-full py-2.5 text-sm text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: Feature toggles ────────────────────────────────────── */}
         {step === 'features' && (
           <div className="max-w-md mx-auto pt-4 space-y-4">
             <p className="text-sm text-stone-500">Choose which features to enable for <span className="font-semibold text-stone-700">"{groupName}"</span>. You can change these any time in Group Settings.</p>

@@ -139,6 +139,8 @@ export const db = {
         .upsert({ conversation_id: convId, user_id: userId, last_read_at: new Date().toISOString() }, { onConflict: 'conversation_id,user_id' }),
     getGroupInviteCode: (groupId) =>
       supabase.rpc('get_group_invite_code', { target_group_id: groupId }),
+    verifyJoinCode: (code) =>
+      supabase.from('churches').select('id, name').eq('join_code', code.toUpperCase().trim()).maybeSingle(),
     linkGroup: (joinCode) =>
       supabase.rpc('link_group_to_church', { p_join_code: joinCode }),
     unlinkGroup: () =>
