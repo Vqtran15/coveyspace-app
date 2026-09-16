@@ -31,8 +31,8 @@ export default function AdminPage() {
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
 
   const [churchPickerOpen, setChurchPickerOpen] = useState(false)
-  const [allChurches, setAllChurches] = useState([])
-  const [churchSearch, setChurchSearch] = useState('')
+  const [churchCode, setChurchCode] = useState('')
+  const [churchCodeError, setChurchCodeError] = useState('')
   const [churchSaving, setChurchSaving] = useState(false)
   const [confirmUnlinkChurch, setConfirmUnlinkChurch] = useState(false)
 
@@ -176,24 +176,19 @@ export default function AdminPage() {
     setGroupNameSaving(false)
   }
 
-  async function handleOpenChurchPicker() {
-    if (allChurches.length === 0) {
-      const { data } = await db.churches.fetchAll()
-      setAllChurches(data ?? [])
-    }
-    setChurchSearch('')
-    setChurchPickerOpen(true)
-  }
-
-  async function handleLinkChurch(church) {
+  async function handleLinkChurch() {
+    const trimmed = churchCode.trim().toUpperCase()
+    if (!trimmed) return
     setChurchSaving(true)
-    const { error } = await db.churches.linkGroup(church.id)
+    setChurchCodeError('')
+    const { data, error } = await db.churches.linkGroup(trimmed)
     if (error) {
-      toast('Failed to link church', 'error')
+      setChurchCodeError('Invalid code — check with your church admin')
     } else {
       await refreshProfile()
-      toast(`Linked to ${church.name}`, 'success')
+      toast(`Linked to ${data.church_name}`, 'success')
       setChurchPickerOpen(false)
+      setChurchCode('')
     }
     setChurchSaving(false)
   }
@@ -364,40 +359,31 @@ export default function AdminPage() {
               <input
                 autoFocus
                 type="text"
-                value={churchSearch}
-                onChange={e => setChurchSearch(e.target.value)}
-                placeholder="Search churches…"
-                className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+                value={churchCode}
+                onChange={e => { setChurchCode(e.target.value.toUpperCase()); setChurchCodeError('') }}
+                onKeyDown={e => e.key === 'Enter' && handleLinkChurch()}
+                placeholder="Enter church code"
+                maxLength={6}
+                className={`w-full text-sm bg-white border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 placeholder:text-stone-300 font-mono tracking-widest uppercase ${churchCodeError ? 'border-red-300 focus:ring-red-400' : 'border-stone-200 focus:ring-ember'}`}
               />
-              <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100 max-h-48 overflow-y-auto">
-                {allChurches
-                  .filter(c => c.name.toLowerCase().includes(churchSearch.toLowerCase()))
-                  .map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => handleLinkChurch(c)}
-                      disabled={churchSaving}
-                      className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40 first:rounded-t-2xl last:rounded-b-2xl"
-                    >
-                      {c.name}
-                    </button>
-                  ))}
-                {allChurches.filter(c => c.name.toLowerCase().includes(churchSearch.toLowerCase())).length === 0 && (
-                  <p className="px-4 py-3 text-sm text-stone-400">No churches found</p>
-                )}
+              {churchCodeError && <p className="text-xs text-red-500 px-1">{churchCodeError}</p>}
+              <div className="flex gap-2">
+                <button onClick={() => { setChurchPickerOpen(false); setChurchCode(''); setChurchCodeError('') }} className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleLinkChurch} disabled={!churchCode.trim() || churchSaving} className="flex-1 py-2.5 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40">
+                  {churchSaving ? 'Linking…' : 'Link'}
+                </button>
               </div>
-              <button onClick={() => setChurchPickerOpen(false)} className="w-full py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">
-                Cancel
-              </button>
             </div>
           ) : (
             <button
               key="church-idle"
-              onClick={handleOpenChurchPicker}
+              onClick={() => { setChurchCode(''); setChurchCodeError(''); setChurchPickerOpen(true) }}
               className="animate-overlay-in w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-500 hover:bg-stone-50 transition-colors"
             >
               <Church size={16} className="text-stone-400 shrink-0" />
-              <span className="flex-1 text-left">Link to a church</span>
+              <span className="flex-1 text-left">Enter church code</span>
             </button>
           )}
         </section>
