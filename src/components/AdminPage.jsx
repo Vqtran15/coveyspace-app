@@ -343,7 +343,7 @@ export default function AdminPage() {
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Church</p>
           {churchId ? (
             confirmUnlinkChurch ? (
-              <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
+              <div key="church-confirm" className="animate-overlay-in p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
                 <p className="text-sm text-stone-700">Remove the link to <span className="font-semibold">{churchName}</span>? Members will lose access to church broadcasts.</p>
                 <div className="flex gap-2">
                   <button onClick={() => setConfirmUnlinkChurch(false)} className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
@@ -353,14 +353,14 @@ export default function AdminPage() {
                 </div>
               </div>
             ) : (
-              <div className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl">
+              <div key="church-linked" className="animate-overlay-in w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl">
                 <Church size={16} weight="fill" className="text-ember shrink-0" />
                 <span className="flex-1 text-sm text-stone-700 truncate">{churchName}</span>
                 <button onClick={() => setConfirmUnlinkChurch(true)} className="text-xs text-stone-400 hover:text-red-500 transition-colors shrink-0">Unlink</button>
               </div>
             )
           ) : churchPickerOpen ? (
-            <div className="space-y-2">
+            <div key="church-picker" className="animate-overlay-in space-y-2">
               <input
                 autoFocus
                 type="text"
@@ -392,8 +392,9 @@ export default function AdminPage() {
             </div>
           ) : (
             <button
+              key="church-idle"
               onClick={handleOpenChurchPicker}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-500 hover:bg-stone-50 transition-colors"
+              className="animate-overlay-in w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-500 hover:bg-stone-50 transition-colors"
             >
               <Church size={16} className="text-stone-400 shrink-0" />
               <span className="flex-1 text-left">Link to a church</span>
