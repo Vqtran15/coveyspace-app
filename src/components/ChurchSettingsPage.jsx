@@ -906,7 +906,7 @@ export default function ChurchSettingsPage() {
           <div className="flex items-center gap-4">
             <span className="font-mono font-bold text-3xl tracking-widest text-stone-800 flex-1">{churchJoinCode}</span>
             <button
-              onClick={() => { navigator.clipboard.writeText(churchJoinCode); }}
+              onClick={() => { navigator.clipboard.writeText(churchJoinCode); toast('Church code copied!', 'success') }}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors shrink-0"
             >
               Copy
