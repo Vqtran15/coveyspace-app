@@ -26,14 +26,29 @@ export default function AuthPage() {
   const [animDir, setAnimDir]       = useState(null)
   const [pwLengthError, setPwLengthError]   = useState(false)
   const [pwMismatchError, setPwMismatchError] = useState(false)
-  const [selectedChurchId, setSelectedChurchId] = useState('')
-  const [churchList, setChurchList] = useState([])
+  const [churchCode, setChurchCode]         = useState('')
+  const [churchVerified, setChurchVerified] = useState(null)  // { id, name }
+  const [churchVerifying, setChurchVerifying] = useState(false)
+  const [churchCodeError, setChurchCodeError] = useState('')
 
-  useEffect(() => {
-    if (joinMode === 'create' && churchList.length === 0) {
-      db.churches.fetchAll().then(({ data }) => setChurchList(data ?? []))
+  async function handleChurchCodeChange(val) {
+    const clean = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+    setChurchCode(clean)
+    setChurchVerified(null)
+    setChurchCodeError('')
+  }
+
+  async function handleChurchCodeBlur() {
+    if (!churchCode.trim()) return
+    setChurchVerifying(true)
+    const { data, error } = await db.churches.verifyJoinCode(churchCode)
+    setChurchVerifying(false)
+    if (error || !data) {
+      setChurchCodeError('Invalid code — check with your church admin.')
+    } else {
+      setChurchVerified(data)
     }
-  }, [joinMode])
+  }
 
   function switchMode(next) {
     setAnimDir(MODE_ORDER[next] > MODE_ORDER[mode] ? 'right' : 'left')
@@ -47,6 +62,9 @@ export default function AuthPage() {
       setJoinMode('join')
       setInviteCode('')
       setNewGroupName('')
+      setChurchCode('')
+      setChurchVerified(null)
+      setChurchCodeError('')
     }
   }
 
@@ -108,12 +126,24 @@ export default function AuthPage() {
           setLoading(false)
           return
         }
+        // Validate church code if provided but not yet verified
+        if (churchCode.trim() && !churchVerified) {
+          setChurchVerifying(true)
+          const { data, error: cErr } = await db.churches.verifyJoinCode(churchCode)
+          setChurchVerifying(false)
+          if (cErr || !data) {
+            setChurchCodeError('Invalid church code — check with your church admin.')
+            setLoading(false)
+            return
+          }
+          setChurchVerified(data)
+        }
         metadata = {
           display_name: displayName,
           first_name: firstName.trim(),
           last_name:  lastName.trim() || null,
           community_group_name: newGroupName.trim(),
-          ...(selectedChurchId ? { church_id: selectedChurchId } : {}),
+          ...(churchVerified ? { church_join_code: churchCode.trim().toUpperCase() } : {}),
         }
       }
 
@@ -305,18 +335,33 @@ export default function AuthPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
-                          Church <span className="normal-case font-normal text-stone-400">(optional)</span>
+                          Church Code <span className="normal-case font-normal text-stone-400">(optional)</span>
                         </label>
-                        <select
-                          value={selectedChurchId}
-                          onChange={e => setSelectedChurchId(e.target.value)}
-                          className={`${inputClass} bg-white`}
-                        >
-                          <option value="">None (independent group)</option>
-                          {churchList.map(c => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                          ))}
-                        </select>
+                        <input
+                          type="text"
+                          value={churchCode}
+                          onChange={e => handleChurchCodeChange(e.target.value)}
+                          onBlur={handleChurchCodeBlur}
+                          placeholder="e.g. ABC123"
+                          maxLength={6}
+                          autoComplete="off"
+                          className={`${inputClass} font-mono tracking-widest uppercase`}
+                        />
+                        {churchVerifying && (
+                          <p className="text-xs text-stone-400 mt-1 flex items-center gap-1.5">
+                            <span className="inline-block w-3 h-3 rounded-full border-2 border-stone-300 border-t-transparent animate-spin" />
+                            Verifying…
+                          </p>
+                        )}
+                        {!churchVerifying && churchVerified && (
+                          <p className="text-xs text-jade font-medium mt-1">✓ {churchVerified.name}</p>
+                        )}
+                        {!churchVerifying && churchCodeError && (
+                          <p className="text-xs text-red-500 mt-1">{churchCodeError}</p>
+                        )}
+                        {!churchVerified && !churchCodeError && (
+                          <p className="text-xs text-stone-400 mt-1">Ask your church admin for the 6-character church code.</p>
+                        )}
                       </div>
                     </div>
                   )}
