@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, Church } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { db } from '../lib/db.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import { weekOccToMode } from '../utils/schedule.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 
 export default function AdminPage() {
-  const { groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange } = useAppContext()
+  const { groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange, churchId, churchName, refreshProfile } = useAppContext()
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
@@ -28,6 +29,12 @@ export default function AdminPage() {
   const [membersOpen, setMembersOpen] = useState(true)
   const [mealFreqMode, setMealFreqMode]       = useState(() => weekOccToMode(groupSettings?.meal_week_occurrences))
   const [serviceFreqMode, setServiceFreqMode] = useState(() => weekOccToMode(groupSettings?.service_week_occurrences))
+
+  const [churchPickerOpen, setChurchPickerOpen] = useState(false)
+  const [allChurches, setAllChurches] = useState([])
+  const [churchSearch, setChurchSearch] = useState('')
+  const [churchSaving, setChurchSaving] = useState(false)
+  const [confirmUnlinkChurch, setConfirmUnlinkChurch] = useState(false)
 
   const [activeTab, setActiveTab] = useState('settings')
   const [tabAnimKey, setTabAnimKey]     = useState(0)
@@ -169,6 +176,41 @@ export default function AdminPage() {
     setGroupNameSaving(false)
   }
 
+  async function handleOpenChurchPicker() {
+    if (allChurches.length === 0) {
+      const { data } = await db.churches.fetchAll()
+      setAllChurches(data ?? [])
+    }
+    setChurchSearch('')
+    setChurchPickerOpen(true)
+  }
+
+  async function handleLinkChurch(church) {
+    setChurchSaving(true)
+    const { error } = await db.churches.linkGroup(church.id)
+    if (error) {
+      toast('Failed to link church', 'error')
+    } else {
+      await refreshProfile()
+      toast(`Linked to ${church.name}`, 'success')
+      setChurchPickerOpen(false)
+    }
+    setChurchSaving(false)
+  }
+
+  async function handleUnlinkChurch() {
+    setChurchSaving(true)
+    const { error } = await db.churches.unlinkGroup()
+    if (error) {
+      toast('Failed to unlink church', 'error')
+    } else {
+      await refreshProfile()
+      toast('Church unlinked', 'success')
+      setConfirmUnlinkChurch(false)
+    }
+    setChurchSaving(false)
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 pt-8 pb-12">
       {/* Header */}
@@ -292,6 +334,69 @@ export default function AdminPage() {
             >
               <PencilSimple size={16} weight="bold" className="text-stone-400 shrink-0" />
               <span className="flex-1 text-left truncate">{groupName}</span>
+            </button>
+          )}
+        </section>
+
+        {/* Church */}
+        <section>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Church</p>
+          {churchId ? (
+            confirmUnlinkChurch ? (
+              <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
+                <p className="text-sm text-stone-700">Remove the link to <span className="font-semibold">{churchName}</span>? Members will lose access to church broadcasts.</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirmUnlinkChurch(false)} className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">Cancel</button>
+                  <button onClick={handleUnlinkChurch} disabled={churchSaving} className="flex-1 py-2.5 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-40">
+                    {churchSaving ? 'Unlinking…' : 'Unlink'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl">
+                <Church size={16} weight="fill" className="text-ember shrink-0" />
+                <span className="flex-1 text-sm text-stone-700 truncate">{churchName}</span>
+                <button onClick={() => setConfirmUnlinkChurch(true)} className="text-xs text-stone-400 hover:text-red-500 transition-colors shrink-0">Unlink</button>
+              </div>
+            )
+          ) : churchPickerOpen ? (
+            <div className="space-y-2">
+              <input
+                autoFocus
+                type="text"
+                value={churchSearch}
+                onChange={e => setChurchSearch(e.target.value)}
+                placeholder="Search churches…"
+                className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+              />
+              <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100 max-h-48 overflow-y-auto">
+                {allChurches
+                  .filter(c => c.name.toLowerCase().includes(churchSearch.toLowerCase()))
+                  .map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => handleLinkChurch(c)}
+                      disabled={churchSaving}
+                      className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-40 first:rounded-t-2xl last:rounded-b-2xl"
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                {allChurches.filter(c => c.name.toLowerCase().includes(churchSearch.toLowerCase())).length === 0 && (
+                  <p className="px-4 py-3 text-sm text-stone-400">No churches found</p>
+                )}
+              </div>
+              <button onClick={() => setChurchPickerOpen(false)} className="w-full py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors">
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleOpenChurchPicker}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-500 hover:bg-stone-50 transition-colors"
+            >
+              <Church size={16} className="text-stone-400 shrink-0" />
+              <span className="flex-1 text-left">Link to a church</span>
             </button>
           )}
         </section>
