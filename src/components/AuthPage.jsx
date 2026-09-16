@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -127,7 +127,8 @@ export default function AuthPage() {
           return
         }
         // Validate church code if provided but not yet verified
-        if (churchCode.trim() && !churchVerified) {
+        let verifiedChurch = churchVerified
+        if (churchCode.trim() && !verifiedChurch) {
           setChurchVerifying(true)
           const { data, error: cErr } = await db.churches.verifyJoinCode(churchCode)
           setChurchVerifying(false)
@@ -137,13 +138,14 @@ export default function AuthPage() {
             return
           }
           setChurchVerified(data)
+          verifiedChurch = data
         }
         metadata = {
           display_name: displayName,
           first_name: firstName.trim(),
           last_name:  lastName.trim() || null,
           community_group_name: newGroupName.trim(),
-          ...(churchVerified ? { church_join_code: churchCode.trim().toUpperCase() } : {}),
+          ...(verifiedChurch ? { church_join_code: churchCode.trim().toUpperCase() } : {}),
         }
       }
 

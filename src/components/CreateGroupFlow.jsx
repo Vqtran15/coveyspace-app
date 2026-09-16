@@ -50,21 +50,6 @@ export default function CreateGroupFlow({ onDone, onClose }) {
     setFeatures(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  async function handleVerifyChurchCode() {
-    const trimmed = churchCode.trim().toUpperCase()
-    if (!trimmed) return
-    setChurchVerifying(true)
-    setChurchError('')
-    setChurchVerified(null)
-    const { data, error } = await db.churches.verifyJoinCode(trimmed)
-    setChurchVerifying(false)
-    if (error || !data) {
-      setChurchError('Invalid code — check with your church admin.')
-    } else {
-      setChurchVerified(data)
-    }
-  }
-
   async function handleChurchCodeChange(val) {
     setChurchCode(val)
     setChurchVerified(null)
