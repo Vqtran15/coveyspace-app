@@ -516,19 +516,25 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setReplyingTo(null)
     } catch (e) {
       console.error('createPoll error:', e)
+      toast('Failed to create poll', 'error')
     } finally {
       setPollSubmitting(false)
     }
   }
 
   async function castVote(pollId, optionIndex) {
+    const prevPoll = polls[pollId]
     setPolls(prev => {
       if (!prev[pollId]) return prev
       const p = prev[pollId]
       return { ...prev, [pollId]: { ...p, votes: [...p.votes.filter(v => v.user_id !== myId), { poll_id: pollId, user_id: myId, option_index: optionIndex }] } }
     })
     const { error } = await supabase.from('poll_votes').upsert({ poll_id: pollId, user_id: myId, option_index: optionIndex })
-    if (error) console.error('castVote error:', error)
+    if (error) {
+      console.error('castVote error:', error)
+      if (prevPoll) setPolls(prev => ({ ...prev, [pollId]: prevPoll }))
+      toast('Failed to cast vote', 'error')
+    }
   }
 
   function startEditPoll(pollId, poll) {
@@ -557,6 +563,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setEditingPollId(null)
     } catch (e) {
       console.error('savePoll error:', e)
+      toast('Failed to save poll', 'error')
     } finally {
       setSavingPoll(false)
     }
@@ -1299,6 +1306,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
     } catch (err) {
       console.error('Send failed:', err)
+      toast('Failed to send message', 'error')
     } finally {
       sendingRef.current = false
       setSending(false)
@@ -2044,7 +2052,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         <div className="pointer-events-auto" style={{ paddingBottom: keyboardOpen ? '0' : 'var(--sab)' }}>
           {typing && (
             <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
-              <span className="text-[11px] text-stone-400 ml-1 block mb-1">{typing}</span>
+              <span className="text-xs text-stone-400 ml-1 block mb-1">{typing}</span>
               <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
                 {[0, 1, 2].map(i => (
                   <div

@@ -182,7 +182,7 @@ export default function ImageCropModal({ file, onConfirm, onCancel }) {
         </button>
         <button
           onClick={onCancel}
-          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium active:bg-white/10 transition-colors"
+          className="flex-1 py-3.5 rounded-xl border border-white/20 text-white/90 text-sm font-medium active:bg-white/10 transition-colors"
         >
           Cancel
         </button>

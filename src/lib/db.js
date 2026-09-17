@@ -148,4 +148,31 @@ export const db = {
     getJoinCode: () =>
       supabase.rpc('get_church_join_code'),
   },
+
+  pco: {
+    // Invite history for a Coveyspace group (church admin only, RLS-filtered)
+    getInvites: (coveyspaceGroupId) =>
+      supabase
+        .from('pco_invites')
+        .select('email, sent_at, last_sent_at, send_count, joined_at')
+        .eq('coveyspace_group_id', coveyspaceGroupId),
+
+    // Saved PCO group → Coveyspace group mapping for a church
+    getMapping: (churchId, pcoGroupId) =>
+      supabase
+        .from('pco_group_mappings')
+        .select('coveyspace_group_id, last_synced_at')
+        .eq('church_id', churchId)
+        .eq('pco_group_id', pcoGroupId)
+        .maybeSingle(),
+
+    // Save (or update) a PCO group → Coveyspace group mapping
+    upsertMapping: ({ churchId, pcoGroupId, coveyspaceGroupId }) =>
+      supabase
+        .from('pco_group_mappings')
+        .upsert(
+          { church_id: churchId, pco_group_id: pcoGroupId, coveyspace_group_id: coveyspaceGroupId },
+          { onConflict: 'church_id,pco_group_id' }
+        ),
+  },
 }

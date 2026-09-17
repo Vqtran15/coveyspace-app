@@ -833,14 +833,14 @@ export default function MessageList() {
                               if (e.key === 'Escape') exitEdit()
                             }}
                             rows={1}
-                            className="w-full text-sm bg-transparent border-0 outline-none text-white resize-none placeholder:text-white/50"
+                            className="w-full text-sm bg-transparent border-0 outline-none text-white resize-none placeholder:text-white/60"
                             style={{ minWidth: 140 }}
                           />
                           <div className="flex gap-3 mt-1.5">
-                            <button type="button" onClick={exitEdit} className="text-[11px] text-white/90 hover:text-white font-medium transition-colors">
+                            <button type="button" onClick={exitEdit} className="text-xs text-white/90 hover:text-white font-medium transition-colors">
                               Cancel
                             </button>
-                            <button type="submit" disabled={!editText.trim()} className="text-[11px] text-white font-semibold disabled:opacity-40 transition-opacity">
+                            <button type="submit" disabled={!editText.trim()} className="text-xs text-white font-semibold disabled:opacity-40 transition-opacity">
                               Save
                             </button>
                           </div>

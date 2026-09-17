@@ -158,7 +158,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
         </div>
       ) : (
         <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:bg-sunrise-50">
-          <p className="text-sm text-stone-400">Select a conversation to start messaging</p>
+          <p className="text-sm text-stone-500">Select a conversation to start messaging</p>
         </div>
       )}
     </div>

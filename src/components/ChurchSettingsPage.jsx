@@ -13,6 +13,7 @@ import {
   TextAlignLeft, TextAlignCenter, TextAlignRight,
   TextB, TextItalic, TextUnderline, TextStrikethrough,
   TextIndent, TextOutdent, ArrowsClockwise, CheckCircle, Copy, Envelope,
+  MagnifyingGlass, ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -607,6 +608,74 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
   )
 }
 
+// ── PCO member row (shared by group list and search results) ──────────────────
+
+function PcoMemberRow({ member, isMember, inviteRecord, sending, onCopyLink, onInvite, daysAgo }) {
+  // Priority: 1) already a group member, 2) joined via invite, 3) pending invite, 4) never invited
+  const joined = isMember || !!inviteRecord?.joined_at
+  const hasPendingInvite = inviteRecord && !inviteRecord.joined_at && !isMember
+
+  // Resend is available 3+ days after the last send
+  const canResend = hasPendingInvite &&
+    (Date.now() - new Date(inviteRecord.last_sent_at).getTime()) >= 3 * 86_400_000
+
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-stone-800 truncate">{member.name}</p>
+        <p className="text-xs text-stone-400 truncate">{member.email ?? 'No email in PCO'}</p>
+      </div>
+
+      {!member.email ? (
+        <span className="text-xs text-stone-300 shrink-0">Can't invite</span>
+      ) : joined ? (
+        <div className="flex items-center gap-1 text-sage-700 shrink-0">
+          <CheckCircle size={14} weight="fill" />
+          <span className="text-xs font-medium">Member</span>
+        </div>
+      ) : hasPendingInvite ? (
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="text-right">
+            <div className="flex items-center gap-1 text-stone-400">
+              <ClockCounterClockwise size={12} />
+              <span className="text-xs">Invited {daysAgo(inviteRecord.last_sent_at)}</span>
+            </div>
+            {inviteRecord.send_count > 1 && (
+              <p className="text-xs text-stone-300">{inviteRecord.send_count}× sent</p>
+            )}
+          </div>
+          {canResend && (
+            <button
+              onClick={onInvite}
+              disabled={sending}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-stone-200 text-stone-500 hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors disabled:opacity-50"
+            >
+              {sending ? 'Sending…' : 'Resend'}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onCopyLink}
+            aria-label="Copy invite link"
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 transition-colors"
+          >
+            <Copy size={14} />
+          </button>
+          <button
+            onClick={onInvite}
+            disabled={sending}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-ember text-white hover:bg-ember-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {sending ? 'Sending…' : <><Envelope size={12} weight="bold" />Invite</>}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function ChurchSettingsPage() {
@@ -649,6 +718,18 @@ export default function ChurchSettingsPage() {
   const [selectedCoveyGroupId, setSelectedCoveyGroupId] = useState(null)
   const [coveyGroupInviteCode, setCoveyGroupInviteCode] = useState(null)
   const [coveyGroupInviteLoading, setCoveyGroupInviteLoading] = useState(false)
+
+  // Invite history: { [email]: { sent_at, last_sent_at, send_count, joined_at } }
+  const [inviteHistory, setInviteHistory] = useState({})
+
+  // PCO people search
+  const [pcoSearchQuery, setPcoSearchQuery] = useState('')
+  const [pcoSearchResults, setPcoSearchResults] = useState([])
+  const [pcoSearchLoading, setPcoSearchLoading] = useState(false)
+  const [pcoSearchStatuses, setPcoSearchStatuses] = useState({})
+  const [pcoSearchInviteHistory, setPcoSearchInviteHistory] = useState({})
+  const [pcoSearchSending, setPcoSearchSending] = useState({})
+  const pcoSearchDebounceRef = useRef(null)
 
   // Load broadcasts from both conversations merged by date
   useEffect(() => {
@@ -704,6 +785,16 @@ export default function ChurchSettingsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pcoConnection])
 
+  // Re-check member statuses + invite history when target Coveyspace group changes
+  useEffect(() => {
+    if (pcoMembers.length > 0 && selectedCoveyGroupId) {
+      setMemberStatuses({})
+      refreshMemberStatuses(pcoMembers, selectedCoveyGroupId)
+    }
+    if (selectedCoveyGroupId) loadInviteHistory(selectedCoveyGroupId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCoveyGroupId])
+
   // Handle OAuth callback ?pco= param
   useEffect(() => {
     const params   = new URLSearchParams(location.search)
@@ -755,7 +846,7 @@ export default function ChurchSettingsPage() {
     }
   }
 
-  async function loadPcoMembers(pcoGroupId) {
+  async function loadPcoMembers(pcoGroupId, explicitTargetGroupId) {
     setPcoMembersLoading(true)
     setPcoMembers([])
     setMemberStatuses({})
@@ -782,8 +873,9 @@ export default function ChurchSettingsPage() {
     const personMap = {}
     peopleData?.data?.forEach(p => {
       personMap[p.id] = {
-        name:  p.attributes.name ?? [p.attributes.first_name, p.attributes.last_name].filter(Boolean).join(' ') ?? null,
-        email: p.attributes.email_address ?? null,
+        name:      p.attributes.name ?? [p.attributes.first_name, p.attributes.last_name].filter(Boolean).join(' ') ?? null,
+        email:     p.attributes.email_address ?? null,
+        birthdate: p.attributes.birthdate ?? null,
       }
     })
     peopleData?.included
@@ -796,22 +888,173 @@ export default function ChurchSettingsPage() {
       })
 
     const people = persons.map(p => ({
-      id:     p.id,
-      name:   personMap[p.id]?.name  ?? p.attributes.name ?? null,
-      email:  personMap[p.id]?.email ?? null,
-      avatar: p.attributes.avatar,
+      id:       p.id,
+      name:     personMap[p.id]?.name     ?? p.attributes.name ?? null,
+      email:    personMap[p.id]?.email    ?? null,
+      birthdate: personMap[p.id]?.birthdate ?? null,
+      avatar:   p.attributes.avatar,
     }))
 
-    const withEmail = people.filter(p => p.email)
-    if (withEmail.length) {
-      const emails = withEmail.map(p => p.email)
-      const { data: statuses } = await supabase.rpc('check_pco_members', { emails })
-      const map = {}
-      statuses?.forEach(s => { map[s.email] = s.in_group })
-      setMemberStatuses(map)
-    }
     setPcoMembers(people)
+    // explicitTargetGroupId is passed when a saved mapping was just resolved (avoids
+    // using stale selectedCoveyGroupId before React re-renders with the new value)
+    const gId = explicitTargetGroupId ?? selectedCoveyGroupId
+    await Promise.all([
+      refreshMemberStatuses(people, gId),
+      gId ? loadInviteHistory(gId) : Promise.resolve(),
+    ])
     setPcoMembersLoading(false)
+  }
+
+  async function refreshMemberStatuses(people, targetGroupId) {
+    const withEmail = (people ?? pcoMembers).filter(p => p.email)
+    if (!withEmail.length) return
+    const emails = withEmail.map(p => p.email)
+    const { data: statuses } = await supabase.rpc('check_pco_members', {
+      emails,
+      target_group_id: targetGroupId ?? selectedCoveyGroupId ?? null,
+    })
+    const map = {}
+    statuses?.forEach(s => { map[s.email.toLowerCase()] = s.in_group })
+    setMemberStatuses(map)
+  }
+
+  async function loadInviteHistory(targetGroupId) {
+    const gId = targetGroupId ?? selectedCoveyGroupId
+    if (!gId) return
+    const { data } = await db.pco.getInvites(gId)
+    const map = {}
+    data?.forEach(inv => { map[inv.email.toLowerCase()] = inv })
+    setInviteHistory(map)
+  }
+
+  async function loadGroupMapping(pcoGroupId) {
+    if (!churchId || !pcoGroupId) return null
+    const { data } = await db.pco.getMapping(churchId, pcoGroupId)
+    const resolvedId = data?.coveyspace_group_id ?? null
+    if (resolvedId) setSelectedCoveyGroupId(resolvedId)
+    return resolvedId
+  }
+
+  async function saveGroupMapping(pcoGroupId, coveyGroupId) {
+    if (!churchId || !pcoGroupId || !coveyGroupId) return
+    await db.pco.upsertMapping({ churchId, pcoGroupId, coveyspaceGroupId: coveyGroupId })
+  }
+
+  // Days-ago helper for invite status labels
+  function daysAgo(dateStr) {
+    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000)
+    if (days === 0) return 'today'
+    if (days === 1) return '1 day ago'
+    return `${days} days ago`
+  }
+
+  // Search PCO people by name or email (debounced via pcoSearchDebounceRef)
+  async function executePcoSearch(query) {
+    if (!query.trim()) {
+      setPcoSearchResults([])
+      setPcoSearchStatuses({})
+      setPcoSearchInviteHistory({})
+      return
+    }
+    setPcoSearchLoading(true)
+    try {
+      const { data } = await supabase.functions.invoke('pco-api', {
+        body: {
+          path: `/people/v2/people?where[search_name_or_email]=${encodeURIComponent(query.trim())}&include=emails&per_page=25`,
+        },
+      })
+
+      const personMap = {}
+      data?.data?.forEach(p => {
+        personMap[p.id] = {
+          id:        p.id,
+          name:      p.attributes.name ?? [p.attributes.first_name, p.attributes.last_name].filter(Boolean).join(' ') ?? null,
+          email:     p.attributes.email_address ?? null,
+          birthdate: p.attributes.birthdate ?? null,
+          avatar:    p.attributes.avatar ?? null,
+        }
+      })
+      data?.included
+        ?.filter(i => i.type === 'Email')
+        ?.forEach(e => {
+          const pid = e.relationships?.person?.data?.id
+          if (pid && personMap[pid] && !personMap[pid].email && e.attributes?.address) {
+            personMap[pid].email = e.attributes.address
+          }
+        })
+
+      const results = Object.values(personMap)
+      setPcoSearchResults(results)
+
+      // Check membership + invite history for search results
+      const gId = selectedCoveyGroupId
+      const withEmail = results.filter(p => p.email)
+      if (withEmail.length && gId) {
+        const emails = withEmail.map(p => p.email)
+        const [{ data: statuses }, { data: invites }] = await Promise.all([
+          supabase.rpc('check_pco_members', { emails, target_group_id: gId }),
+          db.pco.getInvites(gId),
+        ])
+        const sMap = {}
+        statuses?.forEach(s => { sMap[s.email.toLowerCase()] = s.in_group })
+        setPcoSearchStatuses(sMap)
+        const iMap = {}
+        invites?.forEach(inv => { iMap[inv.email.toLowerCase()] = inv })
+        setPcoSearchInviteHistory(iMap)
+      } else {
+        setPcoSearchStatuses({})
+        setPcoSearchInviteHistory({})
+      }
+    } catch (err) {
+      console.error('[PCO search]', err)
+    } finally {
+      setPcoSearchLoading(false)
+    }
+  }
+
+  function handlePcoSearchChange(val) {
+    setPcoSearchQuery(val)
+    clearTimeout(pcoSearchDebounceRef.current)
+    if (!val.trim()) {
+      setPcoSearchResults([])
+      setPcoSearchStatuses({})
+      setPcoSearchInviteHistory({})
+      return
+    }
+    pcoSearchDebounceRef.current = setTimeout(() => executePcoSearch(val), 400)
+  }
+
+  async function handleSendSearchInvite(member) {
+    const targetCode = coveyGroupInviteCode ?? inviteCode
+    if (!targetCode) { toast('No invite code available', 'error'); return }
+    const targetGroupName = groupsInChurch.find(g => g.id === selectedCoveyGroupId)?.name ?? groupName
+    const inviteUrl = `${window.location.origin}/login?code=${targetCode}`
+    setPcoSearchSending(prev => ({ ...prev, [member.email]: true }))
+    const { error } = await supabase.functions.invoke('pco-send-invite', {
+      body: {
+        email: member.email,
+        name:  member.name,
+        invite_url: inviteUrl,
+        group_name: targetGroupName,
+        coveyspace_group_id: selectedCoveyGroupId ?? null,
+        birthdate: member.birthdate ?? null,
+      },
+    })
+    setPcoSearchSending(prev => ({ ...prev, [member.email]: false }))
+    if (error) {
+      toast('Failed to send invite', 'error')
+    } else {
+      toast(`Invite sent to ${member.name}`, 'success')
+      setPcoSearchInviteHistory(prev => ({
+        ...prev,
+        [member.email.toLowerCase()]: {
+          ...prev[member.email.toLowerCase()],
+          last_sent_at: new Date().toISOString(),
+          send_count: (prev[member.email.toLowerCase()]?.send_count ?? 0) + 1,
+        },
+      }))
+    }
   }
 
   async function handleConnectPco() {
@@ -840,6 +1083,12 @@ export default function ChurchSettingsPage() {
       setPcoMembers([])
       setSelectedPcoGroup(null)
       setMemberStatuses({})
+      setInviteHistory({})
+      setPcoSearchQuery('')
+      setPcoSearchResults([])
+      setPcoSearchStatuses({})
+      setPcoSearchInviteHistory({})
+      setPcoSearchSending({})
       toast('Planning Center disconnected', 'success')
     }
     setPcoDisconnecting(false)
@@ -852,13 +1101,30 @@ export default function ChurchSettingsPage() {
     const inviteUrl = `${window.location.origin}/login?code=${targetCode}`
     setInviteSending(prev => ({ ...prev, [member.email]: true }))
     const { error } = await supabase.functions.invoke('pco-send-invite', {
-      body: { email: member.email, name: member.name, invite_url: inviteUrl, group_name: targetGroupName },
+      body: {
+        email:       member.email,
+        name:        member.name,
+        invite_url:  inviteUrl,
+        group_name:  targetGroupName,
+        coveyspace_group_id: selectedCoveyGroupId ?? null,
+        birthdate:   member.birthdate ?? null,
+      },
     })
     if (error) {
       toast('Failed to send invite', 'error')
     } else {
       toast(`Invite sent to ${member.name}`, 'success')
-      setMemberStatuses(prev => ({ ...prev, [member.email]: 'invited' }))
+      // Update local invite history so status shows immediately without a reload
+      const emailKey = member.email.toLowerCase()
+      setInviteHistory(prev => ({
+        ...prev,
+        [emailKey]: {
+          ...prev[emailKey],
+          last_sent_at: new Date().toISOString(),
+          send_count: (prev[emailKey]?.send_count ?? 0) + 1,
+          joined_at: prev[emailKey]?.joined_at ?? null,
+        },
+      }))
     }
     setInviteSending(prev => ({ ...prev, [member.email]: false }))
   }
@@ -1030,6 +1296,64 @@ export default function ChurchSettingsPage() {
             {/* Connected body */}
             {pcoConnection && (
               <div className="border-t border-stone-100">
+                {/* PCO people search */}
+                <div className="px-4 pt-4 pb-3 border-b border-stone-100">
+                  <div className="relative">
+                    <MagnifyingGlass size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={pcoSearchQuery}
+                      onChange={e => handlePcoSearchChange(e.target.value)}
+                      placeholder="Search people by name or email…"
+                      className="w-full border border-stone-200 rounded-xl pl-8 pr-8 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                    />
+                    {pcoSearchQuery && (
+                      <button
+                        onClick={() => { setPcoSearchQuery(''); setPcoSearchResults([]); setPcoSearchStatuses({}); setPcoSearchInviteHistory({}) }}
+                        aria-label="Clear search"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                      >
+                        <X size={12} weight="bold" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Search results */}
+                {pcoSearchQuery ? (
+                  <div className="px-4 py-3">
+                    {pcoSearchLoading ? (
+                      <div className="space-y-2">
+                        {[1, 2, 3].map(i => <div key={i} className="h-11 bg-stone-100 rounded-xl animate-pulse" />)}
+                      </div>
+                    ) : pcoSearchResults.length === 0 ? (
+                      <p className="text-xs text-stone-500 py-2 text-center">No people found for "{pcoSearchQuery}"</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {pcoSearchResults.map(member => (
+                          <PcoMemberRow
+                            key={member.id}
+                            member={member}
+                            isMember={pcoSearchStatuses[member.email?.toLowerCase()] === true}
+                            inviteRecord={pcoSearchInviteHistory[member.email?.toLowerCase()]}
+                            sending={!!pcoSearchSending[member.email]}
+
+                            onCopyLink={() => {
+                              const code = coveyGroupInviteCode ?? inviteCode
+                              if (!code) { toast('No invite code available', 'error'); return }
+                              navigator.clipboard.writeText(`${window.location.origin}/login?code=${code}`)
+                              toast('Invite link copied', 'success')
+                            }}
+                            onInvite={() => handleSendSearchInvite(member)}
+                            daysAgo={daysAgo}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+
                 {/* Group picker */}
                 <div className="px-4 pt-4 pb-3">
                   <p className="text-xs font-semibold text-stone-500 mb-2">Import members from a PCO Group</p>
@@ -1060,11 +1384,21 @@ export default function ChurchSettingsPage() {
                       <div className="relative flex-1">
                         <select
                           value={selectedPcoGroup ?? ''}
-                          onChange={e => {
+                          onChange={async e => {
                             const val = e.target.value || null
                             setSelectedPcoGroup(val)
-                            if (val) loadPcoMembers(val)
-                            else { setPcoMembers([]); setMemberStatuses({}) }
+                            setPcoSearchQuery('')
+                            setPcoSearchResults([])
+                            if (val) {
+                              // Resolve saved mapping first so loadPcoMembers gets the
+                              // correct target group, not the stale selectedCoveyGroupId
+                              const resolvedGroupId = await loadGroupMapping(val)
+                              loadPcoMembers(val, resolvedGroupId ?? selectedCoveyGroupId)
+                            } else {
+                              setPcoMembers([])
+                              setMemberStatuses({})
+                              setInviteHistory({})
+                            }
                           }}
                           className="w-full appearance-none border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 bg-white pr-9 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
                         >
@@ -1123,6 +1457,8 @@ export default function ChurchSettingsPage() {
                           const val = e.target.value || null
                           setSelectedCoveyGroupId(val)
                           setMemberStatuses({})
+                          setInviteHistory({})
+                          if (val && selectedPcoGroup) saveGroupMapping(selectedPcoGroup, val)
                         }}
                         disabled={coveyGroupInviteLoading}
                         className="w-full appearance-none border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 bg-white pr-9 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent disabled:opacity-50"
@@ -1157,61 +1493,30 @@ export default function ChurchSettingsPage() {
                           {pcoMembers.length} {pcoMembers.length === 1 ? 'person' : 'people'} in this PCO Group
                         </p>
                         <div className="space-y-1">
-                          {pcoMembers.map(member => {
-                            const status = memberStatuses[member.email]
-                            const alreadyMember = status === true
-                            const invited = status === 'invited'
-                            return (
-                              <div key={member.id} className="flex items-center gap-3 py-1.5">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-stone-800 truncate">{member.name}</p>
-                                  <p className="text-xs text-stone-400 truncate">{member.email ?? 'No email in PCO'}</p>
-                                </div>
-                                {!member.email ? (
-                                  <span className="text-xs text-stone-300 shrink-0">Can't invite</span>
-                                ) : alreadyMember ? (
-                                  <div className="flex items-center gap-1 text-sage-700 shrink-0">
-                                    <CheckCircle size={14} weight="fill" />
-                                    <span className="text-xs font-medium">Member</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <button
-                                      onClick={() => {
-                                        const code = coveyGroupInviteCode ?? inviteCode
-                                        if (!code) { toast('No invite code available', 'error'); return }
-                                        navigator.clipboard.writeText(`${window.location.origin}/login?code=${code}`)
-                                        toast('Invite link copied', 'success')
-                                      }}
-                                      aria-label="Copy invite link"
-                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-200 text-stone-400 hover:text-stone-600 hover:border-stone-300 transition-colors"
-                                    >
-                                      <Copy size={14} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleSendInvite(member)}
-                                      disabled={!!inviteSending[member.email] || invited}
-                                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                                        invited
-                                          ? 'bg-stone-100 text-stone-400 cursor-default'
-                                          : 'bg-ember text-white hover:bg-ember-700 disabled:opacity-50'
-                                      }`}
-                                    >
-                                      {inviteSending[member.email]
-                                        ? 'Sending…'
-                                        : invited
-                                          ? 'Sent ✓'
-                                          : <><Envelope size={12} weight="bold" />Invite</>}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
+                          {pcoMembers.map(member => (
+                            <PcoMemberRow
+                              key={member.id}
+                              member={member}
+                              isMember={memberStatuses[member.email?.toLowerCase()] === true}
+                              inviteRecord={inviteHistory[member.email?.toLowerCase()]}
+                              sending={!!inviteSending[member.email]}
+  
+                              onCopyLink={() => {
+                                const code = coveyGroupInviteCode ?? inviteCode
+                                if (!code) { toast('No invite code available', 'error'); return }
+                                navigator.clipboard.writeText(`${window.location.origin}/login?code=${code}`)
+                                toast('Invite link copied', 'success')
+                              }}
+                              onInvite={() => handleSendInvite(member)}
+                              daysAgo={daysAgo}
+                            />
+                          ))}
                         </div>
                       </>
                     )}
                   </div>
+                )}
+                </>
                 )}
               </div>
             )}

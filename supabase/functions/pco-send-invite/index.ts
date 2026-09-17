@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .single()
 
-    // Auth: caller must be a church admin (independent of their active group)
+    // Auth: caller must be a church admin
     const { data: churchRole } = await supabase
       .from('church_roles')
       .select('church_id')
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       return new Response('Forbidden', { status: 403 })
     }
 
-    const { email, name, invite_url, group_name } = await req.json()
+    const { email, name, invite_url, group_name, coveyspace_group_id, birthdate } = await req.json()
     if (!email || !invite_url) return new Response('Missing required fields', { status: 400 })
 
     const firstName = (name ?? '').split(' ')[0] || 'there'
@@ -83,6 +83,43 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const body = await res.text()
       throw new Error(`Resend error ${res.status}: ${body}`)
+    }
+
+    // Record invite in pco_invites (upsert: increment send_count + update last_sent_at on resend)
+    if (coveyspace_group_id) {
+      const now = new Date().toISOString()
+      const { data: existing } = await supabase
+        .from('pco_invites')
+        .select('id, send_count')
+        .eq('email', email)
+        .eq('coveyspace_group_id', coveyspace_group_id)
+        .maybeSingle()
+
+      if (existing) {
+        await supabase
+          .from('pco_invites')
+          .update({ last_sent_at: now, send_count: (existing.send_count ?? 1) + 1 })
+          .eq('id', existing.id)
+      } else {
+        const { error: insertErr } = await supabase
+          .from('pco_invites')
+          .insert({
+            church_id:           churchRole.church_id,
+            coveyspace_group_id,
+            email,
+            invited_name:        name ?? null,
+            birthdate:           birthdate ?? null,
+            sent_by:             user.id,
+          })
+        // Handle concurrent send (unique constraint): fall back to update
+        if (insertErr?.code === '23505') {
+          await supabase
+            .from('pco_invites')
+            .update({ last_sent_at: now })
+            .eq('email', email)
+            .eq('coveyspace_group_id', coveyspace_group_id)
+        }
+      }
     }
 
     return new Response(JSON.stringify({ ok: true }), {
