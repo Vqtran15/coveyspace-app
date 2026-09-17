@@ -356,7 +356,7 @@ export default function AuthPage() {
                           </p>
                         )}
                         {!churchVerifying && churchVerified && (
-                          <p className="text-xs text-jade font-medium mt-1">✓ {churchVerified.name}</p>
+                          <p className="text-xs text-sage-700 font-medium mt-1">✓ {churchVerified.name}</p>
                         )}
                         {!churchVerifying && churchCodeError && (
                           <p className="text-xs text-red-500 mt-1">{churchCodeError}</p>

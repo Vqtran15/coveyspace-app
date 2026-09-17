@@ -324,9 +324,9 @@ test.describe('RotationTab — auto-fill copies slot_columns', () => {
     expect(src).toContain('slot_columns: template.slot_columns')
   })
 
-  test('slot_columns is only copied when non-default (avoids inserting null)', () => {
-    // Only spread when the template has a non-1 value; DB default handles the 1 case
-    expect(src).toContain('template.slot_columns && template.slot_columns !== 1')
+  test('slot_columns uses null-coalesce fallback to 1 (avoids inserting null)', () => {
+    // Uses ?? 1 so null/undefined from template defaults to 1 (DB default)
+    expect(src).toContain('template.slot_columns ?? 1')
   })
 })
 

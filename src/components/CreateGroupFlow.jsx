@@ -235,8 +235,8 @@ export default function CreateGroupFlow({ onDone, onClose }) {
               )}
               {!churchVerifying && churchVerified && (
                 <div className="flex items-center gap-2 px-1">
-                  <CheckCircle size={16} weight="fill" className="text-jade shrink-0" />
-                  <p className="text-xs text-jade font-medium">{churchVerified.name}</p>
+                  <CheckCircle size={16} weight="fill" className="text-sage-700 shrink-0" />
+                  <p className="text-xs text-sage-700 font-medium">{churchVerified.name}</p>
                 </div>
               )}
               {!churchVerifying && churchError && (

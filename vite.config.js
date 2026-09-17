@@ -13,6 +13,17 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: null,
       devOptions: { enabled: false },
+      // Exclude heavy admin/optional chunks from the SW precache so all
+      // users don't download them on install (~1 MB saved).
+      // These chunks are loaded on-demand via lazy() when actually needed.
+      injectManifest: {
+        globIgnores: [
+          'assets/*ChurchSettings*',
+          'assets/*emoji-picker*',
+          'assets/*GuideTab*',
+          'assets/*AdminPage*',
+        ],
+      },
     }),
   ],
   build: {

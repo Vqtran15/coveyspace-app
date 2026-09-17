@@ -140,7 +140,7 @@ export const db = {
     getGroupInviteCode: (groupId) =>
       supabase.rpc('get_group_invite_code', { target_group_id: groupId }),
     verifyJoinCode: (code) =>
-      supabase.from('churches').select('id, name').eq('join_code', code.toUpperCase().trim()).maybeSingle(),
+      supabase.rpc('verify_church_join_code', { p_code: code }),
     linkGroup: (joinCode) =>
       supabase.rpc('link_group_to_church', { p_join_code: joinCode }),
     unlinkGroup: () =>

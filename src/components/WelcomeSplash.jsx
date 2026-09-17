@@ -525,6 +525,9 @@ export default function WelcomeSplash({ onDone }) {
                     <p className="text-xs text-stone-400">{desc}</p>
                   </div>
                   <button
+                    role="switch"
+                    aria-checked={features[key]}
+                    aria-label={label}
                     onClick={() => setFeatures(f => ({ ...f, [key]: !f[key] }))}
                     className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${features[key] ? 'bg-ember' : 'bg-stone-200'}`}
                   >

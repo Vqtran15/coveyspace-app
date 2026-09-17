@@ -1,26 +1,24 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Megaphone, ShieldCheck } from '@phosphor-icons/react'
+import DOMPurify from 'dompurify'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { formatListTime } from '../utils/format.js'
 
+// Force all links to open in a new tab safely
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank')
+    node.setAttribute('rel', 'noopener noreferrer')
+  }
+})
+
 export function sanitizeHtml(html) {
-  try {
-    const doc = new DOMParser().parseFromString(html, 'text/html')
-    doc.querySelectorAll('script, style, iframe').forEach(el => el.remove())
-    doc.querySelectorAll('*').forEach(el => {
-      for (const attr of [...el.attributes]) {
-        if (attr.name.startsWith('on')) el.removeAttribute(attr.name)
-      }
-      if (el.tagName === 'A') {
-        const href = el.getAttribute('href') ?? ''
-        if (href.toLowerCase().startsWith('javascript:')) el.removeAttribute('href')
-        else { el.setAttribute('target', '_blank'); el.setAttribute('rel', 'noopener noreferrer') }
-      }
-    })
-    return doc.body.innerHTML
-  } catch { return '' }
+  return DOMPurify.sanitize(html ?? '', {
+    ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'u', 'strong', 'em', 'a', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+  })
 }
 
 export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdminOnly = false, idx = 0 }) {

@@ -1,4 +1,5 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -122,9 +123,25 @@ export default function MessageList() {
     conversation,
     headerH,
     inputH,
+    virtualizerRef,
   } = useChatContext()
 
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
+
+  const rowVirtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 72,
+    overscan: 20,
+    paddingStart: 8,
+    paddingEnd: 16,
+  })
+
+  // Expose the virtualizer to ChatView so scroll-to-message and first-unread
+  // positioning can fall back to scrollToIndex when the target is off-screen.
+  useEffect(() => {
+    virtualizerRef.current = rowVirtualizer
+  })
 
   function onMsgTouchStart(e, msg, isOwn) {
     handleLongPressStart(e, msg.id, isOwn)
@@ -292,10 +309,31 @@ export default function MessageList() {
           ) : (
           <div
             ref={messagesContainerRef}
-            className="space-y-0.5 py-2 pb-4"
-            style={!visible ? { height: 0, overflow: 'hidden' } : {}}
+            style={{
+              height: visible ? rowVirtualizer.getTotalSize() : 0,
+              position: 'relative',
+              overflow: visible ? 'visible' : 'hidden',
+            }}
           >
-            {items.map((item, i) => {
+            {rowVirtualizer.getVirtualItems().map(virtualRow => {
+              const item = items[virtualRow.index]
+              const i = virtualRow.index
+              return (
+              <div
+                key={virtualRow.key}
+                ref={rowVirtualizer.measureElement}
+                data-index={virtualRow.index}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                }}
+              >
+            {(() => {
               if (item.type === 'date') {
                 return (
                   <div key={item.key} className="flex items-center gap-3 py-3">
@@ -880,6 +918,9 @@ export default function MessageList() {
                     )}
                   </div>
                 </div>
+              )
+            })()}
+              </div>
               )
             })}
           </div>

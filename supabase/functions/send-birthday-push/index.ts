@@ -3,13 +3,23 @@ import webpush from 'npm:web-push'
 
 const VAPID_PUBLIC_KEY  = Deno.env.get('VAPID_PUBLIC_KEY')!
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!
-const VAPID_EMAIL       = Deno.env.get('VAPID_EMAIL') ?? 'mailto:vqtran15@gmail.com'
+const VAPID_EMAIL       = Deno.env.get('VAPID_EMAIL') ?? 'mailto:push@coveyspace.com'
 const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const CRON_SECRET       = Deno.env.get('CRON_SECRET')
 
 webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  // Validate shared secret so only the pg_cron scheduler can invoke this function.
+  // Set CRON_SECRET as a Supabase Edge Function secret, and pass it in the
+  // pg_cron HTTP request header as "x-cron-secret".
+  if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
   try {
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 

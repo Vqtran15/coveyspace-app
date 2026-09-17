@@ -199,8 +199,9 @@ export function AppProvider({ children }) {
   }, [refreshProfile, refreshMemberships])
 
   const refreshBirthdays = useCallback(() => {
-    supabase.from('birthdays').select('id, name, birthday, profile_user_id').then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
-  }, [])
+    if (!groupId) return
+    supabase.from('birthdays').select('id, name, birthday, profile_user_id').eq('community_group_id', groupId).then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
+  }, [groupId])
 
   const existingBirthday = profile?.birthday ?? null
 

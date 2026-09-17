@@ -157,6 +157,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const initialFirstUnreadRef      = useRef(null)
   const unreadDetectedRef          = useRef(false)
   const messagesContainerRef  = useRef(null)
+  // Populated by MessageList after it creates the virtualizer.
+  // Used as a fallback when a target message is outside the current overscan window.
+  const virtualizerRef        = useRef(null)
   const sendingRef            = useRef(false)
   const pollOptionRefs        = useRef([])
   const justAddedOptionRef    = useRef(false)
@@ -777,7 +780,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
     const pollVotesCh = supabase
       .channel(`poll-votes:${convId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'poll_votes' }, ({ new: v, old: o, eventType }) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'poll_votes', filter: `community_group_id=eq.${groupId}` }, ({ new: v, old: o, eventType }) => {
         const vote = eventType === 'DELETE' ? o : v
         if (!vote?.poll_id) return
         setPolls(prev => {
@@ -796,7 +799,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
     const eventRsvpsCh = supabase
       .channel(`event-rsvps:${convId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps' }, ({ new: r, old: o, eventType }) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps', filter: `community_group_id=eq.${groupId}` }, ({ new: r, old: o, eventType }) => {
         const rsvp = eventType === 'DELETE' ? o : r
         if (!rsvp?.event_id) return
         setChatEvents(prev => {
@@ -914,7 +917,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (!visible) return
 
     const targetId = initialFirstUnreadRef.current
-    const targetEl = targetId ? document.getElementById(`msg-${targetId}`) : null
+    let targetEl = targetId ? document.getElementById(`msg-${targetId}`) : null
+
+    // With virtual rendering the target element may be outside the overscan window.
+    // If so, use scrollToIndex to bring it into view first, then re-query the DOM.
+    if (targetId && !targetEl && virtualizerRef.current) {
+      const idx = items.findIndex(i => i.type === 'msg' && i.msg?.id === targetId)
+      if (idx >= 0) {
+        virtualizerRef.current.scrollToIndex(idx, { behavior: 'instant', align: 'start' })
+        targetEl = document.getElementById(`msg-${targetId}`)
+      }
+    }
 
     if (targetEl) {
       // Scroll the first unread message near the top, with a little breathing room
@@ -1657,7 +1670,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   function scrollToMessage(msgId) {
-    document.getElementById(`msg-${msgId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const el = document.getElementById(`msg-${msgId}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } else {
+      // Message is outside the virtualizer's overscan window — scroll by index first
+      const idx = items.findIndex(i => i.type === 'msg' && i.msg?.id === msgId)
+      if (idx >= 0) virtualizerRef.current?.scrollToIndex(idx, { behavior: 'smooth', align: 'center' })
+    }
   }
 
 
@@ -1866,6 +1886,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     headerH,
     inputH,
     inputWrapperRef,
+    virtualizerRef,
   }), [
     // Props
     conversation, session, myId, convId, displayName, groupId, members, isAdmin,
