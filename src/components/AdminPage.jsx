@@ -609,7 +609,7 @@ export default function AdminPage() {
                           : [...mealDows, i].sort((a, b) => a - b)
                         handleSaveRotation({ meal_day_of_week: next })
                       }}
-                      className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                      className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-xl transition-colors ${
                         selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                       }`}
                     >
@@ -730,7 +730,7 @@ export default function AdminPage() {
                               : [...svcDows, i].sort((a, b) => a - b)
                             handleSaveRotation({ service_day_of_week: next })
                           }}
-                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
+                          className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-xl transition-colors ${
                             selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                           }`}
                         >

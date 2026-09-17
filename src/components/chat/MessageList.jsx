@@ -850,6 +850,9 @@ export default function MessageList() {
                           {renderedBodies[msg.id]}
                         </p>
                       )}
+                      {(msg._edited || msg.edited_at) && editingMsgId !== msg.id && (
+                        <p className={`text-[10px] px-3 pb-1.5 -mt-1 ${isOwn ? 'text-right text-white/90' : 'text-stone-400'}`}>edited</p>
+                      )}
                     </div>
                     {isLastInGroup && isOwn && !msg.image_url && (
                       <svg className="absolute bottom-0 -right-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">

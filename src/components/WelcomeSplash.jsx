@@ -12,6 +12,7 @@ import { nextScheduledDate, weekOccToMode } from '../utils/schedule.js'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
+import { useToast } from '../lib/toast.jsx'
 
 const MONTHS    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS      = Array.from({ length: 31 }, (_, i) => i + 1)
@@ -73,6 +74,7 @@ export default function WelcomeSplash({ onDone }) {
   } = useAppContext()
   const [closing, close] = useModalClose(onDone)
   const navigate = useNavigate()
+  const toast = useToast()
 
   // Detect if this splash was triggered by in-app group creation (Settings → Create a new group)
   const createdFromSettings = useRef((() => {
@@ -281,7 +283,7 @@ export default function WelcomeSplash({ onDone }) {
       .upsert(updates, { onConflict: 'group_id' })
       .select().single()
     setSavingFeatures(false)
-    if (error) { console.error('Failed to save features:', error.message); return }
+    if (error) { toast('Failed to save settings — please try again.', 'error'); return }
     if (data) onGroupSettingsChange?.(data)
     localStorage.removeItem(`cg_onb_features_${groupId}`)
     setStep('setup')
@@ -310,7 +312,7 @@ export default function WelcomeSplash({ onDone }) {
       const { data, error } = await supabase.from('group_settings')
         .upsert({ group_id: groupId, ...patch }, { onConflict: 'group_id' })
         .select().single()
-      if (error) { console.error('Failed to save schedule:', error.message); setSavingSetup(false); return }
+      if (error) { toast('Failed to save schedule — please try again.', 'error'); setSavingSetup(false); return }
       if (data) onGroupSettingsChange?.(data)
     }
 
@@ -589,7 +591,7 @@ export default function WelcomeSplash({ onDone }) {
                                 : [...current, i].sort((a, b) => a - b)
                               setMealDow(next.length > 0 ? next : null)
                             }}
-                            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                            className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-lg transition-colors ${
                               selected ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                             }`}
                           >
@@ -729,7 +731,7 @@ export default function WelcomeSplash({ onDone }) {
                                     : [...current, i].sort((a, b) => a - b)
                                   setServiceDow(next.length > 0 ? next : null)
                                 }}
-                                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-lg transition-colors ${
                                   selected ? 'bg-ember text-white shadow-sm' : 'text-stone-500 hover:text-stone-700'
                                 }`}
                               >

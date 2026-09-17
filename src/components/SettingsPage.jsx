@@ -40,7 +40,7 @@ function FloatingInput({ label, value, onChange, type = 'text', required, maxLen
       />
       <label
         className={`absolute left-3 pointer-events-none select-none transition-all duration-200 origin-left ${
-          active ? 'top-1.5 text-[10px] font-semibold text-ember' : 'top-3.5 text-sm text-stone-400'
+          active ? 'top-1.5 text-xs font-semibold text-ember' : 'top-3.5 text-sm text-stone-400'
         }`}
       >
         {label}
@@ -66,7 +66,7 @@ function FloatingPasswordInput({ label, value, onChange, show, onToggle, require
       />
       <label
         className={`absolute left-3 pointer-events-none select-none transition-all duration-200 origin-left ${
-          active ? 'top-1.5 text-[10px] font-semibold text-ember' : 'top-3.5 text-sm text-stone-400'
+          active ? 'top-1.5 text-xs font-semibold text-ember' : 'top-3.5 text-sm text-stone-400'
         }`}
       >
         {label}

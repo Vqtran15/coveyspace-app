@@ -533,6 +533,7 @@ export default function EventsTab() {
   const [events,       setEvents]       = useState([])
   const [rsvps,        setRsvps]        = useState({})
   const [loading,      setLoading]      = useState(true)
+  const [fetchError,   setFetchError]   = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showForm,     setShowForm]     = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
@@ -619,7 +620,9 @@ export default function EventsTab() {
 
   async function load() {
     setLoading(true)
-    const { data: evData } = await db.events.fetchAll(groupId)
+    setFetchError(false)
+    const { data: evData, error } = await db.events.fetchAll(groupId)
+    if (error) { setFetchError(true); setLoading(false); return }
     const evList = (evData ?? []).map(({ event_rsvps: _, ...ev }) => ev)
     setEvents(evList)
     const grouped = {}
@@ -732,6 +735,17 @@ export default function EventsTab() {
               </div>
             </div>
           ))}
+        </div>
+      ) : fetchError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="font-semibold text-stone-700 mb-1">Couldn't load events</p>
+          <p className="text-sm text-stone-500 mb-4">Check your connection and try again.</p>
+          <button
+            onClick={load}
+            className="px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       ) : (
         <>

@@ -1655,8 +1655,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (!editText.trim() || editText.trim() === original) { exitEdit(); return }
     const id = editingMsgId
     exitEdit()
-    const { error } = await supabase.from('messages').update({ body: editText.trim() }).eq('id', id)
-    if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editText.trim(), _edited: true } : m))
+    const editedAt = new Date().toISOString()
+    const { error } = await supabase.from('messages').update({ body: editText.trim(), edited_at: editedAt }).eq('id', id)
+    if (!error) setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editText.trim(), edited_at: editedAt, _edited: true } : m))
     else toast('Failed to edit message', 'error')
   }
 
