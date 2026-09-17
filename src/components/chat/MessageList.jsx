@@ -686,7 +686,7 @@ export default function MessageList() {
                 <div
                   id={`msg-${msg.id}`}
                   key={msg.id}
-                  className={`relative flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? '!mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0'}`}
+                  className={`relative flex gap-2 select-none ${isOwn ? 'justify-end' : 'justify-start'} ${msg.image_url && !prevIsImage ? '!mt-3' : ''} ${msg.image_url ? '!mb-3' : isLastInGroup && !hasReactions ? 'mb-2' : 'mb-0.5'}`}
                   onContextMenu={e => { if (msg._pending || msg._failed) return; e.preventDefault(); openMenu(e, msg.id, isOwn) }}
                   onClick={e => { if (msg._pending || msg._failed) return; handleDoubleTap(e, msg.id, isOwn) }}
                   onTouchStart={e => { if (msg._pending || msg._failed) return; onMsgTouchStart(e, msg, isOwn) }}
