@@ -272,6 +272,7 @@ export default function PrayerTab() {
   const { displayName, groupId, isAdmin, userId, avatarIcon, avatarColorKey, avatarImageUrl } = useAppContext()
   const location = useLocation()
   const featuredUserId = location.state?.featuredUserId
+  const featuredMember = location.state?.featuredMember
   const toast = useToast()
 
   const [members, setMembers]               = useState([])
@@ -281,14 +282,14 @@ export default function PrayerTab() {
   const [groupReactions, setGroupReactions] = useState({})
   const [loading, setLoading]               = useState(true)
   const [loadError, setLoadError]           = useState(false)
-  const [selectedMember, setSelectedMember] = useState(null)
+  const [selectedMember, setSelectedMember] = useState(featuredMember ?? null)
   const [selectedGroupPrayer, setSelectedGroupPrayer] = useState(null)
   const [searchQuery, setSearchQuery]       = useState('')
   const [viewMode, setViewMode]             = useState('members')
   const [contentAnimClass, setContentAnimClass] = useState('animate-slide-in-right')
   const [searchOpen, setSearchOpen]         = useState(false)
   const [togglingIds, setTogglingIds]       = useState(new Set())
-  const hasAutoOpenedRef = useRef(false)
+  const hasAutoOpenedRef = useRef(!!featuredMember)
   const viewSwitchRef    = useRef(false)
   const searchInputRef   = useRef(null)
   const tabResetRef      = useRef(location.state?.tabReset ?? null)

@@ -532,7 +532,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                 },
                 prayerEnabled && prayerCard && {
                   key: 'prayer',
-                  onClick: () => navigate('/prayer', { state: { featuredUserId: prayerCard.member_user_id } }),
+                  onClick: () => navigate('/prayer', { state: { featuredMember: { ...prayerCard.profile, prayer_requests: [] } } }),
                   icon: <HandsPraying size={24} weight="fill" className="text-lagoon" />,
                   iconBg: 'bg-lagoon-50',
                   label: 'Pray for Today',
