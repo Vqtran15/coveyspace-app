@@ -391,6 +391,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                   </button>
                 </>
               )}
+              {isAdmin && pageCount > 1 && <div className="h-px bg-stone-100 mx-1 my-1" />}
               {pageCount > 1 && (
                 <>
                   <button

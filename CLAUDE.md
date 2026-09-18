@@ -66,7 +66,14 @@ Always use the Edit tool directly to make code changes. Do not write Python scri
 If Claude discovers that something in this file is wrong or outdated (e.g., a feature already exists, a file has moved, a constraint no longer applies), update this file immediately before continuing. Do not silently work around stale information.
 
 ## Double Check Rule
-ALWAYS double check your work before reporting it as done. Re-read changed files, verify logic, and confirm nothing was missed or broken.
+ALWAYS double check your work before reporting it as done AND before pushing to any branch. Re-read every changed file, verify logic end-to-end, and confirm nothing was missed or broken. Specifically:
+- Re-read each changed file in full after editing
+- Look for removed imports that are still used, or retained imports that are no longer used
+- Check that all action paths (all branches of if/else, all button handlers) still work correctly
+- Verify no stale state, double-fire, or timing bug was introduced
+- Run `npm run build` and confirm a clean output before pushing
+
+Only push to `origin/staging` after this checklist is complete.
 
 ## Design System
 
@@ -164,9 +171,9 @@ If a fade is needed, add `opacity` and `transition-opacity` on the inner div, ke
 - Icon: `text-stone-300` (decorative, one step lighter than the message)
 
 ## QA Rule
-After every code change, QA the affected functionality before reporting done. Use one of:
+After every code change, QA the affected functionality before reporting done **and before pushing to staging**. Use one of:
 - **Playwright static tests** (`npx playwright test e2e/<spec>.spec.js --project=chromium`) — source-level correctness checks, no server needed
 - **Playwright browser tests** (`npx playwright test --config playwright.staging.config.js`) — full runtime tests against localhost:5173
 - **QA agent** — spawn a subagent to review the changed code for bugs and regressions
 
-**This is a loop**: if QA finds issues, fix them and re-run QA. Keep iterating — fix, QA, fix, QA — until all checks are clean and no new issues are found. Do not report work as done until the loop is clean.
+**This is a loop**: if QA finds issues, fix them and re-run QA. Keep iterating — fix, QA, fix, QA — until all checks are clean and no new issues are found. Do not push to staging or report work as done until the loop is clean.
