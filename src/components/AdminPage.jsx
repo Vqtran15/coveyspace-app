@@ -43,9 +43,13 @@ export default function AdminPage() {
   const TAB_ORDER = { settings: 0, features: 1 }
   function switchTab(id) {
     if (id === activeTab) return
-    setTabAnimClass(TAB_ORDER[id] > TAB_ORDER[activeTab] ? 'animate-slide-in-right' : 'animate-slide-in-left')
-    setTabAnimKey(k => k + 1)
-    setActiveTab(id)
+    const goingRight = TAB_ORDER[id] > TAB_ORDER[activeTab]
+    setTabAnimClass(goingRight ? 'animate-slide-out-left' : 'animate-slide-out-right')
+    setTimeout(() => {
+      setTabAnimClass(goingRight ? 'animate-slide-in-right' : 'animate-slide-in-left')
+      setTabAnimKey(k => k + 1)
+      setActiveTab(id)
+    }, 200)
   }
 
   useEffect(() => {
@@ -424,7 +428,7 @@ export default function AdminPage() {
                 )}
               </div>
               {confirmRotate && (
-                <p className="text-xs text-red-500 mb-1">The old code will stop working immediately.</p>
+                <p className="text-xs text-red-500 mb-1 animate-fade-in">The old code will stop working immediately.</p>
               )}
               {!confirmRotate && (
                 <button
@@ -456,7 +460,11 @@ export default function AdminPage() {
                 className={`text-stone-400 transition-transform ${membersOpen ? 'rotate-180' : ''}`}
               />
             </button>
-            {membersOpen && (
+            <div
+              className="grid"
+              style={{ gridTemplateRows: membersOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+            >
+              <div className="overflow-hidden min-h-0">
               <div className="bg-white border border-stone-200 rounded-2xl divide-y divide-stone-100">
                 {members.map(m => (
                   <div key={m.user_id} className="px-4 py-3.5">
@@ -499,7 +507,7 @@ export default function AdminPage() {
                     </div>
                     {/* Inline role confirmation */}
                     {confirmRoleAction?.id === m.user_id && (
-                      <div className="mt-3 flex items-center gap-2">
+                      <div className="mt-3 flex items-center gap-2 animate-fade-in">
                         <p className="flex-1 text-xs text-stone-500">
                           {confirmRoleAction.newRole === 'admin'
                             ? `Make ${m.display_name} an admin?`
@@ -521,7 +529,7 @@ export default function AdminPage() {
                     )}
                     {/* Inline remove confirmation */}
                     {confirmRemoveId === m.user_id && (
-                      <div className="mt-3 flex items-center gap-2">
+                      <div className="mt-3 flex items-center gap-2 animate-fade-in">
                         <p className="flex-1 text-xs text-stone-500">Remove {m.display_name} from the group?</p>
                         <button
                           onClick={() => setConfirmRemoveId(null)}
@@ -540,7 +548,8 @@ export default function AdminPage() {
                   </div>
                 ))}
               </div>
-            )}
+              </div>
+            </div>
           </section>
         )}
 

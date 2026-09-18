@@ -48,12 +48,12 @@ function TSep() {
 
 // ── Confirm-send modal ─────────────────────────────────────────────────────────
 
-function ConfirmSendModal({ sending, summary, onCancel, onConfirm }) {
+function ConfirmSendModal({ sending, summary, onCancel, onConfirm, closing }) {
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-[45]" onClick={onCancel} />
+      <div className={`fixed inset-0 bg-black/40 z-[45] ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`} onClick={onCancel} />
       <div
-        className="fixed inset-x-4 bottom-4 lg:inset-x-0 lg:mx-auto lg:w-full lg:max-w-sm lg:bottom-8 z-[46] bg-white rounded-2xl shadow-xl px-5 pt-5 animate-modal-in"
+        className={`fixed inset-x-4 bottom-4 lg:inset-x-0 lg:mx-auto lg:w-full lg:max-w-sm lg:bottom-8 z-[46] bg-white rounded-2xl shadow-xl px-5 pt-5 ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
@@ -92,8 +92,10 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
   const [sending, setSending]                   = useState(false)
   const [exiting, setExiting]                   = useState(false)
   const [confirmOpen, setConfirmOpen]           = useState(false)
+  const [confirmClosing, setConfirmClosing]     = useState(false)
   const [previewMode, setPreviewMode]           = useState(false)
   const [linkDialogOpen, setLinkDialogOpen]     = useState(false)
+  const [linkDialogClosing, setLinkDialogClosing] = useState(false)
   const [linkUrl, setLinkUrl]                   = useState('')
   const [linkText, setLinkText]                 = useState('')
   const [savedRange, setSavedRange]             = useState(null)
@@ -192,11 +194,20 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
     }, 40)
   }
 
+  function closeConfirm() {
+    setConfirmClosing(true)
+    setTimeout(() => { setConfirmOpen(false); setConfirmClosing(false) }, 250)
+  }
+
   function closeLinkDialog() {
-    setLinkDialogOpen(false)
-    setLinkUrl('')
-    setLinkText('')
-    setSavedRange(null)
+    setLinkDialogClosing(true)
+    setTimeout(() => {
+      setLinkDialogOpen(false)
+      setLinkDialogClosing(false)
+      setLinkUrl('')
+      setLinkText('')
+      setSavedRange(null)
+    }, 220)
   }
 
   function applyLinkDialog() {
@@ -525,11 +536,11 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
       </div>
 
       {/* Link dialog */}
-      {linkDialogOpen && (
+      {(linkDialogOpen || linkDialogClosing) && (
         <>
-          <div className="fixed inset-0 z-[80] bg-black/40" onClick={closeLinkDialog} />
+          <div className={`fixed inset-0 z-[80] bg-black/40 ${linkDialogClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`} onClick={closeLinkDialog} />
           <div
-            className="fixed inset-x-4 z-[81] bg-white rounded-2xl shadow-xl p-5 space-y-4"
+            className={`fixed inset-x-4 z-[81] bg-white rounded-2xl shadow-xl p-5 space-y-4 ${linkDialogClosing ? 'animate-popup-out' : 'animate-popup-in'}`}
             style={{ top: '50%', transform: 'translateY(-50%)' }}
           >
             <div className="flex items-center justify-between">
@@ -594,11 +605,12 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
         </>
       )}
 
-      {confirmOpen && (
+      {(confirmOpen || confirmClosing) && (
         <ConfirmSendModal
           sending={sending}
           summary={confirmSummary}
-          onCancel={() => setConfirmOpen(false)}
+          closing={confirmClosing}
+          onCancel={closeConfirm}
           onConfirm={doSend}
         />
       )}
@@ -714,6 +726,19 @@ export default function ChurchSettingsPage() {
   const [inviteCode, setInviteCode]               = useState(null)
   const [churchJoinCode, setChurchJoinCode]       = useState(null)
   const [activeTab, setActiveTab]                 = useState('broadcasts')
+  const [tabAnimKey, setTabAnimKey]               = useState(0)
+  const [tabAnimClass, setTabAnimClass]           = useState('')
+  const TAB_ORDER = { broadcasts: 0, planning_center: 1 }
+  function switchTab(id) {
+    if (id === activeTab) return
+    const goingRight = TAB_ORDER[id] > TAB_ORDER[activeTab]
+    setTabAnimClass(goingRight ? 'animate-slide-out-left' : 'animate-slide-out-right')
+    setTimeout(() => {
+      setTabAnimClass(goingRight ? 'animate-slide-in-right' : 'animate-slide-in-left')
+      setTabAnimKey(k => k + 1)
+      setActiveTab(id)
+    }, 200)
+  }
   // Which Coveyspace group to invite PCO members into
   const [selectedCoveyGroupId, setSelectedCoveyGroupId] = useState(null)
   const [coveyGroupInviteCode, setCoveyGroupInviteCode] = useState(null)
@@ -1190,7 +1215,7 @@ export default function ChurchSettingsPage() {
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => switchTab(tab.id)}
             aria-pressed={activeTab === tab.id}
             className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${
               activeTab === tab.id
@@ -1203,6 +1228,7 @@ export default function ChurchSettingsPage() {
         ))}
       </div>
 
+      <div key={tabAnimKey} className={tabAnimClass}>
       {activeTab === 'broadcasts' && (
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -1523,7 +1549,7 @@ export default function ChurchSettingsPage() {
 
             {/* Disconnect confirmation */}
             {confirmDisconnect && (
-              <div className="border-t border-stone-100 px-4 py-4 bg-red-50/60">
+              <div className="border-t border-stone-100 px-4 py-4 bg-red-50/60 animate-fade-in">
                 <p className="text-sm font-semibold text-stone-800 mb-1">Disconnect Planning Center?</p>
                 <p className="text-xs text-stone-500 mb-3">Your Coveyspace group data won't be affected.</p>
                 <div className="flex gap-2">
@@ -1546,6 +1572,7 @@ export default function ChurchSettingsPage() {
           </div>
         </section>
       )}
+      </div>{/* end tab content */}
 
       {/* Broadcast composer overlay */}
       {composerOpen && convIds.allMembers && (

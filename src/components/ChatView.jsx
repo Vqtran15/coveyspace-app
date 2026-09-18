@@ -115,6 +115,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [openUnreadCount, setOpenUnreadCount] = useState(0)
   const [lightboxImg, setLightboxImg]         = useState(null)
   const [lightboxClosing, setLightboxClosing] = useState(false)
+  const [typingClosing, setTypingClosing]     = useState(false)
+  const [pillClosing, setPillClosing]         = useState(false)
   const [convImageUrl, setConvImageUrl]       = useState(conversation.image_url ?? null)
   const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false)
   const [mentionSearch, setMentionSearch]     = useState(null)
@@ -139,6 +141,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const searchInputRef     = useRef(null)
   const presenceChannelRef = useRef(null)
   const typingTimeoutRef   = useRef(null)
+  const typingCloseRef     = useRef(null)
   const lastTapRef         = useRef(null)
   const longPressRef       = useRef(null)
   const longPressFiredRef  = useRef(false)
@@ -1791,6 +1794,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const typing = useMemo(() => typingLabel(typingUsers), [typingUsers])
 
+  useEffect(() => {
+    if (typing) {
+      clearTimeout(typingCloseRef.current)
+      setTypingClosing(false)
+    } else {
+      setTypingClosing(true)
+      typingCloseRef.current = setTimeout(() => setTypingClosing(false), 250)
+    }
+  }, [typing])
+
   const title = useMemo(() => {
     if (conversation.type === 'direct') {
       const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
@@ -2026,12 +2039,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       </div>{/* end header outer (safe-area extension) */}
 
       {/* Unread pill — fixed so it stays in viewport coords regardless of parent scroll */}
-      {firstUnreadId && !searchOpen && (
-        <div className="fixed left-0 right-0 lg:left-56 flex justify-center py-1.5 z-[9] animate-overlay-in" style={{ top: `calc(env(safe-area-inset-top) + ${headerH}px)` }}>
+      {(firstUnreadId || pillClosing) && !searchOpen && (
+        <div className={`fixed left-0 right-0 lg:left-56 flex justify-center py-1.5 z-[9] ${pillClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`} style={{ top: `calc(env(safe-area-inset-top) + ${headerH}px)` }}>
           <button
             onClick={() => {
               document.getElementById(`msg-${firstUnreadId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              setFirstUnreadId(null)
+              setPillClosing(true)
+              setTimeout(() => { setFirstUnreadId(null); setPillClosing(false) }, 220)
             }}
             className="flex items-center gap-1.5 bg-ember text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md"
           >
@@ -2050,8 +2064,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
       >
         <div className="pointer-events-auto" style={{ paddingBottom: keyboardOpen ? '0' : 'var(--sab)' }}>
-          {typing && (
-            <div className="px-4 pb-1 max-w-3xl mx-auto w-full animate-overlay-in">
+          {(typing || typingClosing) && (
+            <div className={`px-4 pb-1 max-w-3xl mx-auto w-full ${typingClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
               <span className="text-xs text-stone-400 ml-1 block mb-1">{typing}</span>
               <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
                 {[0, 1, 2].map(i => (
