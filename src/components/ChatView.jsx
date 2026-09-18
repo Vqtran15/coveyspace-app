@@ -2193,7 +2193,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         >
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+            className="absolute right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
           >
             <X size={20} weight="bold" />
           </button>
