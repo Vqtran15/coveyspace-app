@@ -20,6 +20,7 @@ export function AppProvider({ children }) {
   const [groupSettings, setGroupSettings] = useState(null)
   const [birthdays, setBirthdays]         = useState([])
   const [unreadChatCount, setUnreadChatCount] = useState(0)
+  const [unreadPrayerCount, setUnreadPrayerCount] = useState(0)
   const [churchConversations, setChurchConversations] = useState([])
   const [isChurchAdmin, setIsChurchAdmin] = useState(false)
   const [allMemberships, setAllMemberships] = useState([])
@@ -216,6 +217,7 @@ export function AppProvider({ children }) {
     showScheduleTab,
     birthdays,
     unreadChatCount, setUnreadChatCount,
+    unreadPrayerCount, setUnreadPrayerCount,
     push,
     onDisplayNameChange, onAvatarChange, onGroupSettingsChange, onGroupNameChange,
     setProfile,

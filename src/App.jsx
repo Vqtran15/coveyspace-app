@@ -95,6 +95,7 @@ function AppContent() {
     showScheduleTab,
     birthdays, refreshBirthdays,
     unreadChatCount, setUnreadChatCount,
+    unreadPrayerCount, setUnreadPrayerCount,
     push,
     onDisplayNameChange, onAvatarChange, onGroupSettingsChange, onGroupNameChange,
     setProfile, refreshProfile,
@@ -277,12 +278,53 @@ function AppContent() {
     return () => supabase.removeChannel(channel)
   }, [groupId])
 
+  // ── Prayer unread — initial load + realtime ────────────────────────────────
+  useEffect(() => {
+    if (!groupId || !userId) return
+    const since = localStorage.getItem('lastSeenPrayerAt') ?? new Date(0).toISOString()
+    Promise.all([
+      supabase.from('prayer_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_group_id', groupId)
+        .neq('member_user_id', userId)
+        .gt('created_at', since),
+      supabase.from('group_prayer_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('community_group_id', groupId)
+        .gt('created_at', since),
+    ]).then(([indRes, grpRes]) => {
+      const total = (indRes.count ?? 0) + (grpRes.count ?? 0)
+      if (total > 0 && locationRef.current !== '/prayer') setUnreadPrayerCount(total)
+    })
+    const channel = supabase
+      .channel(`prayer-unread:${groupId}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'prayer_requests',
+        filter: `community_group_id=eq.${groupId}`,
+      }, ({ new: req }) => {
+        if (locationRef.current !== '/prayer' && req.member_user_id !== userId)
+          setUnreadPrayerCount(c => c + 1)
+      })
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'group_prayer_requests',
+        filter: `community_group_id=eq.${groupId}`,
+      }, () => {
+        if (locationRef.current !== '/prayer') setUnreadPrayerCount(c => c + 1)
+      })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [groupId, userId])
+
   // ── Location tracking + page view ─────────────────────────────────────────
   useEffect(() => {
     locationRef.current = location.pathname
     if (location.pathname === '/chat') {
       setUnreadChatCount(0)
       navigator.clearAppBadge?.().catch(() => {})
+    }
+    if (location.pathname === '/prayer') {
+      setUnreadPrayerCount(0)
+      localStorage.setItem('lastSeenPrayerAt', new Date().toISOString())
     }
     window.scrollTo(0, 0)
     trackPageView(location.pathname)
@@ -577,7 +619,7 @@ function AppContent() {
               >
                 <t.Icon size={20} weight={active ? 'fill' : 'regular'} />
                 {t.shortLabel}
-                {t.path === '/chat' && unreadChatCount > 0
+                {(t.path === '/chat' && unreadChatCount > 0) || (t.path === '/prayer' && unreadPrayerCount > 0)
                   ? <span className="ml-auto w-2 h-2 bg-coral rounded-full" />
                   : <span className={`ml-auto text-[10px] font-medium tabular-nums ${active ? 'text-white/50' : 'text-stone-300'}`}>{i + 1}</span>
                 }
@@ -661,7 +703,7 @@ function AppContent() {
                       {t.shortLabel}
                     </span>
                   )}
-                  {t.path === '/chat' && unreadChatCount > 0 && (
+                  {((t.path === '/chat' && unreadChatCount > 0) || (t.path === '/prayer' && unreadPrayerCount > 0)) && (
                     <>
                       <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral/50 rounded-full animate-ping" />
                       <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-coral rounded-full border-2 border-white z-20" />
