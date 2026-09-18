@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { trackEvent } from '../lib/analytics.js'
@@ -20,6 +19,12 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   const [justAddedSlot, setJustAddedSlot] = useState(null)
   const [pausing, setPausing]           = useState(false)
   const [menuOpen, setMenuOpen]         = useState(false)
+  const [menuClosing, setMenuClosing]   = useState(false)
+
+  function closeMenu() {
+    setMenuClosing(true)
+    setTimeout(() => { setMenuOpen(false); setMenuClosing(false) }, 250)
+  }
   const { className: headerEntranceClass } = useEntranceAnimation(`${revealKey}-${page?.id}`, 0, { direction: 'left' })
 
   useEffect(() => {
@@ -249,76 +254,13 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
             </div>
             {(isAdmin || pageCount > 1) && (
               <div className="shrink-0">
-                <div className="relative">
-                  <button
-                    onClick={() => setMenuOpen(m => !m)}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-                  >
-                    <DotsThreeVertical size={18} weight="bold" />
-                  </button>
-                  <AnimatePresence>
-                    {menuOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-[49]"
-                          onClick={() => setMenuOpen(false)}
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                          transition={{ duration: 0.12 }}
-                          style={{ transformOrigin: 'top right' }}
-                          className="absolute right-0 top-9 z-[50] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-40"
-                        >
-                          {isAdmin && (
-                            <>
-                              <button
-                                onClick={() => { setMenuOpen(false); onEditOpen() }}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-                              >
-                                <PencilSimple size={14} className="text-stone-500" />
-                                Edit
-                              </button>
-                              <div className="h-px bg-stone-100" />
-                              <button
-                                onClick={() => { setMenuOpen(false); handleTogglePause() }}
-                                disabled={pausing}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm transition-colors disabled:opacity-40 hover:bg-stone-50"
-                              >
-                                {page.is_paused
-                                  ? <><PlayCircle size={14} weight="fill" className="text-ember" /><span className="text-ember">Resume</span></>
-                                  : <><PauseCircle size={14} weight="fill" className="text-amber-500" /><span className="text-amber-600">Pause</span></>
-                                }
-                              </button>
-                            </>
-                          )}
-                          {pageCount > 1 && (
-                            <>
-                              {isAdmin && <div className="h-px bg-stone-100" />}
-                              <button
-                                onClick={() => { setMenuOpen(false); onPrevPage() }}
-                                disabled={!canGoPrev}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-30"
-                              >
-                                <CaretLeft size={14} className="text-stone-500" />
-                                Last {pageNoun}
-                              </button>
-                              <button
-                                onClick={() => { setMenuOpen(false); onNextPage() }}
-                                disabled={!canGoNext}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-30"
-                              >
-                                <CaretRight size={14} className="text-stone-500" />
-                                Next {pageNoun}
-                              </button>
-                            </>
-                          )}
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <button
+                  onClick={() => setMenuOpen(true)}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                  aria-label="More options"
+                >
+                  <DotsThreeVertical size={18} weight="bold" />
+                </button>
               </div>
             )}
           </div>
@@ -414,6 +356,71 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
             onPageDelete(page.id)
           }}
         />
+      )}
+
+      {(menuOpen || menuClosing) && (
+        <>
+          <div
+            className={`fixed inset-0 bg-black/50 z-[49] ${menuClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+            onClick={closeMenu}
+          />
+          <div
+            className={`fixed inset-x-0 bottom-0 z-[50] bg-white rounded-t-2xl shadow-xl ${menuClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mt-3 mb-2" />
+            <div className="px-4 pb-4 space-y-1">
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => { closeMenu(); setTimeout(onEditOpen, 260) }}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+                  >
+                    <PencilSimple size={20} className="text-stone-500 shrink-0" />
+                    <span className="text-base font-medium">Edit {pageNoun}</span>
+                  </button>
+                  <button
+                    onClick={() => { closeMenu(); setTimeout(handleTogglePause, 260) }}
+                    disabled={pausing}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-40"
+                  >
+                    {page.is_paused
+                      ? <><PlayCircle size={20} weight="fill" className="text-ember shrink-0" /><span className="text-base font-medium text-ember">Resume</span></>
+                      : <><PauseCircle size={20} weight="fill" className="text-amber-500 shrink-0" /><span className="text-base font-medium text-amber-600">Pause this week</span></>
+                    }
+                  </button>
+                </>
+              )}
+              {pageCount > 1 && (
+                <>
+                  <button
+                    onClick={() => { closeMenu(); setTimeout(onPrevPage, 260) }}
+                    disabled={!canGoPrev}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-30"
+                  >
+                    <CaretLeft size={20} className="text-stone-500 shrink-0" />
+                    <span className="text-base font-medium">Previous {pageNoun}</span>
+                  </button>
+                  <button
+                    onClick={() => { closeMenu(); setTimeout(onNextPage, 260) }}
+                    disabled={!canGoNext}
+                    className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-30"
+                  >
+                    <CaretRight size={20} className="text-stone-500 shrink-0" />
+                    <span className="text-base font-medium">Next {pageNoun}</span>
+                  </button>
+                </>
+              )}
+              <div className="h-px bg-stone-100 mx-1 my-1" />
+              <button
+                onClick={closeMenu}
+                className="flex items-center justify-center w-full px-4 py-3.5 rounded-xl text-stone-500 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+              >
+                <span className="text-base font-medium">Cancel</span>
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </main>
   )
