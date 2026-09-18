@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-const STAGGER_MS = 65
+const STAGGER_MS = 30
 const MAX_STAGGER_STEPS = 10
-const DURATION_MS = 750
+const DURATION_MS = 400
 const BUFFER_MS = 150
 
 export function useEntranceAnimation(revealKey, index = 0) {

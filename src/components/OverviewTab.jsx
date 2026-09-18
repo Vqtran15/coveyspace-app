@@ -177,6 +177,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [skeletonFading, setSkeletonFading] = useState(false)
+  const [cardsReady, setCardsReady] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
   const realtimeDebounceRef = useRef(null)
   const [shouldAnimate]  = useState(() => !greetingDone)
@@ -267,6 +269,13 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
   useEffect(() => { load() }, [groupId, prayerEnabled, isAdmin, eventsEnabled, chatEnabled])
+
+  useEffect(() => {
+    if (!loaded) return
+    setSkeletonFading(true)
+    const t = setTimeout(() => setCardsReady(true), 150)
+    return () => clearTimeout(t)
+  }, [loaded])
 
   useEffect(() => {
     if (!groupId) return
@@ -404,8 +413,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
       <InstallBanner />
 
-      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start">
-        {!loaded ? (
+      <div className={`space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start${!cardsReady ? ' transition-opacity duration-[150ms]' : ''}${skeletonFading && !cardsReady ? ' opacity-0' : ''}`}>
+        {!cardsReady ? (
           <>
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
             {mealsEnabled     && <CardSkeleton delay={isAdmin ? 40  : 0}   />}
