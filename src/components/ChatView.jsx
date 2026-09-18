@@ -2188,7 +2188,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {/* Image lightbox */}
       {(lightboxImg || lightboxClosing) && (
         <div
-          className={`fixed inset-0 z-50 bg-black/90 flex items-center justify-center ${lightboxClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-0 z-50 bg-black/90 flex items-center justify-center ${lightboxClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
           onClick={closeLightbox}
         >
           <button
@@ -2201,7 +2201,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           <img
             src={lightboxImg}
             alt="Full size"
-            className={`max-w-full max-h-full object-contain rounded-lg transition-transform duration-[250ms] ease-in ${lightboxClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
+            className={`max-w-full max-h-full object-contain rounded-lg ${lightboxClosing ? 'animate-lightbox-img-out' : 'animate-lightbox-img-in'}`}
             style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
             onClick={e => e.stopPropagation()}
           />

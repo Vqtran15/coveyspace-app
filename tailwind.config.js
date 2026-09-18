@@ -230,6 +230,15 @@ export default {
           '0%':   { opacity: '1', transform: 'scale(1)' },
           '100%': { opacity: '0', transform: 'scale(0.94) translateY(-6px)' },
         },
+        'lightbox-img-in': {
+          '0%':   { opacity: '0', transform: 'scale(0.88)' },
+          '65%':  { opacity: '1', transform: 'scale(1.03)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'lightbox-img-out': {
+          '0%':   { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(0.88)' },
+        },
       },
       animation: {
         'modal-in':         'modal-in 0.25s cubic-bezier(0.32,0.72,0,1) backwards',
@@ -270,6 +279,8 @@ export default {
         'dot-bounce':          'dot-bounce 1.1s ease-in-out infinite',
         'celebration':         'celebration 1.5s ease-out forwards',
         'poll-delete-out':    'poll-delete-out 0.24s ease-in forwards',
+        'lightbox-img-in':    'lightbox-img-in 0.3s cubic-bezier(0.16,1,0.3,1) both',
+        'lightbox-img-out':   'lightbox-img-out 0.22s ease-in forwards',
       },
     },
   },
