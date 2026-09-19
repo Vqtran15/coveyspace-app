@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, Church } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, Church, DotsThreeVertical } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useToast } from '../lib/toast.jsx'
@@ -20,8 +20,9 @@ export default function AdminPage() {
   const [members, setMembers] = useState([])
   const [settingRoleId, setSettingRoleId] = useState(null)
   const [removingId, setRemovingId] = useState(null)
-  const [confirmRoleAction, setConfirmRoleAction] = useState(null) // { id, newRole }
-  const [confirmRemoveId, setConfirmRemoveId] = useState(null)
+  const [memberSheet, setMemberSheet] = useState(null)       // member object
+  const [memberSheetClosing, setMemberSheetClosing] = useState(false)
+  const [memberSheetConfirm, setMemberSheetConfirm] = useState(null) // 'role' | 'remove'
   const [groupNameOpen, setGroupNameOpen] = useState(false)
   const [groupNameValue, setGroupNameValue] = useState('')
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
@@ -102,8 +103,13 @@ export default function AdminPage() {
     setCodeRotating(false)
   }
 
+  function closeMemberSheet() {
+    setMemberSheetClosing(true)
+    setTimeout(() => { setMemberSheet(null); setMemberSheetClosing(false); setMemberSheetConfirm(null) }, 250)
+  }
+
   async function handleSetRole(targetId, newRole) {
-    setConfirmRoleAction(null)
+    closeMemberSheet()
     setSettingRoleId(targetId)
     const member = members.find(m => m.user_id === targetId)
     const { error } = await supabase.rpc('set_member_role', { target_user_id: targetId, new_role: newRole })
@@ -126,7 +132,7 @@ export default function AdminPage() {
 
   async function handleRemoveMember(targetId) {
     const member = members.find(m => m.user_id === targetId)
-    setConfirmRemoveId(null)
+    closeMemberSheet()
     setRemovingId(targetId)
     const { error } = await supabase.rpc('remove_member', { target_user_id: targetId })
     if (error) {
@@ -211,6 +217,7 @@ export default function AdminPage() {
   }
 
   return (
+    <>
     <div className="max-w-2xl mx-auto px-4 pt-8 pb-12">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
@@ -482,69 +489,19 @@ export default function AdminPage() {
                         )}
                       </div>
                       {m.user_id !== userId && (
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={() => setConfirmRoleAction({ id: m.user_id, newRole: m.role === 'admin' ? 'member' : 'admin' })}
-                            disabled={!!settingRoleId}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
-                              m.role === 'admin'
-                                ? 'bg-ember/10 text-ember hover:bg-ember/20'
-                                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                            }`}
-                          >
-                            {settingRoleId === m.user_id ? '…' : m.role === 'admin' ? 'Admin ✓' : 'Make Admin'}
-                          </button>
-                          <button
-                            onClick={() => setConfirmRemoveId(m.user_id)}
-                            disabled={removingId === m.user_id}
-                            aria-label={`Remove ${m.display_name} from group`}
-                            className="w-11 h-11 flex items-center justify-center rounded-lg text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
-                          >
-                            {removingId === m.user_id ? <span className="text-[10px]">…</span> : <X size={15} weight="bold" />}
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => { setMemberSheet(m); setMemberSheetConfirm(null) }}
+                          disabled={settingRoleId === m.user_id || removingId === m.user_id}
+                          aria-label={`Actions for ${m.display_name}`}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-40 shrink-0"
+                        >
+                          {(settingRoleId === m.user_id || removingId === m.user_id)
+                            ? <span className="text-xs text-stone-400">…</span>
+                            : <DotsThreeVertical size={20} weight="bold" />
+                          }
+                        </button>
                       )}
                     </div>
-                    {/* Inline role confirmation */}
-                    {confirmRoleAction?.id === m.user_id && (
-                      <div className="mt-3 flex items-center gap-2 animate-fade-in">
-                        <p className="flex-1 text-xs text-stone-500">
-                          {confirmRoleAction.newRole === 'admin'
-                            ? `Make ${m.display_name} an admin?`
-                            : `Remove admin rights from ${m.display_name}?`}
-                        </p>
-                        <button
-                          onClick={() => setConfirmRoleAction(null)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleSetRole(confirmRoleAction.id, confirmRoleAction.newRole)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-ember hover:bg-ember-700 transition-colors"
-                        >
-                          Confirm
-                        </button>
-                      </div>
-                    )}
-                    {/* Inline remove confirmation */}
-                    {confirmRemoveId === m.user_id && (
-                      <div className="mt-3 flex items-center gap-2 animate-fade-in">
-                        <p className="flex-1 text-xs text-stone-500">Remove {m.display_name} from the group?</p>
-                        <button
-                          onClick={() => setConfirmRemoveId(null)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleRemoveMember(confirmRemoveId)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -831,5 +788,102 @@ export default function AdminPage() {
 
       </div>
     </div>
+
+    {/* Member action sheet */}
+    {memberSheet && (
+      <div
+        className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${memberSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+        onClick={closeMemberSheet}
+      >
+        <div
+          className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Sheet header */}
+          <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-stone-100">
+            <AvatarCircle icon={memberSheet.avatar_icon} name={memberSheet.display_name} userId={memberSheet.user_id} colorKey={memberSheet.avatar_color} imageUrl={memberSheet.avatar_image_url} />
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-semibold text-stone-800 truncate">{memberSheet.display_name}</p>
+              {memberSheet.role === 'admin' && (
+                <span className="text-xs text-ember font-semibold flex items-center gap-1">
+                  <ShieldCheck size={10} weight="fill" /> Admin
+                </span>
+              )}
+            </div>
+            <button onClick={closeMemberSheet} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="px-4 pt-3 pb-2 space-y-1">
+            {memberSheetConfirm === 'role' ? (
+              <div className="animate-fade-in">
+                <p className="text-sm text-stone-600 text-center mb-4 px-2">
+                  {memberSheet.role === 'admin'
+                    ? `Remove admin rights from ${memberSheet.display_name}?`
+                    : `Make ${memberSheet.display_name} an admin?`}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMemberSheetConfirm(null)}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleSetRole(memberSheet.user_id, memberSheet.role === 'admin' ? 'member' : 'admin')}
+                    disabled={!!settingRoleId}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-ember hover:bg-ember-700 transition-colors disabled:opacity-40"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            ) : memberSheetConfirm === 'remove' ? (
+              <div className="animate-fade-in">
+                <p className="text-sm text-stone-600 text-center mb-4 px-2">
+                  Remove {memberSheet.display_name} from the group? They'll need an invite code to rejoin.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMemberSheetConfirm(null)}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleRemoveMember(memberSheet.user_id)}
+                    disabled={!!removingId}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => setMemberSheetConfirm('role')}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors text-left"
+                >
+                  <ShieldCheck size={18} className="text-ember shrink-0" />
+                  {memberSheet.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                </button>
+                <button
+                  onClick={() => setMemberSheetConfirm('remove')}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors text-left"
+                >
+                  <X size={18} className="shrink-0" />
+                  Remove from Group
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
