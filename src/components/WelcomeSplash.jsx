@@ -453,7 +453,7 @@ export default function WelcomeSplash({ onDone }) {
               />
             </div>
 
-            <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
               <AvatarPicker
                 userId={userId}
                 currentIcon={avatarIcon}
@@ -469,7 +469,7 @@ export default function WelcomeSplash({ onDone }) {
               />
             </div>
 
-            <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.28s' }}>
+            <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.28s' }}>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday</p>
               <p className="text-xs text-stone-400 mb-3">Your group will be reminded so they can celebrate you.</p>
               <div className="flex gap-2">
@@ -517,7 +517,7 @@ export default function WelcomeSplash({ onDone }) {
             Turn on what your group needs. You can change these anytime in Group Settings.
           </p>
 
-          <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
             {FEATURE_TOGGLES.map(({ key, label, desc, Icon, color }, i) => (
               <div key={key} className={i < FEATURE_TOGGLES.length - 1 ? 'border-b border-stone-100' : ''}>
                 <div className="flex items-center gap-3 px-4 py-3.5">
@@ -575,7 +575,7 @@ export default function WelcomeSplash({ onDone }) {
                   <ForkKnife size={14} weight="fill" className="text-ember" />
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Meals</p>
                 </div>
-                <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-4">
+                <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Which day do you meet?</p>
                     <div className="flex bg-stone-100 rounded-xl p-1">
@@ -697,7 +697,7 @@ export default function WelcomeSplash({ onDone }) {
                   <CalendarCheck size={14} weight="fill" className="text-lagoon-600" />
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Service</p>
                 </div>
-                <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm space-y-4">
+                <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm space-y-4">
                   <div>
                     <p className="text-xs text-stone-400 font-medium mb-2">Auto-schedule monthly rotations?</p>
                     <div className="flex bg-stone-100 rounded-xl p-1">
@@ -811,7 +811,7 @@ export default function WelcomeSplash({ onDone }) {
             )}
 
             {!showMeals && !showServices && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm text-center mb-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+              <div className="bg-white border border-stone-100 rounded-2xl p-6 shadow-sm text-center mb-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
                 <p className="text-stone-400 text-sm">No schedule to configure — you can always enable features later in Group Settings.</p>
               </div>
             )}
@@ -912,7 +912,7 @@ export default function WelcomeSplash({ onDone }) {
             >
               {visibleTourCards.map(({ Icon, color, title, desc }) => (
                 <div key={title} className="w-full shrink-0 mr-6">
-                  <div className="bg-white border border-stone-200 rounded-2xl p-8 shadow-sm h-full flex flex-col items-center justify-center text-center gap-4">
+                  <div className="bg-white border border-stone-100 rounded-2xl p-8 shadow-sm h-full flex flex-col items-center justify-center text-center gap-4">
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${color}`}>
                       <Icon size={32} weight="fill" />
                     </div>
@@ -964,7 +964,7 @@ export default function WelcomeSplash({ onDone }) {
           Add this app to your home screen for quick access — no app store needed.
         </p>
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.42s' }}>
-          <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow-sm mb-6">
+          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow-sm mb-6">
             <div className="flex items-center gap-3 px-4 py-4">
               <BoxArrowUp size={22} className="shrink-0 text-ember" />
               <div>
@@ -985,7 +985,7 @@ export default function WelcomeSplash({ onDone }) {
             </div>
           </div>
           {'Notification' in window && 'PushManager' in window && (
-            <div className="bg-white border border-stone-200 rounded-2xl shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+            <div className="bg-white border border-stone-100 rounded-2xl shadow-sm mb-6 animate-fade-up" style={{ animationDelay: '0.52s' }}>
               <div className="flex items-center gap-3 px-4 py-4">
                 <Bell size={22} className="shrink-0 text-ember" weight="fill" />
                 <div className="flex-1 min-w-0">

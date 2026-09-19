@@ -97,7 +97,7 @@ export default function MessageInput() {
 
   return (
     <div className="shrink-0 max-w-3xl mx-auto w-full px-4 py-2" onTouchStart={stopListMomentum}>
-    <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-200 px-3 pt-3 pb-3 relative">
+    <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-100 px-3 pt-3 pb-3 relative">
       {/* Reply preview */}
       {replyingTo && (
         <div className="flex items-center gap-2 bg-ember/5 border border-ember/20 rounded-xl px-3 py-2 mb-2">
@@ -145,7 +145,7 @@ export default function MessageInput() {
         if (!filtered.length) return null
         return (
           <div className="absolute bottom-full left-0 right-0 pb-1 z-[8]">
-            <div className="bg-white rounded-2xl shadow-lg border border-stone-200 overflow-hidden max-h-48 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden max-h-48 overflow-y-auto">
               {filtered.map(member => (
                 <button
                   key={member.user_id}
@@ -321,7 +321,7 @@ export default function MessageInput() {
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
             className="absolute bottom-full left-0 pb-2 z-[8]"
           >
-            <div ref={attachMenuRef} className="bg-white rounded-2xl shadow-lg border border-stone-200 py-1 min-w-[148px] overflow-hidden">
+            <div ref={attachMenuRef} className="bg-white rounded-2xl shadow-lg border border-stone-100 py-1 min-w-[148px] overflow-hidden">
               <button
                 type="button"
                 onClick={() => {

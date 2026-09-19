@@ -204,7 +204,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
       <div className="flex-1 overflow-y-auto px-4 pt-6 pb-24 space-y-4">
 
         {/* Member avatars */}
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-4">Praying for</p>
           <div className="flex flex-wrap gap-4">
             {memberProfiles.map(p => <MemberPill key={p.user_id} profile={p} />)}
@@ -212,7 +212,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
         </div>
 
         {/* Request text */}
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
           <div className="flex items-start justify-between gap-3 mb-1">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Prayer Request</p>
             {canManage && !editing && (
@@ -270,7 +270,7 @@ export default function GroupPrayerProfile({ groupPrayer: initialPrayer, memberP
         )}
 
         {/* Pray section */}
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Who's praying</p>

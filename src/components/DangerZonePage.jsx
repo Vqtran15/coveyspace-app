@@ -61,7 +61,7 @@ export default function DangerZonePage() {
       {/* Leave Group */}
       <div className="mb-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Leave Group</p>
-        <div className="bg-white border border-stone-200 rounded-2xl shadow-sm p-4 space-y-3">
+        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
               <UserMinus size={18} weight="fill" className="text-stone-500" />

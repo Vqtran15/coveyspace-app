@@ -84,7 +84,7 @@ Only push to `origin/staging` after this checklist is complete.
 - **Color in cards lives in icon/badge boxes only** — never use a brand color as the full card background. Tints by context: `bg-amber-50` (meals/dates), `bg-ember/10` (ember items), `bg-lagoon-50` (lagoon items), `bg-coral/10` (coral items), `bg-sage-50` (prayer/sage items)
 
 ### Cards
-- Standard card: `bg-white rounded-2xl border border-stone-200 shadow-sm`
+- Standard card: `bg-white rounded-2xl border border-stone-100 shadow-sm`
 - Elevated/interactive card: bump shadow to `shadow`
 - Never use `rounded-xl` for cards — that's for buttons, inputs, and icon boxes
 - Card borders are always `border` (1px) — never `border-2`

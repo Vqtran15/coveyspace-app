@@ -257,7 +257,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           </div>
         )}
         <div className="pt-2 space-y-3">
-          <div className="bg-white rounded-2xl shadow border border-stone-200 p-4 mb-3 animate-pulse">
+          <div className="bg-white rounded-2xl shadow border border-stone-100 p-4 mb-3 animate-pulse">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-xl bg-stone-200 shrink-0" />
               <div className="flex-1 pt-1 space-y-2">

@@ -34,7 +34,7 @@ export default function ResetPasswordPage({ onDone }) {
           <p className="text-stone-500 mt-1 text-sm">Choose a new password for your account.</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">

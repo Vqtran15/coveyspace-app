@@ -28,7 +28,7 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdmin
 
   return (
     <div
-      className="bg-white rounded-2xl border border-stone-200 shadow-sm px-5 py-4"
+      className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <p className="text-sm font-semibold text-stone-800">{msg.display_name}</p>
@@ -125,7 +125,7 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
         {loading ? (
           <div className="max-w-2xl mx-auto px-4 pt-6 space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl border border-stone-200 px-5 py-4 animate-pulse">
+              <div key={i} className="bg-white rounded-2xl border border-stone-100 px-5 py-4 animate-pulse">
                 <div className="flex justify-between mb-2">
                   <div className="h-3.5 bg-stone-200 rounded w-24" />
                   <div className="h-3 bg-stone-100 rounded w-14" />

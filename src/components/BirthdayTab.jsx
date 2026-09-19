@@ -206,7 +206,7 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
                     <div className="space-y-2">
                       <button
                         onClick={openEdit}
-                        className="w-full py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm font-medium text-stone-700 hover:bg-stone-100 transition-colors"
+                        className="w-full py-3 rounded-xl bg-stone-50 border border-stone-100 text-sm font-medium text-stone-700 hover:bg-stone-100 transition-colors"
                       >
                         Edit birthday
                       </button>
