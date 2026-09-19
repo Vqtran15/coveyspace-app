@@ -196,16 +196,15 @@ function NotesEditor({ initial, onSave, onCancel }) {
     },
   })
 
-  // Re-render whenever the selection or content changes so toolbar active states stay current
+  // Re-render on every transaction (content, selection, OR storedMarks changes) so
+  // isActive() stays current for inline marks like bold/italic/underline. Using
+  // 'update'+'selectionUpdate' misses storedMark-only changes (e.g. tapping Bold
+  // with no selection), which is why those buttons never highlighted.
   useEffect(() => {
     if (!editor) return
     const refresh = () => forceUpdate(n => n + 1)
-    editor.on('selectionUpdate', refresh)
-    editor.on('update', refresh)
-    return () => {
-      editor.off('selectionUpdate', refresh)
-      editor.off('update', refresh)
-    }
+    editor.on('transaction', refresh)
+    return () => { editor.off('transaction', refresh) }
   }, [editor])
 
   useEffect(() => {
@@ -287,7 +286,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
           <div className="flex items-center gap-0.5 pr-2 py-1.5 shrink-0 border-l border-stone-100">
             {/* Text color */}
             <div className="relative shrink-0" data-picker>
-              <button type="button" title="Text color" className={btn(false)}
+              <button type="button" title="Text color" className={btn(!!editor.getAttributes('textStyle').color)}
                 onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'color' ? null : 'color') }}>
                 <Palette size={16} weight="bold" />
               </button>
