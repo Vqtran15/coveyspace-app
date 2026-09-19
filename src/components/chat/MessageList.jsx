@@ -757,13 +757,13 @@ export default function MessageList() {
                       {msg.reply_message && (
                         <button
                           onClick={() => scrollToMessage(msg.reply_message.id)}
-                          className={`w-full text-left mx-0 px-3 pt-2.5 pb-1.5 border-b ${isOwn ? 'border-white/20' : 'border-stone-100'}`}
+                          className={`w-full text-left mx-0 px-3 pt-2.5 pb-2 border-b ${isOwn ? 'bg-black/20 border-black/10' : 'bg-stone-50 border-stone-100'}`}
                         >
                           <div className={`min-w-0 pl-2 border-l-2 ${isOwn ? 'border-white/60' : 'border-ember'}`}>
                             <p className={`text-[11px] font-semibold truncate ${isOwn ? 'text-white/90' : 'text-ember'}`}>
                               {senderName(msg.reply_message.user_id, msg.reply_message.display_name)}
                             </p>
-                            <p className={`text-[11px] truncate ${isOwn ? 'text-white/90' : 'text-stone-500'}`}>
+                            <p className={`text-[11px] truncate ${isOwn ? 'text-white/80' : 'text-stone-500'}`}>
                               {msg.reply_message.image_url && !msg.reply_message.body
                                 ? isVideoUrl(msg.reply_message.image_url) ? '🎬 Video' : '📷 Photo'
                                 : msg.reply_message.body}
