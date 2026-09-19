@@ -15,7 +15,7 @@
 body {
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  background-color: #FBF8F4;
+  background-color: #EDEAE5;
 }
 
 /* Chat container — starts at y:0 (the top of the physical screen in PWA) and
