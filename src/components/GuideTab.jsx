@@ -243,7 +243,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
         scrollable area so the CSS spec's overflow-x→overflow-y coercion
         doesn't clip the dropdown.
       */}
-      <div className="border border-stone-200 rounded-xl focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
+      <div className="bg-white border border-stone-200 rounded-xl focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
         <div className="flex items-stretch bg-stone-50 border-b border-stone-100 rounded-t-xl">
           {/* Scrollable toolbar buttons */}
           <div className="flex items-center gap-0.5 px-2 py-1.5 overflow-x-auto flex-1 min-w-0">
