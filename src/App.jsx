@@ -118,7 +118,7 @@ function AppContent() {
   const [welcomeBackGroupName, setWelcomeBackGroupName] = useState(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
-  const guide    = useAnimatedOverlay()
+  const guide    = useAnimatedOverlay(260)
   const giving   = useAnimatedOverlay()
   const birthday = useAnimatedOverlay()
 
@@ -723,8 +723,8 @@ function AppContent() {
             onClick={guide.close}
           />
           <div
-            className={`fixed inset-0 lg:left-56 z-30 overflow-y-auto lg:overflow-hidden bg-sunrise-50 lg:bg-transparent lg:flex lg:items-start lg:justify-center lg:py-12 ${guide.closing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-            style={{ paddingTop: 'var(--sat)' }}
+            className={`fixed inset-0 lg:left-56 z-30 overflow-y-auto lg:overflow-hidden bg-sunrise-50 lg:bg-transparent lg:flex lg:items-start lg:justify-center lg:py-12 ${guide.closing ? 'animate-guide-close' : 'animate-guide-open'}`}
+            style={{ paddingTop: 'var(--sat)', willChange: 'transform, opacity' }}
           >
             <div className="w-full min-h-full bg-sunrise-50 lg:min-h-0 lg:max-w-3xl lg:rounded-2xl lg:shadow-2xl lg:overflow-y-auto lg:max-h-full">
               <GuideTab

@@ -62,6 +62,14 @@ export default {
           '0%':   { opacity: '1', transform: 'translateY(0)' },
           '100%': { opacity: '0', transform: 'translateY(-12px)' },
         },
+        'guide-open': {
+          '0%':   { opacity: '0', transform: 'translateY(22px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'guide-close': {
+          '0%':   { opacity: '1', transform: 'translateY(0)' },
+          '100%': { opacity: '0', transform: 'translateY(18px)' },
+        },
         'slide-in-right': {
           '0%':   { opacity: '0', transform: 'translateX(72px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
@@ -239,6 +247,8 @@ export default {
         'sheet-out':        'sheet-out 0.25s cubic-bezier(0.4,0,1,1) forwards',
         'backdrop-in':      'backdrop-in 0.22s ease-out backwards',
         'backdrop-out':     'backdrop-out 0.25s ease-in forwards',
+        'guide-open':       'guide-open 0.28s cubic-bezier(0.22,1,0.36,1) backwards',
+        'guide-close':      'guide-close 0.2s ease-in forwards',
         'slide-in-right':   'slide-in-right 0.3s cubic-bezier(0.25,0.46,0.45,0.94) backwards',
         'slide-in-left':    'slide-in-left 0.3s cubic-bezier(0.25,0.46,0.45,0.94) backwards',
         'slide-in-up':      'slide-in-up 0.3s cubic-bezier(0.25,0.46,0.45,0.94) backwards',
