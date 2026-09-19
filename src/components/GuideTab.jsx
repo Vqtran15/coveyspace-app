@@ -6,6 +6,7 @@ import {
 } from '@phosphor-icons/react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 
@@ -308,7 +309,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: URL ──────────────────────────────────────────────────────────────
   if (editMode === 'url') {
     return (
-      <div key="url" className={`max-w-3xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
+      <div key="url" className={`max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -334,7 +335,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: file upload ──────────────────────────────────────────────────────
   if (editMode === 'file') {
     return (
-      <div key="file" className={`max-w-3xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
+      <div key="file" className={`max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -360,7 +361,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
   // ── Edit: notes ────────────────────────────────────────────────────────────
   if (editMode === 'notes') {
     return (
-      <div key="notes" className={`max-w-3xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
+      <div key="notes" className={`max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12 ${screenClass()}`}>
         <NavHeader onBack={() => navigateTo(backTarget, 'left')} />
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-20 h-20 rounded-2xl bg-sunrise flex items-center justify-center mb-5">
@@ -403,7 +404,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
             <p className="text-stone-500 text-sm mb-6 max-w-xs">Community guide from your admin.</p>
             <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkBreaks]}
                 components={{
                   h1: ({ children }) => <h1 className="text-base font-bold text-stone-800 mb-2 mt-4 first:mt-0">{children}</h1>,
                   h2: ({ children }) => <h2 className="text-sm font-bold text-stone-800 mb-1.5 mt-3 first:mt-0">{children}</h2>,
