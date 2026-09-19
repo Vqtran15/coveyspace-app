@@ -1357,17 +1357,21 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 {(guideEnabled || givingEnabled) && (
                   <div>
                     <div className="h-3.5 bg-stone-200 rounded w-36 mb-2 animate-pulse" />
-                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-pulse">
+                    <div className="space-y-3">
                       {guideEnabled && (
-                        <div className={`p-4 flex items-center gap-3 ${givingEnabled ? 'border-b border-stone-50' : ''}`}>
-                          <div className="w-8 h-8 rounded-xl bg-stone-100 shrink-0" />
-                          <div className="h-4 bg-stone-200 rounded w-2/5" />
+                        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                          <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-stone-200 rounded w-2/5" />
+                          </div>
                         </div>
                       )}
                       {givingEnabled && (
-                        <div className="p-4 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-stone-100 shrink-0" />
-                          <div className="h-4 bg-stone-200 rounded w-2/5" />
+                        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                          <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-stone-200 rounded w-2/5" />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1480,39 +1484,39 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 {(guideEnabled || givingEnabled) && (
                   <div className="mb-6">
                     <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Church Resources</p>
-                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="space-y-3">
                       {guideEnabled && (
                         <button
                           onClick={onOpenGuide}
-                          className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors ${givingEnabled ? 'border-b border-stone-100' : ''}`}
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                         >
-                          <div className="w-8 h-8 rounded-xl bg-sunrise/10 flex items-center justify-center shrink-0">
-                            <BookOpen size={16} weight="fill" className="text-sunrise" />
+                          <div className="w-12 h-12 rounded-xl bg-sunrise/10 flex items-center justify-center shrink-0">
+                            <BookOpen size={22} weight="fill" className="text-sunrise" />
                           </div>
-                          <div className="flex-1 text-left">
-                            <p className="text-sm font-medium text-stone-800">Community Guide</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-base font-semibold text-stone-800">Community Guide</p>
                             {isAdmin && !groupSettings?.guide_type && !groupSettings?.guide_url && (
-                              <p className="text-xs text-stone-400">Tap to set up</p>
+                              <p className="text-xs text-stone-400 mt-0.5">Tap to set up</p>
                             )}
                           </div>
-                          <CaretRight size={14} className="text-stone-400 shrink-0" />
+                          <CaretRight size={16} className="text-stone-400 shrink-0" />
                         </button>
                       )}
                       {givingEnabled && (
                         <button
                           onClick={onOpenGiving}
-                          className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors"
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                         >
-                          <div className="w-8 h-8 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
-                            <Coins size={16} weight="fill" className="text-sage-700" />
+                          <div className="w-12 h-12 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
+                            <Coins size={22} weight="fill" className="text-sage-700" />
                           </div>
-                          <div className="flex-1 text-left">
-                            <p className="text-sm font-medium text-stone-800">Monthly Giving</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-base font-semibold text-stone-800">Monthly Giving</p>
                             {isAdmin && !groupSettings?.giving_url && (
-                              <p className="text-xs text-stone-400">Tap to set up</p>
+                              <p className="text-xs text-stone-400 mt-0.5">Tap to set up</p>
                             )}
                           </div>
-                          <CaretRight size={14} className="text-stone-400 shrink-0" />
+                          <CaretRight size={16} className="text-stone-400 shrink-0" />
                         </button>
                       )}
                     </div>
