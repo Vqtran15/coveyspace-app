@@ -532,6 +532,7 @@ export default function EventsTab() {
   const [rsvps,        setRsvps]        = useState({})
   const [loading,      setLoading]      = useState(true)
   const [fetchError,   setFetchError]   = useState(false)
+  const [hasFetched,   setHasFetched]   = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showForm,     setShowForm]     = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
@@ -628,6 +629,7 @@ export default function EventsTab() {
       grouped[ev.id] = (ev.event_rsvps ?? []).map(r => ({ user_id: r.user_id, status: r.status, profile: r.profiles }))
     }
     setRsvps(grouped)
+    setHasFetched(true)
     setLoading(false)
   }
 
@@ -722,7 +724,7 @@ export default function EventsTab() {
         </div>
       </div>
 
-      {loading ? (
+      {(loading && (!hasFetched || upcoming.length > 0)) ? (
         <div className="space-y-3">
           {[0, 1, 2].map(i => (
             <div key={i} className="bg-white border border-stone-200 rounded-2xl p-4 animate-pulse flex gap-3" style={{ animationDelay: `${i * 60}ms` }}>

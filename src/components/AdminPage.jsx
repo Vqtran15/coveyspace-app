@@ -811,7 +811,7 @@ export default function AdminPage() {
                 </span>
               )}
             </div>
-            <button onClick={closeMemberSheet} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
+            <button onClick={closeMemberSheet} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
               <X size={20} />
             </button>
           </div>

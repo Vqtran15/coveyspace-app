@@ -1228,7 +1228,8 @@ export default function ChurchSettingsPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => { navigator.clipboard.writeText(churchJoinCode); toast('Church code copied!', 'success') }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors"
+                  disabled={churchCodeRotating}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors disabled:opacity-40"
                 >
                   Copy
                 </button>

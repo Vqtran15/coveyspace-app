@@ -256,7 +256,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
               <div className="shrink-0">
                 <button
                   onClick={() => setMenuOpen(true)}
-                  className="w-8 h-8 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                   aria-label="More options"
                 >
                   <DotsThreeVertical size={18} weight="bold" />
@@ -359,14 +359,14 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
       )}
 
       {(menuOpen || menuClosing) && (
-        <>
+        <div
+          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${menuClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          onClick={closeMenu}
+        >
           <div
-            className={`fixed inset-0 bg-black/50 z-[49] ${menuClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
-            onClick={closeMenu}
-          />
-          <div
-            className={`fixed inset-x-0 bottom-0 z-[50] bg-white rounded-t-2xl shadow-xl ${menuClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto shadow-xl ${menuClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            onClick={e => e.stopPropagation()}
           >
             <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mt-3 mb-2" />
             <div className="px-4 pb-4 space-y-1">
@@ -421,7 +421,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </main>
   )
