@@ -5,7 +5,6 @@ import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check, Arrow
 import { supabase } from '../lib/supabase.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
-import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -51,15 +50,13 @@ function formatMemberNames(firstNames) {
 
 // ─── Individual member card ───────────────────────────────────────────────────
 
-function MemberCard({ member, index, onClick }) {
-  const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
+function MemberCard({ member, onClick }) {
   const lastUpdated = formatLastUpdated(member.prayer_requests)
 
   return (
     <motion.button
       onClick={onClick}
-      style={entranceStyle}
-      className={`w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
+      className="w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember"
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -79,8 +76,7 @@ function MemberCard({ member, index, onClick }) {
 
 // ─── Group prayer card (members view) ────────────────────────────────────────
 
-function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
-  const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
+function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
   const profiles  = groupPrayer.member_user_ids.map(id => memberMap[id]).filter(Boolean)
   const firstNames = profiles.map(p => p.display_name?.split(' ')[0]).filter(Boolean)
   const label      = formatMemberNames(firstNames)
@@ -92,8 +88,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, index, onClick }) {
   return (
     <motion.button
       onClick={onClick}
-      style={entranceStyle}
-      className={`w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember ${entranceClass}`}
+      className="w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember"
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -165,13 +160,12 @@ function ReactionAvatars({ reactions }) {
 
 // ─── Individual feed card ─────────────────────────────────────────────────────
 
-function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, toggling, onPray, onOpen, index }) {
-  const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
+function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, toggling, onPray, onOpen }) {
   const reactionCount = reactions?.length ?? 0
   const userReacted   = reactions?.some(r => r.user_id === currentUserId) ?? false
 
   return (
-    <div style={entranceStyle} className={`bg-white border border-stone-100 rounded-2xl p-4 shadow-sm ${entranceClass}`}>
+    <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
           <AvatarCircle size="8" icon={member?.avatar_icon} colorKey={member?.avatar_color} userId={member?.user_id} name={member?.display_name} imageUrl={member?.avatar_image_url} />
@@ -210,15 +204,14 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
 
 // ─── Group feed card ──────────────────────────────────────────────────────────
 
-function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggling, onPray, onOpen, index }) {
-  const { className: entranceClass, style: entranceStyle } = useEntranceAnimation('/prayer', index)
+function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggling, onPray, onOpen }) {
   const profiles   = groupPrayer.member_user_ids.map(id => memberMap[id]).filter(Boolean)
   const firstNames = profiles.map(p => p.display_name?.split(' ')[0]).filter(Boolean)
   const label      = formatMemberNames(firstNames)
   const userReacted = reactions?.some(r => r.user_id === currentUserId) ?? false
 
   return (
-    <div style={entranceStyle} className={`bg-white border border-stone-100 rounded-2xl p-4 shadow-sm ${entranceClass}`}>
+    <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
           <div className="flex items-center shrink-0">
@@ -736,13 +729,12 @@ export default function PrayerTab() {
             <p className="text-sm">No members match "{searchQuery}"</p>
           </div>
         ) : (
-          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-            {combinedList.map((item, i) =>
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 animate-fade-in">
+            {combinedList.map((item) =>
               item.type === 'member' ? (
                 <MemberCard
                   key={item.data.user_id}
                   member={item.data}
-                  index={i}
                   onClick={() => setSelectedMember(item.data)}
                 />
               ) : (
@@ -750,7 +742,6 @@ export default function PrayerTab() {
                   key={item.data.id}
                   groupPrayer={item.data}
                   memberMap={memberMap}
-                  index={i}
                   onClick={() => setSelectedGroupPrayer(item.data)}
                 />
               )
@@ -773,8 +764,8 @@ export default function PrayerTab() {
             )}
           </div>
         ) : (
-          <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-            {filteredFeed.map((item, i) =>
+          <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 animate-fade-in">
+            {filteredFeed.map((item) =>
               item.type === 'individual' ? (
                 <FeedCard
                   key={item.data.id}
@@ -786,7 +777,6 @@ export default function PrayerTab() {
                   toggling={togglingIds.has(item.data.id)}
                   onPray={() => toggleFeedReaction(item.data)}
                   onOpen={() => setSelectedMember(item.data.member)}
-                  index={i}
                 />
               ) : (
                 <GroupFeedCard
@@ -798,7 +788,6 @@ export default function PrayerTab() {
                   toggling={togglingIds.has(item.data.id)}
                   onPray={() => toggleGroupReaction(item.data)}
                   onOpen={() => setSelectedGroupPrayer(item.data)}
-                  index={i}
                 />
               )
             )}

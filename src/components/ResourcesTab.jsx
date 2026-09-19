@@ -1293,9 +1293,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   // resolves, then stagger everything in together. Prevents translateY animation from firing
   // on Bible/Guide while bulletin cards are still loading (the "loads low, shifts up" bug).
   const bulletinReady = allBroadcasts !== null
-  const bulletinCardCount = (allMembersConv ? 1 : 0) + (adminOnlyConv ? 1 : 0)
-  const bibleDelay = churchId ? bulletinCardCount * 40 : 0
-  const guideDelay = bibleDelay + 40
+
 
   return (
     <div className="max-w-3xl lg:max-w-5xl mx-auto px-4 pt-8 pb-4">
@@ -1320,7 +1318,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
           style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'var(--sab, env(safe-area-inset-bottom))' }}
         >
           <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
-            <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-stack-in" style={{ animationDelay: '0ms' }}>Resources</h1>
+            <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-fade-in">Resources</h1>
 
             {!bulletinReady ? (
               /* ── Loading: hold all slots as skeletons so no card animates in early ── */
@@ -1377,8 +1375,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 )}
               </div>
             ) : (
-              /* ── Loaded: all cards stagger in together ── */
-              <>
+              /* ── Loaded: all cards fade in together ── */
+              <div className="animate-fade-in">
                 {/* Church broadcasts — two separate cards per audience */}
                 {!!churchId && (
                   <div className="mb-6">
@@ -1394,8 +1392,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         return (
                           <button
                             onClick={() => openBroadcast(allMembersConv)}
-                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                            style={{ animationDelay: '0ms' }}
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                           >
                             <div className="relative shrink-0">
                               <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center">
@@ -1429,8 +1426,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         return (
                           <button
                             onClick={() => openBroadcast(adminOnlyConv)}
-                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                            style={{ animationDelay: '40ms' }}
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                           >
                             <div className="relative shrink-0">
                               <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center">
@@ -1464,8 +1460,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Bible</p>
                   <button
                     onClick={openReader}
-                    className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all animate-stack-in"
-                    style={{ animationDelay: `${bibleDelay}ms` }}
+                    className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                   >
                     <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                       <BookOpen size={22} weight="fill" className="text-ember" />
@@ -1485,7 +1480,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 {(guideEnabled || givingEnabled) && (
                   <div className="mb-6">
                     <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Church Resources</p>
-                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden animate-stack-in" style={{ animationDelay: `${guideDelay}ms` }}>
+                    <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
                       {guideEnabled && (
                         <button
                           onClick={onOpenGuide}
@@ -1523,7 +1518,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                     </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </main>
         </div>,

@@ -28,8 +28,7 @@ function TypePicker({ onPick }) {
         <button
           key={type}
           onClick={() => onPick(type)}
-          style={{ animationDelay: `${80 + i * 70}ms` }}
-          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-sunrise hover:bg-sunrise/5 transition-colors animate-stack-in"
+          className="flex items-center gap-4 px-5 py-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-sunrise hover:bg-sunrise/5 transition-colors animate-fade-in"
         >
           <div className="w-10 h-10 rounded-xl bg-sunrise-50 flex items-center justify-center shrink-0">
             <Icon size={20} className="text-sunrise" weight="fill" />

@@ -21,15 +21,14 @@ export function sanitizeHtml(html) {
   })
 }
 
-export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdminOnly = false, idx = 0 }) {
+export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdminOnly = false }) {
   const targetedGroups = isChurchAdmin && msg.target_group_ids?.length
     ? msg.target_group_ids.map(id => groupsInChurch.find(g => g.id === id)?.name).filter(Boolean)
     : null
 
   return (
     <div
-      className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4 animate-stack-in"
-      style={{ animationDelay: `${Math.min(idx * 40, 200)}ms` }}
+      className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <p className="text-sm font-semibold text-stone-800">{msg.display_name}</p>
@@ -148,11 +147,11 @@ export default function ChurchBroadcastView({ conversation, onBack }) {
           </div>
         ) : (
           <div
-            className="max-w-2xl mx-auto px-4 py-6 space-y-3"
+            className="max-w-2xl mx-auto px-4 py-6 space-y-3 animate-fade-in"
             style={{ paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px + 24px)' }}
           >
-            {messages.map((msg, i) => (
-              <BroadcastCard key={msg.id} msg={msg} isChurchAdmin={isChurchAdmin} isAdminOnly={msg._isAdminOnly} idx={i} />
+            {messages.map((msg) => (
+              <BroadcastCard key={msg.id} msg={msg} isChurchAdmin={isChurchAdmin} isAdminOnly={msg._isAdminOnly} />
             ))}
           </div>
         )}

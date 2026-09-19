@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
-import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -158,8 +157,6 @@ export default function ConversationList({ session, groupId, members, enterClass
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
-  const { className: headerClass } = useEntranceAnimation('/chat', 0)
-
   async function loadConversations() {
     try {
       const { data: convs, error } = await supabase
@@ -438,7 +435,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       )}
 
       {(showNotifBanner || notifBannerClosing) && (
-        <div className={`shrink-0 px-4 pt-4 ${notifBannerClosing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
+        <div className={`shrink-0 px-4 pt-4 ${notifBannerClosing ? 'animate-overlay-out' : 'animate-fade-in'}`}>
           <div className="max-w-3xl mx-auto flex items-center gap-3 bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3">
             <Bell size={18} weight="fill" className="text-ember shrink-0" />
             <div className="flex-1 min-w-0">
@@ -470,7 +467,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       )}
 
       {/* Header */}
-      <div className={`max-w-3xl mx-auto w-full px-4 ${upcoming.length > 0 || showNotifBanner ? 'pt-4' : 'pt-8'} pb-3 shrink-0 flex items-center justify-between ${headerClass}`}>
+      <div className={`max-w-3xl mx-auto w-full px-4 ${upcoming.length > 0 || showNotifBanner ? 'pt-4' : 'pt-8'} pb-3 shrink-0 flex items-center justify-between`}>
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold text-stone-800">Chat</h1>
         </div>

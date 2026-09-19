@@ -398,15 +398,14 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
-function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOpenDetail, onRsvp }) {
+function EventCard({ event, isFeatured, eventRsvps = [], userId, onOpenDetail, onRsvp }) {
   const { month, day, year } = formatDateBadge(event.event_date)
   const myRsvp = eventRsvps.find(r => r.user_id === userId)
 
   if (isFeatured) {
     return (
       <div
-        className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden animate-stack-in"
-        style={{ animationDelay: `${delay}ms` }}
+        className="w-full bg-white border border-stone-200 rounded-2xl overflow-hidden"
       >
         {/* Top section */}
         <div className="flex items-start gap-3.5 px-4 pt-4 pb-3">
@@ -496,8 +495,7 @@ function EventCard({ event, isFeatured, delay = 0, eventRsvps = [], userId, onOp
       onClick={() => { haptic(); onOpenDetail() }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left animate-stack-in"
-      style={{ animationDelay: `${delay}ms` }}
+      className="w-full flex items-center gap-3 bg-white border border-stone-200 rounded-2xl p-4 text-left"
     >
       <motion.div
         layoutId={`event-date-${event.id}`}
@@ -751,13 +749,12 @@ export default function EventsTab() {
         <>
           {/* Upcoming */}
           {upcoming.length > 0 ? (
-            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start mb-6">
+            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:items-start mb-6 animate-fade-in">
               {upcoming.map((event, i) => (
                 <EventCard
                   key={event.id}
                   event={event}
                   isFeatured={i === 0}
-                  delay={i * 80}
                   eventRsvps={rsvps[event.id] ?? []}
                   userId={userId}
                   onOpenDetail={() => setSelectedEvent(event)}
