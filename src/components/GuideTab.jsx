@@ -1,12 +1,14 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   BookOpen, ArrowSquareOut, ArrowLeft, Link,
   File, NotePencil, PencilSimple, UploadSimple, X,
-  TextB, TextItalic, ListBullets,
+  TextB, TextItalic, TextUnderline, ListBullets, ListNumbers,
+  TextIndent, TextHTwo, Palette, Highlighter,
 } from '@phosphor-icons/react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkBreaks from 'remark-breaks'
+import rehypeRaw from 'rehype-raw'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 
@@ -14,6 +16,21 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
+
+const TEXT_COLORS = [
+  { label: 'Red',    hex: '#EF4444' },
+  { label: 'Orange', hex: '#F97316' },
+  { label: 'Blue',   hex: '#2563EB' },
+  { label: 'Green',  hex: '#16A34A' },
+  { label: 'Purple', hex: '#7C3AED' },
+]
+
+const HIGHLIGHT_COLORS = [
+  { label: 'Yellow', hex: '#FEF08A' },
+  { label: 'Green',  hex: '#BBF7D0' },
+  { label: 'Blue',   hex: '#BFDBFE' },
+  { label: 'Pink',   hex: '#FBCFE8' },
+]
 
 function TypePicker({ onPick }) {
   return (
@@ -147,12 +164,6 @@ function FileUploader({ groupId, onSave, onCancel }) {
   )
 }
 
-const TOOLBAR_ACTIONS = [
-  { format: 'bold',   Icon: TextB,        title: 'Bold' },
-  { format: 'italic', Icon: TextItalic,   title: 'Italic' },
-  { format: 'bullet', Icon: ListBullets,  title: 'Bullet list' },
-]
-
 function applyFormat(el, format, setContent) {
   const start = el.selectionStart
   const end   = el.selectionEnd
@@ -162,7 +173,7 @@ function applyFormat(el, format, setContent) {
   let newVal, nextStart, nextEnd
 
   if (format === 'bold' || format === 'italic') {
-    const m = format === 'bold' ? '**' : '*'
+    const m           = format === 'bold' ? '**' : '*'
     const placeholder = format === 'bold' ? 'bold text' : 'italic text'
     if (sel) {
       const inserted = `${m}${sel}${m}`
@@ -175,12 +186,45 @@ function applyFormat(el, format, setContent) {
       nextStart = start + m.length
       nextEnd   = start + m.length + placeholder.length
     }
+  } else if (format === 'underline') {
+    const placeholder = 'underlined text'
+    if (sel) {
+      const inserted = `<u>${sel}</u>`
+      newVal    = val.substring(0, start) + inserted + val.substring(end)
+      nextStart = start
+      nextEnd   = start + inserted.length
+    } else {
+      const inserted = `<u>${placeholder}</u>`
+      newVal    = val.substring(0, start) + inserted + val.substring(end)
+      nextStart = start + 3
+      nextEnd   = start + 3 + placeholder.length
+    }
   } else if (format === 'bullet') {
     const lineStart = val.lastIndexOf('\n', start - 1) + 1
     newVal    = val.substring(0, lineStart) + '- ' + val.substring(lineStart)
     nextStart = nextEnd = start + 2
+  } else if (format === 'ordered') {
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1
+    newVal    = val.substring(0, lineStart) + '1. ' + val.substring(lineStart)
+    nextStart = nextEnd = start + 3
+  } else if (format === 'indent') {
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1
+    newVal    = val.substring(0, lineStart) + '  ' + val.substring(lineStart)
+    nextStart = nextEnd = start + 2
+  } else if (format === 'heading') {
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1
+    const lineEnd   = val.indexOf('\n', start)
+    const lineText  = val.substring(lineStart, lineEnd === -1 ? val.length : lineEnd)
+    if (lineText.startsWith('## ')) {
+      newVal    = val.substring(0, lineStart) + lineText.slice(3) + val.substring(lineEnd === -1 ? val.length : lineEnd)
+      nextStart = nextEnd = Math.max(lineStart, start - 3)
+    } else {
+      newVal    = val.substring(0, lineStart) + '## ' + val.substring(lineStart)
+      nextStart = nextEnd = start + 3
+    }
   }
 
+  if (newVal === undefined) return
   setContent(newVal)
   setTimeout(() => {
     el.focus()
@@ -190,10 +234,70 @@ function applyFormat(el, format, setContent) {
 }
 
 function NotesEditor({ initial, onSave, onCancel }) {
-  const [content, setContent] = useState(initial || '')
-  const [saving, setSaving]   = useState(false)
+  const [content, setContent]       = useState(initial || '')
+  const [saving, setSaving]         = useState(false)
+  const [openPicker, setOpenPicker] = useState(null) // null | 'color' | 'highlight'
   const textareaRef = useRef(null)
   const toast = useToast()
+
+  useEffect(() => {
+    if (!openPicker) return
+    function onDown(e) {
+      if (!e.target.closest('[data-picker]')) setOpenPicker(null)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [openPicker])
+
+  function applyColorFormat(format, colorValue) {
+    const el = textareaRef.current
+    if (!el) return
+    const start = el.selectionStart
+    const end   = el.selectionEnd
+    const val   = el.value
+    const sel   = val.substring(start, end)
+    const pre   = val.substring(0, start)
+    const post  = val.substring(end)
+    let newVal, nextStart, nextEnd
+
+    if (format === 'color') {
+      if (colorValue) {
+        const openTag  = `<span style="color:${colorValue}">`
+        const target   = sel || 'colored text'
+        const inserted = `${openTag}${target}</span>`
+        newVal    = pre + inserted + post
+        nextStart = sel ? start : start + openTag.length
+        nextEnd   = sel ? start + inserted.length : start + openTag.length + target.length
+      } else {
+        const stripped = sel.replace(/<span style="color:[^"]*">([\s\S]*?)<\/span>/g, '$1')
+        newVal = pre + stripped + post
+        nextStart = start
+        nextEnd   = start + stripped.length
+      }
+    } else {
+      if (colorValue) {
+        const openTag  = `<mark style="background-color:${colorValue}">`
+        const target   = sel || 'highlighted text'
+        const inserted = `${openTag}${target}</mark>`
+        newVal    = pre + inserted + post
+        nextStart = sel ? start : start + openTag.length
+        nextEnd   = sel ? start + inserted.length : start + openTag.length + target.length
+      } else {
+        const stripped = sel.replace(/<mark[^>]*>([\s\S]*?)<\/mark>/g, '$1')
+        newVal = pre + stripped + post
+        nextStart = start
+        nextEnd   = start + stripped.length
+      }
+    }
+
+    setContent(newVal)
+    setOpenPicker(null)
+    setTimeout(() => {
+      el.focus()
+      el.selectionStart = nextStart
+      el.selectionEnd   = nextEnd
+    }, 0)
+  }
 
   async function handle() {
     setSaving(true)
@@ -203,22 +307,102 @@ function NotesEditor({ initial, onSave, onCancel }) {
     setSaving(false)
   }
 
+  const btn = 'w-8 h-8 flex items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors shrink-0'
+  const sep = <div className="w-px h-5 bg-stone-200 mx-0.5 shrink-0" />
+
   return (
     <div className="w-full flex flex-col gap-3">
       <div className="border border-stone-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
-        <div className="flex items-center gap-0.5 px-2 py-1.5 bg-stone-50 border-b border-stone-100">
-          {TOOLBAR_ACTIONS.map(({ format, Icon, title }) => (
-            <button
-              key={format}
-              type="button"
-              title={title}
-              onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, format, setContent) }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-200 transition-colors"
-            >
-              <Icon size={16} weight="bold" />
+        <div className="flex items-center gap-0.5 px-2 py-1.5 bg-stone-50 border-b border-stone-100 overflow-x-auto">
+          {/* Text style */}
+          <button type="button" title="Bold" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'bold', setContent) }}>
+            <TextB size={16} weight="bold" />
+          </button>
+          <button type="button" title="Italic" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'italic', setContent) }}>
+            <TextItalic size={16} weight="bold" />
+          </button>
+          <button type="button" title="Underline" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'underline', setContent) }}>
+            <TextUnderline size={16} weight="bold" />
+          </button>
+
+          {sep}
+
+          {/* Heading */}
+          <button type="button" title="Heading" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'heading', setContent) }}>
+            <TextHTwo size={16} weight="bold" />
+          </button>
+
+          {sep}
+
+          {/* Lists + indent */}
+          <button type="button" title="Bullet list" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'bullet', setContent) }}>
+            <ListBullets size={16} weight="bold" />
+          </button>
+          <button type="button" title="Numbered list" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'ordered', setContent) }}>
+            <ListNumbers size={16} weight="bold" />
+          </button>
+          <button type="button" title="Indent" className={btn}
+            onMouseDown={e => { e.preventDefault(); applyFormat(textareaRef.current, 'indent', setContent) }}>
+            <TextIndent size={16} weight="bold" />
+          </button>
+
+          {sep}
+
+          {/* Text color */}
+          <div className="relative shrink-0" data-picker>
+            <button type="button" title="Text color" className={btn}
+              onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'color' ? null : 'color') }}>
+              <Palette size={16} weight="bold" />
             </button>
-          ))}
+            {openPicker === 'color' && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg p-2 flex items-center gap-1.5 z-20">
+                {TEXT_COLORS.map(({ label, hex }) => (
+                  <button key={hex} type="button" title={label}
+                    onMouseDown={e => { e.preventDefault(); applyColorFormat('color', hex) }}
+                    className="w-6 h-6 rounded-full ring-1 ring-offset-1 ring-stone-200 hover:scale-110 transition-transform shrink-0"
+                    style={{ background: hex }}
+                  />
+                ))}
+                <button type="button" title="Remove color"
+                  onMouseDown={e => { e.preventDefault(); applyColorFormat('color', null) }}
+                  className="w-6 h-6 rounded-full border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-stone-400 shrink-0">
+                  <X size={10} weight="bold" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Highlight */}
+          <div className="relative shrink-0" data-picker>
+            <button type="button" title="Highlight" className={btn}
+              onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'highlight' ? null : 'highlight') }}>
+              <Highlighter size={16} weight="bold" />
+            </button>
+            {openPicker === 'highlight' && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg p-2 flex items-center gap-1.5 z-20">
+                {HIGHLIGHT_COLORS.map(({ label, hex }) => (
+                  <button key={hex} type="button" title={label}
+                    onMouseDown={e => { e.preventDefault(); applyColorFormat('highlight', hex) }}
+                    className="w-6 h-6 rounded-full ring-1 ring-offset-1 ring-stone-200 hover:scale-110 transition-transform shrink-0"
+                    style={{ background: hex }}
+                  />
+                ))}
+                <button type="button" title="Remove highlight"
+                  onMouseDown={e => { e.preventDefault(); applyColorFormat('highlight', null) }}
+                  className="w-6 h-6 rounded-full border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-stone-400 shrink-0">
+                  <X size={10} weight="bold" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
         <textarea
           ref={textareaRef}
           value={content}
@@ -405,6 +589,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
             <div className="w-full text-left bg-white border border-stone-200 rounded-2xl px-5 py-4 text-sm text-stone-700 leading-relaxed">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkBreaks]}
+                rehypePlugins={[rehypeRaw]}
                 components={{
                   h1: ({ children }) => <h1 className="text-base font-bold text-stone-800 mb-2 mt-4 first:mt-0">{children}</h1>,
                   h2: ({ children }) => <h2 className="text-sm font-bold text-stone-800 mb-1.5 mt-3 first:mt-0">{children}</h2>,
