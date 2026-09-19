@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import {
-  BookOpen, ArrowSquareOut, ArrowLeft, Link,
+  BookOpen, ArrowLeft, Link,
   File, NotePencil, PencilSimple, UploadSimple, X,
   TextB, TextItalic, TextUnderline, ListBullets, ListNumbers,
   TextIndent, TextHTwo, Palette, Highlighter,
@@ -492,6 +492,48 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
     )
   }
 
+  // ── Display mode: URL/File — in-app iframe viewer ─────────────────────────
+  if (!editMode && (effectiveType === 'url' || effectiveType === 'file') && guideUrl) {
+    return (
+      <div key="display-iframe" className={`flex flex-col h-screen ${screenClass()}`}>
+        <div
+          className="relative flex items-center px-4 bg-sunrise-50 border-b border-stone-100 shrink-0"
+          style={{ paddingTop: 'calc(var(--sat) + 12px)', paddingBottom: '12px' }}
+        >
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors"
+            aria-label="Close guide"
+          >
+            <ArrowLeft size={20} weight="bold" />
+          </button>
+          <span className="absolute left-1/2 -translate-x-1/2 text-base font-semibold text-stone-800 pointer-events-none">Guide</span>
+          <div className="ml-auto">
+            {isAdmin ? (
+              <button
+                onClick={() => navigateTo(effectiveType, 'right', null)}
+                className="flex items-center gap-1.5 text-sm font-medium text-stone-500 hover:text-stone-700 transition-colors"
+              >
+                <PencilSimple size={16} weight="bold" />
+                Edit
+              </button>
+            ) : (
+              <div className="w-9" />
+            )}
+          </div>
+        </div>
+        <div className="flex-1 overflow-hidden bg-white">
+          <iframe
+            src={guideUrl}
+            className="w-full h-full border-0"
+            title="Guide"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+          />
+        </div>
+      </div>
+    )
+  }
+
   // ── Display mode ───────────────────────────────────────────────────────────
   return (
     <div key="display" className={`max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12 ${screenClass()}`}>
@@ -537,21 +579,6 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
                 </ReactMarkdown>
               )}
             </div>
-          </>
-        ) : (effectiveType === 'url' || effectiveType === 'file') && guideUrl ? (
-          <>
-            <p className="text-stone-500 text-sm mb-8 max-w-xs">
-              {effectiveType === 'file'
-                ? 'Your community guide is available to view.'
-                : 'Read the latest guide from your community.'}
-            </p>
-            <button
-              onClick={() => window.open(guideUrl, '_blank', 'noopener,noreferrer')}
-              className="flex items-center gap-2 px-6 py-3 bg-sunrise hover:bg-sunrise-800 active:bg-sunrise-800 text-white font-medium rounded-xl transition-colors"
-            >
-              Open Guide
-              <ArrowSquareOut size={18} weight="bold" />
-            </button>
           </>
         ) : isAdmin ? (
           <>
