@@ -36,12 +36,11 @@ function shortName(full) {
   return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0] ?? ''
 }
 
-function Card({ icon, iconBg, label, primary, secondary, onClick, delay = 0, confetti = false, className = '', dot = false }) {
+function Card({ icon, iconBg, label, primary, secondary, onClick, confetti = false, className = '', dot = false }) {
   return (
     <motion.button
       onClick={onClick}
-      style={{ animationDelay: `${delay}ms` }}
-      className={`relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left animate-stack-in ${className}`}
+      className={`relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left ${className}`}
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -413,7 +412,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
       <InstallBanner />
 
-      <div className={`space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start${!cardsReady ? ' transition-opacity duration-[150ms]' : ''}${skeletonFading && !cardsReady ? ' opacity-0' : ''}`}>
+      <div className={`space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start${!cardsReady ? ' transition-opacity duration-[150ms]' : ' animate-fade-in'}${skeletonFading && !cardsReady ? ' opacity-0' : ''}`}>
         {!cardsReady ? (
           <>
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
@@ -428,7 +427,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
           <>
             {/* Solo-admin nudge — shown until someone joins */}
             {soloAdmin && (
-              <div className="w-full animate-stack-in lg:col-span-2">
+              <div className="w-full lg:col-span-2">
                 <div className="bg-ember/5 border border-ember/25 rounded-2xl p-5 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-ember mb-0.5">Your group is just you</p>
@@ -458,7 +457,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
             {/* Announcement — always first */}
             {showAnnouncement && (
               announcement ? (
-                <div className="w-full animate-stack-in lg:col-span-2">
+                <div className="w-full lg:col-span-2">
                   <div
                     className={`w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 ${announceShake ? 'animate-announcement-shake' : ''}`}
                   >
@@ -483,8 +482,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
               ) : (
                 <button
                   onClick={() => setEditingAnnouncement(true)}
-                  className="w-full bg-ember/8 border border-dashed border-ember/30 rounded-2xl p-4 animate-stack-in text-left lg:col-span-2"
-                  style={{ animationDelay: '0ms' }}
+                  className="w-full bg-ember/8 border border-dashed border-ember/30 rounded-2xl p-4 text-left lg:col-span-2"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
@@ -500,7 +498,6 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
             )}
 
             {(() => {
-              const baseDelay = showAnnouncement ? 80 : 0
               const cards = [
                 eventsEnabled && nextEvent !== null && nextEvent !== undefined && {
                   key: 'events',
@@ -560,11 +557,10 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                 },
               ].filter(Boolean)
 
-              return cards.map(({ key, ...rest }, i) => (
+              return cards.map(({ key, ...rest }) => (
                 <Card
                   key={key}
                   {...rest}
-                  delay={baseDelay + i * 40}
                 />
               ))
             })()}
