@@ -1315,7 +1315,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       {hubOpen && createPortal(
         <div
           className={`fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto ${hubClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
-          style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'var(--sab, env(safe-area-inset-bottom))' }}
+          style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'calc(max(16px, var(--sab, env(safe-area-inset-bottom)) + 8px) + 68px)' }}
         >
           <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
             <h1 className="text-3xl font-bold text-stone-800 mb-6 animate-fade-in">Resources</h1>
