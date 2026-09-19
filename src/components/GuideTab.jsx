@@ -494,7 +494,7 @@ export default function GuideTab({ onClose, guideUrl, guideType, guideContent, i
 
   // ── Display mode ───────────────────────────────────────────────────────────
   return (
-    <div key="display" className={`max-w-3xl mx-auto px-4 pt-8 pb-24 lg:pb-12 ${screenClass()}`}>
+    <div key="display" className={`max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-12 ${screenClass()}`}>
       <NavHeader
         onBack={onClose}
         showEdit={isAdmin && hasGuide}
