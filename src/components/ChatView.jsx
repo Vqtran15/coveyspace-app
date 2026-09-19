@@ -145,7 +145,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const lastTapRef         = useRef(null)
   const longPressRef       = useRef(null)
   const longPressFiredRef  = useRef(false)
-  const imgTapRef          = useRef(null)
+  const imgTapRef              = useRef(null)
+  const lightboxTouchStartY    = useRef(null)
   const preserveScrollRef  = useRef(null)
   const isAtBottomRef              = useRef(true)
   const initialScrollDoneRef       = useRef(false)
@@ -2205,20 +2206,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           className={`fixed inset-0 z-50 bg-black/90 flex items-center justify-center ${lightboxClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
           onClick={closeLightbox}
         >
-          <button
-            onClick={closeLightbox}
-            className="absolute right-4 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
-          >
-            <X size={20} weight="bold" />
-          </button>
           <img
             src={lightboxImg}
             alt="Full size"
             className={`max-w-full max-h-full object-contain rounded-lg ${lightboxClosing ? 'animate-lightbox-img-out' : 'animate-lightbox-img-in'}`}
             style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
-            onClick={e => e.stopPropagation()}
+            onClick={closeLightbox}
+            onTouchStart={e => { lightboxTouchStartY.current = e.touches[0].clientY }}
+            onTouchEnd={e => {
+              const dy = e.changedTouches[0].clientY - (lightboxTouchStartY.current ?? 0)
+              if (dy > 80) closeLightbox()
+              lightboxTouchStartY.current = null
+            }}
           />
+          <button
+            onClick={e => { e.stopPropagation(); closeLightbox() }}
+            className="absolute right-4 z-10 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+          >
+            <X size={20} weight="bold" />
+          </button>
         </div>
       )}
     </div>
