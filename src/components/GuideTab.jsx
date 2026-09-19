@@ -182,6 +182,8 @@ function FileUploader({ groupId, onSave, onCancel }) {
 function NotesEditor({ initial, onSave, onCancel }) {
   const [saving, setSaving]         = useState(false)
   const [openPicker, setOpenPicker] = useState(null) // null | 'color' | 'highlight'
+  // Force re-render on editor state changes so isActive() reflects current selection
+  const [, forceUpdate] = useState(0)
   const toast = useToast()
 
   const editor = useEditor({
@@ -193,6 +195,18 @@ function NotesEditor({ initial, onSave, onCancel }) {
       },
     },
   })
+
+  // Re-render whenever the selection or content changes so toolbar active states stay current
+  useEffect(() => {
+    if (!editor) return
+    const refresh = () => forceUpdate(n => n + 1)
+    editor.on('selectionUpdate', refresh)
+    editor.on('update', refresh)
+    return () => {
+      editor.off('selectionUpdate', refresh)
+      editor.off('update', refresh)
+    }
+  }, [editor])
 
   useEffect(() => {
     if (!openPicker) return
@@ -222,94 +236,102 @@ function NotesEditor({ initial, onSave, onCancel }) {
 
   return (
     <div className="w-full flex flex-col gap-3">
-      <div className="border border-stone-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
-        <div className="flex items-center gap-0.5 px-2 py-1.5 bg-stone-50 border-b border-stone-100 overflow-x-auto">
-          {/* Text style */}
-          <button type="button" title="Bold" className={btn(editor.isActive('bold'))}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}>
-            <TextB size={16} weight="bold" />
-          </button>
-          <button type="button" title="Italic" className={btn(editor.isActive('italic'))}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleItalic().run() }}>
-            <TextItalic size={16} weight="bold" />
-          </button>
-          <button type="button" title="Underline" className={btn(editor.isActive('underline'))}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleUnderline().run() }}>
-            <TextUnderline size={16} weight="bold" />
-          </button>
-
-          {sep}
-
-          {/* Heading */}
-          <button type="button" title="Heading" className={btn(editor.isActive('heading', { level: 2 }))}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run() }}>
-            <TextHTwo size={16} weight="bold" />
-          </button>
-
-          {sep}
-
-          {/* Lists + indent */}
-          <button type="button" title="Bullet list" className={btn(editor.isActive('bulletList'))}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleBulletList().run() }}>
-            <ListBullets size={16} weight="bold" />
-          </button>
-          <button type="button" title="Numbered list" className={btn(editor.isActive('orderedList'))}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleOrderedList().run() }}>
-            <ListNumbers size={16} weight="bold" />
-          </button>
-          <button type="button" title="Indent" className={btn(false)}
-            onMouseDown={e => { e.preventDefault(); editor.chain().focus().sinkListItem('listItem').run() }}>
-            <TextIndent size={16} weight="bold" />
-          </button>
-
-          {sep}
-
-          {/* Text color */}
-          <div className="relative shrink-0" data-picker>
-            <button type="button" title="Text color" className={btn(false)}
-              onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'color' ? null : 'color') }}>
-              <Palette size={16} weight="bold" />
+      {/*
+        Outer container: no overflow-hidden so picker dropdowns can escape.
+        Toolbar gets rounded-t-xl to clip its own bg at the top corners.
+        Picker buttons live in a shrink-0 section outside the overflow-x-auto
+        scrollable area so the CSS spec's overflow-x→overflow-y coercion
+        doesn't clip the dropdown.
+      */}
+      <div className="border border-stone-200 rounded-xl focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
+        <div className="flex items-stretch bg-stone-50 border-b border-stone-100 rounded-t-xl">
+          {/* Scrollable toolbar buttons */}
+          <div className="flex items-center gap-0.5 px-2 py-1.5 overflow-x-auto flex-1 min-w-0">
+            <button type="button" title="Bold" className={btn(editor.isActive('bold'))}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}>
+              <TextB size={16} weight="bold" />
             </button>
-            {openPicker === 'color' && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg p-2 flex items-center gap-1.5 z-20">
-                {TEXT_COLORS.map(({ label, hex }) => (
-                  <button key={hex} type="button" title={label}
-                    onMouseDown={e => { e.preventDefault(); editor.chain().focus().setColor(hex).run(); setOpenPicker(null) }}
-                    className="w-6 h-6 rounded-full ring-1 ring-offset-1 ring-stone-200 hover:scale-110 transition-transform shrink-0"
-                    style={{ background: hex }}
-                  />
-                ))}
-                <button type="button" title="Remove color"
-                  onMouseDown={e => { e.preventDefault(); editor.chain().focus().unsetColor().run(); setOpenPicker(null) }}
-                  className="w-6 h-6 rounded-full border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-stone-400 shrink-0">
-                  <X size={10} weight="bold" />
-                </button>
-              </div>
-            )}
+            <button type="button" title="Italic" className={btn(editor.isActive('italic'))}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleItalic().run() }}>
+              <TextItalic size={16} weight="bold" />
+            </button>
+            <button type="button" title="Underline" className={btn(editor.isActive('underline'))}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleUnderline().run() }}>
+              <TextUnderline size={16} weight="bold" />
+            </button>
+
+            {sep}
+
+            <button type="button" title="Heading" className={btn(editor.isActive('heading', { level: 2 }))}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleHeading({ level: 2 }).run() }}>
+              <TextHTwo size={16} weight="bold" />
+            </button>
+
+            {sep}
+
+            <button type="button" title="Bullet list" className={btn(editor.isActive('bulletList'))}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleBulletList().run() }}>
+              <ListBullets size={16} weight="bold" />
+            </button>
+            <button type="button" title="Numbered list" className={btn(editor.isActive('orderedList'))}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleOrderedList().run() }}>
+              <ListNumbers size={16} weight="bold" />
+            </button>
+            <button type="button" title="Indent" className={btn(false)}
+              onMouseDown={e => { e.preventDefault(); editor.chain().focus().sinkListItem('listItem').run() }}>
+              <TextIndent size={16} weight="bold" />
+            </button>
           </div>
 
-          {/* Highlight */}
-          <div className="relative shrink-0" data-picker>
-            <button type="button" title="Highlight" className={btn(editor.isActive('highlight'))}
-              onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'highlight' ? null : 'highlight') }}>
-              <Highlighter size={16} weight="bold" />
-            </button>
-            {openPicker === 'highlight' && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg p-2 flex items-center gap-1.5 z-20">
-                {HIGHLIGHT_COLORS.map(({ label, hex }) => (
-                  <button key={hex} type="button" title={label}
-                    onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color: hex }).run(); setOpenPicker(null) }}
-                    className="w-6 h-6 rounded-full ring-1 ring-offset-1 ring-stone-200 hover:scale-110 transition-transform shrink-0"
-                    style={{ background: hex }}
-                  />
-                ))}
-                <button type="button" title="Remove highlight"
-                  onMouseDown={e => { e.preventDefault(); editor.chain().focus().unsetHighlight().run(); setOpenPicker(null) }}
-                  className="w-6 h-6 rounded-full border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-stone-400 shrink-0">
-                  <X size={10} weight="bold" />
-                </button>
-              </div>
-            )}
+          {/* Color pickers: pinned right, outside overflow-x-auto so dropdowns aren't clipped */}
+          <div className="flex items-center gap-0.5 pr-2 py-1.5 shrink-0 border-l border-stone-100">
+            {/* Text color */}
+            <div className="relative shrink-0" data-picker>
+              <button type="button" title="Text color" className={btn(false)}
+                onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'color' ? null : 'color') }}>
+                <Palette size={16} weight="bold" />
+              </button>
+              {openPicker === 'color' && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg p-2 flex items-center gap-1.5 z-30">
+                  {TEXT_COLORS.map(({ label, hex }) => (
+                    <button key={hex} type="button" title={label}
+                      onMouseDown={e => { e.preventDefault(); editor.chain().focus().setColor(hex).run(); setOpenPicker(null) }}
+                      className="w-6 h-6 rounded-full ring-1 ring-offset-1 ring-stone-200 hover:scale-110 transition-transform shrink-0"
+                      style={{ background: hex }}
+                    />
+                  ))}
+                  <button type="button" title="Remove color"
+                    onMouseDown={e => { e.preventDefault(); editor.chain().focus().unsetColor().run(); setOpenPicker(null) }}
+                    className="w-6 h-6 rounded-full border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-stone-400 shrink-0">
+                    <X size={10} weight="bold" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Highlight */}
+            <div className="relative shrink-0" data-picker>
+              <button type="button" title="Highlight" className={btn(editor.isActive('highlight'))}
+                onMouseDown={e => { e.preventDefault(); setOpenPicker(p => p === 'highlight' ? null : 'highlight') }}>
+                <Highlighter size={16} weight="bold" />
+              </button>
+              {openPicker === 'highlight' && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg p-2 flex items-center gap-1.5 z-30">
+                  {HIGHLIGHT_COLORS.map(({ label, hex }) => (
+                    <button key={hex} type="button" title={label}
+                      onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color: hex }).run(); setOpenPicker(null) }}
+                      className="w-6 h-6 rounded-full ring-1 ring-offset-1 ring-stone-200 hover:scale-110 transition-transform shrink-0"
+                      style={{ background: hex }}
+                    />
+                  ))}
+                  <button type="button" title="Remove highlight"
+                    onMouseDown={e => { e.preventDefault(); editor.chain().focus().unsetHighlight().run(); setOpenPicker(null) }}
+                    className="w-6 h-6 rounded-full border border-stone-200 bg-white hover:bg-stone-50 flex items-center justify-center text-stone-400 shrink-0">
+                    <X size={10} weight="bold" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
