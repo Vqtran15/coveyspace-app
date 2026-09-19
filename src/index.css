@@ -130,7 +130,7 @@ a:focus:not(:focus-visible),
 .guide-editor ol             { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
 .guide-editor li             { margin-bottom: 0.125rem; }
 .guide-editor li:last-child  { margin-bottom: 0; }
-.guide-editor strong         { font-weight: 600; color: #1c1917; }
+.guide-editor strong         { font-weight: 600; }
 .guide-editor em             { font-style: italic; }
 .guide-editor u              { text-decoration: underline; }
 .guide-editor:focus          { outline: none; }
@@ -144,6 +144,6 @@ a:focus:not(:focus-visible),
 .guide-notes ol             { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
 .guide-notes li             { margin-bottom: 0.125rem; }
 .guide-notes li:last-child  { margin-bottom: 0; }
-.guide-notes strong         { font-weight: 600; color: #1c1917; }
+.guide-notes strong         { font-weight: 600; }
 .guide-notes em             { font-style: italic; }
 .guide-notes u              { text-decoration: underline; }
