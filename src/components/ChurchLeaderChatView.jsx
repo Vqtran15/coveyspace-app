@@ -74,7 +74,7 @@ function Message({ msg, myId }) {
             style={{ maxHeight: 300 }}
           />
         ) : (
-          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isOwn ? 'bg-ember text-white rounded-br-md' : 'bg-white border border-stone-100 text-stone-800 rounded-bl-md shadow-sm'}`}>
+          <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isOwn ? 'bg-ember text-white rounded-br-md' : 'bg-white border border-stone-200 text-stone-800 rounded-bl-md shadow-sm'}`}>
             {msg.body}
           </div>
         )}
@@ -414,7 +414,7 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
         className="shrink-0 px-4 py-2"
         style={{ paddingBottom: keyboardOpen ? '8px' : 'max(8px, var(--sab, env(safe-area-inset-bottom)))' }}
       >
-        <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-100 px-3 pt-3 pb-3 relative">
+        <div className="bg-white/90 backdrop-blur-sm rounded-[30px] shadow-lg border border-stone-200 px-3 pt-3 pb-3 relative">
 
           {/* Image previews */}
           {imagePreviews.length > 0 && (
@@ -444,7 +444,7 @@ export default function ChurchLeaderChatView({ conversation, onBack }) {
                 transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                 className="absolute bottom-full left-0 pb-2 z-[8]"
               >
-                <div ref={attachMenuRef} className="bg-white rounded-2xl shadow-lg border border-stone-100 py-1 min-w-[148px] overflow-hidden">
+                <div ref={attachMenuRef} className="bg-white rounded-2xl shadow-lg border border-stone-200 py-1 min-w-[148px] overflow-hidden">
                   <button
                     type="button"
                     onClick={() => {

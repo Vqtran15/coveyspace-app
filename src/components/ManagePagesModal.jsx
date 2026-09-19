@@ -312,7 +312,7 @@ export default function ManagePagesPage({
                             exit={{ opacity: 0, scale: 0.9, y: -4 }}
                             transition={{ duration: 0.12 }}
                             style={{ transformOrigin: 'top right' }}
-                            className="absolute right-0 top-9 z-10 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden w-36"
+                            className="absolute right-0 top-9 z-10 bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden w-36"
                             onClick={e => e.stopPropagation()}
                           >
                             {onEditPage && (

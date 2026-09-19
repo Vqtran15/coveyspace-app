@@ -190,7 +190,7 @@ export default function AuthPage() {
     >
       <div className="w-full max-w-sm">
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg border border-stone-200 overflow-hidden">
           {/* Logo inside card */}
           <div className="pt-7 pb-5 text-center border-b border-stone-100">
             <div className="inline-flex flex-col items-center gap-2.5">

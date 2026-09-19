@@ -56,7 +56,7 @@ function MemberCard({ member, onClick }) {
   return (
     <motion.button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember"
+      className="w-full text-left p-4 rounded-2xl bg-white border border-stone-200 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember"
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -88,7 +88,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
   return (
     <motion.button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-2xl bg-white border border-stone-100 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember"
+      className="w-full text-left p-4 rounded-2xl bg-white border border-stone-200 shadow-sm transition-all active:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-ember"
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -165,7 +165,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
   const userReacted   = reactions?.some(r => r.user_id === currentUserId) ?? false
 
   return (
-    <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm">
+    <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
           <AvatarCircle size="8" icon={member?.avatar_icon} colorKey={member?.avatar_color} userId={member?.user_id} name={member?.display_name} imageUrl={member?.avatar_image_url} />
@@ -211,7 +211,7 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
   const userReacted = reactions?.some(r => r.user_id === currentUserId) ?? false
 
   return (
-    <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm">
+    <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
           <div className="flex items-center shrink-0">
@@ -696,7 +696,7 @@ export default function PrayerTab() {
       {loading ? (
         <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="bg-white border border-stone-100 rounded-2xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
+            <div key={i} className="bg-white border border-stone-200 rounded-2xl p-4 animate-pulse" style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-stone-200 shrink-0" />
                 <div className="flex-1 space-y-2">

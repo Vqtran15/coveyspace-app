@@ -300,7 +300,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
 
           {/* Send to — only shown when church has multiple groups */}
           {groupsInChurch.length > 1 && (
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm px-4 py-4 space-y-3">
               <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Send to</p>
               <LayoutGroup id="broadcast-target">
                 <div className="bg-stone-100 rounded-xl p-1 flex">
@@ -358,7 +358,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           )}
 
           {/* Audience */}
-          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-4 space-y-3">
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm px-4 py-4 space-y-3">
             <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Audience</p>
             <LayoutGroup id="broadcast-audience">
               <div className="bg-stone-100 rounded-xl p-1 flex">
@@ -433,7 +433,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
           {previewMode ? (
             <>
               {editorEmpty ? (
-                <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-8 text-center">
+                <div className="bg-white rounded-2xl border border-stone-200 shadow-sm px-5 py-8 text-center">
                   <p className="text-sm text-stone-500">Nothing to preview yet — write something first.</p>
                 </div>
               ) : (
@@ -453,7 +453,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
             </>
           ) : (
             /* Editor card — toolbar on top, content below */
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-ember focus-within:border-transparent transition-all">
               <div className="border-b border-stone-100 overflow-x-auto scrollbar-hide">
                 <div className="flex items-center gap-0.5 px-3 py-1.5 min-w-max">
                   <select
@@ -1292,7 +1292,7 @@ export default function ChurchSettingsPage() {
           {broadcastLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl border border-stone-100 px-5 py-4 animate-pulse">
+                <div key={i} className="bg-white rounded-2xl border border-stone-200 px-5 py-4 animate-pulse">
                   <div className="flex justify-between mb-2">
                     <div className="h-3.5 bg-stone-200 rounded w-24" />
                     <div className="h-3 bg-stone-100 rounded w-14" />
@@ -1305,7 +1305,7 @@ export default function ChurchSettingsPage() {
               ))}
             </div>
           ) : broadcastMessages.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-8 text-center">
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm px-5 py-8 text-center">
               <Megaphone size={36} weight="thin" className="text-stone-300 mx-auto mb-2" />
               <p className="text-sm text-stone-500">No announcements sent yet</p>
               <p className="text-xs text-stone-400 mt-1">Tap "New Announcement" to send your first message</p>

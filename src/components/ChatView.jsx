@@ -2091,7 +2091,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           className="fixed z-30"
           style={{ bottom: menuPos.bottom, ...('right' in menuPos ? { right: menuPos.right } : { left: '50%', transform: 'translateX(-50%)' }) }}
         >
-        <div className={`bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 ${menuClosing ? 'animate-popup-out' : 'animate-popup-in'}`}>
+        <div className={`bg-white rounded-2xl shadow-xl border border-stone-200 p-1.5 ${menuClosing ? 'animate-popup-out' : 'animate-popup-in'}`}>
           <div className="flex items-center gap-0.5">
             {EMOJIS.map(emoji => {
               const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)

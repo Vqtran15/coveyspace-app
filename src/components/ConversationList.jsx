@@ -534,7 +534,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             {[0, 1, 2, 3, 4].map(i => (
               <div
                 key={i}
-                className="flex items-center gap-3 bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5 animate-pulse"
+                className="flex items-center gap-3 bg-white rounded-2xl border border-stone-200 shadow-sm px-4 py-3.5 animate-pulse"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <div className="w-11 h-11 rounded-full bg-stone-200 shrink-0" />

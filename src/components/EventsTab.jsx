@@ -252,7 +252,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -4 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden z-10"
+                    className="absolute right-0 top-full mt-1 w-40 bg-white rounded-2xl shadow-xl border border-stone-200 overflow-hidden z-10"
                   >
                     <button
                       onClick={() => { setMenuOpen(false); onEdit(event) }}
