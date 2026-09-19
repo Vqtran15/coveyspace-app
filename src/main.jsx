@@ -81,26 +81,31 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   var cached = parseFloat(localStorage.getItem(CACHE_KEY) || '0')
   if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
 
-  window.scrollTo(0, 1)
-  setTimeout(function () {
-    var sab = measure()
-    if (sab > 0) {
-      apply(sab)
-    } else {
-      // Retry once at 500ms total
-      setTimeout(function () {
-        sab = measure()
-        if (sab > 0) {
-          apply(sab)
-        } else if (cached > 0) {
-          // Both probes returned 0 (e.g. SW reload with delayed viewport init).
-          // Re-affirm cached value — it was applied above but the CSS env()
-          // default may have overwritten it since then.
-          apply(cached)
-        }
-      }, 350)
-    }
-  }, 150)
+  // Defer the scroll probe to after the first paint so it doesn't disrupt
+  // the cold-start viewport initialization (which can cause the splash to shift).
+  // The cached value above handles the first render; the probe just validates it.
+  requestAnimationFrame(function () {
+    window.scrollTo(0, 1)
+    setTimeout(function () {
+      var sab = measure()
+      if (sab > 0) {
+        apply(sab)
+      } else {
+        // Retry once at ~500ms total from page load
+        setTimeout(function () {
+          sab = measure()
+          if (sab > 0) {
+            apply(sab)
+          } else if (cached > 0) {
+            // Both probes returned 0 (e.g. SW reload with delayed viewport init).
+            // Re-affirm cached value — it was applied above but the CSS env()
+            // default may have overwritten it since then.
+            apply(cached)
+          }
+        }, 350)
+      }
+    }, 150)
+  })
 
 }())
 
