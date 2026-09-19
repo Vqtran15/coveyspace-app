@@ -119,8 +119,8 @@ function AppContent() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
   const guide    = useAnimatedOverlay(260)
-  const giving   = useAnimatedOverlay()
-  const birthday = useAnimatedOverlay()
+  const giving   = useAnimatedOverlay(260)
+  const birthday = useAnimatedOverlay(260)
 
   const [birthdayBannerDismissed, setBirthdayBannerDismissed] = useState(false)
   const [birthdayBannerClosing,   setBirthdayBannerClosing]   = useState(false)
