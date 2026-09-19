@@ -191,7 +191,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
     content: initial || '',
     editorProps: {
       attributes: {
-        class: 'guide-editor min-h-[260px] px-4 py-3 text-sm text-stone-800 leading-relaxed',
+        class: 'guide-editor min-h-[260px] lg:min-h-[480px] px-4 py-3 text-sm text-stone-800 leading-relaxed',
       },
     },
   })
@@ -245,7 +245,7 @@ function NotesEditor({ initial, onSave, onCancel }) {
       <div className="bg-white border border-stone-200 rounded-xl focus-within:ring-2 focus-within:ring-sunrise focus-within:border-transparent">
         <div className="flex items-stretch bg-stone-50 border-b border-stone-100 rounded-t-xl">
           {/* Scrollable toolbar buttons */}
-          <div className="flex items-center gap-0.5 px-2 py-1.5 overflow-x-auto flex-1 min-w-0">
+          <div className="flex items-center gap-0.5 lg:gap-1 px-2 py-1.5 overflow-x-auto lg:overflow-visible flex-1 min-w-0">
             <button type="button" title="Bold" className={btn(editor.isActive('bold'))}
               onMouseDown={e => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}>
               <TextB size={16} weight="bold" />
