@@ -725,6 +725,8 @@ export default function ChurchSettingsPage() {
   const [inviteSending, setInviteSending]         = useState({})
   const [inviteCode, setInviteCode]               = useState(null)
   const [churchJoinCode, setChurchJoinCode]       = useState(null)
+  const [confirmRotateChurchCode, setConfirmRotateChurchCode] = useState(false)
+  const [churchCodeRotating, setChurchCodeRotating]           = useState(false)
   const [activeTab, setActiveTab]                 = useState('broadcasts')
   const [tabAnimKey, setTabAnimKey]               = useState(0)
   const [tabAnimClass, setTabAnimClass]           = useState('')
@@ -1166,6 +1168,14 @@ export default function ChurchSettingsPage() {
     }
   }
 
+  async function handleRotateChurchCode() {
+    setConfirmRotateChurchCode(false)
+    setChurchCodeRotating(true)
+    const { data, error } = await db.churches.rotateJoinCode()
+    if (!error) setChurchJoinCode(data)
+    setChurchCodeRotating(false)
+  }
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -1194,16 +1204,50 @@ export default function ChurchSettingsPage() {
       {isChurchAdmin && churchJoinCode && (
         <div className="mb-6 bg-white border border-stone-200 rounded-2xl px-5 py-4">
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Church Code</p>
-          <div className="flex items-center gap-4">
-            <span className="font-mono font-bold text-3xl tracking-widest text-stone-800 flex-1">{churchJoinCode}</span>
-            <button
-              onClick={() => { navigator.clipboard.writeText(churchJoinCode); toast('Church code copied!', 'success') }}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors shrink-0"
-            >
-              Copy
-            </button>
+          <div className="flex items-center gap-4 mb-2">
+            <span className="font-mono font-bold text-3xl tracking-widest text-stone-800 flex-1">
+              {churchCodeRotating ? '……' : churchJoinCode}
+            </span>
+            {confirmRotateChurchCode ? (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setConfirmRotateChurchCode(false)}
+                  className="px-3 py-2 rounded-xl text-sm font-medium text-stone-600 bg-white border border-stone-200 hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRotateChurchCode}
+                  disabled={churchCodeRotating}
+                  className="px-3 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-40"
+                >
+                  Reset
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => { navigator.clipboard.writeText(churchJoinCode); toast('Church code copied!', 'success') }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors"
+                >
+                  Copy
+                </button>
+                <button
+                  onClick={() => setConfirmRotateChurchCode(true)}
+                  disabled={churchCodeRotating}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors disabled:opacity-40"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-stone-400 mt-2">Share this code with group admins so they can link their group to your church.</p>
+          {confirmRotateChurchCode && (
+            <p className="text-xs text-red-500 mb-1 animate-fade-in">The old code will stop working immediately.</p>
+          )}
+          {!confirmRotateChurchCode && (
+            <p className="text-xs text-stone-400">Share this code with group admins so they can link their group to your church.</p>
+          )}
         </div>
       )}
 

@@ -147,6 +147,8 @@ export const db = {
       supabase.rpc('unlink_group_from_church'),
     getJoinCode: () =>
       supabase.rpc('get_church_join_code'),
+    rotateJoinCode: () =>
+      supabase.rpc('rotate_church_join_code'),
   },
 
   pco: {
