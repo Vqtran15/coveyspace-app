@@ -226,7 +226,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       initial={{ y: '100%' }}
       animate={{ y: 0, transition: { type: 'tween', duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] } }}
       exit={{ y: '100%', transition: { type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] } }}
-      className="fixed inset-0 lg:left-56 z-50 flex flex-col bg-stone-50"
+      className="fixed inset-0 lg:left-56 z-50 flex flex-col bg-sunrise-50"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Nav bar */}
