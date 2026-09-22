@@ -78,7 +78,7 @@ Only push to `origin/staging` after this checklist is complete.
 ## Design System
 
 ### Colors
-- **Page background**: `bg-sunrise-50` (`#EDEAE5`) — warm stone gray
+- **Page background**: `bg-sunrise-50` (`#F2EDE6`) — warm cream
 - **Primary accent**: `ember` (`#C4622D`) — CTAs, focus rings, active states
 - **Supporting palette**: `coral` (`#B85A3A`), `lagoon` (`#E8A838`), `sage` (`#A1CCA6`)
 - **Color in cards lives in icon/badge boxes only** — never use a brand color as the full card background. Tints by context: `bg-amber-50` (meals/dates), `bg-ember/10` (ember items), `bg-lagoon-50` (lagoon items), `bg-coral/10` (coral items), `bg-sage-50` (prayer/sage items)

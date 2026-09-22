@@ -39,7 +39,7 @@ export default {
           700:   '#3D6E44',
         },
         sunrise: {
-          50:    '#EDEAE5',
+          50:    '#F2EDE6',
           DEFAULT:'#D4890A',
           800:   '#7A5010',
           900:   '#5A3A08',
