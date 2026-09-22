@@ -298,7 +298,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
           {/* Location */}
           {event.location && (
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-200 shadow">
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-100 shadow">
               <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                 <MapPin size={16} className="text-ember" weight="fill" />
               </div>
@@ -308,14 +308,14 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
           {/* Description */}
           {event.description && (
-            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-200 shadow">
+            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-100 shadow">
               <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
             </div>
           )}
 
           {/* RSVP */}
-          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow">
-            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
+          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow">
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
                 { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
@@ -351,7 +351,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           {/* Share to Chat */}
           <button
             onClick={onShareToChat}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-ember/8 border border-ember/20 text-sm font-semibold text-ember hover:bg-ember/12 active:bg-ember/15 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-stone-200 text-sm font-semibold text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors"
           >
             <ChatCircleDots size={18} />
             Share to Chat
@@ -363,23 +363,23 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             const maybe    = (rsvps ?? []).filter(r => r.status === 'maybe')
             const notGoing = (rsvps ?? []).filter(r => r.status === 'not_going')
             const sections = [
-              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-ember/10 text-ember',             border: 'border-l-ember/40' },
-              { key: 'maybe',     label: 'Maybe',    people: maybe,    pill: 'bg-lagoon/20 text-lagoon-700',     border: 'border-l-lagoon-600' },
-              { key: 'not_going', label: "Can't go", people: notGoing, pill: 'bg-stone-100 text-stone-500',      border: 'border-l-stone-300' },
+              { key: 'going',     label: 'Going',    people: going,    pill: 'bg-ember/10 text-ember' },
+              { key: 'maybe',     label: 'Maybe',    people: maybe,    pill: 'bg-lagoon/20 text-lagoon-700' },
+              { key: 'not_going', label: "Can't go", people: notGoing, pill: 'bg-stone-100 text-stone-500' },
             ].filter(s => s.people.length > 0)
 
             if (!sections.length) return null
             return (
-              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow space-y-4">
-                {sections.map(({ key, label, people, pill, border }) => (
+              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow space-y-4">
+                {sections.map(({ key, label, people, pill }) => (
                   <div key={key}>
                     <div className="flex items-center gap-2 mb-2.5">
-                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{label}</p>
+                      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">{label}</p>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pill}`}>{people.length}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {people.map(r => (
-                        <div key={r.user_id} className={`flex items-center gap-2 bg-stone-50 rounded-xl px-3 py-2 border-l-2 ${border}`}>
+                        <div key={r.user_id} className="flex items-center gap-2 bg-stone-50 rounded-xl px-3 py-2 border border-stone-100">
                           <AvatarCircle size="6" icon={r.profile?.avatar_icon} colorKey={r.profile?.avatar_color} userId={r.user_id} name={r.profile?.display_name} imageUrl={r.profile?.avatar_image_url} />
                           <span className="text-xs font-medium text-stone-700">{r.profile?.display_name ?? 'Member'}</span>
                         </div>
