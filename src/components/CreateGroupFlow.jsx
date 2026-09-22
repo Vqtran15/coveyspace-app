@@ -272,7 +272,7 @@ export default function CreateGroupFlow({ onDone, onClose }) {
           <div className="max-w-md mx-auto pt-4 space-y-4">
             <p className="text-sm text-stone-500">Choose which features to enable for <span className="font-semibold text-stone-700">"{groupName}"</span>. You can change these any time in Group Settings.</p>
 
-            <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
               {FEATURE_TOGGLES.map(({ key, label, desc, Icon, color, bg }, i) => {
                 const enabled = features[key]
                 return (

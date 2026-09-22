@@ -1329,7 +1329,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                     <div className="h-3.5 bg-stone-200 rounded w-32 mb-2 animate-pulse" />
                     <div className="space-y-3">
                       {Array.from({ length: isAdmin ? 2 : 1 }, (_, i) => (
-                        <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                        <div key={i} className="bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 animate-pulse">
                           <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
                           <div className="flex-1 space-y-2">
                             <div className="h-4 bg-stone-200 rounded w-2/5" />
@@ -1344,7 +1344,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 {/* Bible skeleton */}
                 <div>
                   <div className="h-3.5 bg-stone-200 rounded w-16 mb-2 animate-pulse" />
-                  <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                  <div className="bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 animate-pulse">
                     <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
                     <div className="flex-1 space-y-2">
                       <div className="h-3 bg-stone-100 rounded w-1/4" />
@@ -1359,7 +1359,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                     <div className="h-3.5 bg-stone-200 rounded w-36 mb-2 animate-pulse" />
                     <div className="space-y-3">
                       {guideEnabled && (
-                        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                        <div className="bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 animate-pulse">
                           <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
                           <div className="flex-1 space-y-2">
                             <div className="h-4 bg-stone-200 rounded w-2/5" />
@@ -1367,7 +1367,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         </div>
                       )}
                       {givingEnabled && (
-                        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 animate-pulse">
+                        <div className="bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 animate-pulse">
                           <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />
                           <div className="flex-1 space-y-2">
                             <div className="h-4 bg-stone-200 rounded w-2/5" />
@@ -1396,7 +1396,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         return (
                           <button
                             onClick={() => openBroadcast(allMembersConv)}
-                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                           >
                             <div className="relative shrink-0">
                               <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center">
@@ -1430,7 +1430,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                         return (
                           <button
                             onClick={() => openBroadcast(adminOnlyConv)}
-                            className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                            className="w-full bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                           >
                             <div className="relative shrink-0">
                               <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center">
@@ -1464,7 +1464,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Bible</p>
                   <button
                     onClick={openReader}
-                    className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                    className="w-full bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                   >
                     <div className="w-12 h-12 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                       <BookOpen size={22} weight="fill" className="text-ember" />
@@ -1488,7 +1488,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       {guideEnabled && (
                         <button
                           onClick={onOpenGuide}
-                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                         >
                           <div className="w-12 h-12 rounded-xl bg-sunrise/10 flex items-center justify-center shrink-0">
                             <BookOpen size={22} weight="fill" className="text-sunrise" />
@@ -1505,7 +1505,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       {givingEnabled && (
                         <button
                           onClick={onOpenGiving}
-                          className="w-full bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
+                          className="w-full bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4 text-left hover:bg-stone-50 active:scale-[0.99] transition-all"
                         >
                           <div className="w-12 h-12 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
                             <Coins size={22} weight="fill" className="text-sage-700" />
@@ -1721,7 +1721,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                     ref={el => { cardRefs.current[i] = el }}
                     onPointerDown={e => editMode && handleDndStart(i, e)}
                     className={[
-                      'relative group bg-white border rounded-2xl select-none shadow-sm h-[92px]',
+                      'relative group bg-white border rounded-2xl select-none shadow h-[92px]',
                       isSource ? 'opacity-30 border-dashed border-stone-400'
                         : isTarget ? 'border-ember border-2'
                         : 'border-stone-200',

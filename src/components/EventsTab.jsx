@@ -298,7 +298,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
           {/* Location */}
           {event.location && (
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-200 shadow-sm">
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-200 shadow">
               <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                 <MapPin size={16} className="text-ember" weight="fill" />
               </div>
@@ -308,13 +308,13 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
           {/* Description */}
           {event.description && (
-            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-200 shadow-sm">
+            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-200 shadow">
               <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
             </div>
           )}
 
           {/* RSVP */}
-          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow-sm">
+          <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow">
             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">RSVP</p>
             <div className="flex gap-2">
               {[
@@ -370,7 +370,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
             if (!sections.length) return null
             return (
-              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow-sm space-y-4">
+              <div className="bg-white rounded-2xl px-4 py-4 border border-stone-200 shadow space-y-4">
                 {sections.map(({ key, label, people, pill, border }) => (
                   <div key={key}>
                     <div className="flex items-center gap-2 mb-2.5">

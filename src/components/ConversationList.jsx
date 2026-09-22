@@ -17,7 +17,7 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
   const deletable   = !isMainGroupChat(conv)
   return (
     <motion.div
-      className={`flex items-stretch rounded-2xl border overflow-hidden animate-fade-up ${conv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow-sm'}`}
+      className={`flex items-stretch rounded-2xl border overflow-hidden animate-fade-up ${conv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow'}`}
       style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -534,7 +534,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             {[0, 1, 2, 3, 4].map(i => (
               <div
                 key={i}
-                className="flex items-center gap-3 bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5 animate-pulse"
+                className="flex items-center gap-3 bg-white rounded-2xl border border-stone-100 shadow px-4 py-3.5 animate-pulse"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <div className="w-11 h-11 rounded-full bg-stone-200 shrink-0" />

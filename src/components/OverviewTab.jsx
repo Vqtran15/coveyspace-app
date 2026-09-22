@@ -40,7 +40,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, confetti = fal
   return (
     <motion.button
       onClick={onClick}
-      className={`relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm active:bg-stone-50 transition-colors text-left ${className}`}
+      className={`relative overflow-hidden w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow active:bg-stone-50 transition-colors text-left ${className}`}
       whileTap={{ scale: 0.975 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -62,7 +62,7 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, confetti = fal
 function CardSkeleton({ delay = 0 }) {
   return (
     <div
-      className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-pulse"
+      className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 border border-stone-100 shadow animate-pulse"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="w-12 h-12 rounded-xl bg-stone-100 shrink-0" />

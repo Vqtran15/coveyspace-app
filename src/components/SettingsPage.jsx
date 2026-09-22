@@ -322,7 +322,7 @@ useEffect(() => {
 
       {/* Profile identity card */}
       <div className="mb-4">
-        <div className="bg-white border border-stone-100 rounded-2xl shadow-sm p-4 flex items-center gap-4">
+        <div className="bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4">
           <div className="relative shrink-0">
             <AvatarCircle icon={avatarIcon} name={displayName} userId={userId} colorKey={avatarColorKey} size="lg" imageUrl={avatarImageUrl} />
             <button
@@ -383,7 +383,7 @@ useEffect(() => {
       <div className="mb-4">
         <button
           onClick={() => setGroupsOpen(v => !v)}
-          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
+          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
           aria-expanded={groupsOpen}
         >
           <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
@@ -401,7 +401,7 @@ useEffect(() => {
           style={{ gridTemplateRows: groupsOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
         >
           <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
                 {allMemberships.map((m, idx) => {
                   const isActive = m.community_group_id === groupId
                   const isSwitching = switchingGroupId === m.community_group_id
@@ -447,7 +447,7 @@ useEffect(() => {
       <div className="mb-4">
         <button
           onClick={() => setNewGroupOpen(v => !v)}
-          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
+          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
           aria-expanded={newGroupOpen}
         >
           <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
@@ -465,7 +465,7 @@ useEffect(() => {
           style={{ gridTemplateRows: newGroupOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
         >
           <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
                 <button
                   onClick={() => setCreateGroupOpen(true)}
                   className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
@@ -541,7 +541,7 @@ useEffect(() => {
         <div className="mb-4">
           <button
             onClick={() => setPrefsOpen(v => !v)}
-            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
+            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
             aria-expanded={prefsOpen}
           >
             <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
@@ -559,7 +559,7 @@ useEffect(() => {
             style={{ gridTemplateRows: prefsOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
           >
             <div className="overflow-hidden min-h-0">
-                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
                   {push.permission === 'denied' ? (
                     <p className="text-xs text-stone-500 px-4 py-3.5">
                       Notifications are blocked. Enable them in your browser settings.
@@ -590,7 +590,7 @@ useEffect(() => {
         <div className="mb-4">
           <button
             onClick={() => setAdminSectionOpen(v => !v)}
-            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
+            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
             aria-expanded={adminSectionOpen}
           >
             <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
@@ -608,7 +608,7 @@ useEffect(() => {
             style={{ gridTemplateRows: adminSectionOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
           >
             <div className="overflow-hidden min-h-0">
-                <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
                   {isChurchAdmin && (
                     <button
                       onClick={() => navigate('/church-settings')}
@@ -649,7 +649,7 @@ useEffect(() => {
       <div className="mb-4">
         <button
           onClick={() => setAccountOpen(v => !v)}
-          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow-sm px-4 py-3 mb-2"
+          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
           aria-expanded={accountOpen}
         >
           <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
@@ -667,7 +667,7 @@ useEffect(() => {
           style={{ gridTemplateRows: accountOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
         >
           <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
                 <button
                   onClick={() => openSettingsSheet('password')}
                   className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
@@ -710,7 +710,7 @@ useEffect(() => {
       </div>
 
       {/* Feedback */}
-      <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden mb-4">
+      <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden mb-4">
         <button
           onClick={() => setFeedbackOpen(true)}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"

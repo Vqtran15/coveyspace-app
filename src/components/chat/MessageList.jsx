@@ -381,7 +381,7 @@ export default function MessageList() {
                     key={msg.id}
                     className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''} ${deletingPollId === msg.poll_id ? 'animate-poll-delete-out pointer-events-none' : ''}`}
                   >
-                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-white border border-stone-200 rounded-2xl shadow overflow-hidden">
 
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100 flex items-start justify-between gap-2">
@@ -559,7 +559,7 @@ export default function MessageList() {
                 const reactionCount = pr.reactions.length
                 return (
                   <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
-                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-white border border-stone-200 rounded-2xl shadow overflow-hidden">
                       {/* Tappable header + body — navigates to prayer profile */}
                       <button
                         type="button"
@@ -625,7 +625,7 @@ export default function MessageList() {
                 )
                 return (
                   <div key={msg.id} id={`msg-${msg.id}`} className={`!mt-3 !mb-5 ${msg._isNew ? 'animate-msg-in-left' : ''}`}>
-                    <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="bg-white border border-stone-200 rounded-2xl shadow overflow-hidden">
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">

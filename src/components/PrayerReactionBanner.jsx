@@ -4,7 +4,7 @@ export default function PrayerReactionBanner({ reactorName, closing = false, onD
   return (
     <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div
-        className="relative overflow-hidden rounded-2xl bg-sunrise/10 border border-sunrise/30 shadow-sm px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
+        className="relative overflow-hidden rounded-2xl bg-sunrise/10 border border-sunrise/30 shadow px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
         onClick={onTap}
       >
         <span className="absolute left-0 top-0 h-full w-1.5 bg-sunrise rounded-l-2xl" />

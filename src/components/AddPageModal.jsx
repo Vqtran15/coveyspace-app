@@ -249,7 +249,7 @@ export default function AddPageModal({ noun, pageNoun, defaultTitle, pages = [],
             </label>
             <div className="flex flex-col gap-2">
               {dishes.map((dish, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5">
+                <div key={i} className="bg-white rounded-2xl border border-stone-100 shadow px-4 py-3.5">
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-medium shrink-0 text-right tabular-nums whitespace-nowrap ${dish ? 'text-stone-300' : 'text-stone-400'}`}>
                       {noun} {i + 1}

@@ -214,7 +214,7 @@ export default function EditDishesModal({ page, noun, pageNoun, signups, onClose
               {entries.map((entry, i) => {
                 const signup = signupForEntry(entry)
                 return (
-                  <div key={entry.key} className="bg-white rounded-2xl border border-stone-100 shadow-sm px-4 py-3.5">
+                  <div key={entry.key} className="bg-white rounded-2xl border border-stone-100 shadow px-4 py-3.5">
                     <div className="flex items-center gap-3">
                       <span className={`text-xs font-medium shrink-0 whitespace-nowrap ${entry.dish ? 'text-stone-300' : 'text-stone-400'}`}>
                         {noun} {i + 1}

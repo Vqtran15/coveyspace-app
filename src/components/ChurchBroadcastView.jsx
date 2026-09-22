@@ -28,7 +28,7 @@ export function BroadcastCard({ msg, isChurchAdmin, groupsInChurch = [], isAdmin
 
   return (
     <div
-      className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4"
+      className="bg-white rounded-2xl border border-stone-100 shadow px-5 py-4"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <p className="text-sm font-semibold text-stone-800">{msg.display_name}</p>
