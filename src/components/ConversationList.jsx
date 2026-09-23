@@ -421,7 +421,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   return (
     <div
       className={`bg-sunrise-50 lg:!h-auto lg:min-h-full lg:!pt-0 ${enterClass ?? ''}`}
-      style={{ height: 'calc(100dvh - var(--sab) - 68px)', paddingTop: 'var(--sat)', overflowY: 'auto', overscrollBehavior: 'contain' }}
+      style={{ height: 'calc(100dvh - var(--sab) - 68px)', paddingTop: 'var(--sat)', overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)' }}
     >
       {upcoming.length > 0 && !birthdayBannerDismissed && (
         <div>
