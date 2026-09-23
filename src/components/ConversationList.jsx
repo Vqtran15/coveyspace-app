@@ -420,7 +420,7 @@ export default function ConversationList({ session, groupId, members, enterClass
 
   return (
     <div
-      className={`bg-sunrise-50 lg:!h-auto lg:min-h-full lg:!pt-0 ${enterClass ?? ''}`}
+      className={`bg-sunrise-50 lg:!h-auto lg:min-h-full lg:!pt-0 lg:!pb-6 ${enterClass ?? ''}`}
       style={{ height: '100dvh', paddingTop: 'var(--sat)', overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)' }}
     >
       {upcoming.length > 0 && !birthdayBannerDismissed && (
