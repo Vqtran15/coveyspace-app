@@ -657,7 +657,7 @@ export default function AdminPage() {
               })()}
             </div>
           </div>
-          <p className="text-xs text-stone-400 mt-2 px-1">New meals are automatically created on these days using your existing meals as a rotating template.</p>
+          <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new meals by cycling through your existing meals as templates in order — the order in Manage Meals sets the rotation. Both a day of week and a frequency must be configured for auto-scheduling to work.</p>
         </section>}
 
         {/* Service Schedule */}
@@ -780,7 +780,7 @@ export default function AdminPage() {
               </>
             )}
           </div>
-          <p className="text-xs text-stone-400 mt-2 px-1">Service sign-ups auto-fill on the configured schedule using existing slot templates.</p>
+          <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new services by cycling through your existing services as templates in order — the order in Manage Services sets the rotation.</p>
         </section>}
 
         </>}

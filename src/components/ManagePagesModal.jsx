@@ -15,6 +15,7 @@ function shortDate(dateStr) {
 export default function ManagePagesPage({
   pages, isAdmin, pageNoun, pageNounPlural,
   onReorder, onAddPage, onDeletePage, onRenamePage, onEditPage, onClose,
+  subtitle,
 }) {
   const [exiting, setExiting] = useState(false)
   const [list, setList] = useState([...pages].reverse())
@@ -170,7 +171,10 @@ export default function ManagePagesPage({
           >
             <ArrowLeft size={20} weight="bold" />
           </button>
-          <h1 className="flex-1 text-3xl font-bold text-stone-800">Manage {pageNounPlural}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold text-stone-800">Manage {pageNounPlural}</h1>
+            {subtitle && <p className="text-sm text-stone-500 mt-0.5">{subtitle}</p>}
+          </div>
           {onAddPage && (
             <button
               onClick={onAddPage}

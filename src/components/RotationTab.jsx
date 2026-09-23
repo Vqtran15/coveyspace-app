@@ -391,6 +391,11 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           } : undefined}
           onEditPage={isAdmin ? page => { setManagingEditPage(page); setShowManagePages(false) } : undefined}
           onClose={() => setShowManagePages(false)}
+          subtitle={isAdmin
+            ? autoFill
+              ? `Drag to reorder — the order here sets the rotation cycle for auto-created ${pageNounPlural.toLowerCase()}.`
+              : 'Drag to reorder.'
+            : undefined}
         />
       )}
 
