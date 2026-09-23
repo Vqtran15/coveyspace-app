@@ -74,7 +74,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   const mainName   = mainConv ? convName(mainConv) : ''
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4 space-y-2 py-1">
+    <div className="max-w-3xl mx-auto w-full px-4 space-y-2 pt-1 pb-6">
       {mainConv && (
         <>
           <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide pb-1 px-1">Group Chat</p>
@@ -421,7 +421,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   return (
     <div
       className={`flex flex-col bg-sunrise-50 lg:!h-auto lg:min-h-full lg:!pt-0 ${enterClass ?? ''}`}
-      style={{ height: 'calc(var(--dvh) - var(--sab) - 68px)', paddingTop: 'var(--sat)' }}
+      style={{ height: 'calc(100dvh - var(--sab) - 68px)', paddingTop: 'var(--sat)' }}
     >
       {upcoming.length > 0 && !birthdayBannerDismissed && (
         <div className="shrink-0">
