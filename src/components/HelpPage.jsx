@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife, MagnifyingGlass, X } from '@phosphor-icons/react'
+import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife, MagnifyingGlass, X, Church } from '@phosphor-icons/react'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 
@@ -142,6 +142,28 @@ const SECTIONS = [
         q: 'How do I pause meals or services for a week?',
         a: 'Go to Admin → Group Settings and tap the pause option next to Meals or Services. The sign-up for that week will be hidden from members.',
         adminOnly: true,
+      },
+    ],
+  },
+  {
+    label: 'Church & Planning Center',
+    icon: <Church size={16} weight="fill" />,
+    color: 'text-stone-500 bg-stone-100',
+    items: [
+      {
+        q: 'How do I add a group to my church?',
+        a: "A church admin shares a Church Code from Church Settings. As a group admin, go to Admin → scroll to the Church section → enter the code and tap Join.\n\nOnce linked, your group will receive church-wide announcements and appear under that church in the admin dashboard.",
+        adminOnly: true,
+      },
+      {
+        q: 'How does the Planning Center integration work?',
+        a: "Church admins can connect Planning Center from Church Settings → Planning Center tab. Once connected, you can search any person in your PCO People list by name or email and send them an invite link to join a group.\n\nYou can also import an entire PCO Group — everyone in that group gets an invite in one step. Coveyspace does not write anything back to Planning Center; it only reads your People and Groups data to make inviting easier.",
+        adminOnly: true,
+      },
+      {
+        q: 'Who can see church announcements?',
+        a: "Church announcements appear in the Resources tab for all members of every group linked to that church. Church admins can also send announcements to group leaders only — those show up in a separate Leaders channel that regular members cannot see.",
+        adminOnly: false,
       },
     ],
   },
