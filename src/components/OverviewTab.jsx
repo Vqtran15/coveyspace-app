@@ -557,10 +557,11 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                 },
               ].filter(Boolean)
 
-              return cards.map(({ key, ...rest }) => (
+              return cards.map(({ key, ...rest }, i) => (
                 <Card
                   key={key}
                   {...rest}
+                  className={cards.length % 2 === 1 && i === cards.length - 1 ? 'lg:col-span-2' : ''}
                 />
               ))
             })()}

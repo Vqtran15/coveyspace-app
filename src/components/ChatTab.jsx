@@ -16,7 +16,8 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   const tabResetRef = useRef(location.state?.tabReset ?? null)
   const [autoOpenGroupChat, setAutoOpenGroupChat] = useState(!!locationState?.openGroupChat)
   const consumeAutoOpen = useCallback(() => setAutoOpenGroupChat(false), [])
-  const [autoOpenMainChat, setAutoOpenMainChat] = useState(!!locationState?.openMainChat)
+  const IS_DESKTOP = window.matchMedia?.('(min-width: 1024px)').matches ?? false
+  const [autoOpenMainChat, setAutoOpenMainChat] = useState(!!locationState?.openMainChat || IS_DESKTOP)
   const consumeAutoOpenMain = useCallback(() => setAutoOpenMainChat(false), [])
   const [activeConv, setActiveConv]           = useState(null)
   const [openedWithLastReadAt, setOpenedWithLastReadAt] = useState(null)
