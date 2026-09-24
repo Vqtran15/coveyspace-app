@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { ArrowLeft, UsersThree, Buildings, ChatCircleDots, HandsPraying, CalendarStar, BookOpen, ForkKnife } from '@phosphor-icons/react'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { db } from '../lib/db.js'
@@ -30,11 +30,12 @@ const ACTIVITY_ORDER = { active: 0, quiet: 1, inactive: 2 }
 
 export default function ChurchAnalyticsPage() {
   const navigate = useNavigate()
-  const { churchId, churchName } = useAppContext()
+  const { churchId, churchName, isChurchAdmin } = useAppContext()
   const [groups, setGroups] = useState(null)
   const [activityMap, setActivityMap] = useState(null)
 
   useEffect(() => {
+    if (!isChurchAdmin) return
     if (!churchId) { setGroups([]); setActivityMap({}); return }
     db.churches.fetchGroupsForChurch(churchId).then(({ data }) => {
       const fetched = data ?? []
@@ -56,6 +57,8 @@ export default function ChurchAnalyticsPage() {
   const totalMembers = loaded ? groups.reduce((s, g) => s + Number(g.profiles?.[0]?.count ?? 0), 0) : 0
   const avgSize = loaded && groups.length > 0 ? Math.round(totalMembers / groups.length) : 0
   const activeCount = activityLoaded && groups ? groups.filter(g => activityStatus(activityMap[g.id]) === 'active').length : null
+
+  if (!isChurchAdmin) return <Navigate to="/settings" replace />
 
   const sortedGroups = loaded && activityLoaded
     ? [...groups].sort((a, b) =>

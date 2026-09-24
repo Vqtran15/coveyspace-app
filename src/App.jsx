@@ -535,7 +535,7 @@ function AppContent() {
                 <Route path="/bible"    element={<ResourcesTab onOpenGuide={() => guide.setOpen(true)} onOpenGiving={() => giving.setOpen(true)} />} />
                 <Route path="/admin"           element={<AdminPage />} />
                 <Route path="/church-settings"  element={<ChurchSettingsPage />} />
-                <Route path="/church-analytics" element={<ChurchAnalyticsPage />} />
+                <Route path="/church-analytics" element={isChurchAdmin ? <ChurchAnalyticsPage /> : <Navigate to="/settings" replace />} />
                 <Route path="/danger-zone"     element={<DangerZonePage />} />
                 <Route path="/help"            element={<HelpPage />} />
                 <Route path="/settings" element={
