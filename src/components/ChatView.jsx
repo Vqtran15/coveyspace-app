@@ -289,11 +289,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     // Capture baseline before any keyboard interaction. Using vv.height rather than
     // window.innerHeight because iOS mutates window.innerHeight when the keyboard
     // appears on some versions, which would make kbH ≈ 0 and prevent detection.
-    const baseline = Math.round(vv.height)
+    let baseline = Math.round(vv.height)
     let kbOpen = false
 
     function update() {
       const nowVVH = Math.round(vv.height)
+      // Self-correct: if the viewport grew larger than our captured baseline (can
+      // happen when ChatView mounts while the previous session's keyboard was still
+      // animating away, leaving vv.height temporarily reduced at capture time),
+      // update baseline to the new larger value so keyboard detection stays accurate.
+      if (!kbOpen && nowVVH > baseline) baseline = nowVVH
       const kbH = baseline - nowVVH
       const nowOpen = kbH > 120
       // sat + vv.offsetTop + vv.height gives the keyboard top in document
@@ -338,13 +343,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
     }
 
+    // Fallback for iOS PWA builds that intermittently skip visualViewport resize/scroll
+    // events on keyboard open. Calling update() 150 ms after any input focus gives
+    // iOS enough time to finish updating vv.height before we read it.
+    let focusTimer = null
+    function onFocusIn(e) {
+      if (!['INPUT', 'TEXTAREA'].includes(e.target?.tagName)) return
+      clearTimeout(focusTimer)
+      focusTimer = setTimeout(update, 150)
+    }
+
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
+    document.addEventListener('focusin', onFocusIn)
     document.addEventListener('visibilitychange', onVisible)
     return () => {
       vv.removeEventListener('resize', update)
       vv.removeEventListener('scroll', update)
+      document.removeEventListener('focusin', onFocusIn)
       document.removeEventListener('visibilitychange', onVisible)
+      clearTimeout(focusTimer)
       document.body.classList.remove('chat-keyboard-open')
       document.documentElement.style.removeProperty('--vvh')
       setKeyboardOpen(false)
