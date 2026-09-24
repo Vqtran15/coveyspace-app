@@ -12,7 +12,7 @@ const SECTIONS = [
     items: [
       {
         q: 'How do I invite someone to my group?',
-        a: "Go to Admin → Group Settings → scroll to the Invite Code section. Share that code with anyone you want to add. They'll enter it when they sign up for Coveyspace.",
+        a: "Go to Admin → scroll down to the Invite Code section. Share that code with anyone you want to add. They'll enter it when they sign up for Coveyspace.",
         adminOnly: false,
       },
       {
@@ -81,12 +81,12 @@ const SECTIONS = [
       },
       {
         q: 'How do I share a photo in chat?',
-        a: 'Tap the photo icon next to the message input to pick an image from your camera roll.',
+        a: 'Tap the + button next to the message input and select Photo / GIF from the menu.',
         adminOnly: false,
       },
       {
         q: 'How do I add a poll?',
-        a: 'In the Chat tab, tap the poll icon next to the message input. Enter your question and add options, then tap Send to post it to the group.',
+        a: 'Tap the + button next to the message input and select Poll from the menu. Enter your question, add options, and tap Send.',
         adminOnly: false,
       },
     ],
@@ -98,22 +98,27 @@ const SECTIONS = [
     items: [
       {
         q: 'How do I add a prayer request?',
-        a: "Tap the Prayer tab, then the + button in the top right. Write your request and choose whether it's private (only you can see it) or shared with the group.",
+        a: "Tap the Prayer tab, then tap your name in the list to open your prayer profile. Tap the + button to add a new request. Turn on 'Notify group' if you'd like to send the group an alert.",
         adminOnly: false,
       },
       {
         q: "How do I pray for someone's request?",
-        a: 'Tap the request to open it, then tap "I prayed for this." The person who posted it will get a notification.',
+        a: "Tap a member's name to open their prayer profile, then tap the \"Pray\" button on any request. Your support shows as a reaction on the request — no notification is sent to the person.",
         adminOnly: false,
       },
       {
         q: 'How do I mark a request as answered?',
-        a: 'Open the request and tap "Mark as Answered." Answered requests are moved to a separate section so the active list stays focused.',
+        a: 'Long-press a request in a member\'s prayer profile and tap "Answered" in the menu. In the group Requests feed, answered items are hidden automatically so the active list stays focused.',
         adminOnly: false,
       },
       {
         q: 'Can I keep a prayer request private?',
-        a: 'Yes — when adding a request, choose "Private" and only you will be able to see it.',
+        a: "Personal prayer requests are visible to all group members when they visit your profile. There's no fully private option — but if you add a request without turning on 'Notify group,' no one will be alerted and it will only surface if someone taps your name.",
+        adminOnly: false,
+      },
+      {
+        q: 'Can I add a prayer request for another member?',
+        a: "Yes — tap a member's name to open their prayer profile, then tap the + button to add a request for them. Toggle 'Notify group' if you'd like to alert the group.",
         adminOnly: false,
       },
     ],
@@ -130,17 +135,17 @@ const SECTIONS = [
       },
       {
         q: 'How does auto-scheduling work for services?',
-        a: "When Services is enabled, a service sign-up is automatically generated each week on the day and time your group meets. Members can sign up for a role (like leading, hosting, or bringing food) directly from the Sign Up tab.\n\nIf your group is skipping a week, admins can pause the service for that week in Admin → Group Settings.",
+        a: "When Services is enabled, a service sign-up is automatically generated each week on the day your group meets. Members can sign up for a role (like leading, hosting, or bringing food) directly from the Sign Up tab.\n\nIf your group is skipping a week, admins can pause that week's sign-up from the Sign Up tab.",
         adminOnly: false,
       },
       {
         q: 'How do I set the day and time for meals or services?',
-        a: 'Go to Admin → Group Settings → Features. Enable Meals or Services, then configure the day of the week and time. The schedule starts generating from the next occurrence of that day.',
+        a: 'Go to Admin → Features tab. Enable Meals or Services, then configure the day of the week and frequency. The schedule starts generating from the next occurrence of that day.',
         adminOnly: true,
       },
       {
         q: 'How do I pause meals or services for a week?',
-        a: 'Go to Admin → Group Settings and tap the pause option next to Meals or Services. The sign-up for that week will be hidden from members.',
+        a: "Open the Sign Up tab, tap the ⋯ menu on the current meal or service, then tap 'Pause this week.' The sign-up will be hidden for that week and resumes automatically the following week.",
         adminOnly: true,
       },
     ],
@@ -179,7 +184,7 @@ const SECTIONS = [
       },
       {
         q: 'How do I post new discussion questions?',
-        a: 'Tap the Guide tab, then the + or edit button. You can type content directly or upload a PDF.',
+        a: 'Tap the Guide tab, then tap the Edit button (pencil icon) in the top right. You can write notes directly in the app, upload a PDF or Word document, or paste a link to a Google Doc or Notion page.',
         adminOnly: true,
       },
       {
