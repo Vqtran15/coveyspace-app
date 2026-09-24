@@ -266,13 +266,12 @@ export default function WelcomeSplash({ onDone }) {
 
 
   async function handlePersonalizeNext() {
-    if (bdMonth && bdDay) {
-      const mm = String(bdMonth).padStart(2, '0')
-      const dd = String(bdDay).padStart(2, '0')
-      await supabase.from('profiles')
-        .update({ birthday: `2000-${mm}-${dd}` })
-        .eq('user_id', userId)
-    }
+    if (!bdMonth || !bdDay) return
+    const mm = String(bdMonth).padStart(2, '0')
+    const dd = String(bdDay).padStart(2, '0')
+    await supabase.from('profiles')
+      .update({ birthday: `2000-${mm}-${dd}` })
+      .eq('user_id', userId)
     setStep(isAdmin ? 'features' : 'tour')
   }
 
@@ -473,8 +472,8 @@ export default function WelcomeSplash({ onDone }) {
             </div>
 
             <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow mb-6 animate-fade-up" style={{ animationDelay: '0.28s' }}>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday <span className="normal-case font-normal">(optional)</span></p>
-              <p className="text-xs text-stone-400 mb-3">Add it so your group can celebrate you — you can always add it later in Settings.</p>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday</p>
+              <p className="text-xs text-stone-400 mb-3">Your group will be reminded so they can celebrate you.</p>
               <div className="flex gap-2">
                 <select
                   value={bdMonth}
@@ -501,7 +500,8 @@ export default function WelcomeSplash({ onDone }) {
 
             <button
               onClick={handlePersonalizeNext}
-              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              disabled={!bdMonth || !bdDay}
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>
