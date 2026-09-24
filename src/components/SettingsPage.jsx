@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ChatTeardropDots, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, UserCircle, Question } from '@phosphor-icons/react'
+import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, UserCircle, Question } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -10,7 +10,6 @@ import { setCookie } from '../lib/cookies.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
-import FeedbackModal from './FeedbackModal.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 import InstallBanner from './InstallBanner.jsx'
 
@@ -156,7 +155,6 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [pwSaving, setPwSaving] = useState(false)
   const [pwError, setPwError] = useState(null)
 
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [groupsOpen, setGroupsOpen] = useState(true)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [adminSectionOpen, setAdminSectionOpen] = useState(false)
@@ -709,22 +707,14 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Help & Feedback */}
+      {/* Help */}
       <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden mb-4">
         <button
           onClick={() => navigate('/help')}
-          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
         >
           <Question size={16} weight="bold" className="text-stone-400 shrink-0" />
           <span className="flex-1 text-left">Help & FAQ</span>
-          <CaretRight size={14} className="text-stone-300 shrink-0" />
-        </button>
-        <button
-          onClick={() => setFeedbackOpen(true)}
-          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
-        >
-          <ChatTeardropDots size={16} weight="fill" className="text-stone-400 shrink-0" />
-          <span className="flex-1 text-left">Send feedback</span>
           <CaretRight size={14} className="text-stone-300 shrink-0" />
         </button>
       </div>
@@ -864,14 +854,6 @@ useEffect(() => {
       )}
     </AnimatePresence>
 
-    {feedbackOpen && (
-      <FeedbackModal
-        userId={userId}
-        displayName={displayName}
-        email={email}
-        onClose={() => setFeedbackOpen(false)}
-      />
-    )}
 
     {createGroupOpen && (
       <CreateGroupFlow
