@@ -608,9 +608,10 @@ useEffect(() => {
             <div className="overflow-hidden min-h-0">
                 <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
                   {isChurchAdmin && (
+                    <>
                     <button
                       onClick={() => navigate('/church-settings')}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all border-b border-stone-100"
                     >
                       <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
                         <Church size={18} weight="fill" className="text-ember" />
@@ -621,6 +622,20 @@ useEffect(() => {
                       </div>
                       <CaretRight size={14} className="text-stone-300" />
                     </button>
+                    <button
+                      onClick={() => navigate('/church-analytics')}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                        <UsersThree size={18} weight="fill" className="text-stone-500" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-semibold text-stone-800">Church Analytics</p>
+                        <p className="text-xs text-stone-400">Groups & member counts</p>
+                      </div>
+                      <CaretRight size={14} className="text-stone-300" />
+                    </button>
+                    </>
                   )}
                   {isAdmin && (
                     <button

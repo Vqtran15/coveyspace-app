@@ -149,6 +149,11 @@ export const db = {
       supabase.rpc('get_church_join_code'),
     rotateJoinCode: () =>
       supabase.rpc('rotate_church_join_code'),
+    fetchGroupsForChurch: (churchId) =>
+      supabase.from('community_groups')
+        .select('id, name, profiles(count)')
+        .eq('church_id', churchId)
+        .order('name'),
   },
 
   pco: {

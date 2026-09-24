@@ -35,7 +35,8 @@ const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage.jsx'
 const WelcomeSplash     = lazy(() => import('./components/WelcomeSplash.jsx'))
 const SettingsPage      = lazy(() => import('./components/SettingsPage.jsx'))
 const AdminPage         = lazy(() => import('./components/AdminPage.jsx'))
-const ChurchSettingsPage = lazy(() => import('./components/ChurchSettingsPage.jsx'))
+const ChurchSettingsPage   = lazy(() => import('./components/ChurchSettingsPage.jsx'))
+const ChurchAnalyticsPage = lazy(() => import('./components/ChurchAnalyticsPage.jsx'))
 const DangerZonePage     = lazy(() => import('./components/DangerZonePage.jsx'))
 const HelpPage           = lazy(() => import('./components/HelpPage.jsx'))
 
@@ -77,7 +78,7 @@ const TABS = [
 ]
 
 const PATHS = TABS.map(t => t.path)
-const OFF_NAV_PATHS = ['/settings', '/admin', '/church-settings', '/danger-zone', '/help']
+const OFF_NAV_PATHS = ['/settings', '/admin', '/church-settings', '/church-analytics', '/danger-zone', '/help']
 
 const IS_PWA =
   window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -533,7 +534,8 @@ function AppContent() {
                 <Route path="/prayer"   element={<PrayerTab />} />
                 <Route path="/bible"    element={<ResourcesTab onOpenGuide={() => guide.setOpen(true)} onOpenGiving={() => giving.setOpen(true)} />} />
                 <Route path="/admin"           element={<AdminPage />} />
-                <Route path="/church-settings" element={<ChurchSettingsPage />} />
+                <Route path="/church-settings"  element={<ChurchSettingsPage />} />
+                <Route path="/church-analytics" element={<ChurchAnalyticsPage />} />
                 <Route path="/danger-zone"     element={<DangerZonePage />} />
                 <Route path="/help"            element={<HelpPage />} />
                 <Route path="/settings" element={
