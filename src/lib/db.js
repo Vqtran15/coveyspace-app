@@ -151,9 +151,18 @@ export const db = {
       supabase.rpc('rotate_church_join_code'),
     fetchGroupsForChurch: (churchId) =>
       supabase.from('community_groups')
-        .select('id, name, profiles(count)')
+        .select('id, name, profiles(count), group_settings(chat_enabled, prayer_enabled, events_enabled, guide_enabled, meals_enabled, services_enabled, bible_enabled, giving_enabled)')
         .eq('church_id', churchId)
         .order('name'),
+    fetchGroupLastActivity: (groupIds) => {
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      return supabase.from('messages')
+        .select('community_group_id, created_at')
+        .in('community_group_id', groupIds)
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(2000)
+    },
   },
 
   pco: {
