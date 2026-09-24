@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife } from '@phosphor-icons/react'
+import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife, MagnifyingGlass, X } from '@phosphor-icons/react'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 
@@ -169,15 +169,16 @@ const SECTIONS = [
   },
 ]
 
-function FAQItem({ q, a, adminOnly }) {
+function FAQItem({ q, a, adminOnly, forceOpen = false }) {
   const [open, setOpen] = useState(false)
+  const isOpen = forceOpen || open
   const lines = a.split('\n\n')
   return (
     <div className="border-b border-stone-100 last:border-0">
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-start gap-3 px-4 py-3.5 text-left hover:bg-stone-50 transition-colors"
-        aria-expanded={open}
+        aria-expanded={isOpen}
       >
         <span className="flex-1 text-sm font-medium text-stone-800 leading-snug">{q}</span>
         <div className="flex items-center gap-2 shrink-0 mt-0.5">
@@ -189,13 +190,13 @@ function FAQItem({ q, a, adminOnly }) {
           <CaretDown
             size={14}
             weight="bold"
-            className={`text-stone-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`text-stone-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </button>
       <div
         className="grid"
-        style={{ gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 200ms cubic-bezier(0.4,0,0.2,1)' }}
+        style={{ gridTemplateRows: isOpen ? '1fr' : '0fr', transition: 'grid-template-rows 200ms cubic-bezier(0.4,0,0.2,1)' }}
       >
         <div className="overflow-hidden min-h-0">
           <div className="px-4 pb-4 flex flex-col gap-2">
@@ -213,13 +214,26 @@ export default function HelpPage() {
   const navigate = useNavigate()
   const { userId, displayName, session } = useAppContext()
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const trimmed = query.trim().toLowerCase()
+  const filteredSections = trimmed
+    ? SECTIONS.map(s => ({
+        ...s,
+        items: s.items.filter(
+          item =>
+            item.q.toLowerCase().includes(trimmed) ||
+            item.a.toLowerCase().includes(trimmed)
+        ),
+      })).filter(s => s.items.length > 0)
+    : SECTIONS
 
   return (
     <>
     <main className="max-w-md mx-auto px-4 pt-8 pb-16">
 
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4">
         <div className="flex items-center gap-1 min-w-0 -ml-2">
           <button
             onClick={() => navigate(-1)}
@@ -233,24 +247,63 @@ export default function HelpPage() {
         <p className="text-sm text-stone-500 mt-1 ml-1">Answers to common questions about Coveyspace.</p>
       </div>
 
-      {/* FAQ Sections */}
-      <div className="flex flex-col gap-4">
-        {SECTIONS.map(section => (
-          <div key={section.label}>
-            <div className="flex items-center gap-2 mb-2 px-1">
-              <div className={`w-5 h-5 rounded-md flex items-center justify-center ${section.color}`}>
-                {section.icon}
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{section.label}</p>
-            </div>
-            <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-              {section.items.map(item => (
-                <FAQItem key={item.q} {...item} />
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* Search */}
+      <div className="flex items-center gap-2 mb-5">
+        <div className="relative flex-1">
+          <MagnifyingGlass size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search questions…"
+            className="w-full border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+            >
+              <X size={14} weight="bold" />
+            </button>
+          )}
+        </div>
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="text-sm text-ember font-medium shrink-0"
+          >
+            Cancel
+          </button>
+        )}
       </div>
+
+      {/* FAQ Sections */}
+      {filteredSections.length > 0 ? (
+        <div className="flex flex-col gap-4">
+          {filteredSections.map(section => (
+            <div key={section.label}>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center ${section.color}`}>
+                  {section.icon}
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{section.label}</p>
+              </div>
+              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
+                {section.items.map(item => (
+                  <FAQItem key={item.q} {...item} forceOpen={!!trimmed} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center py-16 text-center">
+          <MagnifyingGlass size={32} className="text-stone-300 mb-3" />
+          <p className="text-sm font-medium text-stone-500">No results for "{query}"</p>
+          <p className="text-sm text-stone-400 mt-1">Try a different word or phrase.</p>
+        </div>
+      )}
 
       {/* Send feedback */}
       <div className="mt-6 bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
