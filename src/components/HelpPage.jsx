@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, EnvelopeSimple } from '@phosphor-icons/react'
+import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots } from '@phosphor-icons/react'
+import { useAppContext } from '../contexts/AppContext.jsx'
+import FeedbackModal from './FeedbackModal.jsx'
 
 const SECTIONS = [
   {
@@ -177,8 +179,11 @@ function FAQItem({ q, a, adminOnly }) {
 
 export default function HelpPage() {
   const navigate = useNavigate()
+  const { userId, displayName, session } = useAppContext()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   return (
+    <>
     <main className="max-w-md mx-auto px-4 pt-8 pb-16">
 
       {/* Header */}
@@ -215,21 +220,32 @@ export default function HelpPage() {
         ))}
       </div>
 
-      {/* Still need help */}
+      {/* Send feedback */}
       <div className="mt-6 bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-        <div className="px-4 py-4">
-          <p className="text-sm font-semibold text-stone-800 mb-1">Still have a question?</p>
-          <p className="text-sm text-stone-500 mb-3">Use the feedback button in Settings to send a message directly.</p>
-          <a
-            href="mailto:vuong@coveyspace.com"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-ember"
-          >
-            <EnvelopeSimple size={15} weight="bold" />
-            vuong@coveyspace.com
-          </a>
-        </div>
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-stone-50 transition-colors"
+        >
+          <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+            <ChatTeardropDots size={16} weight="fill" className="text-ember" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-stone-800">Still have a question?</p>
+            <p className="text-xs text-stone-500 mt-0.5">Send us a message directly.</p>
+          </div>
+        </button>
       </div>
 
     </main>
+
+    {feedbackOpen && (
+      <FeedbackModal
+        userId={userId}
+        displayName={displayName}
+        email={session?.user?.email}
+        onClose={() => setFeedbackOpen(false)}
+      />
+    )}
+    </>
   )
 }
