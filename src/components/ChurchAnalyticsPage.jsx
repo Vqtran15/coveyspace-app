@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
-import { ArrowLeft, UsersThree, Buildings, ChatCircleDots, HandsPraying, CalendarStar, BookOpen, ForkKnife } from '@phosphor-icons/react'
+import { ArrowLeft, UsersThree, Buildings } from '@phosphor-icons/react'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { db } from '../lib/db.js'
 
-const FEATURES = [
-  { key: 'chat_enabled',    label: 'Chat',    Icon: ChatCircleDots },
-  { key: 'prayer_enabled',  label: 'Prayer',  Icon: HandsPraying   },
-  { key: 'events_enabled',  label: 'Events',  Icon: CalendarStar   },
-  { key: 'guide_enabled',   label: 'Guide',   Icon: BookOpen       },
-  { key: 'meals_enabled',   label: 'Meals',   Icon: ForkKnife      },
-]
+
+function fmtMonthYear(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
 
 function activityStatus(lastActiveAt) {
   if (!lastActiveAt) return 'inactive'
@@ -109,37 +112,6 @@ export default function ChurchAnalyticsPage() {
         </div>
       )}
 
-      {/* Feature adoption */}
-      {loaded && groups.length > 0 && (
-        <div className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2 px-1">Feature Adoption</p>
-          <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-            {FEATURES.map(({ key, label, Icon }, idx) => {
-              const count = groups.filter(g => g.group_settings?.[0]?.[key] === true).length
-              const pct = groups.length > 0 ? (count / groups.length) * 100 : 0
-              return (
-                <div
-                  key={key}
-                  className={`flex items-center gap-3 px-4 py-3 ${idx < FEATURES.length - 1 ? 'border-b border-stone-100' : ''}`}
-                >
-                  <Icon size={15} weight="fill" className="text-stone-400 shrink-0" />
-                  <span className="text-sm text-stone-600 w-14 shrink-0">{label}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-stone-100 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-ember transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-stone-400 tabular-nums shrink-0 w-10 text-right">
-                    {count}/{groups.length}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Group list */}
       {!loaded ? (
         <div className="space-y-2">
@@ -162,6 +134,11 @@ export default function ChurchAnalyticsPage() {
           <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
             {sortedGroups.map((group, idx) => {
               const memberCount = Number(group.profiles?.[0]?.count ?? 0)
+              const memberships = group.group_memberships ?? []
+              const adminCount = memberships.filter(m => m.role === 'admin').length
+              const lastJoined = memberships.length > 0
+                ? memberships.reduce((max, m) => (m.joined_at > max ? m.joined_at : max), memberships[0].joined_at)
+                : null
               const status = activityLoaded ? activityStatus(activityMap[group.id]) : null
               const activity = status ? ACTIVITY[status] : null
               return (
@@ -175,7 +152,10 @@ export default function ChurchAnalyticsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-stone-800 truncate">{group.name}</p>
                     <p className="text-xs text-stone-500 mt-0.5">
-                      {memberCount} {memberCount === 1 ? 'member' : 'members'}
+                      {memberCount} {memberCount === 1 ? 'member' : 'members'} · {adminCount} {adminCount === 1 ? 'admin' : 'admins'}
+                    </p>
+                    <p className="text-xs text-stone-400 mt-0.5">
+                      Created {fmtMonthYear(group.created_at)} · Last joined {fmtDate(lastJoined)}
                     </p>
                   </div>
                   {activity && (

@@ -151,7 +151,7 @@ export const db = {
       supabase.rpc('rotate_church_join_code'),
     fetchGroupsForChurch: (churchId) =>
       supabase.from('community_groups')
-        .select('id, name, profiles(count), group_settings(chat_enabled, prayer_enabled, events_enabled, guide_enabled, meals_enabled, services_enabled, bible_enabled, giving_enabled)')
+        .select('id, name, created_at, profiles(count), group_memberships(role, joined_at)')
         .eq('church_id', churchId)
         .order('name'),
     fetchGroupLastActivity: (groupIds) => {
