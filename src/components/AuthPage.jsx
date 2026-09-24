@@ -246,6 +246,13 @@ export default function AuthPage() {
               {/* Signup-only fields */}
               {mode === 'signup' && (
                 <>
+                  {codeParam && joinMode === 'join' && (
+                    <div className="text-center -mt-1">
+                      <span className="inline-block text-xs font-semibold text-ember px-3 py-1.5 bg-ember/5 rounded-full border border-ember/15">
+                        You've been invited — your group code is ready
+                      </span>
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
@@ -294,7 +301,7 @@ export default function AuthPage() {
                         joinMode === 'create' ? 'bg-ember text-white' : 'text-stone-400'
                       }`}
                     >
-                      Start New Group
+                      Create New Group
                     </button>
                   </div>
 

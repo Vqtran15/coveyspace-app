@@ -91,6 +91,8 @@ export default function WelcomeSplash({ onDone }) {
     ('standalone' in window.navigator && window.navigator.standalone === true)
 
   const isDesktop = window.matchMedia?.('(min-width: 1024px)').matches ?? false
+  const isIOS     = /iP(hone|ad|od)/.test(navigator.userAgent)
+  const isAndroid = /Android/.test(navigator.userAgent)
 
   const visibleTourCards = TOUR_CARDS.filter(c => groupSettings == null || groupSettings[c.key] !== false)
 
@@ -264,12 +266,13 @@ export default function WelcomeSplash({ onDone }) {
 
 
   async function handlePersonalizeNext() {
-    if (!bdMonth || !bdDay) return
-    const mm = String(bdMonth).padStart(2, '0')
-    const dd = String(bdDay).padStart(2, '0')
-    await supabase.from('profiles')
-      .update({ birthday: `2000-${mm}-${dd}` })
-      .eq('user_id', userId)
+    if (bdMonth && bdDay) {
+      const mm = String(bdMonth).padStart(2, '0')
+      const dd = String(bdDay).padStart(2, '0')
+      await supabase.from('profiles')
+        .update({ birthday: `2000-${mm}-${dd}` })
+        .eq('user_id', userId)
+    }
     setStep(isAdmin ? 'features' : 'tour')
   }
 
@@ -470,8 +473,8 @@ export default function WelcomeSplash({ onDone }) {
             </div>
 
             <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow mb-6 animate-fade-up" style={{ animationDelay: '0.28s' }}>
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday</p>
-              <p className="text-xs text-stone-400 mb-3">Your group will be reminded so they can celebrate you.</p>
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Birthday <span className="normal-case font-normal">(optional)</span></p>
+              <p className="text-xs text-stone-400 mb-3">Add it so your group can celebrate you — you can always add it later in Settings.</p>
               <div className="flex gap-2">
                 <select
                   value={bdMonth}
@@ -498,8 +501,7 @@ export default function WelcomeSplash({ onDone }) {
 
             <button
               onClick={handlePersonalizeNext}
-              disabled={!bdMonth || !bdDay}
-              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
               Next
             </button>
@@ -952,45 +954,52 @@ export default function WelcomeSplash({ onDone }) {
     }
 
     // ── STEP: install ──────────────────────────────────────────────────────────
+    // Show only the platform-relevant instruction row
+    const showIOS     = !isAndroid
+    const showAndroid = !isIOS
     return (
       <div className="flex flex-col items-center justify-center flex-1 p-6 overflow-y-auto overscroll-contain">
-        <div className="mb-6 text-ember animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
+        <div className="mb-5 text-ember animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
           <DeviceMobile size={72} weight="fill" />
         </div>
-        <h1 className="text-2xl font-bold text-stone-800 text-center mb-3 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          Save to your home screen
+        <h1 className="text-2xl font-bold text-stone-800 text-center mb-2 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          Add Coveyspace to your home screen
         </h1>
-        <p className="text-stone-500 text-sm text-center max-w-xs mb-8 animate-fade-up" style={{ animationDelay: '0.32s' }}>
-          Add this app to your home screen for quick access — no app store needed.
+        <p className="text-stone-500 text-sm text-center max-w-xs mb-6 animate-fade-up" style={{ animationDelay: '0.28s' }}>
+          Get one-tap access and push notifications for your group — no App Store needed.
         </p>
-        <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.42s' }}>
-          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow mb-6">
-            <div className="flex items-center gap-3 px-4 py-4">
-              <BoxArrowUp size={22} className="shrink-0 text-ember" />
-              <div>
-                <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
-                <p className="text-xs text-stone-400 mt-0.5">
-                  Open in <span className="font-medium">Safari</span>, tap <span className="font-medium">Share</span>, then <span className="font-medium">"Add to Home Screen"</span>
-                </p>
+        <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.38s' }}>
+          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow mb-4">
+            {showIOS && (
+              <div className="flex items-start gap-3 px-4 py-4">
+                <BoxArrowUp size={22} className="shrink-0 text-ember mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
+                  <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                    Open in <span className="font-medium">Safari</span>, tap <span className="font-medium">Share</span> at the bottom, then tap <span className="font-medium">"Add to Home Screen"</span>
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 px-4 py-4">
-              <DotsThreeVertical size={22} className="shrink-0 text-ember" weight="bold" />
-              <div>
-                <p className="text-sm font-semibold text-stone-700">Android</p>
-                <p className="text-xs text-stone-400 mt-0.5">
-                  Tap the <span className="font-medium">browser menu</span>, then <span className="font-medium">"Add to Home Screen"</span>
-                </p>
+            )}
+            {showAndroid && (
+              <div className="flex items-start gap-3 px-4 py-4">
+                <DotsThreeVertical size={22} className="shrink-0 text-ember mt-0.5" weight="bold" />
+                <div>
+                  <p className="text-sm font-semibold text-stone-700">Android</p>
+                  <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                    Tap the <span className="font-medium">⋮ menu</span> in your browser, then tap <span className="font-medium">"Install app"</span> or <span className="font-medium">"Add to Home Screen"</span>
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           {'Notification' in window && 'PushManager' in window && (
-            <div className="bg-white border border-stone-100 rounded-2xl shadow mb-6 animate-fade-up" style={{ animationDelay: '0.52s' }}>
+            <div className="bg-white border border-stone-100 rounded-2xl shadow mb-4 animate-fade-up" style={{ animationDelay: '0.48s' }}>
               <div className="flex items-center gap-3 px-4 py-4">
                 <Bell size={22} className="shrink-0 text-ember" weight="fill" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-stone-700">Chat Notifications</p>
-                  <p className="text-xs text-stone-400 mt-0.5">Get notified when new messages arrive</p>
+                  <p className="text-sm font-semibold text-stone-700">Push Notifications</p>
+                  <p className="text-xs text-stone-500 mt-0.5">Get notified for messages and prayer requests</p>
                 </div>
                 {notifPermission === 'granted' ? (
                   <span className="text-xs font-semibold text-ember shrink-0">On ✓</span>
@@ -1028,7 +1037,7 @@ export default function WelcomeSplash({ onDone }) {
               onClick={close}
               className="w-full px-8 py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
             >
-              {isAdmin ? 'Go to my group' : "I'm ready"}
+              {isAdmin ? 'Go to my group →' : "Let's go →"}
             </button>
           )}
         </div>
