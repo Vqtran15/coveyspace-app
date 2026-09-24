@@ -84,6 +84,11 @@ const SECTIONS = [
         a: 'Tap the photo icon next to the message input to pick an image from your camera roll.',
         adminOnly: false,
       },
+      {
+        q: 'How do I add a poll?',
+        a: 'In the Chat tab, tap the poll icon next to the message input. Enter your question and add options, then tap Send to post it to the group.',
+        adminOnly: false,
+      },
     ],
   },
   {
