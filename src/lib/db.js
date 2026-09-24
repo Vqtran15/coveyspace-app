@@ -114,7 +114,7 @@ export const db = {
     fetchAll: () =>
       supabase.from('churches').select('id, name').order('name'),
     fetchRole: (userId) =>
-      supabase.from('church_roles').select('church_id, role').eq('user_id', userId),
+      supabase.from('church_roles').select('church_id, role, churches(name)').eq('user_id', userId),
     fetchConversations: (churchId) =>
       supabase.from('church_conversations').select('id, church_id, type, name').eq('church_id', churchId),
     fetchMessages: (convId) =>

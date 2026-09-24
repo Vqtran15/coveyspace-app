@@ -23,6 +23,7 @@ export function AppProvider({ children }) {
   const [unreadPrayerCount, setUnreadPrayerCount] = useState(0)
   const [churchConversations, setChurchConversations] = useState([])
   const [isChurchAdmin, setIsChurchAdmin] = useState(false)
+  const [churchRoles, setChurchRoles] = useState([])
   const [allMemberships, setAllMemberships] = useState([])
 
   // Derived early so effects below can reference them in dependency arrays
@@ -39,8 +40,12 @@ export function AppProvider({ children }) {
   const avatarIcon     = profile?.avatar_icon ?? null
   const avatarColorKey = profile?.avatar_color ?? null
   const avatarImageUrl = profile?.avatar_image_url ?? null
-  const churchId      = profile?.community_groups?.church_id ?? null
-  const churchName    = profile?.community_groups?.churches?.name ?? null
+  // Church admins may be in a group unaffiliated with any church; derive churchId
+  // from their church_roles row so analytics always targets the right church.
+  const churchIdFromRole   = churchRoles[0]?.church_id ?? null
+  const churchNameFromRole = churchRoles[0]?.churches?.name ?? null
+  const churchId      = churchIdFromRole ?? profile?.community_groups?.church_id ?? null
+  const churchName    = churchNameFromRole ?? profile?.community_groups?.churches?.name ?? null
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -85,9 +90,11 @@ export function AppProvider({ children }) {
 
   // ── Church data ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!userId) { setIsChurchAdmin(false); return }
+    if (!userId) { setIsChurchAdmin(false); setChurchRoles([]); return }
     db.churches.fetchRole(userId).then(({ data }) => {
-      setIsChurchAdmin((data ?? []).length > 0)
+      const roles = data ?? []
+      setIsChurchAdmin(roles.length > 0)
+      setChurchRoles(roles)
     })
   }, [userId])
 
