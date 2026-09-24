@@ -10,14 +10,14 @@ export default function ChurchAnalyticsPage() {
   const [groups, setGroups] = useState(null)
 
   useEffect(() => {
-    if (!churchId) return
+    if (!churchId) { setGroups([]); return }
     db.churches.fetchGroupsForChurch(churchId).then(({ data }) => {
       setGroups(data ?? [])
     })
   }, [churchId])
 
   const totalMembers = groups
-    ? groups.reduce((sum, g) => sum + (g.profiles?.[0]?.count ?? 0), 0)
+    ? groups.reduce((sum, g) => sum + Number(g.profiles?.[0]?.count ?? 0), 0)
     : 0
 
   return (
@@ -75,7 +75,7 @@ export default function ChurchAnalyticsPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2 px-1">Groups</p>
           <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
             {groups.map((group, idx) => {
-              const memberCount = group.profiles?.[0]?.count ?? 0
+              const memberCount = Number(group.profiles?.[0]?.count ?? 0)
               return (
                 <div
                   key={group.id}
