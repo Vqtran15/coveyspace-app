@@ -548,7 +548,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             ))}
           </div>
         ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
+          <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 text-stone-400">
             <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />
             <p className="text-sm">No conversations yet</p>
           </div>

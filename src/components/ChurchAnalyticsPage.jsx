@@ -52,7 +52,7 @@ export default function ChurchAnalyticsPage() {
         setActivityMap(map)
       })
     })
-  }, [churchId])
+  }, [churchId, isChurchAdmin])
 
   const loaded = groups !== null
   const activityLoaded = activityMap !== null
