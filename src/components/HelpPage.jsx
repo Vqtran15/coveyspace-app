@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots } from '@phosphor-icons/react'
+import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife } from '@phosphor-icons/react'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import FeedbackModal from './FeedbackModal.jsx'
 
@@ -115,6 +115,33 @@ const SECTIONS = [
         q: 'Can I keep a prayer request private?',
         a: 'Yes — when adding a request, choose "Private" and only you will be able to see it.',
         adminOnly: false,
+      },
+    ],
+  },
+  {
+    label: 'Meals & Services',
+    icon: <ForkKnife size={16} weight="fill" />,
+    color: 'text-ember bg-ember/10',
+    items: [
+      {
+        q: 'How does auto-scheduling work for meals?',
+        a: "When Meals is enabled, Coveyspace automatically creates a new meal sign-up each week based on the day and time you configured. You don't need to create it manually — it rolls over on its own.\n\nMembers will see the upcoming meal on the home screen and can sign up from the Sign Up tab.",
+        adminOnly: false,
+      },
+      {
+        q: 'How does auto-scheduling work for services?',
+        a: "When Services is enabled, a service sign-up is automatically generated each week on the day and time your group meets. Members can sign up for a role (like leading, hosting, or bringing food) directly from the Sign Up tab.\n\nIf your group is skipping a week, admins can pause the service for that week in Admin → Group Settings.",
+        adminOnly: false,
+      },
+      {
+        q: 'How do I set the day and time for meals or services?',
+        a: 'Go to Admin → Group Settings → Features. Enable Meals or Services, then configure the day of the week and time. The schedule starts generating from the next occurrence of that day.',
+        adminOnly: true,
+      },
+      {
+        q: 'How do I pause meals or services for a week?',
+        a: 'Go to Admin → Group Settings and tap the pause option next to Meals or Services. The sign-up for that week will be hidden from members.',
+        adminOnly: true,
       },
     ],
   },
