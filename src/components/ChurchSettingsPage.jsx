@@ -696,9 +696,9 @@ export default function ChurchSettingsPage() {
   const location  = useLocation()
   const toast     = useToast()
 
-  // Conversations split by type
-  const allMembersConv  = churchConversations.find(c => c.type === 'all_members')
-  const adminsOnlyConv  = churchConversations.find(c => c.type === 'admins_only')
+  // Conversations split by type (churchConversations is null while loading)
+  const allMembersConv  = churchConversations?.find(c => c.type === 'all_members')
+  const adminsOnlyConv  = churchConversations?.find(c => c.type === 'admins_only')
   const convIds = {
     allMembers:  allMembersConv?.id  ?? null,
     adminsOnly:  adminsOnlyConv?.id  ?? null,
