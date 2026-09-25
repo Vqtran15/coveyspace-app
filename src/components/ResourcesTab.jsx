@@ -920,7 +920,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       }
       return
     }
-    if (!churchConversations?.length) return
+    if (churchConversations === null) return
     const convAll   = churchConversations.find(c => c.type === 'all_members')
     const convAdmin = isAdmin ? churchConversations.find(c => c.type === 'admins_only') : null
     if (!convAll && !convAdmin) {

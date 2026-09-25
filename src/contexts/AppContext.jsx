@@ -21,7 +21,7 @@ export function AppProvider({ children }) {
   const [birthdays, setBirthdays]         = useState([])
   const [unreadChatCount, setUnreadChatCount] = useState(0)
   const [unreadPrayerCount, setUnreadPrayerCount] = useState(0)
-  const [churchConversations, setChurchConversations] = useState([])
+  const [churchConversations, setChurchConversations] = useState(null)
   const [isChurchAdmin, setIsChurchAdmin] = useState(false)
   const [churchRoles, setChurchRoles] = useState([])
   const [allMemberships, setAllMemberships] = useState([])
@@ -100,7 +100,7 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     if (!churchId) { setChurchConversations([]); return }
-    setChurchConversations([])
+    setChurchConversations(null)
     db.churches.fetchConversations(churchId).then(({ data }) => {
       setChurchConversations(data ?? [])
     })
