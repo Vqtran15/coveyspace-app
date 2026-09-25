@@ -750,7 +750,7 @@ function relativeTime(dateStr) {
 // ─── Main ResourcesTab ────────────────────────────────────────────────────────
 
 export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
-  const { userId, churchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin, profileLoaded } = useAppContext()
+  const { userId, churchId, groupChurchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin, profileLoaded } = useAppContext()
   const toast = useToast()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
@@ -912,8 +912,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   useEffect(() => {
     setAllBroadcasts(null)
     setAdminBroadcasts(null)
-    if (!churchId) {
-      // Once profile is loaded and there's no church, mark ready with empty so cards animate in
+    if (!groupChurchId) {
+      // Active group isn't in a church — mark ready immediately once profile loaded
       if (profileLoaded) {
         setAllBroadcasts([])
         setAdminBroadcasts([])
@@ -946,7 +946,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       setAllBroadcasts([])
       setAdminBroadcasts([])
     })
-  }, [churchId, churchConversations, isAdmin, userId, profileLoaded])
+  }, [groupChurchId, churchConversations, isAdmin, userId, profileLoaded])
 
   // ── Persist current chapter so it survives tab navigation ────────────
   useEffect(() => {
@@ -1324,7 +1324,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               /* ── Loading: hold all slots as skeletons so no card animates in early ── */
               <div className="space-y-6">
                 {/* Bulletin skeletons — shown while profile or church data is loading */}
-                {(!profileLoaded || !!churchId) && (
+                {(!profileLoaded || !!groupChurchId) && (
                   <div>
                     <div className="h-3.5 bg-stone-200 rounded w-32 mb-2 animate-pulse" />
                     <div className="space-y-3">
@@ -1382,7 +1382,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               /* ── Loaded: all cards fade in together ── */
               <div className="animate-fade-in">
                 {/* Church broadcasts — two separate cards per audience */}
-                {!!churchId && (
+                {!!groupChurchId && (
                   <div className="mb-6">
                     <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">
                       From {churchName ?? 'Your Church'}

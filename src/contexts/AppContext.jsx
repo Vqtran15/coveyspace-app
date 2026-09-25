@@ -46,6 +46,10 @@ export function AppProvider({ children }) {
   const churchNameFromRole = churchRoles[0]?.churches?.name ?? null
   const churchId      = churchIdFromRole ?? profile?.community_groups?.church_id ?? null
   const churchName    = churchNameFromRole ?? profile?.community_groups?.churches?.name ?? null
+  // churchId includes role-based fallback (used for analytics/admin).
+  // groupChurchId is purely the active group's church link — used to gate
+  // church bulletin visibility so admins in unaffiliated groups don't see it.
+  const groupChurchId = profile?.community_groups?.church_id ?? null
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -232,7 +236,7 @@ export function AppProvider({ children }) {
     // Multi-group
     allMemberships, switchGroup, refreshMemberships,
     // Church
-    churchId, churchName, isChurchAdmin, churchConversations,
+    churchId, groupChurchId, churchName, isChurchAdmin, churchConversations,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
