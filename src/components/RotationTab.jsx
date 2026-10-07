@@ -396,6 +396,15 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
             const { error } = await supabase.from(tables.pages).delete().eq('id', pageId)
             if (error) throw new Error(error.message)
             handlePageDeleted(pageId)
+            // If autoFill is on and deleting this page drops the future buffer below the
+            // minimum, re-run load() so new pages are created immediately.
+            if (autoFill) {
+              const today = toDateString(new Date())
+              const remaining = pages.filter(p => p.id !== pageId)
+              if (remaining.filter(p => p.week_date > today).length < FUTURE_BUFFER) {
+                load()
+              }
+            }
           } : undefined}
           onRenamePage={isAdmin ? async (pageId, newTitle) => {
             const { error } = await supabase.from(tables.pages).update({ title: newTitle }).eq('id', pageId)
