@@ -657,7 +657,7 @@ export default function AdminPage() {
               })()}
             </div>
           </div>
-          <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new meals by cycling through your existing meals as templates in order — the order in Manage Meals sets the rotation. Both a day of week and a frequency must be configured for auto-scheduling to work.</p>
+          <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new meals using the meal least recently scheduled, so the same meal is never repeated back-to-back. Both a day of week and a frequency must be configured for auto-scheduling to work.</p>
         </section>}
 
         {/* Service Schedule */}
@@ -780,7 +780,7 @@ export default function AdminPage() {
               </>
             )}
           </div>
-          <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new services by cycling through your existing services as templates in order — the order in Manage Services sets the rotation.</p>
+          <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new services using the service least recently scheduled, so the same service is never repeated back-to-back.</p>
         </section>}
 
         </>}
