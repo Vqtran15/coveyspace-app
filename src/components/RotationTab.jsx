@@ -18,13 +18,13 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
   const today = toDateString(new Date())
   if (existingPages.filter(p => p.week_date > today).length >= FUTURE_BUFFER) return existingPages
 
-  // Snapshot sorted oldest→newest — this is the cycling pool
-  const pool = [...existingPages].sort((a, b) => a.week_date.localeCompare(b.week_date))
   const result = [...existingPages]
-  let k = 0
+  let insertCount = 0
 
-  while (result.filter(p => p.week_date > today).length < FUTURE_BUFFER && k < AUTO_FILL_LIMIT) {
-    const lastPage = result[result.length - 1]
+  while (result.filter(p => p.week_date > today).length < FUTURE_BUFFER && insertCount < AUTO_FILL_LIMIT) {
+    // Always re-sort so newly inserted pages are included when picking the next template
+    const allSorted = [...result].sort((a, b) => a.week_date.localeCompare(b.week_date))
+    const lastPage = allSorted[allSorted.length - 1]
     const lastDate = new Date(lastPage.week_date + 'T12:00:00')
 
     const hasDow = targetDow != null && (!Array.isArray(targetDow) || targetDow.length > 0)
@@ -46,7 +46,20 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
     }
     const nextDateStr = toDateString(nextDate)
 
-    const template = pool[k % pool.length]
+    // Build a per-title map: each unique title → its most recent page entry (latest config).
+    // Iterating oldest→newest means later entries overwrite earlier ones, giving us the
+    // freshest slot config for each title while still tracking when it was last used.
+    const titleMap = new Map()
+    for (const p of allSorted) {
+      titleMap.set(p.title, p)
+    }
+
+    // Sort candidates by last-used date ascending so the least recently used title is first.
+    // Recency guard: skip any title used within 2 weeks of the new date to avoid back-to-back
+    // repeats; fall back to the least recently used title if all are recent.
+    const candidates = [...titleMap.values()].sort((a, b) => a.week_date.localeCompare(b.week_date))
+    const recentCutoff = toDateString(new Date(new Date(nextDateStr + 'T12:00:00').getTime() - 14 * 24 * 60 * 60 * 1000))
+    const template = candidates.find(c => c.week_date < recentCutoff) ?? candidates[0]
 
     const { data: newPage, error } = await supabase
       .from(tables.pages)
@@ -64,7 +77,7 @@ async function autoFillPages(existingPages, tables, defaultTitle, intervalDays =
 
     if (error) break
     result.push(newPage)
-    k++
+    insertCount++
   }
 
   return result
@@ -393,7 +406,7 @@ const RotationTab = forwardRef(function RotationTab({ config, revealKey, groupNa
           onClose={() => setShowManagePages(false)}
           subtitle={isAdmin
             ? autoFill
-              ? `Drag to reorder — the order here sets the rotation cycle for auto-created ${pageNounPlural.toLowerCase()}.`
+              ? `Drag to reorder — new ${pageNounPlural.toLowerCase()} are auto-created using the one least recently scheduled.`
               : 'Drag to reorder.'
             : undefined}
         />
