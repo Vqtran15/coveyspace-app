@@ -1840,10 +1840,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }, [conversation, members, myId, convName])
 
   const activeMessage  = useMemo(() => messages.find(m => m.id === activeMsg), [messages, activeMsg])
-  const dmOtherMember  = useMemo(() =>
-    conversation.type === 'direct' ? members.find(m => m.user_id !== myId) : null,
-    [conversation, members, myId]
-  )
+  const dmOtherMember  = useMemo(() => {
+    if (conversation.type !== 'direct') return null
+    const otherId = conversation.conversation_members?.find(m => m.user_id !== myId)?.user_id
+    return otherId ? members.find(m => m.user_id === otherId) ?? null : null
+  }, [conversation, members, myId])
   const isMainGroupChat = useMemo(() =>
     conversation.type === 'group' && (conversation.conversation_members?.length ?? 0) >= members.length,
     [conversation, members]
