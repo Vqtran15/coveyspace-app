@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync, createPortal } from 'react-dom'
-import { motion, AnimatePresence, useAnimation } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check, VideoCamera,
 } from '@phosphor-icons/react'
@@ -31,14 +31,19 @@ export default function MessageInput() {
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [justSent, setJustSent] = useState(false)
   const [justTapped, setJustTapped] = useState(false)
-  const btnControls = useAnimation()
+  const btnWrapRef = useRef(null)
   const justTappedTimerRef = useRef(null)
 
   useEffect(() => () => clearTimeout(justTappedTimerRef.current), [])
 
   function onSendClick() {
     if (sending || (!text.trim() && imagePreviews.length === 0)) return
-    btnControls.start({ scale: [1, 1.22, 1], transition: { duration: 0.28, ease: [0.34, 1.56, 0.64, 1] } })
+    const el = btnWrapRef.current
+    if (el) {
+      el.classList.remove('animate-send-pulse')
+      void el.offsetWidth
+      el.classList.add('animate-send-pulse')
+    }
     clearTimeout(justTappedTimerRef.current)
     setJustTapped(true)
     justTappedTimerRef.current = setTimeout(() => setJustTapped(false), 380)
@@ -421,43 +426,44 @@ export default function MessageInput() {
         >
           <Smiley size={20} />
         </button>
-        <motion.button
-          animate={btnControls}
-          type="button"
-          onClick={onSendClick}
-          disabled={sending || (!text.trim() && imagePreviews.length === 0)}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            {justSent ? (
-              <motion.span
-                key="check"
-                initial={{ scale: 0, rotate: -30 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0 }}
-                transition={{ type: 'spring', stiffness: 520, damping: 22 }}
-              >
-                <Check size={18} weight="bold" />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="plane"
-                initial={{ scale: 0 }}
-                animate={justTapped
-                  ? { scale: 1, rotate: [0, -15, 15, -8, 0] }
-                  : { scale: 1, rotate: 0 }
-                }
-                exit={{ scale: 0 }}
-                transition={justTapped
-                  ? { rotate: { duration: 0.35, ease: 'easeInOut' }, scale: { type: 'spring', stiffness: 520, damping: 22 } }
-                  : { type: 'spring', stiffness: 520, damping: 22 }
-                }
-              >
-                <PaperPlaneTilt size={18} weight="fill" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
+        <span ref={btnWrapRef} className="shrink-0 inline-flex">
+          <button
+            type="button"
+            onClick={onSendClick}
+            disabled={sending || (!text.trim() && imagePreviews.length === 0)}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {justSent ? (
+                <motion.span
+                  key="check"
+                  initial={{ scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 22 }}
+                >
+                  <Check size={18} weight="bold" />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="plane"
+                  initial={{ scale: 0 }}
+                  animate={justTapped
+                    ? { scale: 1, rotate: [0, -15, 15, -8, 0] }
+                    : { scale: 1, rotate: 0 }
+                  }
+                  exit={{ scale: 0 }}
+                  transition={justTapped
+                    ? { rotate: { duration: 0.35, ease: 'easeInOut' }, scale: { type: 'spring', stiffness: 520, damping: 22 } }
+                    : { type: 'spring', stiffness: 520, damping: 22 }
+                  }
+                >
+                  <PaperPlaneTilt size={18} weight="fill" />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </span>
       </div>
     </div>
     </div>
