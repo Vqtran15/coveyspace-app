@@ -1095,7 +1095,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       return
     }
     if (preserveScrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight - preserveScrollRef.current
+      const { scrollTop, scrollHeight } = preserveScrollRef.current
+      scrollRef.current.scrollTop = scrollTop + (scrollRef.current.scrollHeight - scrollHeight)
       preserveScrollRef.current = null
       return
     }
@@ -1169,6 +1170,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   async function loadMore() {
     if (loadingMore || !hasMore || !messages.length) return
+    // Capture scroll anchor BEFORE the spinner appears so the saved height
+    // doesn't include it. setLoadingMore(false) is batched with setMessages,
+    // so the spinner will be absent when useLayoutEffect fires — anchoring
+    // against a height that never included it gives the correct delta.
+    const anchorScrollTop    = scrollRef.current?.scrollTop    ?? 0
+    const anchorScrollHeight = scrollRef.current?.scrollHeight ?? 0
     setLoadingMore(true)
     const { data } = await supabase
       .from('messages')
@@ -1179,7 +1186,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .limit(PAGE_SIZE)
     const older = (data ?? []).reverse()
     if (older.length) {
-      preserveScrollRef.current = scrollRef.current?.scrollHeight ?? 0
+      preserveScrollRef.current = { scrollTop: anchorScrollTop, scrollHeight: anchorScrollHeight }
       setMessages(prev => [...older, ...prev])
       fetchPollsForMessages(older)
       fetchEventsForMessages(older)
