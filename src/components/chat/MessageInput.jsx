@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync, createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useAnimate } from 'framer-motion'
 import {
   PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check, VideoCamera,
 } from '@phosphor-icons/react'
@@ -30,6 +30,20 @@ export default function MessageInput() {
 
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [justSent, setJustSent] = useState(false)
+  const [justTapped, setJustTapped] = useState(false)
+  const [btnScope, animateBtn] = useAnimate()
+  const justTappedTimerRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(justTappedTimerRef.current), [])
+
+  function onSendClick() {
+    if (sending || (!text.trim() && imagePreviews.length === 0)) return
+    animateBtn(btnScope.current, { scale: [1, 1.22, 1] }, { duration: 0.28, ease: [0.34, 1.56, 0.64, 1] })
+    clearTimeout(justTappedTimerRef.current)
+    setJustTapped(true)
+    justTappedTimerRef.current = setTimeout(() => setJustTapped(false), 380)
+    handleSend()
+  }
   const attachMenuRef = useRef(null)
   const attachBtnRef = useRef(null)
   const emojiPickerRef = useRef(null)
@@ -408,8 +422,9 @@ export default function MessageInput() {
           <Smiley size={20} />
         </button>
         <button
+          ref={btnScope}
           type="button"
-          onClick={handleSend}
+          onClick={onSendClick}
           disabled={sending || (!text.trim() && imagePreviews.length === 0)}
           className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
         >
@@ -428,9 +443,15 @@ export default function MessageInput() {
               <motion.span
                 key="plane"
                 initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
+                animate={justTapped
+                  ? { scale: 1, rotate: [0, -15, 15, -8, 0] }
+                  : { scale: 1, rotate: 0 }
+                }
                 exit={{ scale: 0 }}
-                transition={{ type: 'spring', stiffness: 520, damping: 22 }}
+                transition={justTapped
+                  ? { rotate: { duration: 0.35, ease: 'easeInOut' }, scale: { type: 'spring', stiffness: 520, damping: 22 } }
+                  : { type: 'spring', stiffness: 520, damping: 22 }
+                }
               >
                 <PaperPlaneTilt size={18} weight="fill" />
               </motion.span>
