@@ -67,7 +67,7 @@ function MemberCard({ member, onClick }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {lastUpdated && <span className="text-xs text-stone-500">{lastUpdated}</span>}
-          <CaretRight size={14} weight="bold" className="text-stone-400" />
+          <CaretRight size={14} weight="bold" className="text-stone-500" />
         </div>
       </div>
     </motion.button>
@@ -122,7 +122,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs text-stone-500">{formatRelativeDate(groupPrayer.created_at)}</span>
-          <CaretRight size={14} weight="bold" className="text-stone-400" />
+          <CaretRight size={14} weight="bold" className="text-stone-500" />
         </div>
       </div>
     </motion.button>
@@ -153,7 +153,7 @@ function ReactionAvatars({ reactions }) {
           }
         </div>
       ))}
-      {extra > 0 && <span className="text-xs text-stone-400 ml-1.5">+{extra}</span>}
+      {extra > 0 && <span className="text-xs text-stone-500 ml-1.5">+{extra}</span>}
     </div>
   )
 }
@@ -232,7 +232,7 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
           </div>
           <span className="text-sm font-semibold text-stone-700 truncate">{label}</span>
         </button>
-        <span className="text-xs text-stone-400 shrink-0 ml-2">{formatRelativeDate(groupPrayer.created_at)}</span>
+        <span className="text-xs text-stone-500 shrink-0 ml-2">{formatRelativeDate(groupPrayer.created_at)}</span>
       </div>
       <button onClick={onOpen} className="w-full text-left">
         <p className="text-sm text-stone-700 leading-relaxed">{groupPrayer.request}</p>
@@ -857,7 +857,7 @@ export default function PrayerTab() {
 
             {/* Member selection */}
             <div className="px-5 pb-3">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">
                 Select members
                 {selectedMemberIds.size > 0 && (
                   <span className="ml-2 text-ember normal-case font-semibold">
@@ -887,7 +887,7 @@ export default function PrayerTab() {
 
             {/* Request textarea */}
             <div className="px-5 pb-4">
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Prayer request</p>
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Prayer request</p>
               <textarea
                 value={requestText}
                 onChange={e => setRequestText(e.target.value)}

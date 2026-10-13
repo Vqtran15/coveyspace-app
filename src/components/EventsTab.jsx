@@ -74,7 +74,7 @@ function GoingAvatars({ rsvps }) {
           }
         </div>
       ))}
-      {extra > 0 && <span className="text-xs text-stone-400 ml-1.5">+<AnimatedCount value={extra} /></span>}
+      {extra > 0 && <span className="text-xs text-stone-500 ml-1.5">+<AnimatedCount value={extra} /></span>}
     </div>
   )
 }
@@ -510,8 +510,8 @@ function EventCard({ event, isFeatured, eventRsvps = [], userId, onOpenDetail, o
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           {event.location && (
             <>
-              <MapPin size={11} className="text-stone-400 shrink-0" />
-              <span className="text-xs text-stone-400 truncate">{event.location}</span>
+              <MapPin size={11} className="text-stone-500 shrink-0" />
+              <span className="text-xs text-stone-500 truncate">{event.location}</span>
               <span className="text-stone-300 text-xs">·</span>
             </>
           )}
@@ -880,7 +880,7 @@ export default function EventsTab() {
                     ))}
                   </div>
                 ) : pickerConvs.length === 0 ? (
-                  <p className="text-sm text-stone-400 text-center py-6">No conversations found</p>
+                  <p className="text-sm text-stone-500 text-center py-6">No conversations found</p>
                 ) : (
                   <div className="space-y-1">
                     {pickerConvs.map(conv => (
@@ -895,7 +895,7 @@ export default function EventsTab() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-stone-800 text-sm truncate">{convPickerLabel(conv)}</p>
-                          <p className="text-xs text-stone-400">{conv.type === 'group' ? 'Group chat' : 'Direct message'}</p>
+                          <p className="text-xs text-stone-500">{conv.type === 'group' ? 'Group chat' : 'Direct message'}</p>
                         </div>
                         {sendingToConv === conv.id && (
                           <div className="w-4 h-4 rounded-full border-2 border-ember border-t-transparent animate-spin shrink-0" />

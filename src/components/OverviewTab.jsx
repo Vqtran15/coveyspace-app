@@ -52,9 +52,9 @@ function Card({ icon, iconBg, label, primary, secondary, onClick, confetti = fal
       <div className="relative flex-1 min-w-0">
         <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-0.5">{label}</p>
         <p className="text-base font-semibold text-stone-800 leading-snug line-clamp-2">{primary}</p>
-        {secondary && <p className="text-xs text-stone-400 mt-0.5 truncate">{secondary}</p>}
+        {secondary && <p className="text-xs text-stone-500 mt-0.5 truncate">{secondary}</p>}
       </div>
-      <CaretRight size={16} className="text-stone-400 shrink-0 relative" />
+      <CaretRight size={16} className="text-stone-500 shrink-0 relative" />
     </motion.button>
   )
 }
@@ -490,7 +490,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-ember uppercase tracking-wide mb-0.5">Announcement</p>
-                      <p className="text-sm text-stone-400 italic">Tap to add an announcement</p>
+                      <p className="text-sm text-stone-500 italic">Tap to add an announcement</p>
                     </div>
                   </div>
                 </button>

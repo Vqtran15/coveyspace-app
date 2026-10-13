@@ -35,7 +35,7 @@ function ReactionAvatars({ reactions }) {
           }
         </div>
       ))}
-      {extra > 0 && <span className="text-xs text-stone-400 ml-1.5">+{extra}</span>}
+      {extra > 0 && <span className="text-xs text-stone-500 ml-1.5">+{extra}</span>}
     </div>
   )
 }
@@ -509,7 +509,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
                   ))}
                 </div>
               ) : filteredRequests.length === 0 ? (
-                <p className="text-sm text-stone-400 text-center py-6">
+                <p className="text-sm text-stone-500 text-center py-6">
                   {q ? 'No requests match your search.' : 'No requests yet. Tap + to add one!'}
                 </p>
               ) : (
@@ -651,7 +651,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
             {/* Request preview */}
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
               <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Prayer request</p>
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-1">Prayer request</p>
               <p className="text-sm text-stone-700 line-clamp-2">{actionSheetReq.request}</p>
             </div>
             {/* Action rows */}
@@ -725,7 +725,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           >
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
               <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Delete request?</p>
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-1">Delete request?</p>
               <p className="text-sm text-stone-700 line-clamp-2">{deleteSheetReq.request}</p>
             </div>
             <div className="py-1">
@@ -761,7 +761,7 @@ export default function PrayerProfile({ member, displayName, groupId, currentUse
           >
             <div className="px-5 pt-4 pb-3 border-b border-stone-100">
               <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4 lg:hidden" />
-              <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-1">Share in Chat?</p>
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-1">Share in Chat?</p>
               <p className="text-sm text-stone-700 line-clamp-2">{shareSheetReq.request}</p>
             </div>
             <div className="px-4 pt-3 pb-2 flex flex-col gap-2">

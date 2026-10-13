@@ -289,7 +289,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={() => setJoinMode('join')}
                       className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-                        joinMode === 'join' ? 'bg-ember text-white' : 'text-stone-400'
+                        joinMode === 'join' ? 'bg-ember text-white' : 'text-stone-500'
                       }`}
                     >
                       Join a Group
@@ -298,7 +298,7 @@ export default function AuthPage() {
                       type="button"
                       onClick={() => setJoinMode('create')}
                       className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-                        joinMode === 'create' ? 'bg-ember text-white' : 'text-stone-400'
+                        joinMode === 'create' ? 'bg-ember text-white' : 'text-stone-500'
                       }`}
                     >
                       Create New Group

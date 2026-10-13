@@ -34,7 +34,7 @@ export default function SlotCard({ slotNumber, noun, itemNoun, dishName, categor
       {dishName ? (
         <div className="font-semibold text-stone-800 mb-1">{dishName}</div>
       ) : (
-        <div className="text-sm text-stone-400 italic mb-1">Add a new {itemNoun.toLowerCase()}</div>
+        <div className="text-sm text-stone-500 italic mb-1">Add a new {itemNoun.toLowerCase()}</div>
       )}
 
       {filled ? (

@@ -2080,7 +2080,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             )}
           </div>
           {searchQuery && (
-            <p className="text-xs text-stone-400 mt-1.5 px-1">
+            <p className="text-xs text-stone-500 mt-1.5 px-1">
               {filteredMsgs.length} {filteredMsgs.length === 1 ? 'message' : 'messages'} found
             </p>
           )}
@@ -2118,7 +2118,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         <div className="pointer-events-auto" style={{ paddingBottom: keyboardOpen ? '0' : 'var(--sab)' }}>
           {(typing || typingClosing) && (
             <div className={`px-4 pb-1 max-w-3xl mx-auto w-full ${typingClosing ? 'animate-overlay-out' : 'animate-overlay-in'}`}>
-              <span className="text-xs text-stone-400 ml-1 block mb-1">{typing}</span>
+              <span className="text-xs text-stone-500 ml-1 block mb-1">{typing}</span>
               <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-none px-3 py-2.5 inline-flex items-center gap-1 shadow-sm">
                 {[0, 1, 2].map(i => (
                   <div

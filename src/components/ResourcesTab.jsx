@@ -647,7 +647,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                           {matches.map(book => <BookButton key={book.id} book={book} onSelect={b => { setSelectedBook(b); setBookSearch('') }} />)}
                         </div>
                       ) : (
-                        <p className="text-sm text-stone-400 text-center py-8">No books match "{bookSearch}"</p>
+                        <p className="text-sm text-stone-500 text-center py-8">No books match "{bookSearch}"</p>
                       )
                     })()
                   ) : (
@@ -657,7 +657,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.18 }}
                       >
-                        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 px-1">
                           Old Testament
                         </p>
                         <div className="grid grid-cols-2 gap-1.5 mb-5">
@@ -669,7 +669,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.18, delay: 0.07 }}
                       >
-                        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2 px-1">
+                        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2 px-1">
                           New Testament
                         </p>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -1408,16 +1408,16 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                               <div className="flex items-center justify-between gap-2 mb-0.5">
                                 <p className={`text-base truncate ${hasUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>Church Bulletin</p>
                                 {latest && (
-                                  <p className={`text-xs shrink-0 ${hasUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{relativeTime(latest.created_at)}</p>
+                                  <p className={`text-xs shrink-0 ${hasUnread ? 'font-semibold text-ember' : 'text-stone-500'}`}>{relativeTime(latest.created_at)}</p>
                                 )}
                               </div>
                               {latest?.body ? (
                                 <p className={`text-sm line-clamp-2 leading-relaxed ${hasUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{stripHtml(latest.body)}</p>
                               ) : (
-                                <p className="text-xs text-stone-400">No announcements yet</p>
+                                <p className="text-xs text-stone-500">No announcements yet</p>
                               )}
                             </div>
-                            <CaretRight size={16} className="text-stone-400 shrink-0" />
+                            <CaretRight size={16} className="text-stone-500 shrink-0" />
                           </button>
                         )
                       })()}
@@ -1442,16 +1442,16 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                               <div className="flex items-center justify-between gap-2 mb-0.5">
                                 <p className={`text-base truncate ${hasUnread ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>Leadership Bulletin</p>
                                 {latest && (
-                                  <p className={`text-xs shrink-0 ${hasUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{relativeTime(latest.created_at)}</p>
+                                  <p className={`text-xs shrink-0 ${hasUnread ? 'font-semibold text-ember' : 'text-stone-500'}`}>{relativeTime(latest.created_at)}</p>
                                 )}
                               </div>
                               {latest?.body ? (
                                 <p className={`text-sm line-clamp-2 leading-relaxed ${hasUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{stripHtml(latest.body)}</p>
                               ) : (
-                                <p className="text-xs text-stone-400">No messages yet</p>
+                                <p className="text-xs text-stone-500">No messages yet</p>
                               )}
                             </div>
-                            <CaretRight size={16} className="text-stone-400 shrink-0" />
+                            <CaretRight size={16} className="text-stone-500 shrink-0" />
                           </button>
                         )
                       })()}
@@ -1474,9 +1474,9 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       <p className="text-base font-semibold text-stone-800 truncate">
                         {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
                       </p>
-                      <p className="text-xs text-stone-400 mt-0.5">Quick access, search &amp; browse</p>
+                      <p className="text-xs text-stone-500 mt-0.5">Quick access, search &amp; browse</p>
                     </div>
-                    <CaretRight size={16} className="text-stone-400 shrink-0" />
+                    <CaretRight size={16} className="text-stone-500 shrink-0" />
                   </button>
                 </div>
 
@@ -1496,10 +1496,10 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           <div className="flex-1 min-w-0">
                             <p className="text-base font-semibold text-stone-800">Community Guide</p>
                             {isAdmin && !groupSettings?.guide_type && !groupSettings?.guide_url && (
-                              <p className="text-xs text-stone-400 mt-0.5">Tap to set up</p>
+                              <p className="text-xs text-stone-500 mt-0.5">Tap to set up</p>
                             )}
                           </div>
-                          <CaretRight size={16} className="text-stone-400 shrink-0" />
+                          <CaretRight size={16} className="text-stone-500 shrink-0" />
                         </button>
                       )}
                       {givingEnabled && (
@@ -1513,10 +1513,10 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           <div className="flex-1 min-w-0">
                             <p className="text-base font-semibold text-stone-800">Monthly Giving</p>
                             {isAdmin && !groupSettings?.giving_url && (
-                              <p className="text-xs text-stone-400 mt-0.5">Tap to set up</p>
+                              <p className="text-xs text-stone-500 mt-0.5">Tap to set up</p>
                             )}
                           </div>
-                          <CaretRight size={16} className="text-stone-400 shrink-0" />
+                          <CaretRight size={16} className="text-stone-500 shrink-0" />
                         </button>
                       )}
                     </div>
@@ -1624,7 +1624,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
         {/* Recent chapters */}
         {recentChapters.length > 0 && (
           <div className="mb-4">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Recent</p>
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Recent</p>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
               {recentChapters.map(r => (
                 <button
@@ -1643,7 +1643,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
         {/* Quick Access */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Quick Access</p>
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Quick Access</p>
             <div className="flex items-center gap-1">
               {userPassages !== null && userPassages.length > 0 && (
                 <button
@@ -1944,7 +1944,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   {/* Verse count + list */}
                   {openChapter && !chapterError && (
                     <>
-                      <p className="text-xs text-stone-400 font-medium mb-3">
+                      <p className="text-xs text-stone-500 font-medium mb-3">
                         {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
                         {openChapter.startVerse != null && (
                           <span>
@@ -2083,7 +2083,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 <Bookmark size={20} weight={isAlreadySaved ? 'fill' : 'regular'} className={isAlreadySaved ? 'text-ember' : 'text-stone-500'} />
                 <div>
                   <p className="text-sm font-semibold text-stone-800">{isAlreadySaved ? 'Already saved' : 'Save chapter'}</p>
-                  <p className="text-xs text-stone-400">Add to Quick Access</p>
+                  <p className="text-xs text-stone-500">Add to Quick Access</p>
                 </div>
               </button>
               <div className="h-px bg-stone-100 mx-3" />
@@ -2094,7 +2094,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                 <Plus size={20} className="text-stone-500" />
                 <div>
                   <p className="text-sm font-semibold text-stone-800">Select verses</p>
-                  <p className="text-xs text-stone-400">Pick a range to copy or save to Quick Access</p>
+                  <p className="text-xs text-stone-500">Pick a range to copy or save to Quick Access</p>
                 </div>
               </button>
               <button

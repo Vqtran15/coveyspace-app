@@ -193,7 +193,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
       {bothEnabled && isDesktop && (
         <div className="lg:grid lg:grid-cols-2 lg:gap-6 max-w-5xl mx-auto px-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-3 px-1">Meals</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-3 px-1">Meals</p>
             <RotationTab
               key={`meals-desktop-${localRefreshKey}`}
               ref={mealDesktopRef}
@@ -207,7 +207,7 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
             />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-3 px-1">Service</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-3 px-1">Service</p>
             <RotationTab
               key={`services-desktop-${localRefreshKey}`}
               ref={serviceDesktopRef}
