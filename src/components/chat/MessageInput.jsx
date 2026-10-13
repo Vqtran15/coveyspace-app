@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync, createPortal } from 'react-dom'
-import { motion, AnimatePresence, useAnimate } from 'framer-motion'
+import { motion, AnimatePresence, useAnimation } from 'framer-motion'
 import {
   PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check, VideoCamera,
 } from '@phosphor-icons/react'
@@ -31,14 +31,14 @@ export default function MessageInput() {
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [justSent, setJustSent] = useState(false)
   const [justTapped, setJustTapped] = useState(false)
-  const [btnScope, animateBtn] = useAnimate()
+  const btnControls = useAnimation()
   const justTappedTimerRef = useRef(null)
 
   useEffect(() => () => clearTimeout(justTappedTimerRef.current), [])
 
   function onSendClick() {
     if (sending || (!text.trim() && imagePreviews.length === 0)) return
-    animateBtn(btnScope.current, { scale: [1, 1.22, 1] }, { duration: 0.28, ease: [0.34, 1.56, 0.64, 1] })
+    btnControls.start({ scale: [1, 1.22, 1], transition: { duration: 0.28, ease: [0.34, 1.56, 0.64, 1] } })
     clearTimeout(justTappedTimerRef.current)
     setJustTapped(true)
     justTappedTimerRef.current = setTimeout(() => setJustTapped(false), 380)
@@ -421,8 +421,8 @@ export default function MessageInput() {
         >
           <Smiley size={20} />
         </button>
-        <button
-          ref={btnScope}
+        <motion.button
+          animate={btnControls}
           type="button"
           onClick={onSendClick}
           disabled={sending || (!text.trim() && imagePreviews.length === 0)}
@@ -457,7 +457,7 @@ export default function MessageInput() {
               </motion.span>
             )}
           </AnimatePresence>
-        </button>
+        </motion.button>
       </div>
     </div>
     </div>
