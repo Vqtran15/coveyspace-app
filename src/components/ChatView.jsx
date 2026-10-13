@@ -10,10 +10,10 @@ import { useModalClose } from '../hooks/useModalClose.js'
 import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
-import { initials } from '../utils/format.js'
+import { initials, GROUP_TIME_GAP, isVideoUrl } from '../utils/format.js'
 import { haptic } from '../lib/haptic.js'
 import { trackEvent } from '../lib/analytics.js'
-import { ChatContext } from './chat/ChatContext.jsx'
+import { ChatContext, ChatInputContext } from './chat/ChatContext.jsx'
 import MessageList from './chat/MessageList.jsx'
 import MessageInput from './chat/MessageInput.jsx'
 import ConversationInfo from './chat/ConversationInfo.jsx'
@@ -21,10 +21,17 @@ import ConversationInfo from './chat/ConversationInfo.jsx'
 const PAGE_SIZE   = 50
 const CACHE_LIMIT = 50
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
-const GROUP_TIME_GAP = 5 * 60 * 1000
 const DRAFT_KEY    = convId => `draft:${convId}`
 const READ_AT_KEY  = convId => `readAt:${convId}`
 const CACHE_KEY    = convId => `chat_v1_${convId}`
+
+// Behavior thresholds
+const AT_BOTTOM_THRESHOLD = 80    // px from bottom to consider "at bottom"
+const KEYBOARD_THRESHOLD  = 120   // px viewport shrink to detect keyboard open
+const DOUBLE_TAP_MS       = 300   // ms window for double-tap detection
+const LONG_PRESS_MS       = 500   // ms to trigger long press
+const TYPING_STOP_MS      = 3000  // ms idle before typing indicator clears
+const FOCUS_DELAY_MS      = 50    // ms delay before programmatic focus
 
 function loadCache(convId) {
   try { return JSON.parse(localStorage.getItem(CACHE_KEY(convId)) ?? 'null') } catch { return null }
@@ -300,7 +307,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       // update baseline to the new larger value so keyboard detection stays accurate.
       if (!kbOpen && nowVVH > baseline) baseline = nowVVH
       const kbH = baseline - nowVVH
-      const nowOpen = kbH > 120
+      const nowOpen = kbH > KEYBOARD_THRESHOLD
       // sat + vv.offsetTop + vv.height gives the keyboard top in document
       // coordinates, which is the correct chat container height.
       // vv.offsetTop accounts for any page scroll iOS applies when the keyboard
@@ -333,7 +340,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       requestAnimationFrame(() => {
         if (!kbOpen) return
         const nowVVH = Math.round(vv.height)
-        if (baseline - nowVVH <= 120) {
+        if (baseline - nowVVH <= KEYBOARD_THRESHOLD) {
           // Keyboard is not open — clear the stuck state.
           kbOpen = false
           document.body.classList.remove('chat-keyboard-open')
@@ -375,12 +382,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const myId = session.user.id
   const convId = conversation.id
-
-  // Resolve the current display name for a message sender.
-  // Falls back to the stored name for users who've left the group.
-  function senderName(userId, storedName) {
-    return members.find(m => m.user_id === userId)?.display_name || storedName
-  }
 
   // ── Poll helpers ─────────────────────────────────────────────────────────
   async function fetchPollsForMessages(msgs) {
@@ -595,11 +596,20 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     setPollMenuOpenId(null)
     setDeletingPollId(pollId)
     await new Promise(r => setTimeout(r, 260))
+    const msgSnapshot = messages.find(m => m.id === messageId)
+    const pollSnapshot = polls[pollId]
     setMessages(prev => prev.filter(m => m.id !== messageId))
     setPolls(prev => { const next = { ...prev }; delete next[pollId]; return next })
     setDeletingPollId(null)
-    await supabase.from('messages').delete().eq('id', messageId)
-    await supabase.from('polls').delete().eq('id', pollId)
+    const [{ error: msgErr }, { error: pollErr }] = await Promise.all([
+      supabase.from('messages').delete().eq('id', messageId),
+      supabase.from('polls').delete().eq('id', pollId),
+    ])
+    if (msgErr || pollErr) {
+      if (msgSnapshot) setMessages(prev => [...prev, msgSnapshot].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)))
+      if (pollSnapshot) setPolls(prev => ({ ...prev, [pollId]: pollSnapshot }))
+      toast('Failed to delete poll', 'error')
+    }
   }
 
   // ── Messages + reactions + realtime ──────────────────────────────────────
@@ -624,6 +634,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     initialScrollSettledRef.current = false
     initialFirstUnreadRef.current = null
     unreadDetectedRef.current = false
+    lastTapRef.current = null
     freshLoadRef.current = true
     clearTimeout(freshLoadTimerRef.current)
     freshLoadTimerRef.current = setTimeout(() => { freshLoadRef.current = false }, 5000)
@@ -665,11 +676,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         // scroll-to-first-unread from the cache path.
         if (freshLoadRef.current && !initialFirstUnreadRef.current) {
           requestAnimationFrame(() => {
+            if (!mountedRef.current) return
             scrollToBottom()
             const el = scrollRef.current
             if (!el) return
             let cleanup
             function onRestorationScroll() {
+              if (!mountedRef.current) { el.removeEventListener('scroll', onRestorationScroll); clearTimeout(cleanup); return }
               const dist = el.scrollHeight - el.scrollTop - el.clientHeight
               if (dist > 20) {
                 el.removeEventListener('scroll', onRestorationScroll)
@@ -1137,7 +1150,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     // scroll settles, which would briefly set isAtBottom=false and flash the button.
     // initialScrollSettledRef is set to true 2 frames after the initial reveal scroll.
     if (!initialScrollSettledRef.current) return
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < AT_BOTTOM_THRESHOLD
     setIsAtBottom(atBottom)
     isAtBottomRef.current = atBottom
     if (atBottom) {
@@ -1216,7 +1229,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // ── Input ─────────────────────────────────────────────────────────────────
   function toggleSearch() {
     if (searchOpen) { setSearchOpen(false); setSearchQuery('') }
-    else { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 50) }
+    else { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), FOCUS_DELAY_MS) }
   }
 
   function handleTextInput(e) {
@@ -1231,7 +1244,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       clearTimeout(typingTimeoutRef.current)
       typingTimeoutRef.current = setTimeout(() => {
         presenceChannelRef.current?.track({ display_name: displayName, typing: false })
-      }, 3000)
+      }, TYPING_STOP_MS)
     }
     // @mention detection
     const cursor = e.target.selectionStart ?? val.length
@@ -1261,7 +1274,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }, 0)
   }
 
-  function handleKeyDown() {}
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent?.isComposing) {
+      e.preventDefault()
+      handleSend(e)
+    }
+  }
 
   // ── Send ──────────────────────────────────────────────────────────────────
   async function handleSend(e) {
@@ -1570,9 +1588,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     haptic()
     closeMenu()
     if (existing) {
-      // Optimistic remove — Supabase DELETE realtime events only carry the PK,
-      // so message_id and emoji are null on the event and the realtime handler
-      // can't find the row to remove. Update local state immediately instead.
+      // Optimistic remove for instant feedback — the realtime DELETE handler
+      // also fires and is now a no-op (row already gone from state).
       setReactions(prev => {
         if (!prev[messageId]?.[emoji]) return prev
         const byEmoji = { ...prev[messageId] }
@@ -1652,7 +1669,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     if (longPressFiredRef.current) { longPressFiredRef.current = false; return }
     const now = Date.now()
     const last = lastTapRef.current
-    if (last && last.msgId === msgId && now - last.time < 300) {
+    if (last && last.msgId === msgId && now - last.time < DOUBLE_TAP_MS) {
       lastTapRef.current = null
       if (isOwn) {
         e.stopPropagation()
@@ -1682,7 +1699,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       } else {
         openMenuFromEl(el, msgId, isOwn)
       }
-    }, 500)
+    }, LONG_PRESS_MS)
   }
 
   function handleLongPressEnd() {
@@ -1723,7 +1740,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     const msg = messages.find(m => m.id === msgId)
     if (msg) {
       setReplyingTo(msg)
-      setTimeout(() => textareaRef.current?.focus(), 50)
+      setTimeout(() => textareaRef.current?.focus(), FOCUS_DELAY_MS)
     }
     closeMenu()
   }
@@ -1784,6 +1801,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     } else {
       clearTimeout(last?.timer)
       const timer = setTimeout(() => {
+        if (!mountedRef.current) return
         imgTapRef.current = null
         setLightboxImg(imageUrl)
       }, 310)
@@ -1832,12 +1850,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
       if (lastReadMsgId) {
         if (!map[lastReadMsgId]) map[lastReadMsgId] = []
-        const member = members.find(m => m.user_id === userId)
+        const member = memberMap[userId]
         if (member) map[lastReadMsgId].push(member)
       }
     }
     return map
-  }, [memberReadTimes, filteredMsgs, members])
+  }, [memberReadTimes, filteredMsgs, memberMap])
 
   const typing = useMemo(() => typingLabel(typingUsers), [typingUsers])
 
@@ -1851,7 +1869,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       // Only play the closing animation if the indicator was actually shown;
       // skips the spurious 250ms flash on initial mount when typing = ''.
       setTypingClosing(true)
-      typingCloseRef.current = setTimeout(() => setTypingClosing(false), 250)
+      typingCloseRef.current = setTimeout(() => { if (mountedRef.current) setTypingClosing(false) }, 250)
     }
   }, [typing])
 
@@ -1892,33 +1910,33 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   )
 
   // ── Render ────────────────────────────────────────────────────────────────
-  // Memoized so context consumers don't re-render when unrelated state
-  // (e.g. AppContext refresh) causes ChatView to re-render without changing
-  // any of its own state.
+  // Data context: consumed by MessageList and ConversationInfo.
+  // Does NOT include text/imagePreviews/mentionSearch so keystrokes don't
+  // re-render MessageList on every character typed.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const ctxValue = useMemo(() => ({
-    // Refs (stable, not in deps)
+    // Refs (stable)
     scrollRef, messagesContainerRef, textareaRef, fileInputRef, editTextareaRef,
     presenceChannelRef, typingTimeoutRef, savedSelectionRef,
     pollOptionRefs, justAddedOptionRef, pollQuestionRef, groupIconFileRef,
+    inputWrapperRef, virtualizerRef,
     // Props
     conversation, session, myId, convId, displayName, groupId,
     members, isAdmin,
     // Derived
     filteredMsgs, items, readersAtMessage, typing, title, activeMessage,
     dmOtherMember, isMainGroupChat, canEditGroupInfo, memberMap,
-    // State
+    senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
+    // State (message/UI, not compose state)
     messages, loading, visible, contentReady, fetchingFresh, hasMore, loadingMore,
-    text, setText, imagePreviews, setImagePreviews,
     searchOpen, setSearchOpen, searchQuery, setSearchQuery,
     isAtBottom, setIsAtBottom,
     typingUsers, reactions, justReacted,
     activeMsg, setActiveMsg, menuPos, menuClosing, closeMenu,
     showMoreEmojis, setShowMoreEmojis,
     reactionPickerClosing, setReactionPickerClosing,
-    showEmojiPicker, setShowEmojiPicker,
     notesOpen, setNotesOpen,
-    replyingTo, setReplyingTo,
+    setReplyingTo,
     infoOpen, setInfoOpen, infoClosing, closeInfo,
     renamingGroup, setRenamingGroup,
     confirmDeleteMsg, setConfirmDeleteMsg,
@@ -1930,60 +1948,75 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     firstUnreadId, setFirstUnreadId, openUnreadCount,
     lightboxImg, setLightboxImg,
     convImageUrl, uploadingGroupIcon,
-    mentionSearch, setMentionSearch, insertMention,
     polls, chatEvents, chatPrayers,
-    pollCreating, setPollCreating,
-    pollQuestion, setPollQuestion,
-    pollOptions, setPollOptions,
-    pollSubmitting,
     pollMenuOpenId, setPollMenuOpenId,
     deletingPollId,
     editingPollId, setEditingPollId,
     editPollQuestion, setEditPollQuestion,
     editPollOptions, setEditPollOptions,
     savingPoll,
-    sending,
-    // Handlers (functions close over current state; recreated whenever any
-    // dep below changes, which is the same moment state actually changed)
+    // Handlers used by MessageList / ConversationInfo
     scrollToBottom, handleScroll, loadMore, toggleSearch,
-    handleTextInput, handleKeyDown, handleSend, handleFileChange,
     toggleReaction, deleteMessage, openMenuFromEl, exitEdit, openMenu,
     handleDoubleTap, handleLongPressStart, handleLongPressEnd,
     startEdit, handleSaveEdit, handleReply, closeReactionPicker,
-    closeEmojiPicker, insertEmoji, retryMessage,
     uploadGroupIcon, removeGroupIcon,
-    castVote, rsvpInChat, prayInChat, createPoll, startEditPoll, savePoll, deletePoll,
+    castVote, rsvpInChat, prayInChat, startEditPoll, savePoll, deletePoll,
     handleRenameGroup, scrollToMessage, formatEventDate,
     handleScrollToBottom, onMessageImageLoad, handleImageTap,
-    // senderName via memberMap — stable reference, always current
-    senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
-    headerH,
-    inputH,
-    inputWrapperRef,
-    virtualizerRef,
+    retryMessage,
+    headerH, inputH,
   }), [
-    // Props
     conversation, session, myId, convId, displayName, groupId, members, isAdmin,
-    // Derived
     filteredMsgs, items, readersAtMessage, typing, title, activeMessage,
     dmOtherMember, isMainGroupChat, canEditGroupInfo, memberMap,
-    // State — all must be listed so handlers capture current values
     messages, loading, visible, contentReady, fetchingFresh, hasMore, loadingMore,
-    text, imagePreviews, searchOpen, searchQuery, isAtBottom, typingUsers,
+    searchOpen, searchQuery, isAtBottom, typingUsers,
     reactions, justReacted, activeMsg, menuPos, menuClosing, showMoreEmojis,
-    reactionPickerClosing, showEmojiPicker, notesOpen, replyingTo,
+    reactionPickerClosing, notesOpen,
     infoOpen, infoClosing, renamingGroup, renameValue, renameSaving, confirmDeleteMsg,
     editingMsgId, editText, editClosingId, selectedMsgId, confirmDeleteId,
     convName, memberReadTimes, unreadCount, firstUnreadId, openUnreadCount,
     lightboxImg, convImageUrl, uploadingGroupIcon, polls, chatEvents,
-    pollCreating, pollQuestion, pollOptions, pollSubmitting, pollMenuOpenId,
-    deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, sending, chatPrayers,
-    mentionSearch,
+    pollMenuOpenId,
+    deletingPollId, editingPollId, editPollQuestion, editPollOptions, savingPoll, chatPrayers,
     headerH, inputH,
+  ])
+
+  // Input context: consumed only by MessageInput.
+  // Recreated on every keystroke but MessageList never sees it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const inputCtxValue = useMemo(() => ({
+    // Compose state
+    text, setText, imagePreviews, setImagePreviews,
+    replyingTo, setReplyingTo,
+    sending,
+    mentionSearch, setMentionSearch, insertMention,
+    showEmojiPicker, setShowEmojiPicker,
+    pollCreating, setPollCreating,
+    pollQuestion, setPollQuestion,
+    pollOptions, setPollOptions,
+    pollSubmitting,
+    // Shared refs MessageInput needs
+    textareaRef, fileInputRef, savedSelectionRef, scrollRef,
+    presenceChannelRef, typingTimeoutRef,
+    pollOptionRefs, justAddedOptionRef, pollQuestionRef,
+    // Props
+    members, myId, displayName, convId,
+    senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
+    // Handlers that read current text/imagePreviews via closure
+    handleTextInput, handleKeyDown, handleSend, handleFileChange,
+    closeEmojiPicker, insertEmoji, createPoll,
+  }), [
+    text, imagePreviews, replyingTo, sending,
+    mentionSearch, showEmojiPicker,
+    pollCreating, pollQuestion, pollOptions, pollSubmitting,
+    members, myId, displayName, convId, memberMap,
   ])
 
   return (
     <ChatContext.Provider value={ctxValue}>
+    <ChatInputContext.Provider value={inputCtxValue}>
     {/* Fixed frosted overlay for the iOS status bar zone — same styling as the header, ensures visual continuity */}
     <div
       className="fixed top-0 left-0 right-0 lg:left-56 pointer-events-none z-[11] bg-sunrise-50/85 backdrop-blur-md"
@@ -2251,25 +2284,37 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
       {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}
 
-      {/* Image lightbox */}
+      {/* Image / video lightbox */}
       {(lightboxImg || lightboxClosing) && (
         <div
           className={`fixed inset-0 z-50 bg-black/90 flex items-center justify-center ${lightboxClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
           onClick={closeLightbox}
+          onTouchStart={e => { lightboxTouchStartY.current = e.touches[0].clientY }}
+          onTouchEnd={e => {
+            const dy = e.changedTouches[0].clientY - (lightboxTouchStartY.current ?? 0)
+            if (dy > 80) closeLightbox()
+            lightboxTouchStartY.current = null
+          }}
         >
-          <img
-            src={lightboxImg}
-            alt="Full size"
-            className={`max-w-full max-h-full object-contain rounded-lg ${lightboxClosing ? 'animate-lightbox-img-out' : 'animate-lightbox-img-in'}`}
-            style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
-            onClick={closeLightbox}
-            onTouchStart={e => { lightboxTouchStartY.current = e.touches[0].clientY }}
-            onTouchEnd={e => {
-              const dy = e.changedTouches[0].clientY - (lightboxTouchStartY.current ?? 0)
-              if (dy > 80) closeLightbox()
-              lightboxTouchStartY.current = null
-            }}
-          />
+          {isVideoUrl(lightboxImg) ? (
+            <video
+              src={lightboxImg}
+              controls
+              autoPlay
+              playsInline
+              className={`max-w-full max-h-full rounded-lg ${lightboxClosing ? 'animate-lightbox-img-out' : 'animate-lightbox-img-in'}`}
+              style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
+              onClick={e => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={lightboxImg}
+              alt="Full size"
+              className={`max-w-full max-h-full object-contain rounded-lg ${lightboxClosing ? 'animate-lightbox-img-out' : 'animate-lightbox-img-in'}`}
+              style={{ maxHeight: 'calc(100svh - 80px)', maxWidth: 'calc(100vw - 32px)' }}
+              onClick={closeLightbox}
+            />
+          )}
           <button
             onClick={e => { e.stopPropagation(); closeLightbox() }}
             className="absolute right-4 z-10 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors"
@@ -2280,6 +2325,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         </div>
       )}
     </div>
+    </ChatInputContext.Provider>
     </ChatContext.Provider>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -6,7 +6,7 @@ import { getCookie, setCookie } from '../lib/cookies.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
-import { initials, formatListTime } from '../utils/format.js'
+import { initials, formatListTime, isVideoUrl } from '../utils/format.js'
 
 function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, isDeleting, onSelect, onOptionsRequest, i, activeConvId }) {
   const name        = convName(conv)
@@ -132,8 +132,6 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
   )
 }
 
-const VIDEO_PREVIEW_RE = /\.(mp4|mov|webm|m4v|avi|mkv)(\?.*)?$/i
-
 export default function ConversationList({ session, groupId, members, enterClass, autoOpenGroupChat, onAutoOpenConsumed, autoOpenMainChat, onAutoOpenMainChatConsumed, onSelect, onRead, onOpenSettings, upcoming = [], birthdayBannerDismissed = false, birthdayBannerClosing = false, onDismissBirthdayBanner, onOpenBirthdays, pushSupported, pushSubscribed, pushPermission, pushToggling, onPushToggle, pinnedGroupId, onPinGroup, activeConvId = null, onOtherUnreadChange }) {
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
@@ -157,7 +155,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   const searchInputRef = useRef(null)
 
   const myId = session.user.id
-  async function loadConversations() {
+  const loadConversations = useCallback(async () => {
     try {
       const { data: convs, error } = await supabase
         .from('conversations')
@@ -201,12 +199,15 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       const convIds = convs.map(c => c.id)
       const [{ data: msgs }, { data: myMemberships }] = await Promise.all([
+        // Fetch enough messages that every conversation gets its latest one represented.
+        // A proper DISTINCT ON query requires a DB function — see migration_72_latest_messages.sql.
+        // Until that migration is applied, fetching 5× the conversation count is a reliable heuristic.
         supabase
           .from('messages')
           .select('conversation_id, body, display_name, image_url, created_at, user_id')
           .in('conversation_id', convIds)
           .order('created_at', { ascending: false })
-          .limit(200),
+          .limit(Math.max(200, convIds.length * 5)),
         supabase
           .from('conversation_members')
           .select('conversation_id, last_read_at')
@@ -230,7 +231,7 @@ export default function ConversationList({ session, groupId, members, enterClass
     } finally {
       setLoading(false)
     }
-  }
+  }, [myId, groupId, autoOpenGroupChat, autoOpenMainChat, onAutoOpenConsumed, onAutoOpenMainChatConsumed, onSelect, onPinGroup])
 
   useEffect(() => {
     if (!groupId) {
@@ -267,7 +268,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       .subscribe()
 
     return () => supabase.removeChannel(ch)
-  }, [groupId])
+  }, [groupId, loadConversations])
 
 
   function convName(conv) {
@@ -291,7 +292,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   function lastPreview(conv) {
     const msg = lastMessages[conv.id]
     if (!msg) return 'No messages yet'
-    const isVideo = msg.image_url ? VIDEO_PREVIEW_RE.test(msg.image_url) : false
+    const isVideo = isVideoUrl(msg.image_url)
     const body = msg.image_url && !msg.body
       ? (isVideo ? '🎬 Video' : '📷 Photo')
       : msg.image_url

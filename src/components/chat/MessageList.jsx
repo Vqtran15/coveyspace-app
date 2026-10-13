@@ -9,14 +9,10 @@ import {
   Plus as PlusIcon, HandsPraying, ArrowBendUpLeft, CaretRight,
 } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../../lib/avatarIcons.jsx'
-import { initials, formatMessageTime } from '../../utils/format.js'
+import { initials, formatMessageTime, GROUP_TIME_GAP, isVideoUrl } from '../../utils/format.js'
 import { useChatContext } from './ChatContext.jsx'
 import { haptic } from '../../lib/haptic.js'
 
-const VIDEO_URL_RE = /\.(mp4|mov|webm|m4v|avi|mkv)(\?.*)?$/i
-function isVideoUrl(url) { return url ? VIDEO_URL_RE.test(url) : false }
-
-const GROUP_TIME_GAP = 5 * 60 * 1000
 
 const REACTION_PARTICLES = [
   { dx: 0,   dy: -22 },
@@ -139,9 +135,8 @@ export default function MessageList() {
 
   // Expose the virtualizer to ChatView so scroll-to-message and first-unread
   // positioning can fall back to scrollToIndex when the target is off-screen.
-  useEffect(() => {
-    virtualizerRef.current = rowVirtualizer
-  })
+  // Assign directly in render body — a ref assignment is not a side effect.
+  virtualizerRef.current = rowVirtualizer
 
   function onMsgTouchStart(e, msg, isOwn) {
     handleLongPressStart(e, msg.id, isOwn)
@@ -151,6 +146,7 @@ export default function MessageList() {
       el: e.currentTarget.querySelector('[data-bubble]'),
       iconEl: e.currentTarget.querySelector('[data-swipe-icon]'),
       triggered: false, active: false,
+      isOwn,
     }
   }
 
@@ -161,14 +157,17 @@ export default function MessageList() {
     const t = e.touches[0]
     const dx = t.clientX - s.startX
     const dy = t.clientY - s.startY
+    // Own messages swipe left; others' messages swipe right
+    const dir = s.isOwn ? -dx : dx
     if (!s.active) {
       if (Math.abs(dy) > Math.abs(dx)) return
-      if (dx < 5) return
+      if (dir < 5) return
       s.active = true
     }
-    const clamped = Math.max(0, Math.min(dx, 72))
+    const clamped = Math.max(0, Math.min(dir, 72))
+    const translate = s.isOwn ? -clamped : clamped
     s.el.style.transition = 'none'
-    s.el.style.transform = `translateX(${clamped}px)`
+    s.el.style.transform = `translateX(${translate}px)`
     if (s.iconEl) {
       s.iconEl.style.transition = 'none'
       s.iconEl.style.opacity = Math.min(clamped / 48, 1)
@@ -180,7 +179,8 @@ export default function MessageList() {
     handleLongPressEnd()
     const s = swipeRef.current
     if (!s.active || !s.el) return
-    const dx = e.changedTouches[0].clientX - s.startX
+    const rawDx = e.changedTouches[0].clientX - s.startX
+    const dx = s.isOwn ? -rawDx : rawDx
     s.el.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)'
     s.el.style.transform = 'translateX(0)'
     if (s.iconEl) {
@@ -212,15 +212,12 @@ export default function MessageList() {
     <div className="relative flex-1 min-h-0">
       <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)`, paddingBottom: `${inputH}px` }}>
         {loadingMore && (
-          <div className="flex justify-center py-3">
-            <div className="flex items-center gap-1.5">
-              {[0, 1, 2].map(i => (
-                <div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-stone-300 animate-bounce"
-                  style={{ animationDelay: `${i * 120}ms` }}
-                />
-              ))}
+          <div className="py-1">
+            <div className="h-0.5 rounded-full bg-stone-100 overflow-hidden">
+              <div
+                className="h-full bg-ember/50 rounded-full"
+                style={{ width: '40%', animation: 'skeleton-shimmer 1.2s ease-in-out infinite', backgroundSize: '200% 100%', background: 'linear-gradient(90deg,transparent 0%,rgba(168,82,40,0.5) 50%,transparent 100%)' }}
+              />
             </div>
           </div>
         )}
@@ -295,14 +292,14 @@ export default function MessageList() {
         {contentReady && !loading && (
           filteredMsgs.length === 0 ? (
             visible && (
-              <div className="flex flex-col items-center justify-center h-full py-16 text-stone-400">
+              <div className="flex flex-col items-center justify-center h-full py-16">
                 {searchQuery ? (
                   <>
                     <MagnifyingGlass size={40} className="text-stone-300 mb-3" />
-                    <p className="text-sm">No messages match &ldquo;{searchQuery}&rdquo;</p>
+                    <p className="text-sm text-stone-500">No messages match &ldquo;{searchQuery}&rdquo;</p>
                   </>
                 ) : (
-                  <p className="text-sm">No messages yet. Say hello!</p>
+                  <p className="text-sm text-stone-500">No messages yet. Say hello!</p>
                 )}
               </div>
             )
@@ -794,14 +791,24 @@ export default function MessageList() {
                             )}
                           </div>
                         ) : isVideoUrl(msg.image_url) ? (
-                          <video
-                            src={msg.image_url}
-                            controls
-                            playsInline
-                            className="block"
-                            style={{ maxWidth: '100%', maxHeight: 280 }}
-                            onContextMenu={e => e.preventDefault()}
-                          />
+                          <div
+                            className="relative cursor-pointer"
+                            onClick={e => handleImageTap(e, msg.id, isOwn, msg.image_url)}
+                          >
+                            <video
+                              src={msg.image_url}
+                              playsInline
+                              muted
+                              className="block pointer-events-none"
+                              style={{ maxWidth: '100%', maxHeight: 280 }}
+                              onContextMenu={e => e.preventDefault()}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <div className="w-12 h-12 rounded-full bg-black/50 flex items-center justify-center">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                              </div>
+                            </div>
+                          </div>
                         ) : (
                           <img
                             src={msg.image_url}

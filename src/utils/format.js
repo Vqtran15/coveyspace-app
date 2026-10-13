@@ -2,6 +2,11 @@ export function initials(name) {
   return (name ?? '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
+// Shared chat constants — imported by ChatView, MessageList, ConversationList
+export const GROUP_TIME_GAP = 5 * 60 * 1000   // ms between messages before showing a new time header
+export const VIDEO_URL_RE   = /\.(mp4|mov|webm|m4v|avi|mkv)(\?.*)?$/i
+export function isVideoUrl(url) { return url ? VIDEO_URL_RE.test(url) : false }
+
 // Used in chat message timestamps — shows date + time for older messages
 export function formatMessageTime(iso) {
   if (!iso) return ''

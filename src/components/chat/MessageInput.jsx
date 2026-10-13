@@ -1,11 +1,11 @@
 import { lazy, Suspense, useState, useRef, useEffect } from 'react'
-import { flushSync, createPortal } from 'react-dom'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, VideoCamera,
 } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../../lib/avatarIcons.jsx'
-import { useChatContext } from './ChatContext.jsx'
+import { useChatInputContext } from './ChatContext.jsx'
 
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
 
@@ -26,7 +26,7 @@ export default function MessageInput() {
     closeEmojiPicker, insertEmoji, createPoll,
     senderName,
     mentionSearch, setMentionSearch, insertMention, members, myId,
-  } = useChatContext()
+  } = useChatInputContext()
 
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [justTapped, setJustTapped] = useState(false)
@@ -83,14 +83,13 @@ export default function MessageInput() {
 
   function openPoll() {
     if (showEmojiPicker) closeEmojiPicker()
-    const keyboardWasUp = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)
-    if (keyboardWasUp) {
-      flushSync(() => setPollCreating(true))
-      pollQuestionRef.current?.focus()
-    } else {
-      setPollCreating(true)
-    }
+    setPollCreating(true)
   }
+
+  // Focus the poll question input once the poll form has mounted
+  useEffect(() => {
+    if (pollCreating) pollQuestionRef.current?.focus()
+  }, [pollCreating]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function openEmoji() {
     const el = textareaRef.current
@@ -145,10 +144,14 @@ export default function MessageInput() {
       )}
       {/* @mention picker */}
       {mentionSearch !== null && (() => {
-        const filtered = members.filter(m =>
-          m.user_id !== myId &&
-          m.display_name.toLowerCase().startsWith(mentionSearch.toLowerCase())
-        )
+        const q = mentionSearch.toLowerCase()
+        const filtered = members
+          .filter(m => m.user_id !== myId && m.display_name.toLowerCase().includes(q))
+          .sort((a, b) => {
+            const aStarts = a.display_name.toLowerCase().startsWith(q)
+            const bStarts = b.display_name.toLowerCase().startsWith(q)
+            return aStarts === bStarts ? 0 : aStarts ? -1 : 1
+          })
         if (!filtered.length) return null
         return (
           <div className="absolute bottom-full left-0 right-0 pb-1 z-[8]">
@@ -278,16 +281,6 @@ export default function MessageInput() {
               className="fixed inset-x-0 lg:left-56 bottom-0 z-[11]"
             >
               <div className="relative">
-                <style dangerouslySetInnerHTML={{ __html: [
-                  '.covey-picker { border: none !important; --epr-picker-border-radius: 0 !important; }',
-                  '.covey-picker .epr-header { padding-right: 48px !important; }',
-                  // emojisPerRow uses the full <ul> clientWidth, but emojis are absolutely
-                  // positioned inside .epr-emoji-category-content which has margin: 0 10px.
-                  // On widths where (pickerWidth % emojiSize) < 10, the last column overshoots
-                  // the body's overflow-x:hidden boundary. Zeroing the margin keeps both
-                  // coordinate systems aligned so the last column never clips.
-                  '.covey-picker .epr-emoji-category-content { margin-left: 0 !important; margin-right: 0 !important; }',
-                ].join(' ') }} />
                 <Suspense fallback={null}>
                   <EmojiPicker
                     className="covey-picker"
