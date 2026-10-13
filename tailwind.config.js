@@ -98,7 +98,7 @@ export default {
         },
         'send-pulse': {
           '0%':   { transform: 'scale(1)' },
-          '45%':  { transform: 'scale(1.28)' },
+          '45%':  { transform: 'scale(1.5)' },
           '100%': { transform: 'scale(1)' },
         },
         'stack-in': {
@@ -261,7 +261,7 @@ export default {
         'slide-out-right':  'slide-out-right 0.2s ease-in forwards',
         'slide-out-left':   'slide-out-left 0.18s ease-in forwards',
         'card-pulse':       'card-pulse 0.65s ease-out',
-        'send-pulse':       'send-pulse 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'send-pulse':       'send-pulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'stack-in':         'stack-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards',
         'reaction-pop':     'reaction-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'welcome-pop':      'welcome-pop 0.6s cubic-bezier(0.16,1,0.3,1) both',
