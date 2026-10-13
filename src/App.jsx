@@ -132,6 +132,16 @@ function AppContent() {
   const [prayerBanner, setPrayerBanner]           = useState(null)
   const [prayerBannerClosing, setPrayerBannerClosing] = useState(false)
 
+  // ── Fresh-session redirect: always open on /home after kill+relaunch ──────
+  useEffect(() => {
+    if (!sessionStorage.getItem('covey_session')) {
+      sessionStorage.setItem('covey_session', '1')
+      if (location.pathname !== '/home' && location.pathname !== '/login') {
+        navigate('/home', { replace: true })
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Splash screen ──────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setSplashMinDone(true), 1200)
