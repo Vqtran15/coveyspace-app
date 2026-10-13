@@ -176,7 +176,7 @@ export default function ConversationList({ session, groupId, members, enterClass
         if (groupConv) {
           const draftKey = `draft:${groupConv.id}`
           if (!localStorage.getItem(draftKey)) {
-            localStorage.setItem(draftKey, "Hey everyone, just joined! 👋")
+            localStorage.setItem(draftKey, "Hey everyone! 👋")
           }
           onAutoOpenConsumed?.()
           onSelect(groupConv)
@@ -189,7 +189,7 @@ export default function ConversationList({ session, groupId, members, enterClass
           // Clear any onboarding draft that may have been written by autoOpenGroupChat.
           // Home-screen deep links should never pre-populate the input.
           const draftKey = `draft:${mainConv.id}`
-          if (localStorage.getItem(draftKey) === "Hey everyone, just joined! 👋") {
+          if (localStorage.getItem(draftKey) === "Hey everyone! 👋") {
             localStorage.removeItem(draftKey)
           }
           onAutoOpenMainChatConsumed?.()
