@@ -676,22 +676,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         // scroll-to-first-unread from the cache path.
         if (freshLoadRef.current && !initialFirstUnreadRef.current) {
           requestAnimationFrame(() => {
-            if (!mountedRef.current) return
-            scrollToBottom()
-            const el = scrollRef.current
-            if (!el) return
-            let cleanup
-            function onRestorationScroll() {
-              if (!mountedRef.current) { el.removeEventListener('scroll', onRestorationScroll); clearTimeout(cleanup); return }
-              const dist = el.scrollHeight - el.scrollTop - el.clientHeight
-              if (dist > 20) {
-                el.removeEventListener('scroll', onRestorationScroll)
-                clearTimeout(cleanup)
-                requestAnimationFrame(() => { if (mountedRef.current) scrollToBottom() })
-              }
-            }
-            el.addEventListener('scroll', onRestorationScroll, { passive: true })
-            cleanup = setTimeout(() => el.removeEventListener('scroll', onRestorationScroll), 1500)
+            if (mountedRef.current) scrollToBottom()
           })
         }
         if (!msgs.length) return
