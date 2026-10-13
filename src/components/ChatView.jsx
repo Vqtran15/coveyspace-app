@@ -1838,6 +1838,13 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return result
   }, [filteredMsgs, firstUnreadId])
 
+  // O(1) member lookup — declared here so readersAtMessage can reference it
+  // without a forward const reference (TDZ) in its deps array.
+  const memberMap = useMemo(() =>
+    Object.fromEntries(members.map(m => [m.user_id, m])),
+    [members]
+  )
+
   const readersAtMessage = useMemo(() => {
     const map = {}
     for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
@@ -1902,11 +1909,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const canEditGroupInfo = useMemo(() =>
     conversation.type === 'group' && (isMainGroupChat ? isAdmin : true),
     [conversation, isMainGroupChat, isAdmin]
-  )
-  // O(1) member lookup used by MessageList to avoid O(n) find() per bubble
-  const memberMap = useMemo(() =>
-    Object.fromEntries(members.map(m => [m.user_id, m])),
-    [members]
   )
 
   // ── Render ────────────────────────────────────────────────────────────────
