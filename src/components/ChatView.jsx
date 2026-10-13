@@ -1570,7 +1570,28 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     haptic()
     closeMenu()
     if (existing) {
-      await supabase.from('reactions').delete().eq('id', existing.id)
+      // Optimistic remove — Supabase DELETE realtime events only carry the PK,
+      // so message_id and emoji are null on the event and the realtime handler
+      // can't find the row to remove. Update local state immediately instead.
+      setReactions(prev => {
+        if (!prev[messageId]?.[emoji]) return prev
+        const byEmoji = { ...prev[messageId] }
+        const filtered = byEmoji[emoji].filter(r => r.id !== existing.id)
+        if (filtered.length) byEmoji[emoji] = filtered
+        else delete byEmoji[emoji]
+        return { ...prev, [messageId]: byEmoji }
+      })
+      const { error } = await supabase.from('reactions').delete().eq('id', existing.id)
+      if (error) {
+        // Restore on failure
+        setReactions(prev => ({
+          ...prev,
+          [messageId]: {
+            ...(prev[messageId] ?? {}),
+            [emoji]: [...(prev[messageId]?.[emoji] ?? []), existing],
+          },
+        }))
+      }
     } else {
       const key = `${messageId}:${emoji}`
       setJustReacted(prev => ({ ...prev, [key]: true }))
