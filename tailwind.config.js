@@ -6,6 +6,7 @@ export default {
     hoverOnlyWhenSupported: true,
   },
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  safelist: ['animate-send-pulse'],
   theme: {
     extend: {
       fontFamily: {
