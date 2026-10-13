@@ -1841,11 +1841,15 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   const typing = useMemo(() => typingLabel(typingUsers), [typingUsers])
 
+  const typingEverShownRef = useRef(false)
   useEffect(() => {
     if (typing) {
+      typingEverShownRef.current = true
       clearTimeout(typingCloseRef.current)
       setTypingClosing(false)
-    } else {
+    } else if (typingEverShownRef.current) {
+      // Only play the closing animation if the indicator was actually shown;
+      // skips the spurious 250ms flash on initial mount when typing = ''.
       setTypingClosing(true)
       typingCloseRef.current = setTimeout(() => setTypingClosing(false), 250)
     }
