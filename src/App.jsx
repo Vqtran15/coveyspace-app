@@ -699,11 +699,11 @@ function AppContent() {
                     <t.Icon
                       size={26}
                       weight={active ? 'fill' : 'regular'}
-                      className={active ? 'text-white' : 'text-stone-400'}
+                      className={active ? 'text-white' : 'text-stone-500'}
                     />
                   </motion.span>
                   {showLabel && (
-                    <span className={`relative z-10 text-[13px] font-medium leading-none ${active ? 'text-white' : 'text-stone-400'}`}>
+                    <span className={`relative z-10 text-[13px] font-medium leading-none ${active ? 'text-white' : 'text-stone-500'}`}>
                       {t.shortLabel}
                     </span>
                   )}

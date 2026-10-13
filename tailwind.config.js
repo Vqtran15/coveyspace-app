@@ -21,9 +21,9 @@ export default {
         },
         ember: {
           50:    '#FEF4EE',
-          DEFAULT:'#C4622D',
-          700:   '#A85228',
-          800:   '#8C4220',
+          DEFAULT:'#A85228',
+          700:   '#8C4220',
+          800:   '#6E3018',
         },
         lagoon: {
           50:    '#FEF9EC',

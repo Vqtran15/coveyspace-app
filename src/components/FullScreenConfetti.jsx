@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-const COLORS = ['#C4622D', '#E8A838', '#A1CCA6', '#B85A3A', '#6BA3BE', '#F0C987', '#D97559']
+const COLORS = ['#A85228', '#E8A838', '#A1CCA6', '#B85A3A', '#6BA3BE', '#F0C987', '#D97559']
 
 export default function FullScreenConfetti({ onDone }) {
   const canvasRef = useRef(null)

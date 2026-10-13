@@ -12,6 +12,33 @@ React PWA for Coveyspace — a platform for church community groups.
 - `origin/main` → prod
 - **Never push to `origin/main` without explicit "push to prod" from the user**
 
+### Manual Vercel deploy (when GitHub integration is broken)
+If Vercel fails to auto-deploy from a push (e.g. "Git information retrieval failed" or rate-limit errors after reconnecting GitHub), deploy manually via CLI:
+
+```bash
+# 1. Build with npm — NOT vercel build (vercel build masks secrets as [SENSITIVE])
+npm run build
+
+# 2. Package into Vercel output format
+rm -rf .vercel/output && mkdir -p .vercel/output/static
+cat > .vercel/output/config.json << 'EOF'
+{
+  "version": 3,
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
+EOF
+cp -r dist/. .vercel/output/static/
+
+# 3. Deploy and point staging alias
+vercel deploy --prebuilt
+vercel alias set <preview-url> staging.app.coveyspace.com
+```
+
+If `vercel deploy --prebuilt` returns "Not authorized", the OIDC token in `.vercel/.env.preview.local` has expired. Run `vercel pull --yes --environment preview` to refresh it, then redeploy. The `.vercel/project.json` file persists, so `pull` is fast after the first time.
+
 ## Edge Functions
 Located in `supabase/functions/`. Deploy with:
 ```
@@ -79,7 +106,7 @@ Only push to `origin/staging` after this checklist is complete.
 
 ### Colors
 - **Page background**: `bg-sunrise-50` (`#F2EDE6`) — warm cream
-- **Primary accent**: `ember` (`#C4622D`) — CTAs, focus rings, active states
+- **Primary accent**: `ember` (`#A85228`) — CTAs, focus rings, active states (5.38:1 with white, AA ✓)
 - **Supporting palette**: `coral` (`#B85A3A`), `lagoon` (`#E8A838`), `sage` (`#A1CCA6`)
 - **Color in cards lives in icon/badge boxes only** — never use a brand color as the full card background. Tints by context: `bg-amber-50` (meals/dates), `bg-ember/10` (ember items), `bg-lagoon-50` (lagoon items), `bg-coral/10` (coral items), `bg-sage-50` (prayer/sage items)
 

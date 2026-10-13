@@ -66,7 +66,7 @@ function MemberCard({ member, onClick }) {
           <div className="font-semibold text-stone-800">{member.display_name}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {lastUpdated && <span className="text-xs text-stone-400">{lastUpdated}</span>}
+          {lastUpdated && <span className="text-xs text-stone-500">{lastUpdated}</span>}
           <CaretRight size={14} weight="bold" className="text-stone-400" />
         </div>
       </div>
@@ -121,7 +121,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
           <div className="font-semibold text-stone-800 truncate">{label}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs text-stone-400">{formatRelativeDate(groupPrayer.created_at)}</span>
+          <span className="text-xs text-stone-500">{formatRelativeDate(groupPrayer.created_at)}</span>
           <CaretRight size={14} weight="bold" className="text-stone-400" />
         </div>
       </div>
@@ -171,7 +171,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
           <AvatarCircle size="8" icon={member?.avatar_icon} colorKey={member?.avatar_color} userId={member?.user_id} name={member?.display_name} imageUrl={member?.avatar_image_url} />
           <span className="text-sm font-semibold text-stone-700 truncate">{member?.display_name}</span>
         </button>
-        <span className="text-xs text-stone-400 shrink-0 ml-2">{formatRelativeDate(req.created_at)}</span>
+        <span className="text-xs text-stone-500 shrink-0 ml-2">{formatRelativeDate(req.created_at)}</span>
       </div>
       <button onClick={onOpen} className="w-full text-left">
         <p className="text-sm text-stone-700 leading-relaxed">{req.request}</p>

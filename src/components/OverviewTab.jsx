@@ -368,15 +368,15 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
               >
                 <defs>
                   <linearGradient id="greeting-taper" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#C4622D" stopOpacity="0" />
-                    <stop offset="10%" stopColor="#C4622D" stopOpacity="1" />
-                    <stop offset="100%" stopColor="#C4622D" stopOpacity="1" />
+                    <stop offset="0%" stopColor="#A85228" stopOpacity="0" />
+                    <stop offset="10%" stopColor="#A85228" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#A85228" stopOpacity="1" />
                   </linearGradient>
                 </defs>
                 <motion.path
                   d="M 0 14 C 14 3 30 4 200 4"
                   fill="none"
-                  stroke="#C4622D"
+                  stroke="#A85228"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"

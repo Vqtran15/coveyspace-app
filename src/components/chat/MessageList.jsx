@@ -338,7 +338,7 @@ export default function MessageList() {
                 return (
                   <div key={item.key} className="flex items-center gap-3 py-3">
                     <div className="flex-1 h-px bg-stone-200" />
-                    <span className="text-xs text-stone-400 font-medium">{item.label}</span>
+                    <span className="text-xs text-stone-500 font-medium">{item.label}</span>
                     <div className="flex-1 h-px bg-stone-200" />
                   </div>
                 )
@@ -538,7 +538,7 @@ export default function MessageList() {
                               </p>
                             </div>
                             <div className="px-4 pb-2.5 text-right">
-                              <span className="text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                              <span className="text-[10px] text-stone-500">{formatMessageTime(msg.created_at)}</span>
                             </div>
                           </motion.div>
                         )}
@@ -597,9 +597,9 @@ export default function MessageList() {
                         >
                           <HandsPraying size={15} weight={hasReacted ? 'fill' : 'regular'} />
                           {hasReacted ? 'Praying' : 'Pray'}
-                          {reactionCount > 0 && <span className={`text-xs ${hasReacted ? 'text-white/80' : 'text-stone-400'}`}>{reactionCount}</span>}
+                          {reactionCount > 0 && <span className={`text-xs ${hasReacted ? 'text-white/80' : 'text-stone-500'}`}>{reactionCount}</span>}
                         </button>
-                        <span className="ml-auto text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                        <span className="ml-auto text-[10px] text-stone-500">{formatMessageTime(msg.created_at)}</span>
                       </div>
                     </div>
                   </div>
@@ -645,7 +645,7 @@ export default function MessageList() {
                       <div className="px-4 py-3 flex gap-2">
                         {[
                           { status: 'going',     label: 'Going',    Icon: CheckCircle, active: 'bg-ember text-white',      inactive: 'bg-stone-100 text-stone-600' },
-                          { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-white', inactive: 'bg-stone-100 text-stone-600' },
+                          { status: 'maybe',     label: 'Maybe',    Icon: Minus,       active: 'bg-lagoon-700 text-stone-950', inactive: 'bg-stone-100 text-stone-600' },
                           { status: 'not_going', label: "Can't go", Icon: X,           active: 'bg-stone-500 text-white', inactive: 'bg-stone-100 text-stone-600' },
                         ].map(({ status, label, Icon, active, inactive }) => (
                           <button
@@ -672,10 +672,10 @@ export default function MessageList() {
                             }
                           </div>
                         ))}
-                        <span className="text-xs text-stone-400">
+                        <span className="text-xs text-stone-500">
                           {[goingCount && `${goingCount} going`, maybeCount && `${maybeCount} maybe`, notGoingCount && `${notGoingCount} can't go`].filter(Boolean).join(' · ') || 'No RSVPs yet'}
                         </span>
-                        <span className="ml-auto text-[10px] text-stone-400">{formatMessageTime(msg.created_at)}</span>
+                        <span className="ml-auto text-[10px] text-stone-500">{formatMessageTime(msg.created_at)}</span>
                       </div>
                     </div>
                   </div>
@@ -851,12 +851,12 @@ export default function MessageList() {
                         </p>
                       )}
                       {(msg._edited || msg.edited_at) && editingMsgId !== msg.id && (
-                        <p className={`text-[10px] px-3 pb-1.5 -mt-1 ${isOwn ? 'text-right text-white/90' : 'text-stone-400'}`}>edited</p>
+                        <p className={`text-[10px] px-3 pb-1.5 -mt-1 ${isOwn ? 'text-right text-white/90' : 'text-stone-500'}`}>edited</p>
                       )}
                     </div>
                     {isLastInGroup && isOwn && !msg.image_url && (
                       <svg className="absolute bottom-0 -right-[9px] pointer-events-none" width="9" height="12" viewBox="0 0 9 12" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M 0 0 C 0 10 9 10 9 12 L 0 12 Z" fill={editingMsgId === msg.id ? '#57534e' : '#C4622D'} />
+                        <path d="M 0 0 C 0 10 9 10 9 12 L 0 12 Z" fill={editingMsgId === msg.id ? '#57534e' : '#A85228'} />
                       </svg>
                     )}
                     {isLastInGroup && !isOwn && !msg.image_url && (
@@ -868,7 +868,7 @@ export default function MessageList() {
                     </div>
 
                     {isLastInGroup && (
-                      <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1 text-right' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-400'}`}>
+                      <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1 text-right' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-500'}`}>
                         {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatMessageTime(msg.created_at)}
                       </p>
                     )}

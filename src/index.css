@@ -104,7 +104,7 @@ a:focus:not(:focus-visible),
 .broadcast-editor ol             { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.4rem; }
 .broadcast-editor li             { margin-bottom: 0.2rem; }
 .broadcast-editor li:last-child  { margin-bottom: 0; }
-.broadcast-editor a              { color: #C4622D; text-decoration: underline; }
+.broadcast-editor a              { color: #A85228; text-decoration: underline; }
 
 /* ── Rendered broadcast HTML in feed cards ───────────────────────────────── */
 .broadcast-html p              { margin-bottom: 0.4rem; }
@@ -115,7 +115,7 @@ a:focus:not(:focus-visible),
 .broadcast-html ol             { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.4rem; }
 .broadcast-html li             { margin-bottom: 0.2rem; }
 .broadcast-html li:last-child  { margin-bottom: 0; }
-.broadcast-html a              { color: #C4622D; text-decoration: underline; }
+.broadcast-html a              { color: #A85228; text-decoration: underline; }
 .broadcast-html strong         { font-weight: 600; }
 .broadcast-html em             { font-style: italic; }
 .broadcast-html u              { text-decoration: underline; }

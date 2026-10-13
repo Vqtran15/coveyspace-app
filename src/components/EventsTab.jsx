@@ -319,7 +319,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             <div className="flex gap-2">
               {[
                 { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-stone-950', inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, fillColor, active, inactive }) => {
                 const isActive = myRsvp?.status === status

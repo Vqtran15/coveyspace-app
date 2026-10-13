@@ -42,12 +42,12 @@ const TOUR_CARDS = [
   { key: 'meals_enabled',     Icon: ForkKnife,      color: 'bg-ember/10 text-ember',         title: 'Meal Sign-ups',     desc: 'Auto-rotating weekly meals. Members claim their ingredient in seconds.' },
   { key: 'prayer_enabled',    Icon: HandsPraying,   color: 'bg-sunrise/10 text-sunrise',   title: 'Prayer Requests',   desc: 'Every member has a profile. Look back later and see what God has done.' },
   { key: 'birthdays_enabled', Icon: Cake,           color: 'bg-coral/10 text-coral',       title: 'Birthdays',         desc: 'Upcoming birthdays show on the home screen so no one gets forgotten.' },
-  { key: 'services_enabled',  Icon: CalendarCheck,  color: 'bg-lagoon/10 text-lagoon-600', title: 'Service Schedules', desc: 'Monthly service sign-ups that rotate automatically.' },
+  { key: 'services_enabled',  Icon: CalendarCheck,  color: 'bg-lagoon-50 text-lagoon-700', title: 'Service Schedules', desc: 'Monthly service sign-ups that rotate automatically.' },
 ]
 
 const FEATURE_TOGGLES = [
   { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Weekly rotating meal signups',    Icon: ForkKnife,      color: 'text-ember' },
-  { key: 'services_enabled',  label: 'Service Schedules', desc: 'Monthly service signups',          Icon: CalendarCheck,  color: 'text-lagoon-600' },
+  { key: 'services_enabled',  label: 'Service Schedules', desc: 'Monthly service signups',          Icon: CalendarCheck,  color: 'text-lagoon-700' },
   { key: 'chat_enabled',      label: 'Group Chat',        desc: 'Group and direct messages',        Icon: ChatCircleDots, color: 'text-sage-700' },
   { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',           Icon: HandsPraying,   color: 'text-sunrise' },
   { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral' },
@@ -696,7 +696,7 @@ export default function WelcomeSplash({ onDone }) {
             {showServices && (
               <div className="mb-6 animate-fade-up" style={{ animationDelay: showMeals ? '0.22s' : '0.15s' }}>
                 <div className="flex items-center gap-2 mb-3">
-                  <CalendarCheck size={14} weight="fill" className="text-lagoon-600" />
+                  <CalendarCheck size={14} weight="fill" className="text-lagoon-700" />
                   <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Service</p>
                 </div>
                 <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow space-y-4">

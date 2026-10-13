@@ -10,7 +10,7 @@ const FEATURE_TOGGLES = [
   { key: 'prayer_enabled',    label: 'Prayer Requests',   desc: 'Member prayer profiles',          Icon: HandsPraying,   color: 'text-sunrise',     bg: 'bg-sunrise/10' },
   { key: 'birthdays_enabled', label: 'Birthdays',         desc: 'Home screen birthday reminders',  Icon: Cake,           color: 'text-coral',       bg: 'bg-coral/10'   },
   { key: 'meals_enabled',     label: 'Meal Sign-ups',     desc: 'Weekly rotating meal signups',    Icon: ForkKnife,      color: 'text-ember',       bg: 'bg-ember/10'   },
-  { key: 'services_enabled',  label: 'Service Schedules', desc: 'Monthly service signups',         Icon: CalendarCheck,  color: 'text-lagoon-600',  bg: 'bg-lagoon/10'  },
+  { key: 'services_enabled',  label: 'Service Schedules', desc: 'Monthly service signups',         Icon: CalendarCheck,  color: 'text-lagoon-700',  bg: 'bg-lagoon-50'  },
   { key: 'events_enabled',    label: 'Events',            desc: 'One-off events with RSVP',        Icon: CalendarHeart,  color: 'text-amber-500',   bg: 'bg-amber-50'   },
   { key: 'guide_enabled',     label: 'Community Guide',   desc: 'PDF, link, or written notes',     Icon: Link,           color: 'text-ember',       bg: 'bg-ember/10'   },
   { key: 'bible_enabled',     label: 'Bible',             desc: 'Bible reader with verse search',  Icon: BookOpen,       color: 'text-ember',       bg: 'bg-ember/10'   },
