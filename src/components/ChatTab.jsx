@@ -75,11 +75,11 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
     ))
   }, [displayName])
 
-  function openConv(conv) {
+  const openConv = useCallback((conv) => {
     setOpenedWithLastReadAt(localStorage.getItem(`readAt:${conv.id}`))
     setListClass('')
     setActiveConv(conv)
-  }
+  }, [])
 
   const goBack = useCallback(() => {
     setChatExiting(true)
