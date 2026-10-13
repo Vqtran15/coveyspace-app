@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useRef, useEffect } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, Check, VideoCamera,
+  PaperPlaneTilt, Image as ImageIcon, X, ChartBar, Plus as PlusIcon, Smiley, VideoCamera,
 } from '@phosphor-icons/react'
 import { AvatarIcon, avatarColor } from '../../lib/avatarIcons.jsx'
 import { useChatContext } from './ChatContext.jsx'
@@ -29,7 +29,6 @@ export default function MessageInput() {
   } = useChatContext()
 
   const [showAttachMenu, setShowAttachMenu] = useState(false)
-  const [justSent, setJustSent] = useState(false)
   const [justTapped, setJustTapped] = useState(false)
   const btnWrapRef = useRef(null)
   const justTappedTimerRef = useRef(null)
@@ -52,17 +51,6 @@ export default function MessageInput() {
   const attachMenuRef = useRef(null)
   const attachBtnRef = useRef(null)
   const emojiPickerRef = useRef(null)
-  const prevSendingRef = useRef(false)
-
-  useEffect(() => {
-    if (prevSendingRef.current && !sending) {
-      setJustSent(true)
-      const t = setTimeout(() => setJustSent(false), 700)
-      return () => clearTimeout(t)
-    }
-    prevSendingRef.current = sending
-  }, [sending])
-
   // Capture-phase pointerdown listener: closes the attach menu when the user taps
   // anywhere outside the menu card or the + button. Fixed backdrop divs don't work
   // here because they inherit pointer-events: none from the overlay's outer wrapper.
@@ -433,35 +421,18 @@ export default function MessageInput() {
             disabled={sending || (!text.trim() && imagePreviews.length === 0)}
             className="w-9 h-9 flex items-center justify-center rounded-full bg-ember text-white hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {justSent ? (
-                <motion.span
-                  key="check"
-                  initial={{ scale: 0, rotate: -30 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0 }}
-                  transition={{ type: 'spring', stiffness: 520, damping: 22 }}
-                >
-                  <Check size={18} weight="bold" />
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="plane"
-                  initial={{ scale: 0 }}
-                  animate={justTapped
-                    ? { scale: 1, rotate: [0, -15, 15, -8, 0] }
-                    : { scale: 1, rotate: 0 }
-                  }
-                  exit={{ scale: 0 }}
-                  transition={justTapped
-                    ? { rotate: { duration: 0.35, ease: 'easeInOut' }, scale: { type: 'spring', stiffness: 520, damping: 22 } }
-                    : { type: 'spring', stiffness: 520, damping: 22 }
-                  }
-                >
-                  <PaperPlaneTilt size={18} weight="fill" />
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <motion.span
+              animate={justTapped
+                ? { rotate: [0, -15, 15, -8, 0] }
+                : { rotate: 0 }
+              }
+              transition={justTapped
+                ? { duration: 0.35, ease: 'easeInOut' }
+                : { duration: 0 }
+              }
+            >
+              <PaperPlaneTilt size={18} weight="fill" />
+            </motion.span>
           </button>
         </span>
       </div>
