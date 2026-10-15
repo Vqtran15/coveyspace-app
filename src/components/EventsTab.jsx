@@ -276,7 +276,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
         </div>
 
         {/* Date badge + title */}
-        <div className="flex items-start gap-4 px-5 pt-1 pb-5">
+        <div className="mx-4 mb-4 bg-white rounded-2xl border border-stone-100 shadow flex items-start gap-4 px-4 py-4">
           <motion.div
             layoutId={`event-date-${event.id}`}
             className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0"
