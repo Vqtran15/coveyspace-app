@@ -230,7 +230,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Nav bar */}
-      <div className="bg-white border-b border-stone-100 shrink-0">
+      <div className="shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={onClose} aria-label="Back to events" className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-500 hover:bg-stone-100 transition-colors">
             <ArrowLeft size={20} />
