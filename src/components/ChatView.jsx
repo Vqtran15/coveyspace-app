@@ -26,7 +26,7 @@ const READ_AT_KEY  = convId => `readAt:${convId}`
 const CACHE_KEY    = convId => `chat_v1_${convId}`
 
 // Behavior thresholds
-const AT_BOTTOM_THRESHOLD = 24    // px from bottom to consider "at bottom"
+const AT_BOTTOM_THRESHOLD = 60    // px from bottom to consider "at bottom"
 const KEYBOARD_THRESHOLD  = 120   // px viewport shrink to detect keyboard open
 const DOUBLE_TAP_MS       = 300   // ms window for double-tap detection
 const LONG_PRESS_MS       = 500   // ms to trigger long press

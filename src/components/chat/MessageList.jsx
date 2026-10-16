@@ -124,11 +124,29 @@ export default function MessageList() {
 
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
 
+  // Keep a ref to items so estimateSize can read current content without
+  // being a dependency of useVirtualizer (which would recreate it on every render).
+  const itemsRef = useRef(items)
+  itemsRef.current = items
+
   const rowVirtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 72,
-    overscan: 20,
+    estimateSize: (i) => {
+      const item = itemsRef.current[i]
+      if (!item) return 64
+      if (item.type === 'date' || item.type === 'unread') return 40
+      const { msg } = item
+      if (msg.image_url) return 240
+      if (msg.poll_id) return 200
+      if (msg.event_id) return 170
+      if (msg.prayer_request_id) return 110
+      const len = msg.body?.length ?? 0
+      if (len > 200) return 96
+      if (len > 80)  return 76
+      return 56
+    },
+    overscan: 25,
     paddingStart: 8,
     paddingEnd: 16,
   })
@@ -942,7 +960,11 @@ export default function MessageList() {
       {/* Scroll-to-bottom — always in the DOM so there is no mount/unmount flash.
           Visibility is controlled by opacity: visible=false or isAtBottom=true → hidden. */}
       <div
-        className={`absolute inset-x-0 flex justify-center z-10 pointer-events-none transition-opacity duration-150 ${visible && !isAtBottom && !searchOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-x-0 flex justify-center z-10 pointer-events-none ${
+          visible && !isAtBottom && !searchOpen
+            ? 'opacity-100 transition-opacity duration-150 delay-[100ms]'
+            : 'opacity-0 transition-opacity duration-150 delay-0'
+        }`}
         style={{ bottom: `${inputH + 12}px` }}
       >
         <button
