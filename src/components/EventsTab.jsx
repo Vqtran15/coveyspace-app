@@ -275,20 +275,30 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           )}
         </div>
 
-        {/* Date badge + title */}
-        <div className="mx-4 mb-4 bg-white rounded-2xl border border-stone-100 shadow flex items-start gap-4 px-4 py-4">
-          <motion.div
-            layoutId={`event-date-${event.id}`}
-            className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0"
-          >
-            <span className="text-[11px] font-bold text-ember uppercase tracking-wide">{month}</span>
-            <span className="text-2xl font-bold text-ember leading-none">{day}</span>
-            <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{year}</span>
-          </motion.div>
-          <div className="pt-1 min-w-0">
-            <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
-            <p className="text-sm text-stone-500 mt-1.5">{formatDateFull(event.event_date, event.event_time)}</p>
+        {/* Date badge + title + location */}
+        <div className="mx-4 mb-4 bg-white rounded-2xl border border-stone-100 shadow px-4 py-4">
+          <div className="flex items-start gap-4">
+            <motion.div
+              layoutId={`event-date-${event.id}`}
+              className="flex flex-col items-center justify-center bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3 min-w-[60px] shrink-0"
+            >
+              <span className="text-[11px] font-bold text-ember uppercase tracking-wide">{month}</span>
+              <span className="text-2xl font-bold text-ember leading-none">{day}</span>
+              <span className="text-[9px] font-medium text-ember/70 leading-none mt-0.5">{year}</span>
+            </motion.div>
+            <div className="pt-1 min-w-0">
+              <h2 className="text-xl font-bold text-stone-800 leading-tight">{event.title}</h2>
+              <p className="text-sm text-stone-500 mt-1.5">{formatDateFull(event.event_date, event.event_time)}</p>
+            </div>
           </div>
+          {event.location && (
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-stone-100">
+              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                <MapPin size={16} className="text-ember" weight="fill" />
+              </div>
+              <span className="text-sm font-medium text-stone-700">{event.location}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -296,19 +306,10 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-xl mx-auto px-4 pt-5 pb-10 space-y-4">
 
-          {/* Location */}
-          {event.location && (
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-stone-100 shadow">
-              <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                <MapPin size={16} className="text-ember" weight="fill" />
-              </div>
-              <span className="text-sm font-medium text-stone-700">{event.location}</span>
-            </div>
-          )}
-
           {/* Description */}
           {event.description && (
-            <div className="bg-white rounded-2xl px-4 py-3.5 border border-stone-100 shadow">
+            <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Description</p>
               <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{event.description}</p>
             </div>
           )}
