@@ -26,7 +26,7 @@ const READ_AT_KEY  = convId => `readAt:${convId}`
 const CACHE_KEY    = convId => `chat_v1_${convId}`
 
 // Behavior thresholds
-const AT_BOTTOM_THRESHOLD = 60    // px from bottom to consider "at bottom"
+const AT_BOTTOM_THRESHOLD = 20    // px from bottom to consider "at bottom"
 const KEYBOARD_THRESHOLD  = 120   // px viewport shrink to detect keyboard open
 const DOUBLE_TAP_MS       = 300   // ms window for double-tap detection
 const LONG_PRESS_MS       = 500   // ms to trigger long press
@@ -991,10 +991,21 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // Re-pin to bottom as the message container grows — both on the initial reveal
   // (height:0 → full, where useEffect([visible]) would attach too late) and as
   // realtime messages or images expand the container afterward.
+  //
+  // Use a direct distance measurement (4px) rather than isAtBottomRef (which is
+  // true within AT_BOTTOM_THRESHOLD=20px). The flag-based check was pulling users
+  // back while swiping: virtualizer measures new items → ResizeObserver fires →
+  // sees isAtBottomRef=true (user was ≤20px from bottom) → scrollToBottom().
+  // The 4px threshold only auto-scrolls when the user is essentially at the exact
+  // bottom, so a swipe of any meaningful distance is never interrupted.
   useEffect(() => {
     if (!contentReady || !messagesContainerRef.current) return
     const observer = new ResizeObserver(() => {
-      if (isAtBottomRef.current && !preserveScrollRef.current) scrollToBottom()
+      if (preserveScrollRef.current) return
+      const el = scrollRef.current
+      if (!el) return
+      const dist = el.scrollHeight - el.scrollTop - el.clientHeight
+      if (dist < 4) scrollToBottom()
     })
     observer.observe(messagesContainerRef.current)
     return () => observer.disconnect()
