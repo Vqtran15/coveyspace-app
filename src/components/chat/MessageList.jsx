@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, memo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -87,6 +87,10 @@ function renderMessageBody(body, query) {
       : renderTextSegment(part.value, query, String(i))
   )
 }
+
+const MessageBody = memo(function MessageBody({ body, query }) {
+  return renderMessageBody(body, query)
+})
 
 export default function MessageList() {
   const navigate = useNavigate()
@@ -215,16 +219,6 @@ export default function MessageList() {
     swipeRef.current = { startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false }
   }
 
-  // Pre-parse every message body so the URL regex doesn't run on every render
-  const renderedBodies = useMemo(() => {
-    const map = {}
-    for (const item of items) {
-      if (item.type === 'msg' && item.msg.body) {
-        map[item.msg.id] = renderMessageBody(item.msg.body, searchQuery)
-      }
-    }
-    return map
-  }, [items, searchQuery])
 
   return (
     <div className="relative flex-1 min-h-0">
@@ -872,7 +866,7 @@ export default function MessageList() {
                         </form>
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
-                          {renderedBodies[msg.id]}
+                          <MessageBody body={msg.body} query={searchQuery} />
                         </p>
                       )}
                       {(msg._edited || msg.edited_at) && editingMsgId !== msg.id && (

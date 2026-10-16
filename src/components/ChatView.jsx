@@ -172,6 +172,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // Used as a fallback when a target message is outside the current overscan window.
   const virtualizerRef        = useRef(null)
   const sendingRef            = useRef(false)
+  const retryingRef           = useRef(new Set())
   const pollOptionRefs        = useRef([])
   const justAddedOptionRef    = useRef(false)
   const pollQuestionRef       = useRef(null)
@@ -595,9 +596,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   async function deletePoll(pollId, messageId) {
     setPollMenuOpenId(null)
     setDeletingPollId(pollId)
-    await new Promise(r => setTimeout(r, 260))
+    // Capture rollback snapshots before the animation await so they aren't stale
     const msgSnapshot = messages.find(m => m.id === messageId)
     const pollSnapshot = polls[pollId]
+    await new Promise(r => setTimeout(r, 260))
+    if (!mountedRef.current) return
     setMessages(prev => prev.filter(m => m.id !== messageId))
     setPolls(prev => { const next = { ...prev }; delete next[pollId]; return next })
     setDeletingPollId(null)
@@ -605,6 +608,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       supabase.from('messages').delete().eq('id', messageId),
       supabase.from('polls').delete().eq('id', pollId),
     ])
+    if (!mountedRef.current) return
     if (msgErr || pollErr) {
       if (msgSnapshot) setMessages(prev => [...prev, msgSnapshot].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)))
       if (pollSnapshot) setPolls(prev => ({ ...prev, [pollId]: pollSnapshot }))
@@ -1320,6 +1324,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setMessages(prev => [...prev, ...tempMessages])
       setText('')
       localStorage.removeItem(DRAFT_KEY(convId))
+      captured.forEach(p => { if (p.isVideo && p.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(p.previewUrl) })
       setImagePreviews([])
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
       sendImages(tempMessages, capturedText).finally(() => { sendingRef.current = false })
@@ -1523,10 +1528,16 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   }
 
   async function retryMessage(tempId) {
+    if (retryingRef.current.has(tempId)) return
     const msg = messages.find(m => m._tempId === tempId)
     if (!msg?._file) return
+    retryingRef.current.add(tempId)
     setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: true, _failed: false } : m))
-    sendImage(tempId, msg._file, msg.image_url, msg.reply_to_id, msg._textBody ?? null)
+    try {
+      await sendImage(tempId, msg._file, msg.image_url, msg.reply_to_id, msg._textBody ?? null)
+    } finally {
+      retryingRef.current.delete(tempId)
+    }
   }
 
   function closeLightbox() {
@@ -1555,6 +1566,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       el.focus()
       el.setSelectionRange(start + emoji.length, start + emoji.length)
     }, 0)
+  }
+
+  function removePreview(i) {
+    setImagePreviews(prev => {
+      const p = prev[i]
+      if (p?.isVideo && p.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(p.previewUrl)
+      return prev.filter((_, j) => j !== i)
+    })
   }
 
   function handleFileChange(e) {
@@ -2003,7 +2022,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     members, myId, displayName, convId,
     senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
     // Handlers that read current text/imagePreviews via closure
-    handleTextInput, handleKeyDown, handleSend, handleFileChange,
+    handleTextInput, handleKeyDown, handleSend, handleFileChange, removePreview,
     closeEmojiPicker, insertEmoji, createPoll,
   }), [
     text, imagePreviews, replyingTo, sending,

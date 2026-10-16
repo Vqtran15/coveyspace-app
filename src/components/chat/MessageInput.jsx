@@ -11,7 +11,7 @@ const EmojiPicker = lazy(() => import('emoji-picker-react'))
 
 export default function MessageInput() {
   const {
-    text, setText, imagePreviews, setImagePreviews,
+    text, setText, imagePreviews, setImagePreviews, removePreview,
     replyingTo, setReplyingTo,
     sending,
     textareaRef, fileInputRef, savedSelectionRef,
@@ -133,7 +133,7 @@ export default function MessageInput() {
                 : <img src={preview.previewUrl} alt="preview" className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
               }
               <button
-                onClick={() => setImagePreviews(prev => prev.filter((_, j) => j !== i))}
+                onClick={() => removePreview(i)}
                 className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
               >
                 <X size={10} weight="bold" />

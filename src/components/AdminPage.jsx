@@ -74,6 +74,9 @@ export default function AdminPage() {
       .channel(`admin-members-${groupId}`)
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'profiles' },
         ({ old: deleted }) => {
+          // community_group_id is only present when profiles has REPLICA IDENTITY FULL.
+          // If available, use it to ignore deletions from other groups.
+          if (deleted.community_group_id !== undefined && deleted.community_group_id !== groupId) return
           if (deleted.user_id) setMembers(prev => prev.filter(m => m.user_id !== deleted.user_id))
         }
       )

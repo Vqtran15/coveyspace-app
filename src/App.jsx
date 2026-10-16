@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion, LayoutGroup } from 'framer-motion'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck, Church } from '@phosphor-icons/react'
@@ -359,14 +359,14 @@ function AppContent() {
   const isFullHeight = isChat
   const [chatViewOpen, setChatViewOpen] = useState(false)
 
-  const visibleTabs = TABS.filter(t => {
+  const visibleTabs = useMemo(() => TABS.filter(t => {
     if (t.path === '/schedule') return showScheduleTab
     if (t.path === '/events')   return eventsEnabled
     if (t.path === '/chat')     return chatEnabled
     if (t.path === '/prayer')   return prayerEnabled
     if (t.path === '/bible')    return bibleEnabled || guideEnabled || givingEnabled
     return true
-  })
+  }), [showScheduleTab, eventsEnabled, chatEnabled, prayerEnabled, bibleEnabled, guideEnabled, givingEnabled])
 
   // ── Desktop keyboard shortcuts ─────────────────────────────────────────────
   useEffect(() => {

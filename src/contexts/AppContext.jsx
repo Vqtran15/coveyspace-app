@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -73,17 +73,18 @@ export function AppProvider({ children }) {
   // ── Profile load ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!session) return
-    db.profiles.fetch(session.user.id).then(({ data }) => {
-      if (data) setProfile(data)
-      setProfileLoaded(true)
-    })
+    db.profiles.fetch(session.user.id)
+      .then(({ data }) => { if (data) setProfile(data) })
+      .finally(() => setProfileLoaded(true))
   }, [session])
 
   // ── Group settings ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!groupId) { setGroupSettings(null); return }
     setGroupSettings(null)
-    db.groupSettings.fetch(groupId).then(({ data }) => setGroupSettings(data ?? {}))
+    let cancelled = false
+    db.groupSettings.fetch(groupId).then(({ data }) => { if (!cancelled) setGroupSettings(data ?? {}) })
+    return () => { cancelled = true }
   }, [groupId])
 
   // ── Group memberships (all groups this user belongs to) ──────────────────
@@ -105,9 +106,9 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!churchId) { setChurchConversations([]); return }
     setChurchConversations(null)
-    db.churches.fetchConversations(churchId).then(({ data }) => {
-      setChurchConversations(data ?? [])
-    })
+    let cancelled = false
+    db.churches.fetchConversations(churchId).then(({ data }) => { if (!cancelled) setChurchConversations(data ?? []) })
+    return () => { cancelled = true }
   }, [churchId])
 
   // ── Birthdays ─────────────────────────────────────────────────────────────
@@ -217,7 +218,7 @@ export function AppProvider({ children }) {
 
   const existingBirthday = profile?.birthday ?? null
 
-  const value = {
+  const value = useMemo(() => ({
     session, userId, authLoading, isRecovery, clearRecovery, profileLoaded,
     displayName, groupId, groupName, isAdmin,
     avatarIcon, avatarColorKey, avatarImageUrl,
@@ -237,7 +238,23 @@ export function AppProvider({ children }) {
     allMemberships, switchGroup, refreshMemberships,
     // Church
     churchId, groupChurchId, churchName, isChurchAdmin, churchConversations,
-  }
+  }), [
+    session, userId, authLoading, isRecovery, clearRecovery, profileLoaded,
+    displayName, groupId, groupName, isAdmin,
+    avatarIcon, avatarColorKey, avatarImageUrl,
+    existingBirthday,
+    groupSettings,
+    mealsEnabled, servicesEnabled, chatEnabled, prayerEnabled,
+    birthdaysEnabled, guideEnabled, givingEnabled, eventsEnabled, bibleEnabled,
+    showScheduleTab,
+    birthdays,
+    unreadChatCount, unreadPrayerCount,
+    push,
+    onDisplayNameChange, onAvatarChange, onGroupSettingsChange, onGroupNameChange,
+    refreshProfile, refreshBirthdays,
+    allMemberships, switchGroup, refreshMemberships,
+    churchId, groupChurchId, churchName, isChurchAdmin, churchConversations,
+  ])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
