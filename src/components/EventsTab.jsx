@@ -304,7 +304,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-xl mx-auto px-4 pt-5 pb-10 space-y-4">
+        <div className="max-w-xl mx-auto px-4 pt-4 pb-10 space-y-4">
 
           {/* Description */}
           {event.description && (
@@ -320,7 +320,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
             <div className="flex gap-2">
               {[
                 { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-stone-950', inactive: 'bg-stone-100 text-stone-500' },
+                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
                 { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
               ].map(({ status, label, Icon, fillColor, active, inactive }) => {
                 const isActive = myRsvp?.status === status
@@ -348,15 +348,6 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
               })}
             </div>
           </div>
-
-          {/* Share to Chat */}
-          <button
-            onClick={onShareToChat}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-stone-200 text-sm font-semibold text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors"
-          >
-            <ChatCircleDots size={18} />
-            Share to Chat
-          </button>
 
           {/* RSVP breakdown by category */}
           {(rsvps ?? []).length > 0 && (() => {
@@ -391,6 +382,15 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
               </div>
             )
           })()}
+
+          {/* Share to Chat */}
+          <button
+            onClick={onShareToChat}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-stone-200 text-sm font-semibold text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors"
+          >
+            <ChatCircleDots size={18} />
+            Share to Chat
+          </button>
         </div>
       </div>
     </motion.div>
@@ -511,7 +511,7 @@ function EventCard({ event, isFeatured, eventRsvps = [], userId, onOpenDetail, o
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           {event.location && (
             <>
-              <MapPin size={11} className="text-stone-500 shrink-0" />
+              <MapPin size={11} className="text-ember shrink-0" weight="fill" />
               <span className="text-xs text-stone-500 truncate">{event.location}</span>
               <span className="text-stone-300 text-xs">·</span>
             </>
@@ -771,10 +771,13 @@ export default function EventsTab() {
                 <CalendarHeart size={32} className="text-ember" weight="duotone" />
               </div>
               <p className="font-semibold text-stone-700 mb-1">No upcoming events</p>
+              <p className="text-sm text-stone-500 mt-1">
+                {isAdmin ? 'Create the first event for your group.' : "Your group hasn't scheduled anything yet."}
+              </p>
               {isAdmin && (
                 <button
                   onClick={() => { haptic(); setShowForm(true) }}
-                  className="mt-3 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
+                  className="mt-4 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
                 >
                   Create an event
                 </button>
