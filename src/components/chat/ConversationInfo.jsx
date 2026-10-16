@@ -18,6 +18,16 @@ export default function ConversationInfo() {
 
   if (!infoOpen) return null
 
+  // For sub-group chats, only show the members actually in this conversation.
+  // `members` is all group members; `conversation.conversation_members` holds
+  // the scoped list. For the main group chat the two sets are identical.
+  const convMemberIds = new Set(
+    (conversation.conversation_members ?? []).map(m => m.user_id)
+  )
+  const convMembers = conversation.type === 'group' && convMemberIds.size > 0
+    ? members.filter(m => convMemberIds.has(m.user_id))
+    : members
+
   return (
     <div
       className={`fixed inset-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
@@ -117,7 +127,7 @@ export default function ConversationInfo() {
             </div>
           )}
           <p className="text-sm text-stone-400 mt-1">
-            {conversation.type === 'group' ? `${members.length} member${members.length !== 1 ? 's' : ''}` : 'Direct Message'}
+            {conversation.type === 'group' ? `${convMembers.length} member${convMembers.length !== 1 ? 's' : ''}` : 'Direct Message'}
           </p>
         </div>
 
@@ -126,7 +136,7 @@ export default function ConversationInfo() {
           <div className="px-5 pb-8">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Members</p>
             <div className="space-y-1">
-              {members.map(m => (
+              {convMembers.map(m => (
                 <div key={m.user_id} className="flex items-center gap-3 py-2">
                   <div className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${m.avatar_image_url ? 'bg-stone-200 shadow-md' : `flex items-center justify-center ${avatarColor(m.user_id, m.avatar_color)}`}`}>
                     {m.avatar_image_url
