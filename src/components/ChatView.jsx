@@ -1000,7 +1000,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     // @mention detection
     const cursor = e.target.selectionStart ?? val.length
     const textBefore = val.slice(0, cursor)
-    const match = textBefore.match(/@(\w*)$/)
+    const match = textBefore.match(/@([\wÀ-ɏ-]*)$/)
     setMentionSearch(match ? match[1] : null)
   }
 
@@ -1715,13 +1715,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       {/* Action menu */}
       {activeMsg && menuPos && (
         <>
-        <div className="fixed inset-0 z-[29] select-none" onTouchStart={e => { e.preventDefault(); closeMenu() }} onClick={closeMenu} />
+        <div className="fixed inset-0 z-[29] select-none" onTouchStart={e => { e.preventDefault(); if (!confirmDeleteMsg) closeMenu() }} onClick={() => { if (!confirmDeleteMsg) closeMenu() }} />
         <div
           className="fixed z-30"
           style={{ bottom: menuPos.bottom, ...('right' in menuPos ? { right: menuPos.right } : { left: '50%', transform: 'translateX(-50%)' }) }}
         >
         <div className={`bg-white rounded-2xl shadow-xl border border-stone-100 p-1.5 ${menuClosing ? 'animate-popup-out' : 'animate-popup-in'}`}>
-          <div className="flex items-center gap-0.5">
+          {/* Emoji row — always fits; actions on a separate row so neither wraps */}
+          <div className="flex items-center justify-center gap-0.5">
             {EMOJIS.map(emoji => {
               const reacted = reactions[activeMsg]?.[emoji]?.some(r => r.user_id === myId)
               return (
@@ -1736,11 +1737,14 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             })}
             <button
               onClick={() => showMoreEmojis ? closeReactionPicker() : setShowMoreEmojis(true)}
+              aria-label={showMoreEmojis ? 'Close emoji picker' : 'More emojis'}
               className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-colors ${showMoreEmojis ? 'bg-ember text-white' : 'text-stone-400 hover:bg-stone-100'}`}
             >
               {showMoreEmojis ? '×' : '+'}
             </button>
-            <div className="w-px h-6 bg-stone-100 mx-0.5" />
+          </div>
+          {/* Actions row */}
+          <div className="flex items-center justify-center gap-0.5 pt-0.5 mt-0.5 border-t border-stone-100">
             {activeMessage?.body && (
               <button
                 onClick={() => {
@@ -1748,6 +1752,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                   closeMenu()
                   toast('Copied', 'success')
                 }}
+                aria-label="Copy message"
                 className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
               >
                 <Copy size={14} weight="bold" />
@@ -1755,6 +1760,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
             )}
             <button
               onClick={() => handleReply(activeMsg)}
+              aria-label="Reply"
               className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-colors"
             >
               <ArrowBendUpLeft size={15} weight="bold" />
@@ -1765,6 +1771,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 {activeMessage?.body && (
                   <button
                     onClick={() => startEdit(activeMsg)}
+                    aria-label="Edit message"
                     className="w-9 h-9 rounded-xl hover:bg-stone-100 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
                   >
                     <PencilSimple size={14} weight="bold" />
@@ -1772,6 +1779,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
                 )}
                 <button
                   onClick={() => setConfirmDeleteMsg(true)}
+                  aria-label="Delete message"
                   className="w-9 h-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-stone-400 hover:text-red-500 transition-colors"
                 >
                   <Trash size={14} weight="bold" />

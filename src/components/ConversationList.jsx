@@ -101,10 +101,10 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2 mb-0.5">
                   <span className={`text-base lg:text-sm truncate min-w-0 ${mainUnread ? 'font-bold text-stone-900' : 'font-bold text-stone-800'}`}>{mainName}</span>
-                  <span className={`text-xs shrink-0 lg:hidden ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
+                  <span className={`text-xs shrink-0 ${mainUnread ? 'font-semibold text-ember' : 'text-stone-400'}`}>{formatListTime(lastMessages[mainConv.id]?.created_at)}</span>
                 </div>
                 <p className={`text-xs truncate mb-1.5 ${mainUnread ? 'text-stone-700 font-medium' : 'text-stone-500'}`}>{lastPreview(mainConv)}</p>
-                <p className="text-xs text-stone-400 lg:hidden">{members.length} members</p>
+                <p className="text-xs text-stone-400">{members.length} members</p>
               </div>
               <CaretRight size={16} className="text-stone-400 shrink-0" />
             </div>
@@ -454,7 +454,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       )}
 
       {(showNotifBanner || notifBannerClosing) && (
-        <div className={`px-4 pt-4 ${notifBannerClosing ? 'animate-overlay-out' : 'animate-fade-in'}`}>
+        <div role="alert" className={`px-4 pt-4 ${notifBannerClosing ? 'animate-overlay-out' : 'animate-fade-in'}`}>
           <div className="max-w-3xl mx-auto flex items-center gap-3 bg-ember/10 border border-ember/20 rounded-2xl px-4 py-3">
             <Bell size={18} weight="fill" className="text-ember shrink-0" />
             <div className="flex-1 min-w-0">
@@ -506,7 +506,7 @@ export default function ConversationList({ session, groupId, members, enterClass
           <button
             onClick={openModal}
             aria-label="New message"
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
           >
             <PencilSimple size={20} weight="bold" />
           </button>
@@ -567,9 +567,10 @@ export default function ConversationList({ session, groupId, members, enterClass
             ))}
           </div>
         ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 text-stone-400">
+          <div className="flex flex-col items-center justify-center min-h-[60vh] py-16">
             <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />
-            <p className="text-sm">No conversations yet</p>
+            <p className="text-sm font-medium text-stone-500">No conversations yet</p>
+            <p className="text-xs text-stone-400 mt-1.5 text-center max-w-[200px]">Tap the compose button above to start a chat</p>
           </div>
         ) : (
           <ConversationListBody

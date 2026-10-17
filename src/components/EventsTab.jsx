@@ -616,8 +616,8 @@ export default function EventsTab() {
     return conv._partnerName ?? 'Direct Message'
   }
 
-  async function load() {
-    setLoading(true)
+  async function load(silent = false) {
+    if (!silent) setLoading(true)
     setFetchError(false)
     const { data: evData, error } = await db.events.fetchAll(groupId)
     if (error) { setFetchError(true); setLoading(false); return }
@@ -638,8 +638,8 @@ export default function EventsTab() {
     if (!groupId) return
     const channel = supabase
       .channel(`events-tab:${groupId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `community_group_id=eq.${groupId}` }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps', filter: `community_group_id=eq.${groupId}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events', filter: `community_group_id=eq.${groupId}` }, () => load(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps', filter: `community_group_id=eq.${groupId}` }, () => load(true))
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [groupId])

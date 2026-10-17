@@ -390,7 +390,7 @@ export default function MessageList() {
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100 flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-stone-400 uppercase tracking-widest mb-1.5">
                             <ChartBar size={11} weight="bold" />
                             {isEditing ? 'Edit Poll' : `Poll · ${senderName(msg.user_id, msg.display_name)}`}
                           </div>
@@ -489,7 +489,7 @@ export default function MessageList() {
                                 <PlusIcon size={12} weight="bold" /> Add option
                               </button>
                             )}
-                            <p className="text-[10px] text-stone-400">Saving will reset all votes.</p>
+                            <p className="text-xs text-stone-400">Saving will reset all votes.</p>
                             <div className="flex gap-2 mt-0.5">
                               <button
                                 onClick={() => setEditingPollId(null)}
@@ -536,13 +536,13 @@ export default function MessageList() {
                                   </button>
                                 )
                               })}
-                              <p className="text-[10px] text-stone-400 mt-0.5">
+                              <p className="text-xs text-stone-400 mt-0.5">
                                 {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
                                 {myVote !== null ? ' · Tap to change vote' : ' · Tap to vote'}
                               </p>
                             </div>
                             <div className="px-4 pb-2.5 text-right">
-                              <span className="text-[10px] text-stone-500">{formatMessageTime(msg.created_at)}</span>
+                              <span className="text-xs text-stone-500">{formatMessageTime(msg.created_at)}</span>
                             </div>
                           </motion.div>
                         )}
@@ -571,7 +571,7 @@ export default function MessageList() {
                         className="block w-full text-left px-4 pt-3 pb-2.5 border-b border-stone-100 active:bg-stone-50 transition-colors"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-stone-400 uppercase tracking-widest">
                             <HandsPraying size={11} weight="bold" />
                             Prayer Request
                           </div>
@@ -603,7 +603,7 @@ export default function MessageList() {
                           {hasReacted ? 'Praying' : 'Pray'}
                           {reactionCount > 0 && <span className={`text-xs ${hasReacted ? 'text-white/80' : 'text-stone-500'}`}>{reactionCount}</span>}
                         </button>
-                        <span className="ml-auto text-[10px] text-stone-500">{formatMessageTime(msg.created_at)}</span>
+                        <span className="ml-auto text-xs text-stone-500">{formatMessageTime(msg.created_at)}</span>
                       </div>
                     </div>
                   </div>
@@ -632,7 +632,7 @@ export default function MessageList() {
                     <div className="bg-white border border-stone-200 rounded-2xl shadow overflow-hidden">
                       {/* Header */}
                       <div className="px-4 pt-3 pb-2 border-b border-stone-100">
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-400 uppercase tracking-widest mb-1.5">
                           <CalendarHeart size={11} weight="bold" />
                           {`Event · ${senderName(msg.user_id, msg.display_name)}`}
                         </div>
@@ -679,7 +679,7 @@ export default function MessageList() {
                         <span className="text-xs text-stone-500">
                           {[goingCount && `${goingCount} going`, maybeCount && `${maybeCount} maybe`, notGoingCount && `${notGoingCount} can't go`].filter(Boolean).join(' · ') || 'No RSVPs yet'}
                         </span>
-                        <span className="ml-auto text-[10px] text-stone-500">{formatMessageTime(msg.created_at)}</span>
+                        <span className="ml-auto text-xs text-stone-500">{formatMessageTime(msg.created_at)}</span>
                       </div>
                     </div>
                   </div>
@@ -865,7 +865,7 @@ export default function MessageList() {
                         </p>
                       )}
                       {(msg._edited || msg.edited_at) && editingMsgId !== msg.id && (
-                        <p className={`text-[10px] px-3 pb-1.5 -mt-1 ${isOwn ? 'text-right text-white/90' : 'text-stone-500'}`}>edited</p>
+                        <p className={`text-xs px-3 pb-1.5 -mt-1 ${isOwn ? 'text-right text-white/90' : 'text-stone-500'}`}>edited</p>
                       )}
                     </div>
                     {isLastInGroup && isOwn && !msg.image_url && (
@@ -882,7 +882,7 @@ export default function MessageList() {
                     </div>
 
                     {isLastInGroup && (
-                      <p className={`text-[10px] mt-1 ${isOwn ? 'mr-1 text-right' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-500'}`}>
+                      <p className={`text-xs mt-1 ${isOwn ? 'mr-1 text-right' : 'ml-1'} ${msg._failed ? 'text-red-400' : 'text-stone-500'}`}>
                         {msg._pending ? 'Sending…' : msg._failed ? 'Failed to send' : formatMessageTime(msg.created_at)}
                       </p>
                     )}
@@ -899,6 +899,8 @@ export default function MessageList() {
                               </AnimatePresence>
                               <motion.button
                                 onClick={() => toggleReaction(msg.id, emoji)}
+                                aria-label={`${emoji}, ${users.length} ${users.length === 1 ? 'reaction' : 'reactions'}${isMine ? ', remove' : ''}`}
+                                aria-pressed={isMine}
                                 animate={isNew ? { scale: [1, 0.86, 1.32, 0.94, 1] } : { scale: 1 }}
                                 transition={isNew ? { duration: 0.42, times: [0, 0.15, 0.5, 0.75, 1] } : { type: 'spring', stiffness: 400, damping: 25 }}
                                 className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${

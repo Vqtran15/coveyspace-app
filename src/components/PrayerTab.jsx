@@ -164,7 +164,7 @@ function ReactionAvatars({ reactions }) {
 
 // ─── Individual feed card ─────────────────────────────────────────────────────
 
-function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, toggling, onPray, onOpen }) {
+function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, toggling, markingAnswered, onPray, onOpen, onMarkAnswered }) {
   const reactionCount = reactions?.length ?? 0
   const userReacted   = reactions?.some(r => r.user_id === currentUserId) ?? false
 
@@ -180,10 +180,20 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
       <button onClick={onOpen} className="w-full text-left">
         <p className="text-sm text-stone-700 leading-relaxed">{req.request}</p>
       </button>
-      {(reactionCount > 0 || !isOwnRequest) && (
+      {(reactionCount > 0 || !isOwnRequest || isOwnRequest) && (
         <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
           <ReactionAvatars reactions={reactions} />
-          {!isOwnRequest && (
+          {isOwnRequest ? (
+            <motion.button
+              onClick={onMarkAnswered}
+              disabled={markingAnswered}
+              whileTap={{ scale: 0.87 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-stone-400 hover:bg-sage-50 hover:text-sage-700 transition-colors disabled:opacity-50"
+            >
+              <Check size={15} weight="bold" />
+              <span>Answered</span>
+            </motion.button>
+          ) : (
             <motion.button
               key={userReacted}
               onClick={onPray}
@@ -371,6 +381,23 @@ export default function PrayerTab() {
   }
 
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedMember && !selectedGroupPrayer)
+
+  async function handleMarkAnswered(req) {
+    const reqId = req.id
+    setAllRequests(prev => prev.filter(r => r.id !== reqId))
+    setMembers(prev => prev.map(m => ({
+      ...m,
+      prayer_requests: (m.prayer_requests ?? []).filter(r => r.id !== reqId),
+    })))
+    const { error } = await supabase
+      .from('prayer_requests')
+      .update({ answered: true, answered_at: new Date().toISOString() })
+      .eq('id', reqId)
+    if (error) {
+      toast('Failed to mark as answered', 'error')
+      load()
+    }
+  }
 
   useEffect(() => { if (groupId) load() }, [groupId])
 
@@ -776,6 +803,7 @@ export default function PrayerTab() {
                   toggling={togglingIds.has(item.data.id)}
                   onPray={() => toggleFeedReaction(item.data)}
                   onOpen={() => setSelectedMember(item.data.member)}
+                  onMarkAnswered={() => handleMarkAnswered(item.data)}
                 />
               ) : (
                 <GroupFeedCard

@@ -135,9 +135,10 @@ export default function MessageInput() {
               }
               <button
                 onClick={() => removePreview(i)}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-600 text-white rounded-full flex items-center justify-center"
+                aria-label="Remove"
+                className="absolute -top-2 -right-2 w-7 h-7 bg-stone-600 text-white rounded-full flex items-center justify-center"
               >
-                <X size={10} weight="bold" />
+                <X size={12} weight="bold" />
               </button>
             </div>
           ))}
@@ -156,10 +157,12 @@ export default function MessageInput() {
         if (!filtered.length) return null
         return (
           <div className="absolute bottom-full left-0 right-0 pb-1 z-[8]">
-            <div className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden max-h-48 overflow-y-auto">
+            <div id="mention-listbox" role="listbox" aria-label="Mention suggestions" className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden max-h-48 overflow-y-auto">
               {filtered.map(member => (
                 <button
                   key={member.user_id}
+                  role="option"
+                  aria-selected="false"
                   type="button"
                   onPointerDown={e => { e.preventDefault(); insertMention(member) }}
                   className="flex items-center gap-3 px-4 py-2.5 w-full text-left hover:bg-stone-50 transition-colors"
@@ -298,8 +301,8 @@ export default function MessageInput() {
                 <button
                   type="button"
                   onPointerDown={closeEmojiPicker}
-                  className="absolute w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-                  style={{ top: 19, right: 8, zIndex: 10 }}
+                  aria-label="Close emoji picker"
+                  className="absolute top-5 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
                 >
                   <X size={14} weight="bold" />
                 </button>
@@ -396,6 +399,10 @@ export default function MessageInput() {
           onKeyDown={handleKeyDown}
           placeholder="Message…"
           rows={1}
+          aria-label="Message"
+          aria-autocomplete="list"
+          aria-expanded={mentionSearch !== null}
+          aria-controls={mentionSearch !== null ? 'mention-listbox' : undefined}
           className="flex-1 resize-none bg-stone-100 border-0 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none"
           style={{ maxHeight: 120, overflowY: 'auto' }}
         />
@@ -429,6 +436,7 @@ export default function MessageInput() {
           </button>
         </span>
       </div>
+      <p className="hidden lg:block text-[11px] text-stone-400 text-center pb-0.5 -mt-0.5">Shift+Enter for a new line</p>
     </div>
     </div>
   )

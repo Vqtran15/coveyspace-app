@@ -459,19 +459,21 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
               announcement ? (
                 <div className="w-full lg:col-span-2">
                   <div
-                    className={`w-full bg-ember rounded-2xl p-5 shadow-md shadow-ember/25 ${announceShake ? 'animate-announcement-shake' : ''}`}
+                    className={`w-full bg-white border border-stone-100 rounded-2xl p-4 shadow ${announceShake ? 'animate-announcement-shake' : ''}`}
                   >
-                    <div className="flex items-start gap-4">
-                      <Megaphone size={34} weight="fill" className="text-white/90 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-ember/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Megaphone size={20} weight="fill" className="text-ember" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1.5">Announcement</p>
-                        <p className="text-base text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
+                        <p className="text-xs font-semibold text-ember uppercase tracking-wide mb-1">Announcement</p>
+                        <p className="text-sm text-stone-700 leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
                       </div>
                       {isAdmin && (
                         <button
                           onClick={() => setEditingAnnouncement(true)}
                           aria-label="Edit announcement"
-                          className="text-white/50 hover:text-white transition-colors shrink-0 mt-0.5 p-1"
+                          className="text-stone-400 hover:text-ember transition-colors shrink-0 mt-0.5 p-1"
                         >
                           <PencilSimple size={15} />
                         </button>
