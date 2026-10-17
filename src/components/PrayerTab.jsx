@@ -112,10 +112,6 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
   const profiles  = groupPrayer.member_user_ids.map(id => memberMap[id]).filter(Boolean)
   const firstNames = profiles.map(p => p.display_name?.split(' ')[0]).filter(Boolean)
   const label      = formatMemberNames(firstNames)
-  const MAX = 3
-  const shown = profiles.slice(0, MAX)
-  const extra = profiles.length - MAX
-
   return (
     <motion.button
       onClick={onClick}
@@ -125,7 +121,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <StackedAvatars profiles={shown} maxShown={3} sizeClass="w-9 h-9" iconSize={18} textClass="text-xs" overlap={10} showExtra={extra > 0} />
+          <StackedAvatars profiles={profiles} maxShown={3} sizeClass="w-9 h-9" iconSize={18} textClass="text-xs" overlap={10} />
           <div className="font-semibold text-stone-800 truncate">{label}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

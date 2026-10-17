@@ -8,7 +8,7 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime, isVideoUrl } from '../utils/format.js'
 
-const MAIN_GROUP_CHAT_NAME = MAIN_GROUP_CHAT_NAME
+const MAIN_GROUP_CHAT_NAME = 'Main Group Chat'
 const MSG_FETCH_FLOOR = 200
 const MSG_FETCH_PER_CONV = 5
 
