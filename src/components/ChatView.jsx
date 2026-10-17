@@ -690,11 +690,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // otherwise scroll to the bottom. Uses scrollIntoView rather than
   // scrollTop=scrollHeight so the browser computes geometry itself (avoids
   // stale-scrollHeight issues on iOS Safari when the container just became visible).
-  // itemsRef lets the effect read the latest items without adding items to the dep
-  // array (which would re-scroll on every new message after initial reveal).
-  const itemsRef = useRef(items)
-  itemsRef.current = items
-
   useLayoutEffect(() => {
     if (!visible) return
 
@@ -1339,6 +1334,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     [messages, searchQuery]
   )
 
+  // itemsRef lets useLayoutEffect read the latest items without items in its dep
+  // array (which would re-scroll on every new message after initial reveal).
+  const itemsRef = useRef([])
+
   const items = useMemo(() => {
     const result = []
     let lastDate = null
@@ -1367,6 +1366,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
     return result
   }, [filteredMsgs, firstUnreadId])
+  itemsRef.current = items
 
   // O(1) member lookup — declared here so readersAtMessage can reference it
   // without a forward const reference (TDZ) in its deps array.
