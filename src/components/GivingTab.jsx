@@ -126,7 +126,7 @@ export default function GivingTab({ onClose, givingUrl, isAdmin, onGivingSave })
             </button>
           </>
         ) : (
-          <p className="text-sm text-stone-400 max-w-xs mt-2">
+          <p className="text-sm text-stone-500 max-w-xs mt-2">
             No giving link available yet. Ask your admin to set one up.
           </p>
         )}

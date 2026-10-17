@@ -176,6 +176,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   const [prayerCard, setPrayerCard]         = useState(undefined)
   const [editingAnnouncement, setEditingAnnouncement] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [skeletonFading, setSkeletonFading] = useState(false)
   const [cardsReady, setCardsReady] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
@@ -196,6 +197,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   }, [greetingReady])
 
   async function load() {
+    setLoadError(false)
     const today = toDateString(new Date())
     const cutoff = new Date(Date.now() - 60 * 86400000).toISOString()
 
@@ -220,6 +222,11 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
         : Promise.resolve({ count: null }),
     ])
 
+    if (mealRes.error || serviceRes.error || (groupId && groupRes.error)) {
+      setLoadError(true)
+      return
+    }
+
     setNextMeal(mealRes.data ?? null)
     setNextService(serviceRes.data ?? null)
     setNextEvent(eventRes.data ?? null)
@@ -230,7 +237,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
     // Round 2: queries that depend on round-1 results
     const memberIds = prayerEnabled ? memberData.map(m => m.user_id) : []
-    const [{ data: requestData }, { data: latestMsg }] = await Promise.all([
+    const [round2Prayer, round2Chat] = await Promise.all([
       prayerEnabled && memberIds.length > 0
         ? supabase.from('prayer_requests').select('id, member_user_id, request, created_at').in('member_user_id', memberIds).gte('created_at', cutoff).eq('answered', false).order('created_at', { ascending: false })
         : Promise.resolve({ data: null }),
@@ -238,6 +245,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
         ? supabase.from('messages').select('body, display_name, created_at, image_url').eq('conversation_id', mainChatId).order('created_at', { ascending: false }).limit(1).maybeSingle()
         : Promise.resolve({ data: null }),
     ])
+    const { data: requestData } = round2Prayer
+    const { data: latestMsg } = round2Chat
 
     if (prayerEnabled) {
       if (requestData?.length > 0) {
@@ -420,7 +429,14 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
 
       <InstallBanner />
 
-      <div className={`space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start${!cardsReady ? ' transition-opacity duration-[150ms]' : ' animate-fade-in'}${skeletonFading && !cardsReady ? ' opacity-0' : ''}`}>
+      {loadError && (
+        <div className="flex flex-col items-center py-16 text-center">
+          <p className="text-stone-500 text-sm mb-4">Something went wrong loading your home screen.</p>
+          <button onClick={load} className="px-5 py-2.5 bg-ember text-white text-sm font-semibold rounded-xl active:opacity-80 transition-opacity">Retry</button>
+        </div>
+      )}
+
+      {!loadError && <div className={`space-y-3 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0 lg:items-start${!cardsReady ? ' transition-opacity duration-[150ms]' : ' animate-fade-in'}${skeletonFading && !cardsReady ? ' opacity-0' : ''}`}>
         {!cardsReady ? (
           <>
             {isAdmin && <div className="lg:col-span-2"><CardSkeleton delay={0} /></div>}
@@ -577,7 +593,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
             })()}
           </>
         )}
-      </div>
+      </div>}
 
       {editingAnnouncement && (
         <AnnouncementEditModal

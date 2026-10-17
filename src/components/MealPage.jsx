@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { useToast } from '../lib/toast.jsx'
 import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
@@ -18,6 +19,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [justAddedSlot, setJustAddedSlot] = useState(null)
   const [pausing, setPausing]           = useState(false)
+  const toast = useToast()
   const [menuOpen, setMenuOpen]         = useState(false)
   const [menuClosing, setMenuClosing]   = useState(false)
 
@@ -202,6 +204,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     setPausing(true)
     const { error } = await supabase.rpc(tables.pauseRpc, { p_page_id: page.id })
     if (!error) onPageUpdate({ ...page, is_paused: !page.is_paused })
+    else toast('Failed to pause — please try again.', 'error')
     setPausing(false)
   }
 

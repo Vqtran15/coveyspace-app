@@ -181,6 +181,7 @@ export default function WelcomeSplash({ onDone }) {
   const [inviteCode, setInviteCode] = useState(null)
   const [loadingCode, setLoadingCode] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
+  const [inviteCodeError, setInviteCodeError] = useState(false)
 
   // ── Tour (member) ──────────────────────────────────────────────────────────
   const [tourSlide, setTourSlide] = useState(0)
@@ -254,14 +255,18 @@ export default function WelcomeSplash({ onDone }) {
     close()
   }
 
+  function fetchInviteCode() {
+    setLoadingCode(true)
+    setInviteCodeError(false)
+    supabase.rpc('get_invite_code').then(({ data, error }) => {
+      if (error) setInviteCodeError(true)
+      else setInviteCode(data ?? null)
+      setLoadingCode(false)
+    })
+  }
+
   useEffect(() => {
-    if (isAdmin && step === 'invite') {
-      setLoadingCode(true)
-      supabase.rpc('get_invite_code').then(({ data }) => {
-        setInviteCode(data ?? null)
-        setLoadingCode(false)
-      })
-    }
+    if (isAdmin && step === 'invite') fetchInviteCode()
   }, [isAdmin, step])
 
 
@@ -269,9 +274,10 @@ export default function WelcomeSplash({ onDone }) {
     if (!bdMonth || !bdDay) return
     const mm = String(bdMonth).padStart(2, '0')
     const dd = String(bdDay).padStart(2, '0')
-    await supabase.from('profiles')
+    const { error } = await supabase.from('profiles')
       .update({ birthday: `2000-${mm}-${dd}` })
       .eq('user_id', userId)
+    if (error) { toast('Failed to save birthday — please try again.', 'error'); return }
     setStep(isAdmin ? 'features' : 'tour')
   }
 
@@ -336,7 +342,8 @@ export default function WelcomeSplash({ onDone }) {
         position: i,
       }))
       const { error } = await supabase.from('meal_pages').insert(rows)
-      if (!error) setMealNames(['', ''])
+      if (error) { toast('Failed to create meals — please try again.', 'error'); setSavingSetup(false); return }
+      setMealNames(['', ''])
     }
 
     setSavingSetup(false)
@@ -850,7 +857,7 @@ export default function WelcomeSplash({ onDone }) {
         </p>
 
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.35s' }}>
-          {!loadingCode && (
+          {!loadingCode && !inviteCodeError && (
             <button
               onClick={shareCode}
               className="w-full py-3.5 bg-ember text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mb-4"
@@ -858,6 +865,17 @@ export default function WelcomeSplash({ onDone }) {
               <ShareNetwork size={16} weight="bold" />
               {codeCopied ? '✓ Copied!' : 'Share Invite Link'}
             </button>
+          )}
+          {!loadingCode && inviteCodeError && (
+            <div className="mb-4">
+              <p className="text-xs text-red-500 mb-3">Couldn't load invite link.</p>
+              <button
+                onClick={fetchInviteCode}
+                className="w-full py-3.5 bg-stone-100 hover:bg-stone-200 active:scale-[0.98] text-stone-600 font-semibold rounded-xl transition-all text-sm"
+              >
+                Retry
+              </button>
+            </div>
           )}
           {loadingCode && (
             <div className="flex items-center justify-center mb-4 h-12">
