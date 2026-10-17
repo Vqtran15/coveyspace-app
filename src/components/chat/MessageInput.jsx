@@ -219,7 +219,7 @@ export default function MessageInput() {
                 </button>
               </div>
               {/* Scrollable content — submit button lives here so the keyboard never obscures it */}
-              <div className="flex-1 overflow-y-auto px-4 py-5">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5">
                 <div className="space-y-5">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Question</p>
