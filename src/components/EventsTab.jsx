@@ -388,7 +388,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           {/* Share to Chat */}
           <button
             onClick={onShareToChat}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-stone-200 text-sm font-semibold text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white border border-stone-200 text-sm font-semibold text-stone-600 hover:border-ember hover:text-ember hover:bg-ember/5 transition-colors"
           >
             <ChatCircleDots size={18} />
             Share to Chat
