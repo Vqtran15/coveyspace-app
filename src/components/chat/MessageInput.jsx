@@ -214,7 +214,7 @@ export default function MessageInput() {
             </button>
           </div>
           {/* Scrollable: question + options */}
-          <div className="overflow-y-auto flex-1 min-h-0 px-3">
+          <div className="overflow-y-auto px-3 pt-1" style={{ maxHeight: 'calc(100dvh - 200px)' }}>
           <input
             ref={pollQuestionRef}
             type="text"
