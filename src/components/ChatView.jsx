@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect, useMemo, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
 import {
@@ -1877,6 +1877,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     [members]
   )
 
+  const senderName = useCallback(
+    (userId, storedName) => memberMap[userId]?.display_name || storedName,
+    [memberMap]
+  )
+
   const readersAtMessage = useMemo(() => {
     const map = {}
     for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
@@ -1968,7 +1973,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     // Derived
     filteredMsgs, items, readersAtMessage, typing, title, activeMessage,
     dmOtherMember, isMainGroupChat, canEditGroupInfo, memberMap,
-    senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
+    senderName,
     // State (message/UI, not compose state)
     messages, loading, visible, contentReady, fetchingFresh, hasMore, loadingMore,
     searchOpen, setSearchOpen, searchQuery, setSearchQuery,
@@ -2045,7 +2050,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     pollOptionRefs, justAddedOptionRef, pollQuestionRef,
     // Props
     members, myId, displayName, convId,
-    senderName: (userId, storedName) => memberMap[userId]?.display_name || storedName,
+    senderName,
     // Handlers that read current text/imagePreviews via closure
     handleTextInput, handleKeyDown, handleSend, handleFileChange, removePreview,
     closeEmojiPicker, insertEmoji, createPoll,

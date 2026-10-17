@@ -28,6 +28,7 @@ export default function MessageInput() {
     mentionSearch, setMentionSearch, insertMention, members, myId,
   } = useChatInputContext()
 
+  const videoInputRef = useRef(null)
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [justTapped, setJustTapped] = useState(false)
   const btnWrapRef = useRef(null)
@@ -350,11 +351,9 @@ export default function MessageInput() {
                 type="button"
                 onClick={() => {
                   setShowAttachMenu(false)
-                  if (fileInputRef.current) {
-                    fileInputRef.current.setAttribute('accept', 'video/*')
-                    fileInputRef.current.value = ''
-                    fileInputRef.current.click()
-                    setTimeout(() => fileInputRef.current?.setAttribute('accept', 'image/*,video/*'), 500)
+                  if (videoInputRef.current) {
+                    videoInputRef.current.value = ''
+                    videoInputRef.current.click()
                   }
                 }}
                 className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-stone-50 transition-colors"
@@ -389,6 +388,7 @@ export default function MessageInput() {
           </motion.div>
         </button>
         <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileChange} />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleFileChange} />
         <textarea
           ref={textareaRef}
           value={text}

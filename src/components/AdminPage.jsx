@@ -8,6 +8,88 @@ import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import { weekOccToMode } from '../utils/schedule.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 
+function ScheduleFrequencyEditor({ settings, freqMode, onFreqModeChange, dowKey, wkOccKey, onSave }) {
+  const dows = settings?.[dowKey] ?? []
+  const occ  = settings?.[wkOccKey] ?? [1,2,3,4,5]
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
+        <div className="flex gap-1.5">
+          {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => {
+            const selected = dows.includes(i)
+            return (
+              <button key={i} onClick={() => {
+                const next = selected ? (dows.length > 1 ? dows.filter(x => x !== i) : dows) : [...dows, i].sort((a,b) => a-b)
+                onSave({ [dowKey]: next })
+              }}
+              className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-xl transition-colors ${selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+              >{d}</button>
+            )
+          })}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs text-stone-400 font-semibold mb-2">Frequency</p>
+        <div className="flex gap-1.5">
+          {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
+            <button key={value} onClick={() => {
+              onFreqModeChange(value)
+              if (value === 'weekly')   onSave({ [wkOccKey]: [1,2,3,4,5] })
+              if (value === 'biweekly') onSave({ [wkOccKey]: [2,4] })
+            }}
+            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${freqMode === value ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+            >{label}</button>
+          ))}
+        </div>
+        {freqMode === 'biweekly' && (() => {
+          return (
+            <div className="mt-3">
+              <p className="text-xs text-stone-400 font-semibold mb-2">Which pattern?</p>
+              <div className="flex gap-1.5">
+                {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
+                  <button key={label} onClick={() => onSave({ [wkOccKey]: pat })}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+        {freqMode === 'custom' && (() => {
+          return (
+            <div className="mt-3">
+              <p className="text-xs text-stone-400 font-semibold mb-2">Which weeks of the month?</p>
+              <div className="flex gap-1">
+                {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
+                  const n = idx + 1
+                  const selected = occ.includes(n)
+                  return (
+                    <button key={n} onClick={() => {
+                      const next = selected ? (occ.length > 1 ? occ.filter(x => x !== n) : occ) : [...occ, n].sort((a,b) => a-b)
+                      onSave({ [wkOccKey]: next })
+                    }}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'}`}
+                    >{label}</button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+      </div>
+    </div>
+  )
+}
+
+function sortMembers(list) {
+  return list.slice().sort((a, b) => {
+    if (a.role === 'admin' && b.role !== 'admin') return -1
+    if (b.role === 'admin' && a.role !== 'admin') return 1
+    return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+  })
+}
+
 export default function AdminPage() {
   const { groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange, churchId, churchName, refreshProfile } = useAppContext()
   const navigate = useNavigate()
@@ -64,11 +146,7 @@ export default function AdminPage() {
       .order('display_name')
       .then(({ data }) => {
         if (!mounted) return
-        const sorted = (data ?? []).slice().sort((a, b) => {
-          if (a.role === 'admin' && b.role !== 'admin') return -1
-          if (b.role === 'admin' && a.role !== 'admin') return 1
-          return (a.display_name ?? '').localeCompare(b.display_name ?? '')
-        })
+        const sorted = sortMembers(data ?? [])
         setMembers(sorted)
       })
 
@@ -87,11 +165,7 @@ export default function AdminPage() {
           setMembers(prev => {
             if (prev.some(m => m.user_id === added.user_id)) return prev
             const next = [...prev, added]
-            return next.sort((a, b) => {
-              if (a.role === 'admin' && b.role !== 'admin') return -1
-              if (b.role === 'admin' && a.role !== 'admin') return 1
-              return (a.display_name ?? '').localeCompare(b.display_name ?? '')
-            })
+            return sortMembers(next)
           })
         }
       )
@@ -123,11 +197,7 @@ export default function AdminPage() {
     } else {
       setMembers(prev => {
         const updated = prev.map(m => m.user_id === targetId ? { ...m, role: newRole } : m)
-        return updated.slice().sort((a, b) => {
-          if (a.role === 'admin' && b.role !== 'admin') return -1
-          if (b.role === 'admin' && a.role !== 'admin') return 1
-          return (a.display_name ?? '').localeCompare(b.display_name ?? '')
-        })
+        return sortMembers(updated)
       })
       const name = member?.display_name ?? 'Member'
       toast(newRole === 'admin' ? `${name} is now an admin` : `${name}'s admin access was removed`, 'success')
@@ -565,102 +635,14 @@ export default function AdminPage() {
         {groupSettings?.meals_enabled && <section>
           <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Meal Schedule</p>
           <div className="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
-            <div>
-              <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
-              <div className="flex gap-1.5">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => {
-                  const mealDows = groupSettings?.meal_day_of_week ?? []
-                  const selected = mealDows.includes(i)
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        const next = selected
-                          ? mealDows.length > 1 ? mealDows.filter(x => x !== i) : mealDows
-                          : [...mealDows, i].sort((a, b) => a - b)
-                        handleSaveRotation({ meal_day_of_week: next })
-                      }}
-                      className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-xl transition-colors ${
-                        selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                      }`}
-                    >
-                      {d}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-stone-400 font-semibold mb-2">Frequency</p>
-              <div className="flex gap-1.5">
-                {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
-                  <button
-                    key={value}
-                    onClick={() => {
-                      setMealFreqMode(value)
-                      if (value === 'weekly')   handleSaveRotation({ meal_week_occurrences: [1,2,3,4,5] })
-                      if (value === 'biweekly') handleSaveRotation({ meal_week_occurrences: [2,4] })
-                    }}
-                    className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                      mealFreqMode === value ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {mealFreqMode === 'biweekly' && (() => {
-                const occ = groupSettings?.meal_week_occurrences ?? [2,4]
-                return (
-                  <div className="mt-3">
-                    <p className="text-xs text-stone-400 font-semibold mb-2">Which pattern?</p>
-                    <div className="flex gap-1.5">
-                      {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
-                        <button
-                          key={label}
-                          onClick={() => handleSaveRotation({ meal_week_occurrences: pat })}
-                          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                            JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })()}
-              {mealFreqMode === 'custom' && (() => {
-                const occ = groupSettings?.meal_week_occurrences ?? [1,2,3,4,5]
-                return (
-                  <div className="mt-3">
-                    <p className="text-xs text-stone-400 font-semibold mb-2">Which weeks of the month?</p>
-                    <div className="flex gap-1">
-                      {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
-                        const n = idx + 1
-                        const selected = occ.includes(n)
-                        return (
-                          <button
-                            key={n}
-                            onClick={() => {
-                              const next = selected
-                                ? occ.length > 1 ? occ.filter(x => x !== n) : occ
-                                : [...occ, n].sort((a,b) => a-b)
-                              handleSaveRotation({ meal_week_occurrences: next })
-                            }}
-                            className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                              selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
+            <ScheduleFrequencyEditor
+              settings={groupSettings}
+              freqMode={mealFreqMode}
+              onFreqModeChange={setMealFreqMode}
+              dowKey="meal_day_of_week"
+              wkOccKey="meal_week_occurrences"
+              onSave={handleSaveRotation}
+            />
           </div>
           <p className="text-xs text-stone-400 mt-2 px-1">Auto-creates new meals using the meal least recently scheduled, so the same meal is never repeated back-to-back. Both a day of week and a frequency must be configured for auto-scheduling to work.</p>
         </section>}
@@ -686,102 +668,14 @@ export default function AdminPage() {
             </div>
             {groupSettings?.service_autofill && (
               <>
-                <div>
-                  <p className="text-xs text-stone-400 font-semibold mb-2">Day of week</p>
-                  <div className="flex gap-1.5">
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => {
-                      const svcDows = groupSettings?.service_day_of_week ?? []
-                      const selected = svcDows.includes(i)
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            const next = selected
-                              ? svcDows.length > 1 ? svcDows.filter(x => x !== i) : svcDows
-                              : [...svcDows, i].sort((a, b) => a - b)
-                            handleSaveRotation({ service_day_of_week: next })
-                          }}
-                          className={`flex-1 h-11 flex items-center justify-center text-xs font-semibold rounded-xl transition-colors ${
-                            selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                          }`}
-                        >
-                          {d}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-stone-400 font-semibold mb-2">Frequency</p>
-                  <div className="flex gap-1.5">
-                    {[{ label: 'Weekly', value: 'weekly' }, { label: 'Biweekly', value: 'biweekly' }, { label: 'Custom', value: 'custom' }].map(({ label, value }) => (
-                      <button
-                        key={value}
-                        onClick={() => {
-                          setServiceFreqMode(value)
-                          if (value === 'weekly')   handleSaveRotation({ service_week_occurrences: [1,2,3,4,5] })
-                          if (value === 'biweekly') handleSaveRotation({ service_week_occurrences: [2,4] })
-                        }}
-                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                          serviceFreqMode === value ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  {serviceFreqMode === 'biweekly' && (() => {
-                    const occ = groupSettings?.service_week_occurrences ?? [2,4]
-                    return (
-                      <div className="mt-3">
-                        <p className="text-xs text-stone-400 font-semibold mb-2">Which pattern?</p>
-                        <div className="flex gap-1.5">
-                          {[{ label: '1st & 3rd', pat: [1,3] }, { label: '2nd & 4th', pat: [2,4] }].map(({ label, pat }) => (
-                            <button
-                              key={label}
-                              onClick={() => handleSaveRotation({ service_week_occurrences: pat })}
-                              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                JSON.stringify(occ) === JSON.stringify(pat) ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })()}
-                  {serviceFreqMode === 'custom' && (() => {
-                    const occ = groupSettings?.service_week_occurrences ?? [1,2,3,4,5]
-                    return (
-                      <div className="mt-3">
-                        <p className="text-xs text-stone-400 font-semibold mb-2">Which weeks of the month?</p>
-                        <div className="flex gap-1">
-                          {['1st','2nd','3rd','4th','5th'].map((label, idx) => {
-                            const n = idx + 1
-                            const selected = occ.includes(n)
-                            return (
-                              <button
-                                key={n}
-                                onClick={() => {
-                                  const next = selected
-                                    ? occ.length > 1 ? occ.filter(x => x !== n) : occ
-                                    : [...occ, n].sort((a,b) => a-b)
-                                  handleSaveRotation({ service_week_occurrences: next })
-                                }}
-                                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-colors ${
-                                  selected ? 'bg-ember text-white' : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                                }`}
-                              >
-                                {label}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
+                <ScheduleFrequencyEditor
+                  settings={groupSettings}
+                  freqMode={serviceFreqMode}
+                  onFreqModeChange={setServiceFreqMode}
+                  dowKey="service_day_of_week"
+                  wkOccKey="service_week_occurrences"
+                  onSave={handleSaveRotation}
+                />
               </>
             )}
           </div>

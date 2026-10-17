@@ -14,6 +14,12 @@ import AnimatedCount from '../lib/AnimatedCount.jsx'
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
+const RSVP_OPTIONS = [
+  { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+  { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+  { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
+]
+
 function today() {
   return new Date().toISOString().split('T')[0]
 }
@@ -318,11 +324,7 @@ function EventDetail({ event, rsvps, userId, isAdmin, groupId, displayName, onRs
           <div className="bg-white rounded-2xl px-4 py-4 border border-stone-100 shadow">
             <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">RSVP</p>
             <div className="flex gap-2">
-              {[
-                { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-                { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-              ].map(({ status, label, Icon, fillColor, active, inactive }) => {
+              {RSVP_OPTIONS.map(({ status, label, Icon, fillColor, active, inactive }) => {
                 const isActive = myRsvp?.status === status
                 return (
                   <motion.button
@@ -453,11 +455,7 @@ function EventCard({ event, isFeatured, eventRsvps = [], userId, onOpenDetail, o
         {/* RSVP + counts */}
         <div className="px-4 pt-3 pb-3.5">
           <div className="flex gap-2 mb-2.5">
-            {[
-              { status: 'going',     label: 'Going',    Icon: CheckCircle, fillColor: 'bg-ember',      active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-              { status: 'maybe',     label: 'Maybe',    Icon: Minus,       fillColor: 'bg-lagoon-700', active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-              { status: 'not_going', label: "Can't go", Icon: XIcon,       fillColor: 'bg-stone-500',  active: 'text-white', inactive: 'bg-stone-100 text-stone-500' },
-            ].map(({ status, label, Icon, fillColor, active, inactive }) => {
+            {RSVP_OPTIONS.map(({ status, label, Icon, fillColor, active, inactive }) => {
               const isActive = myRsvp?.status === status
               return (
                 <motion.button

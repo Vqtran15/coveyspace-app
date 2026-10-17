@@ -7,12 +7,7 @@ import { useAppContext } from '../contexts/AppContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
 import BirthdayCard from './BirthdayCard.jsx'
-
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-function daysInMonth(month) {
-  if (!month) return 31
-  return new Date(2000, month, 0).getDate()
-}
+import { MONTHS, daysInMonth } from '../utils/dates.js'
 
 const inputCls = 'flex-1 min-w-0 text-sm bg-white border border-stone-200 rounded-xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-ember text-stone-800'
 

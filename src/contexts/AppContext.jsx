@@ -5,6 +5,10 @@ import { db } from '../lib/db.js'
 import { usePushNotifications } from '../hooks/usePushNotifications.js'
 import { dedupBirthdays } from '../utils/birthdays.js'
 
+function fetchBirthdaysForGroup(groupId) {
+  return supabase.from('birthdays').select('id, name, birthday, profile_user_id').eq('community_group_id', groupId)
+}
+
 const PATHS = ['/home', '/schedule', '/events', '/chat', '/prayer', '/bible']
 
 const AppContext = createContext(null)
@@ -115,7 +119,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!groupId) { setBirthdays([]); return }
     setBirthdays([])
-    supabase.from('birthdays').select('id, name, birthday, profile_user_id').eq('community_group_id', groupId).then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
+    fetchBirthdaysForGroup(groupId).then(({ data }) => setBirthdays(dedupBirthdays(data ?? [])))
 
     const channel = supabase
       .channel(`birthdays:${groupId}`)
@@ -213,7 +217,7 @@ export function AppProvider({ children }) {
 
   const refreshBirthdays = useCallback(() => {
     if (!groupId) return
-    supabase.from('birthdays').select('id, name, birthday, profile_user_id').eq('community_group_id', groupId).then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
+    fetchBirthdaysForGroup(groupId).then(({ data }) => { if (data) setBirthdays(dedupBirthdays(data ?? [])) })
   }, [groupId])
 
   const existingBirthday = profile?.birthday ?? null

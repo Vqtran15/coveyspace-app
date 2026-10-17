@@ -12,32 +12,33 @@ import { haptic } from '../lib/haptic.js'
 import PrayerProfile from './PrayerProfile.jsx'
 import GroupPrayerProfile from './GroupPrayerProfile.jsx'
 
+function daysDiff(date) {
+  const now   = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const dDay  = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  return Math.round((today - dDay) / 86400000)
+}
+
 function formatLastUpdated(requests) {
   if (!requests?.length) return null
   const latest = requests.reduce((a, b) =>
     new Date(a.created_at) > new Date(b.created_at) ? a : b
   )
   const d = new Date(latest.created_at)
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const dDay  = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  const diffDays = Math.round((today - dDay) / 86400000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7)  return `${diffDays} days ago`
+  const diff = daysDiff(d)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Yesterday'
+  if (diff < 7)  return `${diff} days ago`
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function formatRelativeDate(dateStr) {
   const d    = new Date(dateStr)
-  const now  = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const dDay  = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  const diffDays = Math.round((today - dDay) / 86400000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7)  return `${diffDays}d ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+  const diff = daysDiff(d)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Yesterday'
+  if (diff < 7)  return `${diff}d ago`
+  if (diff < 30) return `${Math.floor(diff / 7)}w ago`
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
@@ -46,6 +47,37 @@ function formatMemberNames(firstNames) {
   if (firstNames.length === 1) return firstNames[0]
   if (firstNames.length === 2) return `${firstNames[0]} & ${firstNames[1]}`
   return `${firstNames.slice(0, -1).join(', ')} & ${firstNames[firstNames.length - 1]}`
+}
+
+function StackedAvatars({ profiles, maxShown = 3, sizeClass = 'w-9 h-9', iconSize = 18, textClass = 'text-xs', overlap = 10, showExtra = true }) {
+  const shown = profiles.slice(0, maxShown)
+  const extra = profiles.length - maxShown
+  return (
+    <div className="flex items-center shrink-0">
+      {shown.map((p, i) => (
+        <div
+          key={p.user_id}
+          className={`${sizeClass} rounded-full border-2 border-white shrink-0 overflow-hidden flex items-center justify-center ${p.avatar_image_url ? 'bg-stone-200' : avatarColor(p.user_id, p.avatar_color)}`}
+          style={{ marginLeft: i === 0 ? 0 : -overlap, zIndex: shown.length - i }}
+        >
+          {p.avatar_image_url
+            ? <img src={p.avatar_image_url} alt="" className="w-full h-full object-cover" />
+            : p.avatar_icon
+              ? <AvatarIcon name={p.avatar_icon} size={iconSize} />
+              : <span className={`text-white ${textClass} font-bold`}>{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>
+          }
+        </div>
+      ))}
+      {showExtra && extra > 0 && (
+        <div
+          className={`${sizeClass} rounded-full border-2 border-white bg-stone-100 flex items-center justify-center shrink-0`}
+          style={{ marginLeft: -overlap }}
+        >
+          <span className="text-xs font-bold text-stone-500">+{extra}</span>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Individual member card ───────────────────────────────────────────────────
@@ -83,7 +115,6 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
   const MAX = 3
   const shown = profiles.slice(0, MAX)
   const extra = profiles.length - MAX
-  const stackWidth = shown.length * 26 + 10 + (extra > 0 ? 26 : 0)
 
   return (
     <motion.button
@@ -94,30 +125,7 @@ function GroupPrayerCard({ groupPrayer, memberMap, onClick }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex items-center shrink-0" style={{ width: stackWidth }}>
-            {shown.map((p, i) => (
-              <div
-                key={p.user_id}
-                className={`w-9 h-9 rounded-full border-2 border-white overflow-hidden flex items-center justify-center shrink-0 ${p.avatar_image_url ? 'bg-stone-200' : avatarColor(p.user_id, p.avatar_color)}`}
-                style={{ marginLeft: i === 0 ? 0 : -10, zIndex: shown.length - i }}
-              >
-                {p.avatar_image_url
-                  ? <img src={p.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                  : p.avatar_icon
-                    ? <AvatarIcon name={p.avatar_icon} size={18} />
-                    : <span className="text-white text-xs font-bold">{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>
-                }
-              </div>
-            ))}
-            {extra > 0 && (
-              <div
-                className="w-9 h-9 rounded-full border-2 border-white bg-stone-100 flex items-center justify-center shrink-0"
-                style={{ marginLeft: -10 }}
-              >
-                <span className="text-xs font-bold text-stone-500">+{extra}</span>
-              </div>
-            )}
-          </div>
+          <StackedAvatars profiles={shown} maxShown={3} sizeClass="w-9 h-9" iconSize={18} textClass="text-xs" overlap={10} showExtra={extra > 0} />
           <div className="font-semibold text-stone-800 truncate">{label}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -214,22 +222,7 @@ function GroupFeedCard({ groupPrayer, memberMap, reactions, currentUserId, toggl
     <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow">
       <div className="flex items-center justify-between mb-2.5">
         <button onClick={onOpen} className="flex items-center gap-2 min-w-0">
-          <div className="flex items-center shrink-0">
-            {profiles.slice(0, 3).map((p, i) => (
-              <div
-                key={p.user_id}
-                className={`w-7 h-7 rounded-full border-2 border-white shrink-0 overflow-hidden flex items-center justify-center ${p.avatar_image_url ? 'bg-stone-200' : avatarColor(p.user_id, p.avatar_color)}`}
-                style={{ marginLeft: i === 0 ? 0 : -8, zIndex: 3 - i }}
-              >
-                {p.avatar_image_url
-                  ? <img src={p.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                  : p.avatar_icon
-                    ? <AvatarIcon name={p.avatar_icon} size={13} />
-                    : <span className="text-white text-[9px] font-bold">{(p.display_name ?? '?').charAt(0).toUpperCase()}</span>
-                }
-              </div>
-            ))}
-          </div>
+          <StackedAvatars profiles={profiles} maxShown={3} sizeClass="w-7 h-7" iconSize={13} textClass="text-[9px]" overlap={8} showExtra={false} />
           <span className="text-sm font-semibold text-stone-700 truncate">{label}</span>
         </button>
         <span className="text-xs text-stone-500 shrink-0 ml-2">{formatRelativeDate(groupPrayer.created_at)}</span>

@@ -12,12 +12,7 @@ import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 import InstallBanner from './InstallBanner.jsx'
-
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-function daysInMonth(month) {
-  if (!month) return 31
-  return new Date(2000, month, 0).getDate()
-}
+import { MONTHS, daysInMonth } from '../utils/dates.js'
 
 // Floating label input — label shrinks + rises when focused or filled
 function FloatingInput({ label, value, onChange, type = 'text', required, maxLength, autoComplete, className: extra = '', ...props }) {

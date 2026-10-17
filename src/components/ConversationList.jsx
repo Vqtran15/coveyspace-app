@@ -8,6 +8,10 @@ import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime, isVideoUrl } from '../utils/format.js'
 
+const MAIN_GROUP_CHAT_NAME = MAIN_GROUP_CHAT_NAME
+const MSG_FETCH_FLOOR = 200
+const MSG_FETCH_PER_CONV = 5
+
 function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPreview, isMainGroupChat, isDeleting, onSelect, onOptionsRequest, i, activeConvId }) {
   const name        = convName(conv)
   const isDm        = conv.type === 'direct'
@@ -182,7 +186,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       setConversations(convs)
 
       // The main group chat is always named "Main Group Chat" (set by DB trigger on group creation)
-      const main = convs.find(c => c.name === 'Main Group Chat')
+      const main = convs.find(c => c.name === MAIN_GROUP_CHAT_NAME)
       if (main) onPinGroupRef.current(main.id)
 
       if (autoOpenGroupChatRef.current) {
@@ -198,7 +202,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       }
 
       if (autoOpenMainChatRef.current) {
-        const mainConv = convs.find(c => c.name === 'Main Group Chat')
+        const mainConv = convs.find(c => c.name === MAIN_GROUP_CHAT_NAME)
         if (mainConv) {
           // Clear any onboarding draft that may have been written by autoOpenGroupChat.
           // Home-screen deep links should never pre-populate the input.
@@ -221,7 +225,7 @@ export default function ConversationList({ session, groupId, members, enterClass
           .select('conversation_id, body, display_name, image_url, created_at, user_id')
           .in('conversation_id', convIds)
           .order('created_at', { ascending: false })
-          .limit(Math.max(200, convIds.length * 5)),
+          .limit(Math.max(MSG_FETCH_FLOOR, convIds.length * MSG_FETCH_PER_CONV)),
         supabase
           .from('conversation_members')
           .select('conversation_id, last_read_at')

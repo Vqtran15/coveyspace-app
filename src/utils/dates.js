@@ -53,3 +53,10 @@ export function patchTitleDate(title, oldDateStr, newDateStr) {
   if (!title.includes(oldFormatted)) return title
   return title.replace(oldFormatted, formatDate(newDateStr))
 }
+
+export const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+export function daysInMonth(month) {
+  if (!month) return 31
+  return new Date(2000, month, 0).getDate()
+}
