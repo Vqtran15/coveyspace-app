@@ -296,7 +296,7 @@ export default function AvatarPicker({
         <div className="fixed inset-0 z-[60] flex items-end justify-center">
           {/* Backdrop */}
           <div
-            className={`absolute inset-0 bg-black/40 ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
+            className={`absolute inset-0 bg-black/50 ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
             onClick={animatedClose}
           />
           {/* Sheet */}

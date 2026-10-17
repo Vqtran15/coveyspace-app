@@ -51,7 +51,7 @@ function TSep() {
 function ConfirmSendModal({ sending, summary, onCancel, onConfirm, closing }) {
   return (
     <>
-      <div className={`fixed inset-0 bg-black/40 z-[45] ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`} onClick={onCancel} />
+      <div className={`fixed inset-0 bg-black/50 z-[45] ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`} onClick={onCancel} />
       <div
         className={`fixed inset-x-4 bottom-4 lg:inset-x-0 lg:mx-auto lg:w-full lg:max-w-sm lg:bottom-8 z-[46] bg-white rounded-2xl shadow-xl px-5 pt-5 ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
@@ -538,7 +538,7 @@ function BroadcastComposer({ churchId, convIds, groupsInChurch, displayName, use
       {/* Link dialog */}
       {(linkDialogOpen || linkDialogClosing) && (
         <>
-          <div className={`fixed inset-0 z-[80] bg-black/40 ${linkDialogClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`} onClick={closeLinkDialog} />
+          <div className={`fixed inset-0 z-[80] bg-black/50 ${linkDialogClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`} onClick={closeLinkDialog} />
           <div
             className={`fixed inset-x-4 z-[81] bg-white rounded-2xl shadow-xl p-5 space-y-4 ${linkDialogClosing ? 'animate-popup-out' : 'animate-popup-in'}`}
             style={{ top: '50%', transform: 'translateY(-50%)' }}

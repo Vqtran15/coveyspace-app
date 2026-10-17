@@ -852,7 +852,7 @@ export default function EventsTab() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed inset-0 lg:left-56 z-[60] flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
+            className="fixed inset-0 lg:left-56 z-[60] flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
             onClick={e => { if (e.target === e.currentTarget) setShowConvPicker(false) }}
           >
             <motion.div
@@ -922,7 +922,7 @@ export default function EventsTab() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
             onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingEvent(null) } }}
           >
             <div className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden max-h-[90dvh] lg:w-[480px] lg:max-w-full lg:shadow-xl" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
@@ -957,7 +957,7 @@ export default function EventsTab() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
             onClick={e => { if (e.target === e.currentTarget) setDeleteTarget(null) }}
           >
             <motion.div

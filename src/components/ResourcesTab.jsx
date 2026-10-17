@@ -381,7 +381,7 @@ function AddEditSheet({ initial, onSave, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
+      className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
@@ -2055,7 +2055,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/40"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
             onClick={() => setShowChapterMenu(false)}
           >
             <motion.div
@@ -2132,7 +2132,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/30"
+            className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
             onClick={() => setDeleteConfirmIdx(null)}
           >
             <motion.div

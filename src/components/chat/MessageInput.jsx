@@ -190,7 +190,7 @@ export default function MessageInput() {
 
       {pollCreating && !pollSubmitting && (
         <div
-          className="fixed inset-0 z-[7] pointer-events-auto"
+          className="fixed inset-0 z-[7] pointer-events-auto bg-black/50"
           onPointerDown={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }}
         />
       )}
