@@ -95,7 +95,14 @@ function MemberCard({ member, onClick }) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <AvatarCircle size="md" icon={member.avatar_icon} colorKey={member.avatar_color} userId={member.user_id} name={member.display_name} imageUrl={member.avatar_image_url} />
-          <div className="font-semibold text-stone-800">{member.display_name}</div>
+          <div>
+            <div className="font-semibold text-stone-800">{member.display_name}</div>
+            {!member.prayer_requests?.length && (
+              <p className="text-xs text-stone-400 mt-0.5 flex items-center gap-1">
+                <Plus size={10} />No requests yet · tap to add
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {lastUpdated && <span className="text-xs text-stone-500">{lastUpdated}</span>}

@@ -565,6 +565,7 @@ export default function EventsTab() {
   async function openConvPicker() {
     haptic()
     setShowConvPicker(true)
+    if (pickerConvs.length > 0) return
     setPickerLoading(true)
     const { data: convs } = await supabase
       .from('conversations')

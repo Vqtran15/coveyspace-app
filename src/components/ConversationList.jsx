@@ -4,6 +4,7 @@ import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, 
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { useToast } from '../lib/toast.jsx'
 import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, formatListTime, isVideoUrl } from '../utils/format.js'
@@ -154,9 +155,15 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [deletingConvId, setDeletingConvId]   = useState(null)
   const [actionSheetConv, setActionSheetConv] = useState(null)
   const [actionSheetClosing, closeActionSheet, resetActionSheet] = useModalClose(() => setActionSheetConv(null))
+  const [renamingConv, setRenamingConv]       = useState(null)
+  const [renameValue, setRenameValue]         = useState('')
+  const [renaming, setRenaming]               = useState(false)
+  const [renameClosing, closeRename, resetRename] = useModalClose(() => setRenamingConv(null))
+  const [memberSearchQuery, setMemberSearchQuery] = useState('')
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
+  const { toast } = useToast()
 
   // Stable refs for callbacks and one-time flags so loadConversations doesn't
   // rebuild (and tear down the Supabase channel) on every parent re-render.
@@ -361,12 +368,28 @@ export default function ConversationList({ session, groupId, members, enterClass
     resetDm()
     setNewChatMode('dm')
     setSelectedMembers(new Set())
+    setMemberSearchQuery('')
     setNewDmOpen(true)
   }
 
   function switchMode(mode) {
     setNewChatMode(mode)
+    setMemberSearchQuery('')
     if (mode === 'group') setSelectedMembers(new Set())
+  }
+
+  async function handleRename() {
+    const trimmed = renameValue.trim()
+    if (!trimmed) return
+    setRenaming(true)
+    const { error } = await supabase.from('conversations').update({ name: trimmed }).eq('id', renamingConv.id)
+    if (!error) {
+      setConversations(prev => prev.map(c => c.id === renamingConv.id ? { ...c, name: trimmed } : c))
+      closeRename()
+    } else {
+      toast('Failed to rename', 'error')
+    }
+    setRenaming(false)
   }
 
   function toggleMember(userId) {
@@ -607,6 +630,22 @@ export default function ConversationList({ session, groupId, members, enterClass
               <div className="w-10 h-1 rounded-full bg-stone-200" />
             </div>
             <div className="px-4 pt-2 pb-3">
+              {actionSheetConv.type === 'group' && (
+                <button
+                  onClick={() => {
+                    const conv = actionSheetConv
+                    resetActionSheet()
+                    setActionSheetConv(null)
+                    resetRename()
+                    setRenameValue(convName(conv))
+                    setRenamingConv(conv)
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors text-left"
+                >
+                  <PencilSimple size={20} />
+                  <span className="text-sm font-medium">Rename conversation</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   const conv = actionSheetConv
@@ -668,6 +707,48 @@ export default function ConversationList({ session, groupId, members, enterClass
         </div>
       )}
 
+      {/* Rename modal */}
+      {renamingConv && (
+        <div
+          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${renameClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          onClick={closeRename}
+        >
+          <div
+            className={`bg-white rounded-t-2xl w-full max-w-lg mx-auto ${renameClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-5 pt-5 pb-6">
+              <h2 className="text-lg font-bold text-stone-800 mb-4">Rename Conversation</h2>
+              <input
+                type="text"
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent?.isComposing) handleRename() }}
+                autoFocus
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent mb-4"
+                placeholder="Conversation name"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={closeRename}
+                  className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRename}
+                  disabled={renaming || !renameValue.trim()}
+                  className="flex-1 py-3 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+                >
+                  {renaming ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* New message sheet */}
       {newDmOpen && (
         <div
@@ -712,12 +793,32 @@ export default function ConversationList({ session, groupId, members, enterClass
 
             {/* DM mode */}
             {newChatMode === 'dm' && (
+              <div>
+                {otherMembers.length > 5 && (
+                  <div className="px-4 pb-3">
+                    <div className="relative">
+                      <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={memberSearchQuery}
+                        onChange={e => setMemberSearchQuery(e.target.value)}
+                        placeholder="Search members…"
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-8 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                      />
+                      {memberSearchQuery && (
+                        <button onClick={() => setMemberSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                          <X size={12} weight="bold" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               <div className="px-4 pb-8 space-y-1 max-h-72 overflow-y-auto">
                 {otherMembers.length === 0 ? (
                   <p className="text-stone-400 text-sm text-center py-6">
                     No other members in this group yet.
                   </p>
-                ) : otherMembers.map(m => (
+                ) : otherMembers.filter(m => !memberSearchQuery || m.display_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())).map(m => (
                   <button
                     key={m.user_id}
                     onClick={() => startDm(m.user_id)}
@@ -735,6 +836,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                     <span className="text-sm font-medium text-stone-800">{m.display_name}</span>
                   </button>
                 ))}
+              </div>
               </div>
             )}
 
@@ -755,8 +857,25 @@ export default function ConversationList({ session, groupId, members, enterClass
                         </span>
                       )}
                     </p>
+                    {otherMembers.length > 5 && (
+                      <div className="relative mb-3">
+                        <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={memberSearchQuery}
+                          onChange={e => setMemberSearchQuery(e.target.value)}
+                          placeholder="Search members…"
+                          className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-8 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                        />
+                        {memberSearchQuery && (
+                          <button onClick={() => setMemberSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                            <X size={12} weight="bold" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <div className="space-y-0.5 max-h-48 overflow-y-auto mb-4">
-                      {otherMembers.map(m => {
+                      {otherMembers.filter(m => !memberSearchQuery || m.display_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())).map(m => {
                         const selected = selectedMembers.has(m.user_id)
                         return (
                           <button

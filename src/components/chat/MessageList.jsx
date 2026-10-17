@@ -527,11 +527,11 @@ export default function MessageList() {
                                   >
                                     <div
                                       className={`absolute inset-y-0 left-0 transition-all duration-500 ${voted ? 'bg-ember/10' : 'bg-stone-200'}`}
-                                      style={{ width: `${Math.max(pct, 4)}%` }}
+                                      style={{ width: myVote !== null ? `${Math.max(pct, 4)}%` : '0%' }}
                                     />
                                     <div className="relative flex items-center justify-between">
                                       <span className={`text-sm font-medium ${voted ? 'text-ember' : 'text-stone-700'}`}>{opt.text}</span>
-                                      <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>
+                                      {myVote !== null && <span className="text-xs text-stone-400 font-semibold ml-3 shrink-0">{pct}%</span>}
                                     </div>
                                   </button>
                                 )

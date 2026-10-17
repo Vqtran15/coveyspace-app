@@ -253,7 +253,15 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
         if (uniqueUsers.length > 0) {
           const d = new Date()
           const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
-          setPrayerCard(uniqueUsers[seed % uniqueUsers.length])
+          // Stable daily pick: hash date+userId so adding new users rarely displaces the chosen person
+          let best = null, bestScore = -1
+          for (const u of uniqueUsers) {
+            let h = seed
+            for (let i = 0; i < u.member_user_id.length; i++) h = (Math.imul(31, h) + u.member_user_id.charCodeAt(i)) | 0
+            const score = h >>> 0
+            if (score > bestScore) { bestScore = score; best = u }
+          }
+          setPrayerCard(best)
         } else {
           setPrayerCard(null)
         }
@@ -462,7 +470,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                     className={`w-full bg-ember rounded-2xl p-4 shadow ${announceShake ? 'animate-announcement-shake' : ''}`}
                   >
                     <div className="flex items-start gap-3">
-                      <Megaphone size={20} weight="fill" className="text-white/80 shrink-0 mt-0.5" />
+                      <Megaphone size={24} weight="fill" className="text-white/80 shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-white/70 uppercase tracking-wide mb-1">Announcement</p>
                         <p className="text-sm text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
