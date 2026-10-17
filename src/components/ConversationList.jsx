@@ -537,15 +537,17 @@ export default function ConversationList({ session, groupId, members, enterClass
       </div>
 
       {/* Search bar */}
-      <motion.div
-        initial={false}
-        animate={{
-          height: searchOpen ? 'auto' : 0,
-          opacity: searchOpen ? 1 : 0,
+      <div
+        className="grid"
+        style={{
+          gridTemplateRows: searchOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 250ms cubic-bezier(0.25,0.46,0.45,0.94)',
         }}
-        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
       >
+        <div
+          className="overflow-hidden min-h-0"
+          style={{ opacity: searchOpen ? 1 : 0, transition: 'opacity 250ms', padding: '2px', margin: '-2px' }}
+        >
         <div className="max-w-3xl mx-auto w-full px-4 pb-3">
           <div className="relative">
             <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
@@ -564,7 +566,8 @@ export default function ConversationList({ session, groupId, members, enterClass
             )}
           </div>
         </div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* List */}
       <div>
@@ -593,7 +596,7 @@ export default function ConversationList({ session, groupId, members, enterClass
           <div className="flex flex-col items-center justify-center min-h-[60vh] py-16">
             <ChatCircleDots size={48} weight="fill" className="text-stone-300 mb-3" />
             <p className="text-sm font-medium text-stone-500">No conversations yet</p>
-            <p className="text-xs text-stone-400 mt-1.5 text-center max-w-[200px]">Tap the compose button above to start a chat</p>
+            <p className="text-xs text-stone-500 mt-1.5 text-center max-w-[200px]">Tap the compose button above to start a chat</p>
           </div>
         ) : (
           <ConversationListBody
@@ -815,7 +818,7 @@ export default function ConversationList({ session, groupId, members, enterClass
                 )}
               <div className="px-4 pb-8 space-y-1 max-h-72 overflow-y-auto">
                 {otherMembers.length === 0 ? (
-                  <p className="text-stone-400 text-sm text-center py-6">
+                  <p className="text-stone-500 text-sm text-center py-6">
                     No other members in this group yet.
                   </p>
                 ) : otherMembers.filter(m => !memberSearchQuery || m.display_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())).map(m => (
@@ -844,7 +847,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             {newChatMode === 'group' && (
               <div className="px-5 pb-8">
                 {otherMembers.length === 0 ? (
-                  <p className="text-stone-400 text-sm text-center py-4">
+                  <p className="text-stone-500 text-sm text-center py-4">
                     No other members in this group yet.
                   </p>
                 ) : (

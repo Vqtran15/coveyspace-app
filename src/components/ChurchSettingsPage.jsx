@@ -1308,7 +1308,7 @@ export default function ChurchSettingsPage() {
             <div className="bg-white rounded-2xl border border-stone-100 shadow px-5 py-8 text-center">
               <Megaphone size={36} weight="thin" className="text-stone-300 mx-auto mb-2" />
               <p className="text-sm text-stone-500">No announcements sent yet</p>
-              <p className="text-xs text-stone-400 mt-1">Tap "New Announcement" to send your first message</p>
+              <p className="text-xs text-stone-500 mt-1">Tap "New Announcement" to send your first message</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1442,7 +1442,7 @@ export default function ChurchSettingsPage() {
                     </div>
                   ) : pcoGroups.length === 0 ? (
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-stone-400 flex-1">No PCO Groups found. Make sure the Groups product is enabled in Planning Center.</p>
+                      <p className="text-xs text-stone-500 flex-1">No PCO Groups found. Make sure the Groups product is enabled in Planning Center.</p>
                       <button
                         onClick={loadPcoGroups}
                         className="shrink-0 text-xs text-ember font-semibold hover:underline"

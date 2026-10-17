@@ -794,30 +794,31 @@ export default function EventsTab() {
                 {pastExpanded ? <CaretUp size={14} /> : <CaretDown size={14} />}
                 Past events ({past.length})
               </button>
-              <AnimatePresence>
-                {pastExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 pb-2 opacity-60">
-                      {past.map(event => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          eventRsvps={rsvps[event.id] ?? []}
-                          userId={userId}
-                          onOpenDetail={() => setSelectedEvent(event)}
-                          onRsvp={handleRsvp}
-                        />
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div
+                className="grid"
+                style={{
+                  gridTemplateRows: pastExpanded ? '1fr' : '0fr',
+                  transition: 'grid-template-rows 200ms cubic-bezier(0.4,0,0.2,1)',
+                }}
+              >
+                <div
+                  className="overflow-hidden min-h-0"
+                  style={{ opacity: pastExpanded ? 1 : 0, transition: 'opacity 200ms' }}
+                >
+                  <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 pb-2 opacity-60">
+                    {past.map(event => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        eventRsvps={rsvps[event.id] ?? []}
+                        userId={userId}
+                        onOpenDetail={() => setSelectedEvent(event)}
+                        onRsvp={handleRsvp}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </>

@@ -1565,15 +1565,17 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       </div>
 
       {/* Search bar */}
-      <motion.div
-        initial={false}
-        animate={{
-          height: searchOpen ? 'auto' : 0,
-          opacity: searchOpen ? 1 : 0,
+      <div
+        className="grid"
+        style={{
+          gridTemplateRows: searchOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 250ms cubic-bezier(0.25,0.46,0.45,0.94)',
           marginBottom: searchOpen ? 4 : 0,
         }}
-        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
+      >
+      <div
+        className="overflow-hidden min-h-0"
+        style={{ opacity: searchOpen ? 1 : 0, transition: 'opacity 250ms', padding: '2px', margin: '-2px' }}
       >
         <div className="relative">
           <MagnifyingGlass
@@ -1616,7 +1618,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
         {searchError && (
           <p className="text-xs text-coral mt-1 mb-3 px-1">{searchError}</p>
         )}
-      </motion.div>
+      </div>
+      </div>
 
       {/* Home content */}
       <div className="mt-4">

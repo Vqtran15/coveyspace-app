@@ -187,7 +187,7 @@ function FeedCard({ req, member, reactions, currentUserId, isOwnRequest, togglin
       <button onClick={onOpen} className="w-full text-left">
         <p className="text-sm text-stone-700 leading-relaxed">{req.request}</p>
       </button>
-      {(reactionCount > 0 || !isOwnRequest || isOwnRequest) && (
+      {(reactionCount > 0 || !isOwnRequest) && (
         <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-stone-100">
           <ReactionAvatars reactions={reactions} />
           {isOwnRequest ? (
@@ -344,6 +344,9 @@ export default function PrayerTab() {
         supabase.from('group_prayer_requests').select('id, member_user_ids, request, created_at, answered').eq('community_group_id', groupId).order('created_at', { ascending: false }),
       ])
 
+      if (membersRes.error || reactionsRes.error || groupPrayersRes.error)
+        throw membersRes.error ?? reactionsRes.error ?? groupPrayersRes.error
+
       const profileList  = membersRes.data  ?? []
       const reactionList = reactionsRes.data ?? []
       const gpList       = groupPrayersRes.data ?? []
@@ -352,6 +355,7 @@ export default function PrayerTab() {
       const requestsRes = memberIds.length
         ? await supabase.from('prayer_requests').select('id, member_user_id, created_at, date, request, answered, answered_at').in('member_user_id', memberIds).order('created_at', { ascending: false })
         : { data: [] }
+      if (requestsRes.error) throw requestsRes.error
       const requestList = requestsRes.data ?? []
 
       // Fetch group prayer reactions if there are any
@@ -359,6 +363,7 @@ export default function PrayerTab() {
       const gpReactionsRes = gpIds.length
         ? await supabase.from('group_prayer_reactions').select('id, group_prayer_request_id, community_group_id, user_id, display_name, avatar_icon, avatar_color, avatar_image_url').in('group_prayer_request_id', gpIds)
         : { data: [] }
+      if (gpReactionsRes.error) throw gpReactionsRes.error
 
       const reactionMap = {}
       for (const rx of reactionList) {
@@ -692,37 +697,40 @@ export default function PrayerTab() {
       )}
 
       {/* Search */}
-      <motion.div
-        initial={false}
-        animate={{
-          height: searchOpen ? 'auto' : 0,
-          opacity: searchOpen ? 1 : 0,
+      <div
+        className="grid"
+        style={{
+          gridTemplateRows: searchOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 250ms cubic-bezier(0.25,0.46,0.45,0.94)',
           marginBottom: searchOpen ? 16 : 0,
         }}
-        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ overflow: 'hidden', padding: '2px', margin: '-2px' }}
       >
-        <div className="relative">
-          <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-          <input
-            ref={searchInputRef}
-            type="search"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={viewMode === 'members' ? 'Search friends…' : 'Search requests…'}
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-          />
-          {searchQuery && (
-            <button
-              aria-label="Clear search"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
-            >
-              <X size={16} />
-            </button>
-          )}
+        <div
+          className="overflow-hidden min-h-0"
+          style={{ opacity: searchOpen ? 1 : 0, transition: 'opacity 250ms', padding: '2px', margin: '-2px' }}
+        >
+          <div className="relative">
+            <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={viewMode === 'members' ? 'Search friends…' : 'Search requests…'}
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                aria-label="Clear search"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Content */}
       <div key={viewMode} className={contentAnimClass}>
