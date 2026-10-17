@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { haptic } from '../lib/haptic.js'
 
 export function useReactionHandlers({ convId, groupId, myId, closeMenu }) {
   const [reactions, setReactions] = useState({})
   const [justReacted, setJustReacted] = useState({})
+  const justReactedTimers = useRef({})
 
   useEffect(() => {
     setReactions({})
     setJustReacted({})
   }, [convId])
+
+  useEffect(() => {
+    return () => { Object.values(justReactedTimers.current).forEach(clearTimeout) }
+  }, [])
 
   useEffect(() => {
     const rxCh = supabase
@@ -70,7 +75,11 @@ export function useReactionHandlers({ convId, groupId, myId, closeMenu }) {
     } else {
       const key = `${messageId}:${emoji}`
       setJustReacted(prev => ({ ...prev, [key]: true }))
-      setTimeout(() => setJustReacted(prev => { const n = { ...prev }; delete n[key]; return n }), 650)
+      clearTimeout(justReactedTimers.current[key])
+      justReactedTimers.current[key] = setTimeout(() => {
+        setJustReacted(prev => { const n = { ...prev }; delete n[key]; return n })
+        delete justReactedTimers.current[key]
+      }, 650)
       await supabase.from('reactions').insert({
         message_id: messageId,
         community_group_id: groupId,

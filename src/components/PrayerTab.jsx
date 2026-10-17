@@ -288,6 +288,7 @@ export default function PrayerTab() {
   const [contentAnimClass, setContentAnimClass] = useState('animate-slide-in-right')
   const [searchOpen, setSearchOpen]         = useState(false)
   const [togglingIds, setTogglingIds]       = useState(new Set())
+  const [markingAnsweredIds, setMarkingAnsweredIds] = useState(new Set())
   const hasAutoOpenedRef = useRef(!!featuredMember)
   const viewSwitchRef    = useRef(false)
   const switchTimerRef   = useRef(null)
@@ -396,6 +397,7 @@ export default function PrayerTab() {
 
   async function handleMarkAnswered(req) {
     const reqId = req.id
+    setMarkingAnsweredIds(prev => new Set([...prev, reqId]))
     setAllRequests(prev => prev.filter(r => r.id !== reqId))
     setMembers(prev => prev.map(m => ({
       ...m,
@@ -405,6 +407,7 @@ export default function PrayerTab() {
       .from('prayer_requests')
       .update({ answered: true, answered_at: new Date().toISOString() })
       .eq('id', reqId)
+    setMarkingAnsweredIds(prev => { const n = new Set(prev); n.delete(reqId); return n })
     if (error) {
       toast('Failed to mark as answered', 'error')
       load()
@@ -816,6 +819,7 @@ export default function PrayerTab() {
                   currentUserId={userId}
                   isOwnRequest={item.data.member_user_id === userId}
                   toggling={togglingIds.has(item.data.id)}
+                  markingAnswered={markingAnsweredIds.has(item.data.id)}
                   onPray={() => toggleFeedReaction(item.data)}
                   onOpen={() => setSelectedMember(item.data.member)}
                   onMarkAnswered={() => handleMarkAnswered(item.data)}

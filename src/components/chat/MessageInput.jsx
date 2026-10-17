@@ -436,7 +436,7 @@ export default function MessageInput() {
           </button>
         </span>
       </div>
-      <p className="hidden lg:block text-[11px] text-stone-400 text-center pb-0.5 -mt-0.5">Shift+Enter for a new line</p>
+      <p className="hidden lg:block text-xs text-stone-400 text-center pb-0.5 -mt-0.5">Shift+Enter for a new line</p>
     </div>
     </div>
   )

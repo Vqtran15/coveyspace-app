@@ -163,7 +163,7 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
-  const { toast } = useToast()
+  const toast = useToast()
 
   // Stable refs for callbacks and one-time flags so loadConversations doesn't
   // rebuild (and tear down the Supabase channel) on every parent re-render.

@@ -10,7 +10,7 @@ import { useAppContext } from '../contexts/AppContext.jsx'
 
 function ScheduleFrequencyEditor({ settings, freqMode, onFreqModeChange, dowKey, wkOccKey, onSave }) {
   const dows = settings?.[dowKey] ?? []
-  const occ  = settings?.[wkOccKey] ?? [1,2,3,4,5]
+  const occ  = settings?.[wkOccKey] ?? (freqMode === 'biweekly' ? [2, 4] : [1, 2, 3, 4, 5])
   return (
     <div className="space-y-4">
       <div>
