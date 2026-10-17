@@ -734,6 +734,32 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         isAtBottomRef.current = true
         initialRevealScrollNeeded.current = false
         scrollToBottom()
+        // iOS fires async scroll restoration events after the guard window lifts.
+        // Watch for any restoration pull away from bottom and correct once.
+        const scrollEl = scrollRef.current
+        if (scrollEl) {
+          let watchDone = false
+          const clearWatch = setTimeout(() => {
+            watchDone = true
+            scrollEl.removeEventListener('scroll', onRestoreScroll)
+          }, 1500)
+          function onRestoreScroll() {
+            if (watchDone || !mountedRef.current) return
+            const d = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
+            if (d > 20) {
+              watchDone = true
+              scrollEl.removeEventListener('scroll', onRestoreScroll)
+              clearTimeout(clearWatch)
+              requestAnimationFrame(() => {
+                if (!mountedRef.current) return
+                scrollToBottom()
+                isAtBottomRef.current = true
+                setIsAtBottom(true)
+              })
+            }
+          }
+          scrollEl.addEventListener('scroll', onRestoreScroll, { passive: true })
+        }
       }
     }))
   }, [visible])
