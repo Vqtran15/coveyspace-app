@@ -258,6 +258,7 @@ export default function WelcomeSplash({ onDone }) {
   function fetchInviteCode() {
     setLoadingCode(true)
     setInviteCodeError(false)
+    setInviteCode(null)
     supabase.rpc('get_invite_code').then(({ data, error }) => {
       if (error) setInviteCodeError(true)
       else setInviteCode(data ?? null)
