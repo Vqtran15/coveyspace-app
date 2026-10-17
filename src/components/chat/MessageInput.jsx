@@ -36,6 +36,13 @@ export default function MessageInput() {
 
   useEffect(() => () => clearTimeout(justTappedTimerRef.current), [])
 
+  useEffect(() => {
+    if (pollCreating) {
+      const t = setTimeout(() => pollQuestionRef.current?.focus(), 300)
+      return () => clearTimeout(t)
+    }
+  }, [pollCreating])
+
   function onSendClick() {
     if (sending || (!text.trim() && imagePreviews.length === 0)) return
     const el = btnWrapRef.current
@@ -188,90 +195,96 @@ export default function MessageInput() {
         )
       })()}
 
-      {pollCreating && !pollSubmitting && (
-        <div
-          className="fixed inset-0 z-[7] pointer-events-auto bg-black/50"
-          onPointerDown={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }}
-        />
-      )}
-      <AnimatePresence>
-        {pollCreating && (
-          <motion.div
-            key="poll-create"
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-            className="absolute bottom-full left-0 right-0 pb-2 px-4 z-[8]"
-          >
-          <div className="border border-stone-200 rounded-2xl bg-white flex flex-col overflow-hidden"
-               style={{ maxHeight: 'calc(100dvh - 80px)' }}>
-          {/* Header — always visible */}
-          <div className="flex items-center justify-between px-3 pt-3 pb-2 shrink-0">
-            <p className="text-sm font-bold text-stone-800">Create Poll</p>
-            <button onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }} className="text-stone-400 hover:text-stone-600">
-              <X size={16} weight="bold" />
-            </button>
-          </div>
-          {/* Scrollable: question + options */}
-          <div className="overflow-y-auto px-3 pt-1" style={{ maxHeight: 'calc(100dvh - 200px)' }}>
-          <input
-            ref={pollQuestionRef}
-            type="text"
-            value={pollQuestion}
-            onChange={e => setPollQuestion(e.target.value)}
-            placeholder="Ask a question…"
-            className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-          />
-          <div className="flex flex-col gap-1.5 mb-2.5">
-            {pollOptions.map((opt, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  ref={el => pollOptionRefs.current[i] = el}
-                  type="text"
-                  value={opt}
-                  onChange={e => {
-                    const next = [...pollOptions]
-                    next[i] = e.target.value
-                    setPollOptions(next)
-                  }}
-                  placeholder={`Option ${i + 1}`}
-                  className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                />
-                {pollOptions.length > 2 && (
-                  <button
-                    onClick={() => setPollOptions(prev => prev.filter((_, j) => j !== i))}
-                    className="text-stone-300 hover:text-red-400 shrink-0"
-                  >
-                    <X size={14} weight="bold" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          </div>
-          {/* Footer — always visible */}
-          <div className="flex items-center justify-between px-3 pt-2 pb-3 shrink-0">
-            {pollOptions.length < 10 ? (
-              <button
-                onClick={() => { justAddedOptionRef.current = true; setPollOptions(prev => [...prev, '']) }}
-                className="flex items-center gap-1 text-xs text-ember font-semibold hover:text-ember-700 transition-colors"
-              >
-                <PlusIcon size={12} weight="bold" /> Add option
-              </button>
-            ) : <span />}
-            <button
-              onClick={createPoll}
-              disabled={!pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2 || pollSubmitting}
-              className="text-sm font-semibold bg-ember text-white px-4 py-1.5 rounded-xl disabled:opacity-40 hover:bg-ember-700 transition-colors"
+      {createPortal(
+        <AnimatePresence>
+          {pollCreating && (
+            <motion.div
+              key="poll-page"
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'tween', duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-0 lg:left-56 z-[20] bg-sunrise-50 flex flex-col"
+              style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
-              {pollSubmitting ? 'Creating…' : 'Create Poll'}
-            </button>
-          </div>
-          </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-stone-100 bg-sunrise-50">
+                <h1 className="text-xl font-bold text-stone-800">Create Poll</h1>
+                <button
+                  onClick={() => { setPollCreating(false); setPollQuestion(''); setPollOptions(['', '']) }}
+                  aria-label="Close"
+                  className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Question</p>
+                  <input
+                    ref={pollQuestionRef}
+                    type="text"
+                    value={pollQuestion}
+                    onChange={e => setPollQuestion(e.target.value)}
+                    placeholder="Ask a question…"
+                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 bg-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Options</p>
+                  <div className="flex flex-col gap-2">
+                    {pollOptions.map((opt, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          ref={el => pollOptionRefs.current[i] = el}
+                          type="text"
+                          value={opt}
+                          onChange={e => {
+                            const next = [...pollOptions]
+                            next[i] = e.target.value
+                            setPollOptions(next)
+                          }}
+                          placeholder={`Option ${i + 1}`}
+                          className="flex-1 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 bg-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+                        />
+                        {pollOptions.length > 2 && (
+                          <button
+                            onClick={() => setPollOptions(prev => prev.filter((_, j) => j !== i))}
+                            aria-label="Remove option"
+                            className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0"
+                          >
+                            <X size={16} weight="bold" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {pollOptions.length < 10 && (
+                    <button
+                      onClick={() => { justAddedOptionRef.current = true; setPollOptions(prev => [...prev, '']) }}
+                      className="mt-3 flex items-center gap-1.5 text-sm text-ember font-semibold hover:text-ember-700 transition-colors"
+                    >
+                      <PlusIcon size={14} weight="bold" /> Add option
+                    </button>
+                  )}
+                </div>
+              </div>
+              {/* Footer */}
+              <div className="px-4 pt-3 pb-4 border-t border-stone-100 bg-sunrise-50" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+                <button
+                  onClick={createPoll}
+                  disabled={!pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2 || pollSubmitting}
+                  className="w-full py-3.5 bg-ember text-white text-sm font-semibold rounded-xl disabled:opacity-40 hover:bg-ember-700 transition-colors"
+                >
+                  {pollSubmitting ? 'Creating…' : 'Create Poll'}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
       {createPortal(
         <AnimatePresence>
           {showEmojiPicker && (
