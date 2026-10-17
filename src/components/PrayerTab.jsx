@@ -284,15 +284,18 @@ export default function PrayerTab() {
   const [togglingIds, setTogglingIds]       = useState(new Set())
   const hasAutoOpenedRef = useRef(!!featuredMember)
   const viewSwitchRef    = useRef(false)
+  const switchTimerRef   = useRef(null)
   const searchInputRef   = useRef(null)
   const tabResetRef      = useRef(location.state?.tabReset ?? null)
+
+  useEffect(() => () => clearTimeout(switchTimerRef.current), [])
 
   function switchViewMode(newMode) {
     if (newMode === viewMode || viewSwitchRef.current) return
     viewSwitchRef.current = true
     const goRight = newMode === 'feed'
     setContentAnimClass(goRight ? 'animate-slide-out-left' : 'animate-slide-out-right')
-    setTimeout(() => {
+    switchTimerRef.current = setTimeout(() => {
       setViewMode(newMode)
       setContentAnimClass(goRight ? 'animate-slide-in-right' : 'animate-slide-in-left')
       viewSwitchRef.current = false

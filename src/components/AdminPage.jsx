@@ -55,13 +55,15 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAdmin) { navigate('/home', { replace: true }); return }
-    supabase.rpc('get_invite_code').then(({ data }) => setInviteCode(data ?? null))
+    let mounted = true
+    supabase.rpc('get_invite_code').then(({ data }) => { if (mounted) setInviteCode(data ?? null) })
     supabase
       .from('profiles')
       .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url')
       .eq('community_group_id', groupId)
       .order('display_name')
       .then(({ data }) => {
+        if (!mounted) return
         const sorted = (data ?? []).slice().sort((a, b) => {
           if (a.role === 'admin' && b.role !== 'admin') return -1
           if (b.role === 'admin' && a.role !== 'admin') return 1
@@ -95,7 +97,7 @@ export default function AdminPage() {
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => { mounted = false; supabase.removeChannel(channel) }
   }, [groupId, isAdmin])
 
   async function handleRotate() {

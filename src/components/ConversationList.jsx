@@ -154,6 +154,20 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
 
+  // Stable refs for callbacks and one-time flags so loadConversations doesn't
+  // rebuild (and tear down the Supabase channel) on every parent re-render.
+  const onSelectRef                     = useRef(onSelect)
+  onSelectRef.current                   = onSelect
+  const onPinGroupRef                   = useRef(onPinGroup)
+  onPinGroupRef.current                 = onPinGroup
+  const onAutoOpenConsumedRef           = useRef(onAutoOpenConsumed)
+  onAutoOpenConsumedRef.current         = onAutoOpenConsumed
+  const onAutoOpenMainChatConsumedRef   = useRef(onAutoOpenMainChatConsumed)
+  onAutoOpenMainChatConsumedRef.current = onAutoOpenMainChatConsumed
+  // One-time flags — captured at mount; do not update so they only fire once.
+  const autoOpenGroupChatRef  = useRef(autoOpenGroupChat)
+  const autoOpenMainChatRef   = useRef(autoOpenMainChat)
+
   const myId = session.user.id
   const loadConversations = useCallback(async () => {
     try {
@@ -169,21 +183,21 @@ export default function ConversationList({ session, groupId, members, enterClass
 
       // The main group chat is always named "Main Group Chat" (set by DB trigger on group creation)
       const main = convs.find(c => c.name === 'Main Group Chat')
-      if (main) onPinGroup(main.id)
+      if (main) onPinGroupRef.current(main.id)
 
-      if (autoOpenGroupChat) {
+      if (autoOpenGroupChatRef.current) {
         const groupConv = convs.find(c => c.type === 'group')
         if (groupConv) {
           const draftKey = `draft:${groupConv.id}`
           if (!localStorage.getItem(draftKey)) {
             localStorage.setItem(draftKey, "Hey everyone! 👋")
           }
-          onAutoOpenConsumed?.()
-          onSelect(groupConv)
+          onAutoOpenConsumedRef.current?.()
+          onSelectRef.current(groupConv)
         }
       }
 
-      if (autoOpenMainChat) {
+      if (autoOpenMainChatRef.current) {
         const mainConv = convs.find(c => c.name === 'Main Group Chat')
         if (mainConv) {
           // Clear any onboarding draft that may have been written by autoOpenGroupChat.
@@ -192,8 +206,8 @@ export default function ConversationList({ session, groupId, members, enterClass
           if (localStorage.getItem(draftKey) === "Hey everyone! 👋") {
             localStorage.removeItem(draftKey)
           }
-          onAutoOpenMainChatConsumed?.()
-          onSelect(mainConv)
+          onAutoOpenMainChatConsumedRef.current?.()
+          onSelectRef.current(mainConv)
         }
       }
 
@@ -231,7 +245,7 @@ export default function ConversationList({ session, groupId, members, enterClass
     } finally {
       setLoading(false)
     }
-  }, [myId, groupId, autoOpenGroupChat, autoOpenMainChat, onAutoOpenConsumed, onAutoOpenMainChatConsumed, onSelect, onPinGroup])
+  }, [myId, groupId])
 
   useEffect(() => {
     if (!groupId) {

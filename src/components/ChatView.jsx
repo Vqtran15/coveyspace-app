@@ -186,7 +186,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
 
   useEffect(() => {
     mountedRef.current = true
-    return () => { mountedRef.current = false }
+    return () => { mountedRef.current = false; clearTimeout(longPressRef.current) }
   }, [])
 
   useEffect(() => {
@@ -944,6 +944,11 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // otherwise scroll to the bottom. Uses scrollIntoView rather than
   // scrollTop=scrollHeight so the browser computes geometry itself (avoids
   // stale-scrollHeight issues on iOS Safari when the container just became visible).
+  // itemsRef lets the effect read the latest items without adding items to the dep
+  // array (which would re-scroll on every new message after initial reveal).
+  const itemsRef = useRef(items)
+  itemsRef.current = items
+
   useLayoutEffect(() => {
     if (!visible) return
 
@@ -953,7 +958,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     // With virtual rendering the target element may be outside the overscan window.
     // If so, use scrollToIndex to bring it into view first, then re-query the DOM.
     if (targetId && !targetEl && virtualizerRef.current) {
-      const idx = items.findIndex(i => i.type === 'msg' && i.msg?.id === targetId)
+      const idx = itemsRef.current.findIndex(i => i.type === 'msg' && i.msg?.id === targetId)
       if (idx >= 0) {
         virtualizerRef.current.scrollToIndex(idx, { behavior: 'instant', align: 'start' })
         targetEl = document.getElementById(`msg-${targetId}`)
@@ -1893,6 +1898,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       setTypingClosing(true)
       typingCloseRef.current = setTimeout(() => { if (mountedRef.current) setTypingClosing(false) }, 250)
     }
+    return () => clearTimeout(typingCloseRef.current)
   }, [typing])
 
   const title = useMemo(() => {

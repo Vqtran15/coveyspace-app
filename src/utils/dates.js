@@ -1,8 +1,18 @@
 // After 9 PM PT on Tuesdays, rolls the cutoff forward to Wednesday so the
 // current Tuesday meal is no longer shown as "next" on home or in the schedule.
 export function mealCutoffDate() {
-  const pst = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
-  if (pst.getDay() === 2 && pst.getHours() >= 21) {
+  const now = new Date()
+  // new Date(toLocaleString(...)) is implementation-defined and breaks in some environments.
+  // Use Intl.DateTimeFormat.formatToParts — the spec-compliant path.
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      weekday: 'short', hour: 'numeric', hourCycle: 'h23',
+    }).formatToParts(now).map(p => [p.type, p.value])
+  )
+  const pst = new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day))
+  if (parts.weekday === 'Tue' && Number(parts.hour) >= 21) {
     pst.setDate(pst.getDate() + 1)
   }
   return toDateString(pst)

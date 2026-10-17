@@ -231,7 +231,7 @@ useEffect(() => {
           setBdDay(Number(dd))
         }
       })
-    supabase.auth.getUser().then(({ data: { user } }) => setEmail(user?.email ?? ''))
+    supabase.auth.getUser().then(({ data }) => setEmail(data?.user?.email ?? ''))
   }, [userId])
 
   function openSettingsSheet(name) {
