@@ -1855,6 +1855,18 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       }
       result.push({ type: 'msg', msg })
     }
+    // Precompute per-row grouping flags here so the render path doesn't allocate
+    // 4 Date objects per visible row per scroll tick (100+ allocs/frame at overscan 25).
+    for (let i = 0; i < result.length; i++) {
+      const item = result[i]
+      if (item.type !== 'msg') continue
+      const { msg } = item
+      const next = result[i + 1]
+      const prev = result[i - 1]
+      item.isLastInGroup  = next?.type !== 'msg' || next.msg.user_id !== msg.user_id || new Date(next.msg.created_at) - new Date(msg.created_at) > GROUP_TIME_GAP
+      item.isFirstInGroup = prev?.type !== 'msg' || prev.msg.user_id !== msg.user_id || new Date(msg.created_at) - new Date(prev.msg.created_at) > GROUP_TIME_GAP
+      item.prevIsImage    = prev?.type === 'msg' && !!prev.msg.image_url
+    }
     return result
   }, [filteredMsgs, firstUnreadId])
 
@@ -1870,10 +1882,17 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     for (const [userId, lastReadAt] of Object.entries(memberReadTimes)) {
       if (!lastReadAt) continue
       const readTime = new Date(lastReadAt)
+      // Binary-search the ascending-sorted filteredMsgs for the rightmost message
+      // with created_at <= readTime (O(log n) vs the previous O(n) reverse scan).
+      let lo = 0, hi = filteredMsgs.length - 1
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        new Date(filteredMsgs[mid].created_at) <= readTime ? (lo = mid + 1) : (hi = mid - 1)
+      }
+      // hi is now the rightmost index ≤ readTime; scan back past any temp messages.
       let lastReadMsgId = null
-      for (let i = filteredMsgs.length - 1; i >= 0; i--) {
-        const m = filteredMsgs[i]
-        if (!m._tempId && new Date(m.created_at) <= readTime) { lastReadMsgId = m.id; break }
+      for (let i = hi; i >= 0; i--) {
+        if (!filteredMsgs[i]._tempId) { lastReadMsgId = filteredMsgs[i].id; break }
       }
       if (lastReadMsgId) {
         if (!map[lastReadMsgId]) map[lastReadMsgId] = []

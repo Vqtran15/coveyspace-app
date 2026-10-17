@@ -9,7 +9,7 @@ import {
   Plus as PlusIcon, HandsPraying, ArrowBendUpLeft, CaretRight,
 } from '@phosphor-icons/react'
 import { AvatarIcon, AvatarCircle, avatarColor } from '../../lib/avatarIcons.jsx'
-import { initials, formatMessageTime, GROUP_TIME_GAP, isVideoUrl } from '../../utils/format.js'
+import { initials, formatMessageTime, isVideoUrl } from '../../utils/format.js'
 import { useChatContext } from './ChatContext.jsx'
 import { haptic } from '../../lib/haptic.js'
 
@@ -363,13 +363,8 @@ export default function MessageList() {
                 )
               }
 
-              const { msg } = item
+              const { msg, isFirstInGroup, isLastInGroup, prevIsImage } = item
               const isOwn = msg.user_id === myId
-              const nextItem = items[i + 1]
-              const prevItem = items[i - 1]
-              const isLastInGroup  = nextItem?.type !== 'msg' || nextItem.msg.user_id !== msg.user_id || new Date(nextItem.msg.created_at) - new Date(msg.created_at) > GROUP_TIME_GAP
-              const isFirstInGroup = prevItem?.type !== 'msg' || prevItem.msg.user_id !== msg.user_id || new Date(msg.created_at) - new Date(prevItem.msg.created_at) > GROUP_TIME_GAP
-              const prevIsImage = prevItem?.type === 'msg' && !!prevItem.msg.image_url
               const msgReactions = reactions[msg.id]
               const hasReactions = msgReactions && Object.keys(msgReactions).length > 0
 

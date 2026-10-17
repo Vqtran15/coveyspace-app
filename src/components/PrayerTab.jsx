@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, LayoutGroup } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { HandsPraying, MagnifyingGlass, X, CaretRight, Users, Plus, Check, ArrowsClockwise } from '@phosphor-icons/react'
@@ -521,51 +521,58 @@ export default function PrayerTab() {
 
   // ─── Derived lists ───────────────────────────────────────────────────────────
 
-  const memberMap = Object.fromEntries(members.map(m => [m.user_id, m]))
+  const memberMap = useMemo(
+    () => Object.fromEntries(members.map(m => [m.user_id, m])),
+    [members]
+  )
 
-  const feedItems = allRequests
-    .filter(r => !r.answered)
-    .map(r => ({ ...r, member: memberMap[r.member_user_id] }))
-    .filter(r => r.member)
+  const feedItems = useMemo(
+    () => allRequests
+      .filter(r => !r.answered)
+      .map(r => ({ ...r, member: memberMap[r.member_user_id] }))
+      .filter(r => r.member),
+    [allRequests, memberMap]
+  )
 
-  const q = searchQuery.trim().toLowerCase()
+  const q = useMemo(() => searchQuery.trim().toLowerCase(), [searchQuery])
 
   // Members view: combine members + active group prayers, sorted by recency
-  const filteredGroupPrayers = groupPrayers.filter(gp =>
-    !gp.answered && (!q ||
-      gp.request?.toLowerCase().includes(q) ||
-      gp.member_user_ids.some(id => memberMap[id]?.display_name?.toLowerCase().includes(q))
+  const combinedList = useMemo(() => {
+    const filteredGroupPrayers = groupPrayers.filter(gp =>
+      !gp.answered && (!q ||
+        gp.request?.toLowerCase().includes(q) ||
+        gp.member_user_ids.some(id => memberMap[id]?.display_name?.toLowerCase().includes(q))
+      )
     )
-  )
-  const filteredMembers = q
-    ? members.filter(m => m.display_name?.toLowerCase().includes(q))
-    : members
-
-  const combinedList = [
-    ...filteredMembers.map(m => ({
-      type: 'member',
-      data: m,
-      sortKey: m.prayer_requests?.[0]?.created_at ?? null,
-    })),
-    ...filteredGroupPrayers.map(gp => ({
-      type: 'group',
-      data: gp,
-      sortKey: gp.created_at,
-    })),
-  ].sort((a, b) => {
-    if (!a.sortKey && !b.sortKey) return 0
-    if (!a.sortKey) return 1
-    if (!b.sortKey) return -1
-    return new Date(b.sortKey) - new Date(a.sortKey)
-  })
+    const filteredMembers = q
+      ? members.filter(m => m.display_name?.toLowerCase().includes(q))
+      : members
+    return [
+      ...filteredMembers.map(m => ({
+        type: 'member',
+        data: m,
+        sortKey: m.prayer_requests?.[0]?.created_at ?? null,
+      })),
+      ...filteredGroupPrayers.map(gp => ({
+        type: 'group',
+        data: gp,
+        sortKey: gp.created_at,
+      })),
+    ].sort((a, b) => {
+      if (!a.sortKey && !b.sortKey) return 0
+      if (!a.sortKey) return 1
+      if (!b.sortKey) return -1
+      return new Date(b.sortKey) - new Date(a.sortKey)
+    })
+  }, [members, groupPrayers, q, memberMap])
 
   // Feed view: combine individual + group requests, sorted by created_at desc
-  const allFeedItems = [
+  const allFeedItems = useMemo(() => [
     ...feedItems.map(r => ({ type: 'individual', data: r, sortKey: r.created_at })),
     ...groupPrayers.filter(gp => !gp.answered).map(gp => ({ type: 'group', data: gp, sortKey: gp.created_at })),
-  ].sort((a, b) => new Date(b.sortKey) - new Date(a.sortKey))
+  ].sort((a, b) => new Date(b.sortKey) - new Date(a.sortKey)), [feedItems, groupPrayers])
 
-  const filteredFeed = q
+  const filteredFeed = useMemo(() => q
     ? allFeedItems.filter(item => {
         if (item.type === 'individual') {
           return item.data.request?.toLowerCase().includes(q) ||
@@ -574,7 +581,7 @@ export default function PrayerTab() {
         return item.data.request?.toLowerCase().includes(q) ||
           item.data.member_user_ids.some(id => memberMap[id]?.display_name?.toLowerCase().includes(q))
       })
-    : allFeedItems
+    : allFeedItems, [q, allFeedItems, memberMap])
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
