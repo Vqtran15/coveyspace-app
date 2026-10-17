@@ -11,12 +11,14 @@ import { useToast } from '../lib/toast.jsx'
 import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, GROUP_TIME_GAP, isVideoUrl } from '../utils/format.js'
-import { haptic } from '../lib/haptic.js'
 import { trackEvent } from '../lib/analytics.js'
 import { ChatContext, ChatInputContext } from './chat/ChatContext.jsx'
 import MessageList from './chat/MessageList.jsx'
 import MessageInput from './chat/MessageInput.jsx'
 import ConversationInfo from './chat/ConversationInfo.jsx'
+import { useReactionHandlers } from '../hooks/useReactionHandlers.js'
+import { useImageUpload } from '../hooks/useImageUpload.js'
+import { usePollActions } from '../hooks/usePollActions.js'
 
 const PAGE_SIZE   = 50
 const CACHE_LIMIT = 50
@@ -83,13 +85,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [loadingMore, setLoadingMore]   = useState(false)
   const [text, setText]                 = useState(() => localStorage.getItem(DRAFT_KEY(conversation.id)) ?? '')
   const [sending, setSending]           = useState(false)
-  const [imagePreviews, setImagePreviews] = useState([])
   const [searchOpen, setSearchOpen]     = useState(false)
   const [searchQuery, setSearchQuery]   = useState('')
   const [isAtBottom, setIsAtBottom]     = useState(true)
   const [typingUsers, setTypingUsers]   = useState([])
-  const [reactions, setReactions]       = useState({})
-  const [justReacted, setJustReacted]   = useState({})
   const [activeMsg, setActiveMsg]       = useState(null)
   const [menuPos, setMenuPos]           = useState(null)
   const [showMoreEmojis, setShowMoreEmojis] = useState(false)
@@ -125,21 +124,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [typingClosing, setTypingClosing]     = useState(false)
   const [pillClosing, setPillClosing]         = useState(false)
   const [convImageUrl, setConvImageUrl]       = useState(conversation.image_url ?? null)
-  const [uploadingGroupIcon, setUploadingGroupIcon] = useState(false)
   const [mentionSearch, setMentionSearch]     = useState(null)
-  const [polls, setPolls]                     = useState({})
-  const [chatEvents, setChatEvents]           = useState({})
-  const [chatPrayers, setChatPrayers]         = useState({})
-  const [pollCreating, setPollCreating]       = useState(false)
-  const [pollQuestion, setPollQuestion]       = useState('')
-  const [pollOptions, setPollOptions]         = useState(['', ''])
-  const [pollSubmitting, setPollSubmitting]   = useState(false)
-  const [pollMenuOpenId, setPollMenuOpenId]   = useState(null)
-  const [deletingPollId, setDeletingPollId]   = useState(null)
-  const [editingPollId, setEditingPollId]     = useState(null)
-  const [editPollQuestion, setEditPollQuestion] = useState('')
-  const [editPollOptions, setEditPollOptions]   = useState([])
-  const [savingPoll, setSavingPoll]           = useState(false)
 
   const scrollRef          = useRef(null)
   const editTextareaRef    = useRef(null)
@@ -172,10 +157,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   // Used as a fallback when a target message is outside the current overscan window.
   const virtualizerRef        = useRef(null)
   const sendingRef            = useRef(false)
-  const retryingRef           = useRef(new Set())
-  const pollOptionRefs        = useRef([])
-  const justAddedOptionRef    = useRef(false)
-  const pollQuestionRef       = useRef(null)
   const savedSelectionRef     = useRef({ start: 0, end: 0 })
   const groupIconFileRef      = useRef(null)
   const headerWrapperRef      = useRef(null)
@@ -204,6 +185,55 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  // Stale-safe mirrors for values read inside async callbacks or hook params.
+  const messagesRef = useRef(messages)
+  messagesRef.current = messages
+  const convImageUrlRef = useRef(convImageUrl)
+  convImageUrlRef.current = convImageUrl
+
+  const { reactions, setReactions, justReacted, toggleReaction } = useReactionHandlers({
+    convId, groupId, myId, closeMenu,
+  })
+
+  const {
+    imagePreviews, setImagePreviews,
+    uploadingGroupIcon,
+    compressImage, sendImage, sendImages,
+    retryMessage, handleFileChange, removePreview,
+    uploadGroupIcon, removeGroupIcon,
+  } = useImageUpload({
+    convId, groupId, myId, displayName,
+    conversation, setMessages, messagesRef,
+    convImageUrlRef, setConvImageUrl,
+    mountedRef, toast,
+  })
+
+  const {
+    polls, setPolls,
+    chatEvents, setChatEvents,
+    chatPrayers, setChatPrayers,
+    pollCreating, setPollCreating,
+    pollQuestion, setPollQuestion,
+    pollOptions, setPollOptions,
+    pollSubmitting,
+    pollMenuOpenId, setPollMenuOpenId,
+    deletingPollId,
+    editingPollId, setEditingPollId,
+    editPollQuestion, setEditPollQuestion,
+    editPollOptions, setEditPollOptions,
+    savingPoll,
+    pollOptionRefs, justAddedOptionRef, pollQuestionRef,
+    fetchPollsForMessages, fetchEventsForMessages, fetchPrayerRequestsForMessages,
+    prayInChat, rsvpInChat, createPoll, castVote, startEditPoll, savePoll, deletePoll,
+  } = usePollActions({
+    convId, groupId, myId, displayName, members,
+    replyingTo, setReplyingTo,
+    setMessages, messagesRef,
+    isAtBottomRef, setIsAtBottom,
+    freshLoadRef, scrollToBottom,
+    mountedRef, toast,
+  })
 
   // Prevent iOS from scrolling the document while chat is open. The outer div has
   // minHeight > dvh (needed for env(safe-area-inset-bottom) to return non-zero), which
@@ -384,244 +414,10 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const myId = session.user.id
   const convId = conversation.id
 
-  // ── Poll helpers ─────────────────────────────────────────────────────────
-  async function fetchPollsForMessages(msgs) {
-    const ids = [...new Set(msgs.filter(m => m.poll_id).map(m => m.poll_id))]
-    if (!ids.length) return
-    const [{ data: ps }, { data: vs }] = await Promise.all([
-      supabase.from('polls').select('id, question, options').in('id', ids),
-      supabase.from('poll_votes').select('poll_id, user_id, option_index').in('poll_id', ids),
-    ])
-    const map = {}
-    for (const p of ps ?? []) map[p.id] = { question: p.question, options: p.options, votes: [] }
-    for (const v of vs ?? []) { if (map[v.poll_id]) map[v.poll_id].votes.push(v) }
-    if (Object.keys(map).length) {
-      setPolls(prev => ({ ...prev, ...map }))
-      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => { if (isAtBottomRef.current) scrollToBottom() }))
-    }
-  }
-
-  async function fetchEventsForMessages(msgs) {
-    const ids = [...new Set(msgs.filter(m => m.event_id).map(m => m.event_id))]
-    if (!ids.length) return
-    const [{ data: evs }, { data: rs }] = await Promise.all([
-      supabase.from('events').select('id, title, event_date, event_time, location').in('id', ids),
-      supabase.from('event_rsvps')
-        .select('event_id, user_id, status, profiles(display_name, avatar_icon, avatar_color, avatar_image_url)')
-        .in('event_id', ids),
-    ])
-    const map = {}
-    for (const e of evs ?? []) map[e.id] = { ...e, rsvps: [] }
-    for (const r of rs ?? []) {
-      if (map[r.event_id]) map[r.event_id].rsvps.push({ user_id: r.user_id, status: r.status, profile: r.profiles })
-    }
-    if (Object.keys(map).length) {
-      setChatEvents(prev => ({ ...prev, ...map }))
-      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => { if (isAtBottomRef.current) scrollToBottom() }))
-    }
-  }
-
-  async function fetchPrayerRequestsForMessages(msgs) {
-    const ids = [...new Set(msgs.filter(m => m.prayer_request_id).map(m => m.prayer_request_id))]
-    if (!ids.length) return
-    const [{ data: prs }, { data: rxs }] = await Promise.all([
-      supabase.from('prayer_requests').select('id, request, member_user_id').in('id', ids),
-      supabase.from('prayer_reactions').select('prayer_request_id, user_id, display_name, avatar_icon, avatar_color').in('prayer_request_id', ids),
-    ])
-    if (!prs?.length) return
-    const memberUserIds = [...new Set(prs.map(pr => pr.member_user_id))]
-    const { data: memberProfiles } = await supabase.from('profiles').select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url').in('user_id', memberUserIds)
-    const profileMap = {}
-    for (const p of memberProfiles ?? []) profileMap[p.user_id] = p
-    const map = {}
-    for (const pr of prs) map[pr.id] = { id: pr.id, request: pr.request, member_user_id: pr.member_user_id, member: profileMap[pr.member_user_id] ?? null, reactions: [] }
-    for (const rx of rxs ?? []) { if (map[rx.prayer_request_id]) map[rx.prayer_request_id].reactions.push(rx) }
-    if (Object.keys(map).length) {
-      setChatPrayers(prev => ({ ...prev, ...map }))
-      if (freshLoadRef.current) requestAnimationFrame(() => requestAnimationFrame(() => { if (isAtBottomRef.current) scrollToBottom() }))
-    }
-  }
-
-  async function prayInChat(prayerReqId) {
-    const pr = chatPrayers[prayerReqId]
-    if (!pr) return
-    const hasReacted = pr.reactions.some(rx => rx.user_id === myId)
-    const myMember = members.find(m => m.user_id === myId)
-    setChatPrayers(prev => {
-      const p = prev[prayerReqId]
-      if (!p) return prev
-      const reactions = hasReacted
-        ? p.reactions.filter(rx => rx.user_id !== myId)
-        : [...p.reactions, { user_id: myId, display_name: displayName, avatar_icon: myMember?.avatar_icon ?? null, avatar_color: myMember?.avatar_color ?? null }]
-      return { ...prev, [prayerReqId]: { ...p, reactions } }
-    })
-    if (hasReacted) {
-      await supabase.from('prayer_reactions').delete().eq('prayer_request_id', prayerReqId).eq('user_id', myId)
-    } else {
-      await supabase.from('prayer_reactions').insert({
-        prayer_request_id: prayerReqId,
-        prayer_request_owner_id: pr.member_user_id,
-        community_group_id: groupId,
-        user_id: myId,
-        display_name: displayName,
-        avatar_icon: myMember?.avatar_icon ?? null,
-        avatar_color: myMember?.avatar_color ?? null,
-      })
-    }
-  }
-
-  async function rsvpInChat(eventId, status) {
-    const ev = chatEvents[eventId]
-    if (!ev) return
-    const myRsvp = ev.rsvps.find(r => r.user_id === myId)
-    const isToggle = myRsvp?.status === status
-    const myMember = members.find(m => m.user_id === myId)
-    setChatEvents(prev => {
-      const e = prev[eventId]
-      if (!e) return prev
-      const filtered = e.rsvps.filter(r => r.user_id !== myId)
-      const rsvps = isToggle ? filtered : [...filtered, { user_id: myId, status, profile: myMember ?? { display_name: displayName } }]
-      return { ...prev, [eventId]: { ...e, rsvps } }
-    })
-    if (isToggle) {
-      await supabase.from('event_rsvps').delete().eq('event_id', eventId).eq('user_id', myId)
-    } else {
-      await supabase.from('event_rsvps').upsert({ event_id: eventId, user_id: myId, status, community_group_id: groupId }, { onConflict: 'event_id,user_id' })
-    }
-  }
-
-  async function createPoll() {
-    const question = pollQuestion.trim()
-    const opts = pollOptions.map(o => o.trim()).filter(Boolean)
-    if (!question || opts.length < 2 || pollSubmitting) return
-    setPollSubmitting(true)
-    try {
-      const { data: poll, error: pollErr } = await supabase.from('polls').insert({
-        community_group_id: groupId,
-        conversation_id: convId,
-        question,
-        options: opts.map(text => ({ text })),
-        created_by: myId,
-      }).select('id').single()
-      if (pollErr || !poll) throw pollErr ?? new Error('poll insert failed')
-
-      const replyId = replyingTo?.id ?? null
-      const { data: newMsg, error: msgErr } = await supabase.from('messages').insert({
-        community_group_id: groupId,
-        conversation_id: convId,
-        user_id: myId,
-        display_name: displayName || 'Member',
-        body: `📊 Poll: ${question}`,
-        poll_id: poll.id,
-        reply_to_id: replyId,
-      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-      if (msgErr) throw msgErr
-
-      // Build poll data object once — used for both state AND embedded in the message
-      const pollData = { question, options: opts.map(text => ({ text })), votes: [] }
-
-      // Update polls + messages in the same synchronous block so they land in one React render.
-      // Also embed _poll on the message itself as a fallback in case the polls state update
-      // races with the realtime INSERT handler.
-      setPolls(prev => ({ ...prev, [poll.id]: pollData }))
-      if (newMsg) {
-        isAtBottomRef.current = true
-        setIsAtBottom(true)
-        setMessages(prev =>
-          prev.some(m => m.id === newMsg.id)
-            ? prev
-            : [...prev, { ...newMsg, poll_id: poll.id, _poll: pollData, _isNew: true }]
-        )
-      }
-
-      setPollCreating(false)
-      setPollQuestion('')
-      setPollOptions(['', ''])
-      setReplyingTo(null)
-    } catch (e) {
-      console.error('createPoll error:', e)
-      toast('Failed to create poll', 'error')
-    } finally {
-      setPollSubmitting(false)
-    }
-  }
-
-  async function castVote(pollId, optionIndex) {
-    const prevPoll = polls[pollId]
-    setPolls(prev => {
-      if (!prev[pollId]) return prev
-      const p = prev[pollId]
-      return { ...prev, [pollId]: { ...p, votes: [...p.votes.filter(v => v.user_id !== myId), { poll_id: pollId, user_id: myId, option_index: optionIndex }] } }
-    })
-    const { error } = await supabase.from('poll_votes').upsert({ poll_id: pollId, user_id: myId, option_index: optionIndex })
-    if (error) {
-      console.error('castVote error:', error)
-      if (prevPoll) setPolls(prev => ({ ...prev, [pollId]: prevPoll }))
-      toast('Failed to cast vote', 'error')
-    }
-  }
-
-  function startEditPoll(pollId, poll) {
-    if (!poll) return
-    setEditPollQuestion(poll.question)
-    setEditPollOptions(poll.options.map(o => o.text))
-    setEditingPollId(pollId)
-    setPollMenuOpenId(null)
-  }
-
-  async function savePoll(pollId) {
-    const question = editPollQuestion.trim()
-    const opts = editPollOptions.map(o => o.trim()).filter(Boolean)
-    if (!question || opts.length < 2 || savingPoll) return
-    setSavingPoll(true)
-    try {
-      const { error } = await supabase.from('polls')
-        .update({ question, options: opts.map(text => ({ text })) })
-        .eq('id', pollId)
-      if (error) throw error
-      await supabase.from('poll_votes').delete().eq('poll_id', pollId)
-      setPolls(prev => ({
-        ...prev,
-        [pollId]: { ...prev[pollId], question, options: opts.map(text => ({ text })), votes: [] },
-      }))
-      setEditingPollId(null)
-    } catch (e) {
-      console.error('savePoll error:', e)
-      toast('Failed to save poll', 'error')
-    } finally {
-      setSavingPoll(false)
-    }
-  }
-
-  async function deletePoll(pollId, messageId) {
-    setPollMenuOpenId(null)
-    setDeletingPollId(pollId)
-    // Capture rollback snapshots before the animation await so they aren't stale
-    const msgSnapshot = messages.find(m => m.id === messageId)
-    const pollSnapshot = polls[pollId]
-    await new Promise(r => setTimeout(r, 260))
-    if (!mountedRef.current) return
-    setMessages(prev => prev.filter(m => m.id !== messageId))
-    setPolls(prev => { const next = { ...prev }; delete next[pollId]; return next })
-    setDeletingPollId(null)
-    const [{ error: msgErr }, { error: pollErr }] = await Promise.all([
-      supabase.from('messages').delete().eq('id', messageId),
-      supabase.from('polls').delete().eq('id', pollId),
-    ])
-    if (!mountedRef.current) return
-    if (msgErr || pollErr) {
-      if (msgSnapshot) setMessages(prev => [...prev, msgSnapshot].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)))
-      if (pollSnapshot) setPolls(prev => ({ ...prev, [pollId]: pollSnapshot }))
-      toast('Failed to delete poll', 'error')
-    }
-  }
-
   // ── Messages + reactions + realtime ──────────────────────────────────────
   useEffect(() => {
     onRead?.()
     setMessages([])
-    setPolls({})
-    setChatEvents({})
     setReplyingTo(null)
     setMemberReadTimes({})
     setUnreadCount(0)
@@ -737,35 +533,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
-    const rxCh = supabase
-      .channel(`chat-rx:${convId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'reactions',
-        filter: `community_group_id=eq.${groupId}`,
-      }, ({ new: r }) => {
-        setReactions(prev => ({
-          ...prev,
-          [r.message_id]: {
-            ...(prev[r.message_id] ?? {}),
-            [r.emoji]: [...(prev[r.message_id]?.[r.emoji] ?? []), r],
-          },
-        }))
-      })
-      .on('postgres_changes', {
-        event: 'DELETE', schema: 'public', table: 'reactions',
-        filter: `community_group_id=eq.${groupId}`,
-      }, ({ old: r }) => {
-        setReactions(prev => {
-          if (!prev[r.message_id]) return prev
-          const byEmoji = { ...prev[r.message_id] }
-          const filtered = (byEmoji[r.emoji] ?? []).filter(x => x.id !== r.id)
-          if (filtered.length) byEmoji[r.emoji] = filtered
-          else delete byEmoji[r.emoji]
-          return { ...prev, [r.message_id]: byEmoji }
-        })
-      })
-      .subscribe()
-
     // Load member read times for read receipts
     supabase
       .from('conversation_members')
@@ -809,25 +576,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       })
       .subscribe()
 
-    const pollVotesCh = supabase
-      .channel(`poll-votes:${convId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'poll_votes', filter: `community_group_id=eq.${groupId}` }, ({ new: v, old: o, eventType }) => {
-        const vote = eventType === 'DELETE' ? o : v
-        if (!vote?.poll_id) return
-        setPolls(prev => {
-          if (!prev[vote.poll_id]) return prev
-          const p = prev[vote.poll_id]
-          let votes
-          if (eventType === 'DELETE') {
-            votes = p.votes.filter(x => !(x.poll_id === vote.poll_id && x.user_id === vote.user_id))
-          } else {
-            votes = [...p.votes.filter(x => x.user_id !== vote.user_id), vote]
-          }
-          return { ...prev, [vote.poll_id]: { ...p, votes } }
-        })
-      })
-      .subscribe()
-
     const eventRsvpsCh = supabase
       .channel(`event-rsvps:${convId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'event_rsvps', filter: `community_group_id=eq.${groupId}` }, ({ new: r, old: o, eventType }) => {
@@ -853,10 +601,8 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => {
       clearTimeout(freshLoadTimerRef.current)
       supabase.removeChannel(msgCh)
-      supabase.removeChannel(rxCh)
       supabase.removeChannel(readCh)
       supabase.removeChannel(convMetaCh)
-      supabase.removeChannel(pollVotesCh)
       supabase.removeChannel(eventRsvpsCh)
       const closeTime = new Date().toISOString()
       localStorage.setItem(READ_AT_KEY(convId), closeTime)
@@ -1366,185 +1112,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     }
   }
 
-  async function sendImages(tempMessages, textBody) {
-    await Promise.all(tempMessages.map(temp =>
-      sendImage(temp._tempId, temp._file, temp.image_url, temp.reply_to_id, null)
-    ))
-    if (textBody) {
-      const { data: textMsg } = await supabase.from('messages').insert({
-        community_group_id: groupId,
-        conversation_id: convId,
-        user_id: myId,
-        display_name: displayName || 'Member',
-        body: textBody,
-        image_url: null,
-        reply_to_id: null,
-      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-      if (textMsg) {
-        setMessages(prev => prev.some(m => m.id === textMsg.id) ? prev : [...prev, { ...textMsg, _isNew: true }])
-      }
-    }
-  }
-
-  // Returns { file, width, height } — dimensions are the final stored pixel size.
-  function compressImage(file) {
-    if (!file.type.startsWith('image/') || file.type === 'image/gif') {
-      return new Promise(resolve => {
-        const url = URL.createObjectURL(file)
-        const img = new Image()
-        img.onload  = () => { URL.revokeObjectURL(url); resolve({ file, width: img.naturalWidth, height: img.naturalHeight }) }
-        img.onerror = () => { URL.revokeObjectURL(url); resolve({ file, width: null, height: null }) }
-        img.src = url
-      })
-    }
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file)
-      const img = new Image()
-      img.onload = () => {
-        URL.revokeObjectURL(url)
-
-        function tryEncode(maxDim, quality) {
-          const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight))
-          const w = Math.round(img.naturalWidth * scale)
-          const h = Math.round(img.naturalHeight * scale)
-          const canvas = document.createElement('canvas')
-          canvas.width = w
-          canvas.height = h
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-          canvas.toBlob(blob => {
-            if (blob) {
-              resolve({ file: new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }), width: w, height: h })
-            } else if (maxDim > 600) {
-              // toBlob returned null (memory pressure); retry at half the dimension
-              tryEncode(Math.round(maxDim / 2), quality)
-            } else {
-              // Exhausted retries — reject so the caller can surface an error
-              reject(new Error('Image compression failed'))
-            }
-          }, 'image/jpeg', quality)
-        }
-
-        tryEncode(1200, 0.82)
-      }
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')) }
-      img.src = url
-    })
-  }
-
-
-  async function uploadGroupIcon(file) {
-    if (!file || uploadingGroupIcon) return
-    setUploadingGroupIcon(true)
-    try {
-      // Compress if possible; fall back to original if compression fails (e.g. null toBlob on iOS)
-      let compressed = file
-      try {
-        const result = await compressImage(file)
-        compressed = result.file
-      } catch {}
-      // Always use a fresh timestamped path — the chat-images bucket has no UPDATE policy,
-      // so upsert on an existing path is blocked by RLS. A new path is always an INSERT.
-      // Prefix with myId so the owner-delete RLS policy allows cleanup later.
-      const ext = compressed.name?.split('.').pop() || 'jpg'
-      const path = `${myId}/group-icons/${convId}-${Date.now()}.${ext}`
-      const { data: uploaded, error: upErr } = await supabase.storage
-        .from('chat-images')
-        .upload(path, compressed, { contentType: compressed.type || 'image/jpeg' })
-      if (upErr) throw upErr
-      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
-      const { error } = await supabase.from('conversations').update({ image_url: publicUrl }).eq('id', convId)
-      if (error) throw error
-      setConvImageUrl(publicUrl)
-    } catch (err) {
-      console.error('uploadGroupIcon failed:', err)
-      toast('Failed to upload icon', 'error')
-    } finally {
-      setUploadingGroupIcon(false)
-    }
-  }
-
-  async function removeGroupIcon() {
-    const oldUrl = convImageUrl
-    setConvImageUrl(null)
-    const { error } = await supabase.from('conversations').update({ image_url: null }).eq('id', convId)
-    if (error) {
-      console.error('removeGroupIcon failed:', error)
-      setConvImageUrl(oldUrl)
-      toast('Failed to remove icon', 'error')
-      return
-    }
-    if (oldUrl) {
-      const match = oldUrl.match(/\/chat-images\/(.+)$/)
-      if (match) await supabase.storage.from('chat-images').remove([match[1]])
-    }
-  }
-
-  async function sendImage(tempId, file, previewUrl, replyId, textBody = null) {
-    try {
-      const isVid = file.type.startsWith('video/')
-      let uploadFile = file
-      let imgWidth = null
-      let imgHeight = null
-      if (!isVid) {
-        const result = await compressImage(file)
-        uploadFile = result.file
-        imgWidth = result.width
-        imgHeight = result.height
-      }
-      const ext = uploadFile.name.split('.').pop()
-      const path = `${myId}/${convId}_${Date.now()}.${ext}`
-      const { data: uploaded, error: upErr } = await supabase.storage
-        .from('chat-images')
-        .upload(path, uploadFile, { contentType: uploadFile.type })
-      if (upErr) throw upErr
-      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(uploaded.path)
-
-      const { data: newMsg } = await supabase.from('messages').insert({
-        community_group_id: groupId,
-        conversation_id: convId,
-        user_id: myId,
-        display_name: displayName || 'Member',
-        body: null,
-        image_url: publicUrl,
-        reply_to_id: replyId,
-        image_width:  imgWidth  ?? null,
-        image_height: imgHeight ?? null,
-      }).select('*, reply_message:reply_to_id(id, body, display_name, image_url)').single()
-
-      if (newMsg) {
-        trackEvent('chat_message_sent', { type: isVid ? 'video' : 'image', conv_type: conversation.type })
-        if (!isVid) {
-          await new Promise(resolve => {
-            const img = new window.Image()
-            img.onload = resolve
-            img.onerror = resolve
-            img.src = publicUrl
-          })
-        }
-        setMessages(prev => {
-          const without = prev.filter(m => m._tempId !== tempId)
-          return without.some(m => m.id === newMsg.id) ? without : [...without, { ...newMsg, _isNew: true }]
-        })
-      }
-    } catch (err) {
-      console.error('Image send failed:', err)
-      setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: false, _failed: true } : m))
-    }
-  }
-
-  async function retryMessage(tempId) {
-    if (retryingRef.current.has(tempId)) return
-    const msg = messages.find(m => m._tempId === tempId)
-    if (!msg?._file) return
-    retryingRef.current.add(tempId)
-    setMessages(prev => prev.map(m => m._tempId === tempId ? { ...m, _pending: true, _failed: false } : m))
-    try {
-      await sendImage(tempId, msg._file, msg.image_url, msg.reply_to_id, msg._textBody ?? null)
-    } finally {
-      retryingRef.current.delete(tempId)
-    }
-  }
-
   function closeLightbox() {
     setLightboxClosing(true)
     setTimeout(() => { if (mountedRef.current) { setLightboxImg(null); setLightboxClosing(false) } }, 250)
@@ -1571,75 +1138,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       el.focus()
       el.setSelectionRange(start + emoji.length, start + emoji.length)
     }, 0)
-  }
-
-  function removePreview(i) {
-    setImagePreviews(prev => {
-      const p = prev[i]
-      if (p?.isVideo && p.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(p.previewUrl)
-      return prev.filter((_, j) => j !== i)
-    })
-  }
-
-  function handleFileChange(e) {
-    const files = Array.from(e.target.files ?? [])
-    e.target.value = ''
-    if (!files.length) return
-    for (const file of files) {
-      const isVid = file.type.startsWith('video/')
-      const isImg = file.type.startsWith('image/')
-      if (!isVid && !isImg) { toast('Only images and videos are supported', 'error'); continue }
-      if (isVid) {
-        if (file.size > 50 * 1024 * 1024) { toast('Video must be under 50 MB', 'error'); continue }
-        const previewUrl = URL.createObjectURL(file)
-        setImagePreviews(prev => [...prev, { file, previewUrl, isVideo: true }])
-      } else {
-        if (file.size > 10 * 1024 * 1024) { toast('Image must be under 10 MB', 'error'); continue }
-        const reader = new FileReader()
-        reader.onload = ev => setImagePreviews(prev => [...prev, { file, previewUrl: ev.target.result, isVideo: false }])
-        reader.readAsDataURL(file)
-      }
-    }
-  }
-
-  // ── Reactions ─────────────────────────────────────────────────────────────
-  async function toggleReaction(messageId, emoji) {
-    const existing = reactions[messageId]?.[emoji]?.find(r => r.user_id === myId)
-    haptic()
-    closeMenu()
-    if (existing) {
-      // Optimistic remove for instant feedback — the realtime DELETE handler
-      // also fires and is now a no-op (row already gone from state).
-      setReactions(prev => {
-        if (!prev[messageId]?.[emoji]) return prev
-        const byEmoji = { ...prev[messageId] }
-        const filtered = byEmoji[emoji].filter(r => r.id !== existing.id)
-        if (filtered.length) byEmoji[emoji] = filtered
-        else delete byEmoji[emoji]
-        return { ...prev, [messageId]: byEmoji }
-      })
-      const { error } = await supabase.from('reactions').delete().eq('id', existing.id)
-      if (error) {
-        // Restore on failure
-        setReactions(prev => ({
-          ...prev,
-          [messageId]: {
-            ...(prev[messageId] ?? {}),
-            [emoji]: [...(prev[messageId]?.[emoji] ?? []), existing],
-          },
-        }))
-      }
-    } else {
-      const key = `${messageId}:${emoji}`
-      setJustReacted(prev => ({ ...prev, [key]: true }))
-      setTimeout(() => setJustReacted(prev => { const n = { ...prev }; delete n[key]; return n }), 650)
-      await supabase.from('reactions').insert({
-        message_id: messageId,
-        community_group_id: groupId,
-        user_id: myId,
-        emoji,
-      })
-    }
   }
 
   async function deleteMessage(msgId) {
