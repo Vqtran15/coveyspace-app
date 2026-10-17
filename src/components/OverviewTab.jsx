@@ -469,8 +469,10 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                   <div
                     className={`w-full bg-ember rounded-2xl p-4 shadow ${announceShake ? 'animate-announcement-shake' : ''}`}
                   >
-                    <div className="flex items-start gap-3">
-                      <Megaphone size={24} weight="fill" className="text-white/80 shrink-0 mt-0.5" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                        <Megaphone size={24} weight="fill" className="text-white" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-white/70 uppercase tracking-wide mb-1">Announcement</p>
                         <p className="text-sm text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
@@ -479,7 +481,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                         <button
                           onClick={() => setEditingAnnouncement(true)}
                           aria-label="Edit announcement"
-                          className="text-white/60 hover:text-white transition-colors shrink-0 mt-0.5 p-1"
+                          className="text-white/60 hover:text-white transition-colors shrink-0 p-1"
                         >
                           <PencilSimple size={15} />
                         </button>
