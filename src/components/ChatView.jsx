@@ -186,6 +186,9 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     return () => ro.disconnect()
   }, [])
 
+  const myId = session.user.id
+  const convId = conversation.id
+
   // Stale-safe mirrors for values read inside async callbacks or hook params.
   const messagesRef = useRef(messages)
   messagesRef.current = messages
@@ -410,9 +413,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   function scrollToBottom() {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }
-
-  const myId = session.user.id
-  const convId = conversation.id
 
   // ── Messages + reactions + realtime ──────────────────────────────────────
   useEffect(() => {
