@@ -587,23 +587,21 @@ export default function AdminPage() {
                             <ShieldCheck size={10} weight="fill" /> Admin
                           </span>
                         )}
-                        {m.coordinator_role && (
-                          <span className="text-xs text-stone-400">{m.coordinator_role}</span>
+                        {(m.coordinator_role || m.role === 'admin') && (
+                          <span className="text-xs text-stone-400">{m.coordinator_role || 'Group Leader'}</span>
                         )}
                       </div>
-                      {m.user_id !== userId && (
-                        <button
-                          onClick={() => { setMemberSheet(m); setMemberSheetConfirm(null) }}
-                          disabled={settingRoleId === m.user_id || removingId === m.user_id}
-                          aria-label={`Actions for ${m.display_name}`}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-40 shrink-0"
-                        >
-                          {(settingRoleId === m.user_id || removingId === m.user_id)
-                            ? <span className="text-xs text-stone-400">…</span>
-                            : <DotsThreeVertical size={20} weight="bold" />
-                          }
-                        </button>
-                      )}
+                      <button
+                        onClick={() => { setMemberSheet(m); setMemberSheetConfirm(null) }}
+                        disabled={settingRoleId === m.user_id || removingId === m.user_id}
+                        aria-label={`Actions for ${m.display_name}`}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-40 shrink-0"
+                      >
+                        {(settingRoleId === m.user_id || removingId === m.user_id)
+                          ? <span className="text-xs text-stone-400">…</span>
+                          : <DotsThreeVertical size={20} weight="bold" />
+                        }
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -737,8 +735,8 @@ export default function AdminPage() {
                   <ShieldCheck size={10} weight="fill" /> Admin
                 </span>
               )}
-              {memberSheet.coordinator_role && (
-                <span className="text-xs text-stone-500">{memberSheet.coordinator_role}</span>
+              {(memberSheet.coordinator_role || memberSheet.role === 'admin') && (
+                <span className="text-xs text-stone-500">{memberSheet.coordinator_role || 'Group Leader'}</span>
               )}
             </div>
             <button onClick={closeMemberSheet} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
@@ -747,6 +745,7 @@ export default function AdminPage() {
           </div>
 
           {/* Actions */}
+          <div className="overflow-y-auto max-h-[60dvh]">
           <div className="px-4 pt-3 pb-2 space-y-1">
             {memberSheetConfirm === 'coordinator' ? (
               <div className="animate-fade-in">
@@ -833,13 +832,15 @@ export default function AdminPage() {
               </div>
             ) : (
               <>
-                <button
-                  onClick={() => setMemberSheetConfirm('role')}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors text-left"
-                >
-                  <ShieldCheck size={18} className="text-ember shrink-0" />
-                  {memberSheet.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                </button>
+                {memberSheet.user_id !== userId && (
+                  <button
+                    onClick={() => setMemberSheetConfirm('role')}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors text-left"
+                  >
+                    <ShieldCheck size={18} className="text-ember shrink-0" />
+                    {memberSheet.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                  </button>
+                )}
                 <button
                   onClick={() => { setCoordinatorRoleValue(memberSheet.coordinator_role ?? ''); setMemberSheetConfirm('coordinator') }}
                   className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors text-left"
@@ -847,15 +848,18 @@ export default function AdminPage() {
                   <IdentificationBadge size={18} className="text-stone-400 shrink-0" />
                   {memberSheet.coordinator_role ? 'Edit Title' : 'Set Title'}
                 </button>
-                <button
-                  onClick={() => setMemberSheetConfirm('remove')}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors text-left"
-                >
-                  <X size={18} className="shrink-0" />
-                  Remove from Group
-                </button>
+                {memberSheet.user_id !== userId && (
+                  <button
+                    onClick={() => setMemberSheetConfirm('remove')}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <X size={18} className="shrink-0" />
+                    Remove from Group
+                  </button>
+                )}
               </>
             )}
+          </div>
           </div>
         </div>
       </div>
