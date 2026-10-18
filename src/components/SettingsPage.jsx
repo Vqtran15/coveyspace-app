@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, UserCircle, Question } from '@phosphor-icons/react'
+import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, UserCircle, Question, IdentificationBadge } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -151,6 +151,8 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [pwError, setPwError] = useState(null)
 
   const [groupsOpen, setGroupsOpen] = useState(true)
+  const [leadershipOpen, setLeadershipOpen] = useState(true)
+  const [leadershipMembers, setLeadershipMembers] = useState([])
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [adminSectionOpen, setAdminSectionOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
@@ -208,6 +210,17 @@ async function handleSwitchGroup(targetGroupId) {
   }
 
 useEffect(() => {
+    if (!groupId) return
+    supabase
+      .from('profiles')
+      .select('user_id, display_name, coordinator_role, avatar_icon, avatar_color, avatar_image_url')
+      .eq('community_group_id', groupId)
+      .not('coordinator_role', 'is', null)
+      .order('display_name')
+      .then(({ data }) => setLeadershipMembers(data ?? []))
+  }, [groupId])
+
+  useEffect(() => {
     if (!userId) return
     supabase
       .from('profiles')
@@ -435,6 +448,48 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* Leadership */}
+      {leadershipMembers.length > 0 && (
+        <div className="mb-4">
+          <button
+            onClick={() => setLeadershipOpen(v => !v)}
+            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
+            aria-expanded={leadershipOpen}
+          >
+            <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+              <IdentificationBadge size={16} weight="fill" className="text-ember" />
+            </div>
+            <span className="flex-1 text-left text-sm font-medium text-stone-800">Group Leadership</span>
+            <CaretDown
+              size={15}
+              weight="bold"
+              className={`text-stone-400 transition-transform duration-200 ${leadershipOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          <div
+            className="grid"
+            style={{ gridTemplateRows: leadershipOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+          >
+            <div className="overflow-hidden min-h-0">
+              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
+                {leadershipMembers.map((m, idx) => (
+                  <div
+                    key={m.user_id}
+                    className={`flex items-center gap-3 px-4 py-3.5 ${idx < leadershipMembers.length - 1 ? 'border-b border-stone-100' : ''}`}
+                  >
+                    <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-800 truncate">{m.display_name}</p>
+                      <p className="text-xs text-stone-500">{m.coordinator_role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Group */}
       <div className="mb-4">

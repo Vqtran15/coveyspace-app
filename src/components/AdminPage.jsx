@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, Church, DotsThreeVertical } from '@phosphor-icons/react'
+import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, Church, DotsThreeVertical, IdentificationBadge } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
 import { useToast } from '../lib/toast.jsx'
@@ -104,7 +104,9 @@ export default function AdminPage() {
   const [removingId, setRemovingId] = useState(null)
   const [memberSheet, setMemberSheet] = useState(null)       // member object
   const [memberSheetClosing, setMemberSheetClosing] = useState(false)
-  const [memberSheetConfirm, setMemberSheetConfirm] = useState(null) // 'role' | 'remove'
+  const [memberSheetConfirm, setMemberSheetConfirm] = useState(null) // 'role' | 'remove' | 'coordinator'
+  const [coordinatorRoleValue, setCoordinatorRoleValue] = useState('')
+  const [savingCoordinator, setSavingCoordinator] = useState(false)
   const [groupNameOpen, setGroupNameOpen] = useState(false)
   const [groupNameValue, setGroupNameValue] = useState('')
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
@@ -141,7 +143,7 @@ export default function AdminPage() {
     supabase.rpc('get_invite_code').then(({ data }) => { if (mounted) setInviteCode(data ?? null) })
     supabase
       .from('profiles')
-      .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url')
+      .select('user_id, display_name, role, coordinator_role, avatar_icon, avatar_color, avatar_image_url')
       .eq('community_group_id', groupId)
       .order('display_name')
       .then(({ data }) => {
@@ -217,6 +219,24 @@ export default function AdminPage() {
       toast(`${member?.display_name ?? 'Member'} was removed from the group`, 'success')
     }
     setRemovingId(null)
+  }
+
+  async function handleSetCoordinatorRole(targetId, roleText) {
+    const trimmed = roleText.trim()
+    closeMemberSheet()
+    setSavingCoordinator(true)
+    const { error } = await supabase.from('profiles')
+      .update({ coordinator_role: trimmed || null })
+      .eq('user_id', targetId)
+    if (error) {
+      toast('Failed to save title', 'error')
+    } else {
+      setMembers(prev => prev.map(m =>
+        m.user_id === targetId ? { ...m, coordinator_role: trimmed || null } : m
+      ))
+      toast(trimmed ? 'Title saved' : 'Title removed', 'success')
+    }
+    setSavingCoordinator(false)
   }
 
   async function handleShareLink() {
@@ -562,6 +582,9 @@ export default function AdminPage() {
                             <ShieldCheck size={10} weight="fill" /> Admin
                           </span>
                         )}
+                        {m.coordinator_role && (
+                          <span className="text-xs text-stone-400">{m.coordinator_role}</span>
+                        )}
                       </div>
                       {m.user_id !== userId && (
                         <button
@@ -709,6 +732,9 @@ export default function AdminPage() {
                   <ShieldCheck size={10} weight="fill" /> Admin
                 </span>
               )}
+              {memberSheet.coordinator_role && (
+                <span className="text-xs text-stone-500">{memberSheet.coordinator_role}</span>
+              )}
             </div>
             <button onClick={closeMemberSheet} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors text-stone-400 hover:text-stone-600">
               <X size={20} />
@@ -717,7 +743,46 @@ export default function AdminPage() {
 
           {/* Actions */}
           <div className="px-4 pt-3 pb-2 space-y-1">
-            {memberSheetConfirm === 'role' ? (
+            {memberSheetConfirm === 'coordinator' ? (
+              <div className="animate-fade-in">
+                <p className="text-sm text-stone-600 mb-3 px-1">
+                  Set a title for {memberSheet.display_name} visible to all members (e.g. "Worship Leader").
+                </p>
+                <input
+                  type="text"
+                  value={coordinatorRoleValue}
+                  onChange={e => setCoordinatorRoleValue(e.target.value)}
+                  placeholder="Enter title…"
+                  maxLength={50}
+                  autoFocus
+                  className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 bg-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent mb-3"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMemberSheetConfirm(null)}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleSetCoordinatorRole(memberSheet.user_id, coordinatorRoleValue)}
+                    disabled={savingCoordinator}
+                    className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-ember hover:bg-ember-700 transition-colors disabled:opacity-40"
+                  >
+                    Save
+                  </button>
+                </div>
+                {memberSheet.coordinator_role && (
+                  <button
+                    onClick={() => handleSetCoordinatorRole(memberSheet.user_id, '')}
+                    disabled={savingCoordinator}
+                    className="w-full mt-2 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40"
+                  >
+                    Remove title
+                  </button>
+                )}
+              </div>
+            ) : memberSheetConfirm === 'role' ? (
               <div className="animate-fade-in">
                 <p className="text-sm text-stone-600 text-center mb-4 px-2">
                   {memberSheet.role === 'admin'
@@ -769,6 +834,13 @@ export default function AdminPage() {
                 >
                   <ShieldCheck size={18} className="text-ember shrink-0" />
                   {memberSheet.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                </button>
+                <button
+                  onClick={() => { setCoordinatorRoleValue(memberSheet.coordinator_role ?? ''); setMemberSheetConfirm('coordinator') }}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors text-left"
+                >
+                  <IdentificationBadge size={18} className="text-stone-400 shrink-0" />
+                  {memberSheet.coordinator_role ? 'Edit Title' : 'Set Title'}
                 </button>
                 <button
                   onClick={() => setMemberSheetConfirm('remove')}
