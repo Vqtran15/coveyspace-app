@@ -417,7 +417,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
         </h1>
         <button
           onClick={onOpenSettings}
-          aria-label="Open settings"
+          aria-label="Open profile"
           className="relative active:opacity-70 transition-opacity shrink-0 lg:hidden"
         >
           <AvatarCircle size="11" icon={avatarIcon} colorKey={avatarColorKey} userId={userId} name={displayName} imageUrl={avatarImageUrl} />

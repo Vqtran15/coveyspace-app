@@ -329,7 +329,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
           >
             <ArrowLeft size={20} weight="bold" />
           </button>
-          <h1 className="text-3xl font-bold text-stone-800">Settings</h1>
+          <h1 className="text-3xl font-bold text-stone-800">Profile</h1>
         </div>
       </div>
 
