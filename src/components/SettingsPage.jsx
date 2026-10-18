@@ -211,22 +211,23 @@ async function handleSwitchGroup(targetGroupId) {
 
 useEffect(() => {
     if (!groupId) return
-    Promise.all([
-      supabase.from('profiles')
-        .select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url')
-        .eq('community_group_id', groupId),
-      supabase.from('group_memberships')
-        .select('user_id, role, coordinator_role')
-        .eq('community_group_id', groupId),
-    ]).then(([{ data: profiles }, { data: memberships }]) => {
-      const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.user_id, p]))
-      const members = (memberships ?? [])
-        .filter(m => m.role === 'admin' || m.coordinator_role)
-        .filter(m => profileMap[m.user_id])
-        .map(m => ({ ...profileMap[m.user_id], coordinator_role: m.coordinator_role || 'Group Leader' }))
-        .sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? ''))
-      setLeadershipMembers(members)
-    })
+    supabase.from('group_memberships')
+      .select('user_id, role, coordinator_role')
+      .eq('community_group_id', groupId)
+      .then(async ({ data: memberships }) => {
+        const leaders = (memberships ?? []).filter(m => m.role === 'admin' || m.coordinator_role)
+        if (leaders.length === 0) { setLeadershipMembers([]); return }
+        const ids = leaders.map(m => m.user_id)
+        const { data: profiles } = await supabase.from('profiles')
+          .select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url')
+          .in('user_id', ids)
+        const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.user_id, p]))
+        const members = leaders
+          .filter(m => profileMap[m.user_id])
+          .map(m => ({ ...profileMap[m.user_id], coordinator_role: m.coordinator_role || 'Group Leader' }))
+          .sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? ''))
+        setLeadershipMembers(members)
+      })
   }, [groupId])
 
   useEffect(() => {
