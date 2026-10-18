@@ -107,6 +107,7 @@ export default function AdminPage() {
   const [memberSheetConfirm, setMemberSheetConfirm] = useState(null) // 'role' | 'remove' | 'coordinator'
   const [coordinatorRoleValue, setCoordinatorRoleValue] = useState('')
   const [savingCoordinator, setSavingCoordinator] = useState(false)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
   const [groupNameOpen, setGroupNameOpen] = useState(false)
   const [groupNameValue, setGroupNameValue] = useState('')
   const [groupNameConfirm, setGroupNameConfirm] = useState(false)
@@ -224,6 +225,16 @@ export default function AdminPage() {
     }
     setRemovingId(null)
   }
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv || memberSheetConfirm !== 'coordinator') { setKeyboardOffset(0); return }
+    const update = () => setKeyboardOffset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update) }
+  }, [memberSheetConfirm])
 
   async function handleSetCoordinatorRole(targetId, roleText) {
     const trimmed = roleText.trim()
@@ -721,8 +732,8 @@ export default function AdminPage() {
         onClick={closeMemberSheet}
       >
         <div
-          className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto overflow-hidden max-h-[90dvh] flex flex-col ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+          className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto overflow-hidden max-h-[90dvh] flex flex-col transition-[margin] duration-200 ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', marginBottom: keyboardOffset }}
           onClick={e => e.stopPropagation()}
         >
           {/* Sheet header */}
