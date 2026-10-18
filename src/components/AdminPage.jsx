@@ -721,12 +721,12 @@ export default function AdminPage() {
         onClick={closeMemberSheet}
       >
         <div
-          className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+          className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto overflow-hidden max-h-[90dvh] flex flex-col ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* Sheet header */}
-          <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-stone-100">
+          <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-stone-100 shrink-0">
             <AvatarCircle icon={memberSheet.avatar_icon} name={memberSheet.display_name} userId={memberSheet.user_id} colorKey={memberSheet.avatar_color} imageUrl={memberSheet.avatar_image_url} />
             <div className="flex-1 min-w-0">
               <p className="text-base font-semibold text-stone-800 truncate">{memberSheet.display_name}</p>
@@ -745,7 +745,7 @@ export default function AdminPage() {
           </div>
 
           {/* Actions */}
-          <div className="overflow-y-auto max-h-[60dvh]">
+          <div className="overflow-y-auto max-h-[90dvh]">
           <div className="px-4 pt-3 pb-2 space-y-1">
             {memberSheetConfirm === 'coordinator' ? (
               <div className="animate-fade-in">
