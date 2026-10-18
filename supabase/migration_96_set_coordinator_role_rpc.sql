@@ -15,6 +15,10 @@ BEGIN
     RAISE EXCEPTION 'Only admins can set coordinator roles';
   END IF;
 
+  IF LENGTH(TRIM(new_coordinator_role)) > 50 THEN
+    RAISE EXCEPTION 'Title must be 50 characters or fewer';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM group_memberships
     WHERE user_id = target_user_id AND community_group_id = grp_id

@@ -155,7 +155,7 @@ export default function AdminPage() {
       const roleMap = Object.fromEntries((memberships ?? []).map(m => [m.user_id, m.coordinator_role]))
       const flat = (profiles ?? []).map(p => ({ ...p, coordinator_role: roleMap[p.user_id] ?? null }))
       setMembers(sortMembers(flat))
-    })
+    }).catch(() => { if (mounted) toast('Failed to load members', 'error') })
 
     const channel = supabase
       .channel(`admin-members-${groupId}`)

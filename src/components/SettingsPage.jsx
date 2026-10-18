@@ -205,16 +205,18 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
 
   useEffect(() => {
     if (!groupId) return
+    let mounted = true
     supabase.from('group_memberships')
       .select('user_id, role, coordinator_role')
       .eq('community_group_id', groupId)
       .then(async ({ data: memberships }) => {
         const leaders = (memberships ?? []).filter(m => m.role === 'admin' || m.coordinator_role)
-        if (leaders.length === 0) { setLeadershipMembers([]); return }
+        if (leaders.length === 0) { if (mounted) setLeadershipMembers([]); return }
         const ids = leaders.map(m => m.user_id)
         const { data: profiles } = await supabase.from('profiles')
           .select('user_id, display_name, avatar_icon, avatar_color, avatar_image_url')
           .in('user_id', ids)
+        if (!mounted) return
         const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.user_id, p]))
         const members = leaders
           .filter(m => profileMap[m.user_id])
@@ -227,6 +229,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
           })
         setLeadershipMembers(members)
       })
+    return () => { mounted = false }
   }, [groupId])
 
   useEffect(() => {
