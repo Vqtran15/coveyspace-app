@@ -224,8 +224,13 @@ useEffect(() => {
         const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.user_id, p]))
         const members = leaders
           .filter(m => profileMap[m.user_id])
-          .map(m => ({ ...profileMap[m.user_id], coordinator_role: m.coordinator_role || 'Group Leader' }))
-          .sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? ''))
+          .map(m => ({ ...profileMap[m.user_id], role: m.role, coordinator_role: m.coordinator_role || 'Group Leader' }))
+          .sort((a, b) => {
+            const aAdmin = a.role === 'admin' ? 0 : 1
+            const bAdmin = b.role === 'admin' ? 0 : 1
+            if (aAdmin !== bAdmin) return aAdmin - bAdmin
+            return (a.display_name ?? '').localeCompare(b.display_name ?? '')
+          })
         setLeadershipMembers(members)
       })
   }, [groupId])
