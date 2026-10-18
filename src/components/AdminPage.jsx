@@ -240,10 +240,10 @@ export default function AdminPage() {
     const trimmed = roleText.trim()
     closeMemberSheet()
     setSavingCoordinator(true)
-    const { error } = await supabase.from('group_memberships')
-      .update({ coordinator_role: trimmed || null })
-      .eq('user_id', targetId)
-      .eq('community_group_id', groupId)
+    const { error } = await supabase.rpc('set_coordinator_role', {
+      target_user_id: targetId,
+      new_coordinator_role: trimmed,
+    })
     if (error) {
       toast('Failed to save title', 'error')
     } else {
