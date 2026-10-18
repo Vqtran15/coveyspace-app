@@ -141,17 +141,20 @@ export default function AdminPage() {
     if (!isAdmin) { navigate('/home', { replace: true }); return }
     let mounted = true
     supabase.rpc('get_invite_code').then(({ data }) => { if (mounted) setInviteCode(data ?? null) })
-    supabase
-      .from('profiles')
-      .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url, group_memberships!inner(coordinator_role)')
-      .eq('community_group_id', groupId)
-      .eq('group_memberships.community_group_id', groupId)
-      .order('display_name')
-      .then(({ data }) => {
-        if (!mounted) return
-        const flat = (data ?? []).map(m => ({ ...m, coordinator_role: m.group_memberships?.[0]?.coordinator_role ?? null }))
-        setMembers(sortMembers(flat))
-      })
+    Promise.all([
+      supabase.from('profiles')
+        .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url')
+        .eq('community_group_id', groupId)
+        .order('display_name'),
+      supabase.from('group_memberships')
+        .select('user_id, coordinator_role')
+        .eq('community_group_id', groupId),
+    ]).then(([{ data: profiles }, { data: memberships }]) => {
+      if (!mounted) return
+      const roleMap = Object.fromEntries((memberships ?? []).map(m => [m.user_id, m.coordinator_role]))
+      const flat = (profiles ?? []).map(p => ({ ...p, coordinator_role: roleMap[p.user_id] ?? null }))
+      setMembers(sortMembers(flat))
+    })
 
     const channel = supabase
       .channel(`admin-members-${groupId}`)
