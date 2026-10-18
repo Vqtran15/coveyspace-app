@@ -212,12 +212,17 @@ async function handleSwitchGroup(targetGroupId) {
 useEffect(() => {
     if (!groupId) return
     supabase
-      .from('profiles')
-      .select('user_id, display_name, coordinator_role, avatar_icon, avatar_color, avatar_image_url')
+      .from('group_memberships')
+      .select('coordinator_role, profiles(user_id, display_name, avatar_icon, avatar_color, avatar_image_url)')
       .eq('community_group_id', groupId)
       .not('coordinator_role', 'is', null)
-      .order('display_name')
-      .then(({ data }) => setLeadershipMembers(data ?? []))
+      .then(({ data }) => {
+        const members = (data ?? [])
+          .filter(m => m.profiles)
+          .map(m => ({ ...m.profiles, coordinator_role: m.coordinator_role }))
+          .sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? ''))
+        setLeadershipMembers(members)
+      })
   }, [groupId])
 
   useEffect(() => {

@@ -143,13 +143,14 @@ export default function AdminPage() {
     supabase.rpc('get_invite_code').then(({ data }) => { if (mounted) setInviteCode(data ?? null) })
     supabase
       .from('profiles')
-      .select('user_id, display_name, role, coordinator_role, avatar_icon, avatar_color, avatar_image_url')
+      .select('user_id, display_name, role, avatar_icon, avatar_color, avatar_image_url, group_memberships!inner(coordinator_role)')
       .eq('community_group_id', groupId)
+      .eq('group_memberships.community_group_id', groupId)
       .order('display_name')
       .then(({ data }) => {
         if (!mounted) return
-        const sorted = sortMembers(data ?? [])
-        setMembers(sorted)
+        const flat = (data ?? []).map(m => ({ ...m, coordinator_role: m.group_memberships?.[0]?.coordinator_role ?? null }))
+        setMembers(sortMembers(flat))
       })
 
     const channel = supabase
@@ -225,9 +226,10 @@ export default function AdminPage() {
     const trimmed = roleText.trim()
     closeMemberSheet()
     setSavingCoordinator(true)
-    const { error } = await supabase.from('profiles')
+    const { error } = await supabase.from('group_memberships')
       .update({ coordinator_role: trimmed || null })
       .eq('user_id', targetId)
+      .eq('community_group_id', groupId)
     if (error) {
       toast('Failed to save title', 'error')
     } else {
