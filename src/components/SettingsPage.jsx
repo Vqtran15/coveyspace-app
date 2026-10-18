@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, animate as fmAnimate } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, CaretDown, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, UserCircle, Question, IdentificationBadge } from '@phosphor-icons/react'
+import { GearSix, SignOut, ShieldCheck, Church, Bell, BellSlash, PencilSimple, Lock, Eye, EyeSlash, EnvelopeSimple, CaretRight, ArrowLeft, Cake, UsersThree, Plus, Sparkle, Warning, Question } from '@phosphor-icons/react'
 import CreateGroupFlow from './CreateGroupFlow.jsx'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -150,13 +150,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [pwSaving, setPwSaving] = useState(false)
   const [pwError, setPwError] = useState(null)
 
-  const [groupsOpen, setGroupsOpen] = useState(true)
-  const [leadershipOpen, setLeadershipOpen] = useState(true)
   const [leadershipMembers, setLeadershipMembers] = useState([])
-  const [prefsOpen, setPrefsOpen] = useState(false)
-  const [adminSectionOpen, setAdminSectionOpen] = useState(false)
-  const [accountOpen, setAccountOpen] = useState(false)
-  const [newGroupOpen, setNewGroupOpen] = useState(false)
 
   // Group switcher
   const [switchingGroupId, setSwitchingGroupId] = useState(null)
@@ -166,7 +160,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   const [joinGroupError, setJoinGroupError] = useState(null)
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
 
-async function handleSwitchGroup(targetGroupId) {
+  async function handleSwitchGroup(targetGroupId) {
     setSwitchingGroupId(targetGroupId)
     // Pre-set the welcome cookie so WelcomeSplash doesn't fire after switching —
     // GroupWelcomeBack already handles the greeting for existing-member group switches.
@@ -209,7 +203,7 @@ async function handleSwitchGroup(targetGroupId) {
     setJoinGroupLoading(false)
   }
 
-useEffect(() => {
+  useEffect(() => {
     if (!groupId) return
     supabase.from('group_memberships')
       .select('user_id, role, coordinator_role')
@@ -316,6 +310,7 @@ useEffect(() => {
 
   const cancelCls = 'flex-1 py-3 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors'
   const saveCls = 'flex-1 py-3 text-sm font-medium text-white bg-ember rounded-xl hover:bg-ember-700 transition-colors disabled:opacity-40'
+  const sectionLabelCls = 'text-xs font-semibold uppercase tracking-wide text-stone-500 px-1 mb-1.5'
 
   return (
     <>
@@ -338,11 +333,11 @@ useEffect(() => {
       {/* Desktop two-column / mobile single-column */}
       <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
-      {/* ── Left column: identity ── */}
+      {/* ── Left column ── */}
       <div>
 
       {/* Profile identity card */}
-      <div className="mb-4">
+      <div className="mb-6">
         <div className="bg-white border border-stone-100 rounded-2xl shadow p-4 flex items-center gap-4">
           <div className="relative shrink-0">
             <AvatarCircle icon={avatarIcon} name={displayName} userId={userId} colorKey={avatarColorKey} size="lg" imageUrl={avatarImageUrl} />
@@ -401,400 +396,257 @@ useEffect(() => {
       <InstallBanner />
 
       {/* My Groups */}
-      <div className="mb-4">
+      <p className={sectionLabelCls}>My Groups</p>
+      <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden mb-6">
+        {allMemberships.map((m) => {
+          const isActive = m.community_group_id === groupId
+          const isSwitching = switchingGroupId === m.community_group_id
+          return (
+            <button
+              key={m.community_group_id}
+              onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
+              disabled={isActive || !!switchingGroupId}
+              className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm border-b border-stone-100 transition-colors ${
+                isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'
+              }`}
+            >
+              <UsersThree
+                size={16}
+                weight={isActive ? 'fill' : 'regular'}
+                className={`shrink-0 ${isActive ? 'text-ember' : 'text-stone-400'}`}
+              />
+              <span className={`flex-1 text-left font-medium ${isActive ? 'text-ember' : 'text-stone-700'}`}>
+                {m.community_groups?.name ?? 'Group'}
+              </span>
+              {isActive && (
+                <span className="text-[10px] font-semibold text-ember uppercase tracking-wide shrink-0">Active</span>
+              )}
+              {!isActive && m.role === 'admin' && !isSwitching && (
+                <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide shrink-0">Admin</span>
+              )}
+              {isSwitching && (
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-stone-400 border-t-transparent animate-spin shrink-0" />
+              )}
+              {!isActive && !isSwitching && (
+                <CaretRight size={14} className="text-stone-300 shrink-0" />
+              )}
+            </button>
+          )
+        })}
+
+        {/* Create group */}
         <button
-          onClick={() => setGroupsOpen(v => !v)}
-          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
-          aria-expanded={groupsOpen}
+          onClick={() => setCreateGroupOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
         >
-          <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-            <UsersThree size={16} weight="fill" className="text-stone-500" />
+          <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+            <Sparkle size={15} weight="fill" className="text-ember" />
           </div>
-          <span className="flex-1 text-left text-sm font-medium text-stone-800">My Groups</span>
-          <CaretDown
-            size={15}
-            weight="bold"
-            className={`text-stone-400 transition-transform duration-200 ${groupsOpen ? 'rotate-180' : ''}`}
-          />
+          <span className="flex-1 text-left font-medium text-stone-700">Create a new group</span>
+          <CaretRight size={14} className="text-stone-300 shrink-0" />
         </button>
-        <div
-          className="grid"
-          style={{ gridTemplateRows: groupsOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
-        >
-          <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-                {allMemberships.map((m, idx) => {
-                  const isActive = m.community_group_id === groupId
-                  const isSwitching = switchingGroupId === m.community_group_id
-                  const isLast = idx === allMemberships.length - 1
-                  return (
-                    <button
-                      key={m.community_group_id}
-                      onClick={() => !isActive && handleSwitchGroup(m.community_group_id)}
-                      disabled={isActive || !!switchingGroupId}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm transition-colors ${
-                        isLast ? '' : 'border-b border-stone-100'
-                      } ${isActive ? 'bg-ember/5' : 'hover:bg-stone-50 disabled:opacity-60'}`}
-                    >
-                      <UsersThree
-                        size={16}
-                        weight={isActive ? 'fill' : 'regular'}
-                        className={`shrink-0 ${isActive ? 'text-ember' : 'text-stone-400'}`}
-                      />
-                      <span className={`flex-1 text-left font-medium ${isActive ? 'text-ember' : 'text-stone-700'}`}>
-                        {m.community_groups?.name ?? 'Group'}
-                      </span>
-                      {isActive && (
-                        <span className="text-[10px] font-semibold text-ember uppercase tracking-wide shrink-0">Active</span>
-                      )}
-                      {!isActive && m.role === 'admin' && !isSwitching && (
-                        <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide shrink-0">Admin</span>
-                      )}
-                      {isSwitching && (
-                        <span className="w-3.5 h-3.5 rounded-full border-2 border-stone-400 border-t-transparent animate-spin shrink-0" />
-                      )}
-                      {!isActive && !isSwitching && (
-                        <CaretRight size={14} className="text-stone-300 shrink-0" />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Leadership */}
-      {leadershipMembers.length > 0 && (
-        <div className="mb-4">
-          <button
-            onClick={() => setLeadershipOpen(v => !v)}
-            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
-            aria-expanded={leadershipOpen}
-          >
-            <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-              <IdentificationBadge size={16} weight="fill" className="text-ember" />
-            </div>
-            <span className="flex-1 text-left text-sm font-medium text-stone-800">Group Leadership</span>
-            <CaretDown
-              size={15}
-              weight="bold"
-              className={`text-stone-400 transition-transform duration-200 ${leadershipOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          <div
-            className="grid"
-            style={{ gridTemplateRows: leadershipOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
-          >
-            <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-                {leadershipMembers.map((m, idx) => (
-                  <div
-                    key={m.user_id}
-                    className={`flex items-center gap-3 px-4 py-3.5 ${idx < leadershipMembers.length - 1 ? 'border-b border-stone-100' : ''}`}
-                  >
-                    <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-800 truncate">{m.display_name}</p>
-                      <p className="text-xs text-stone-500">{m.coordinator_role}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Group */}
-      <div className="mb-4">
+        {/* Join group */}
         <button
-          onClick={() => setNewGroupOpen(v => !v)}
-          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
-          aria-expanded={newGroupOpen}
+          onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
         >
           <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
             <Plus size={15} weight="bold" className="text-stone-500" />
           </div>
-          <span className="flex-1 text-left text-sm font-medium text-stone-800">Join or Start a Group</span>
-          <CaretDown
-            size={15}
-            weight="bold"
-            className={`text-stone-400 transition-transform duration-200 ${newGroupOpen ? 'rotate-180' : ''}`}
+          <span className="flex-1 text-left font-medium text-stone-700">Join another group</span>
+          <CaretRight
+            size={14}
+            className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
           />
         </button>
+
+        {/* Expandable join form */}
         <div
           className="grid"
-          style={{ gridTemplateRows: newGroupOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+          style={{ gridTemplateRows: joinGroupExpanded ? '1fr' : '0fr', transition: 'grid-template-rows 180ms cubic-bezier(0.4,0,0.2,1)' }}
         >
           <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-                <button
-                  onClick={() => setCreateGroupOpen(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors border-b border-stone-100"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                    <Sparkle size={15} weight="fill" className="text-ember" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-stone-800">Create a new group</p>
-                    <p className="text-xs text-stone-400">Start a group and invite members</p>
-                  </div>
-                  <CaretRight size={14} className="text-stone-300 shrink-0" />
-                </button>
-
-                <button
-                  onClick={() => { setJoinGroupExpanded(e => !e); setJoinGroupError(null) }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-                    <Plus size={15} weight="bold" className="text-stone-500" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-stone-800">Join another group</p>
-                    <p className="text-xs text-stone-400">Enter an invite code to join</p>
-                  </div>
-                  <CaretRight
-                    size={14}
-                    className={`text-stone-300 shrink-0 transition-transform duration-200 ${joinGroupExpanded ? 'rotate-90' : ''}`}
-                  />
-                </button>
-
-                <div
-                  className="grid"
-                  style={{ gridTemplateRows: joinGroupExpanded ? '1fr' : '0fr', transition: 'grid-template-rows 180ms cubic-bezier(0.4,0,0.2,1)' }}
-                >
-                  <div className="overflow-hidden min-h-0">
-                      <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
-                        <input
-                          type="text"
-                          value={joinGroupCode}
-                          onChange={e => {
-                            setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
-                            setJoinGroupError(null)
-                          }}
-                          placeholder="Invite code (e.g. A3B7C2)"
-                          className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                        />
-                        {joinGroupError && (
-                          <p className="text-xs text-red-500">{joinGroupError}</p>
-                        )}
-                        <button
-                          onClick={handleJoinGroup}
-                          disabled={joinGroupCode.length < 6 || joinGroupLoading}
-                          className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
-                        >
-                          {joinGroupLoading ? 'Joining…' : 'Join Group'}
-                        </button>
-                      </div>
-                  </div>
-                </div>
-              </div>
+            <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100">
+              <input
+                type="text"
+                value={joinGroupCode}
+                onChange={e => {
+                  setJoinGroupCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))
+                  setJoinGroupError(null)
+                }}
+                placeholder="Invite code (e.g. A3B7C2)"
+                className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest text-center text-stone-800 placeholder:font-sans placeholder:tracking-normal placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              />
+              {joinGroupError && (
+                <p className="text-xs text-red-500">{joinGroupError}</p>
+              )}
+              <button
+                onClick={handleJoinGroup}
+                disabled={joinGroupCode.length < 6 || joinGroupLoading}
+                className="w-full py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember-700 transition-colors disabled:opacity-40"
+              >
+                {joinGroupLoading ? 'Joining…' : 'Join Group'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Group Leadership */}
+      {leadershipMembers.length > 0 && (
+        <>
+          <p className={sectionLabelCls}>Group Leadership</p>
+          <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden mb-6">
+            {leadershipMembers.map((m, idx) => (
+              <div
+                key={m.user_id}
+                className={`flex items-center gap-3 px-4 py-3.5 ${idx < leadershipMembers.length - 1 ? 'border-b border-stone-100' : ''}`}
+              >
+                <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-stone-800 truncate">{m.display_name}</p>
+                  <p className="text-xs text-stone-500">{m.coordinator_role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       </div>{/* end left column */}
 
-      {/* ── Right column: settings ── */}
+      {/* ── Right column ── */}
       <div>
 
       {/* Preferences */}
       {push.supported && (
-        <div className="mb-4">
-          <button
-            onClick={() => setPrefsOpen(v => !v)}
-            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
-            aria-expanded={prefsOpen}
-          >
-            <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-              <Bell size={16} weight="fill" className="text-stone-500" />
-            </div>
-            <span className="flex-1 text-left text-sm font-medium text-stone-800">Notifications</span>
-            <CaretDown
-              size={15}
-              weight="bold"
-              className={`text-stone-400 transition-transform duration-200 ${prefsOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          <div
-            className="grid"
-            style={{ gridTemplateRows: prefsOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
-          >
-            <div className="overflow-hidden min-h-0">
-                <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-                  {push.permission === 'denied' ? (
-                    <p className="text-xs text-stone-500 px-4 py-3.5">
-                      Notifications are blocked. Enable them in your browser settings.
-                    </p>
-                  ) : (
-                    <button
-                      onClick={push.toggle}
-                      disabled={push.toggling}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
-                    >
-                      {push.subscribed
-                        ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
-                        : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
-                      }
-                      <span className="flex-1 text-left font-medium">
-                        {push.toggling ? 'Updating…' : push.subscribed ? 'Chat notifications on' : 'Chat notifications off'}
-                      </span>
-                    </button>
-                  )}
-                </div>
-            </div>
+        <>
+          <p className={sectionLabelCls}>Preferences</p>
+          <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden mb-6">
+            {push.permission === 'denied' ? (
+              <p className="text-xs text-stone-500 px-4 py-3.5">
+                Notifications are blocked. Enable them in your browser settings.
+              </p>
+            ) : (
+              <button
+                onClick={push.toggle}
+                disabled={push.toggling}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:text-stone-900 transition-colors disabled:opacity-40"
+              >
+                {push.subscribed
+                  ? <Bell size={18} weight="fill" className="text-ember shrink-0" />
+                  : <BellSlash size={18} weight="fill" className="text-stone-400 shrink-0" />
+                }
+                <span className="flex-1 text-left font-medium">
+                  {push.toggling ? 'Updating…' : push.subscribed ? 'Chat notifications on' : 'Chat notifications off'}
+                </span>
+              </button>
+            )}
           </div>
-        </div>
+        </>
       )}
 
       {/* Administration — church admins / group admins */}
       {(isChurchAdmin || isAdmin) && (
-        <div className="mb-4">
-          <button
-            onClick={() => setAdminSectionOpen(v => !v)}
-            className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
-            aria-expanded={adminSectionOpen}
-          >
-            <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-              <ShieldCheck size={17} weight="fill" className="text-ember" />
-            </div>
-            <span className="flex-1 text-left text-sm font-medium text-stone-800">Administration</span>
-            <CaretDown
-              size={15}
-              weight="bold"
-              className={`text-stone-400 transition-transform duration-200 ${adminSectionOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          <div
-            className="grid"
-            style={{ gridTemplateRows: adminSectionOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
-          >
-            <div className="overflow-hidden min-h-0">
-                <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-                  {isChurchAdmin && (
-                    <>
-                    <button
-                      onClick={() => navigate('/church-settings')}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all border-b border-stone-100"
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-                        <Church size={18} weight="fill" className="text-ember" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-stone-800">Church Settings</p>
-                        <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
-                      </div>
-                      <CaretRight size={14} className="text-stone-300" />
-                    </button>
-                    <button
-                      onClick={() => navigate('/church-analytics')}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-                        <UsersThree size={18} weight="fill" className="text-stone-500" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-stone-800">Church Analytics</p>
-                        <p className="text-xs text-stone-400">Groups & member counts</p>
-                      </div>
-                      <CaretRight size={14} className="text-stone-300" />
-                    </button>
-                    </>
-                  )}
-                  {isAdmin && (
-                    <button
-                      onClick={() => navigate('/admin')}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all"
-                    >
-                      <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
-                        <ShieldCheck size={18} weight="fill" className="text-stone-500" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-semibold text-stone-800">Group Settings</p>
-                        <p className="text-xs text-stone-400">Members, features &amp; schedules</p>
-                      </div>
-                      <CaretRight size={14} className="text-stone-300" />
-                    </button>
-                  )}
+        <>
+          <p className={sectionLabelCls}>Administration</p>
+          <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden mb-6">
+            {isChurchAdmin && (
+              <>
+                <button
+                  onClick={() => navigate('/church-settings')}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all border-b border-stone-100"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+                    <Church size={18} weight="fill" className="text-ember" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-stone-800">Church Settings</p>
+                    <p className="text-xs text-stone-400">{churchName ?? 'Broadcasts & Planning Center'}</p>
+                  </div>
+                  <CaretRight size={14} className="text-stone-300" />
+                </button>
+                <button
+                  onClick={() => navigate('/church-analytics')}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all ${isAdmin ? 'border-b border-stone-100' : ''}`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                    <UsersThree size={18} weight="fill" className="text-stone-500" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-stone-800">Church Analytics</p>
+                    <p className="text-xs text-stone-400">Groups & member counts</p>
+                  </div>
+                  <CaretRight size={14} className="text-stone-300" />
+                </button>
+              </>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:scale-[0.98] transition-all"
+              >
+                <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={18} weight="fill" className="text-stone-500" />
                 </div>
-            </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-semibold text-stone-800">Group Settings</p>
+                  <p className="text-xs text-stone-400">Members, features &amp; schedules</p>
+                </div>
+                <CaretRight size={14} className="text-stone-300" />
+              </button>
+            )}
           </div>
-        </div>
+        </>
       )}
 
       {/* Account */}
-      <div className="mb-4">
+      <p className={sectionLabelCls}>Account</p>
+      <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden mb-6">
         <button
-          onClick={() => setAccountOpen(v => !v)}
-          className="w-full flex items-center gap-3 bg-white border border-stone-100 rounded-2xl shadow px-4 py-3 mb-2"
-          aria-expanded={accountOpen}
+          onClick={() => openSettingsSheet('password')}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
         >
-          <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-            <UserCircle size={17} weight="fill" className="text-ember" />
-          </div>
-          <span className="flex-1 text-left text-sm font-medium text-stone-800">Account</span>
-          <CaretDown
-            size={15}
-            weight="bold"
-            className={`text-stone-400 transition-transform duration-200 ${accountOpen ? 'rotate-180' : ''}`}
-          />
+          <Lock size={16} weight="bold" className="text-stone-400 shrink-0" />
+          <span className="flex-1 text-left">Change password</span>
+          <CaretRight size={14} className="text-stone-300 shrink-0" />
         </button>
-        <div
-          className="grid"
-          style={{ gridTemplateRows: accountOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
-        >
-          <div className="overflow-hidden min-h-0">
-              <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
-                <button
-                  onClick={() => openSettingsSheet('password')}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
-                >
-                  <Lock size={16} weight="bold" className="text-stone-400 shrink-0" />
-                  <span className="flex-1 text-left">Change password</span>
-                  <CaretRight size={14} className="text-stone-300 shrink-0" />
-                </button>
 
-                {onRevisitGuide && (
-                  <button
-                    onClick={onRevisitGuide}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
-                  >
-                    <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
-                    <span className="flex-1 text-left">Revisit setup guide</span>
-                    <CaretRight size={14} className="text-stone-300 shrink-0" />
-                  </button>
-                )}
+        {onRevisitGuide && (
+          <button
+            onClick={onRevisitGuide}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
+          >
+            <GearSix size={16} weight="bold" className="text-stone-400 shrink-0" />
+            <span className="flex-1 text-left">Revisit setup guide</span>
+            <CaretRight size={14} className="text-stone-300 shrink-0" />
+          </button>
+        )}
 
-                <button
-                  onClick={() => supabase.auth.signOut()}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors border-b border-stone-100"
-                >
-                  <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
-                  <span className="flex-1 text-left">Sign out</span>
-                </button>
-
-                <button
-                  onClick={() => navigate('/danger-zone')}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
-                >
-                  <Warning size={16} weight="fill" className="text-red-400 shrink-0" />
-                  <span className="flex-1 text-left text-stone-500">Danger Zone</span>
-                  <CaretRight size={14} className="text-stone-300 shrink-0" />
-                </button>
-              </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Help */}
-      <div className="bg-white border border-stone-100 rounded-2xl shadow overflow-hidden mb-4">
         <button
           onClick={() => navigate('/help')}
-          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-b border-stone-100"
         >
           <Question size={16} weight="bold" className="text-stone-400 shrink-0" />
           <span className="flex-1 text-left">Help & FAQ</span>
+          <CaretRight size={14} className="text-stone-300 shrink-0" />
+        </button>
+
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-stone-500 hover:bg-stone-50 transition-colors border-b border-stone-100"
+        >
+          <SignOut size={16} weight="bold" className="text-stone-400 shrink-0" />
+          <span className="flex-1 text-left">Sign out</span>
+        </button>
+
+        <button
+          onClick={() => navigate('/danger-zone')}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-sm hover:bg-stone-50 transition-colors"
+        >
+          <Warning size={16} weight="fill" className="text-red-400 shrink-0" />
+          <span className="flex-1 text-left text-stone-500">Danger Zone</span>
           <CaretRight size={14} className="text-stone-300 shrink-0" />
         </button>
       </div>
@@ -933,7 +785,6 @@ useEffect(() => {
         </>
       )}
     </AnimatePresence>
-
 
     {createGroupOpen && (
       <CreateGroupFlow
