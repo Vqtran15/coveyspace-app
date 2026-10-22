@@ -1806,7 +1806,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             animate={{ x: '0%' }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
-            className="fixed inset-0 lg:left-56 z-[20] bg-sunrise-50 flex flex-col"
+            className="fixed inset-0 lg:left-56 z-50 bg-sunrise-50 flex flex-col"
             style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Sticky header */}
