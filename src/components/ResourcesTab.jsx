@@ -403,9 +403,9 @@ function AddEditSheet({ initial, onSave, onClose }) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
         <div className="px-5 pt-4 pb-5 space-y-4 overflow-y-auto" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}>
@@ -549,7 +549,7 @@ function BookButton({ book, onSelect }) {
       className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white border border-stone-100 hover:border-ember/30 hover:bg-ember/5 transition-colors active:scale-95 text-left w-full"
     >
       <span className="text-sm font-medium text-stone-700 truncate pr-2">{book.name}</span>
-      <span className="text-xs text-stone-500 shrink-0">{book.chapters}</span>
+      <span className="text-xs text-stone-500 shrink-0">{book.chapters} ch</span>
     </button>
   )
 }
@@ -723,6 +723,9 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
   )
 }
 
+// Static map so Tailwind JIT can see all classes at build time (dynamic text-${x} would be purged)
+const VERSE_SIZE_CLS = { sm: 'text-sm', base: 'text-base', lg: 'text-lg', xl: 'text-xl' }
+
 // ─── Page-turn animation variants ────────────────────────────────────────
 const pageVariants = {
   enter: (dir) => ({
@@ -799,8 +802,14 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const closeBroadcastTimer = useRef(null)
 
   function openBroadcast(conv) {
+    const now = new Date().toISOString()
     setChurchBroadcastConv(conv)
-    setChurchLastRead(prev => ({ ...prev, [conv.id]: new Date().toISOString() }))
+    setChurchLastRead(prev => ({ ...prev, [conv.id]: now }))
+    supabase.from('church_conversation_members')
+      .update({ last_read_at: now })
+      .eq('user_id', userId)
+      .eq('conversation_id', conv.id)
+      .then(({ error }) => { if (error) console.error('[ResourcesTab] read-state save error:', error.message) })
   }
   function closeBroadcast() {
     setChurchBroadcastClosing(true)
@@ -973,6 +982,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   // ── Cleanup timers ─────────────────────────────────────────────────────
   useEffect(() => () => {
     clearTimeout(saveTimerRef.current)
+    clearTimeout(closeBroadcastTimer.current)
+    clearTimeout(openReaderTimer.current)
   }, [])
 
   // ── Scroll to top when Add/Edit sheet closes ───────────────────────────
@@ -1111,6 +1122,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   function handleDeletePassage(index) {
     const next = userPassages.filter((_, i) => i !== index)
     setUserPassages(next)
+    if (next.length === 0) setEditMode(false)
     clearTimeout(saveTimerRef.current)
     persistPassages(next)
   }
@@ -1167,6 +1179,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   }
 
   function handleBack() {
+    openIdRef.current++
     setViewMode('home')
     setQuery('')
     setSearchError(null)
@@ -1300,7 +1313,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
       {/* ── Church broadcast overlay (slides over the hub) ───────────────── */}
       {churchBroadcastConv && (
-        <div className={`fixed inset-0 lg:left-56 z-20 ${churchBroadcastClosing ? 'animate-slide-out-right' : ''}`}>
+        <div className={`fixed inset-0 lg:left-56 z-20 ${churchBroadcastClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}>
           <ChurchBroadcastView
             conversation={churchBroadcastConv}
             onBack={closeBroadcast}
@@ -1470,7 +1483,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       <BookOpen size={22} weight="fill" className="text-ember" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500 mb-0.5">BSB</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-0.5">BSB</p>
                       <p className="text-base font-semibold text-stone-800 truncate">
                         {lastChapterLabel ? `Continue in ${lastChapterLabel}` : 'Read the Bible'}
                       </p>
@@ -1595,7 +1608,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
           {query && (
             <button
               onClick={() => { setQuery(''); setViewMode('home'); setOpenChapter(null); setSearchError(null) }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              aria-label="Clear search"
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-stone-400 hover:text-stone-600"
             >
               <X size={16} />
             </button>
@@ -1688,7 +1702,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-3 py-8 text-center"
             >
-              <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center">
                 <PenNib size={22} className="text-stone-400" />
               </div>
               <div>
@@ -1843,7 +1857,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setShowChapterMenu(true)}
                     aria-label="Save or select"
-                    className={['w-9 h-9 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-ember' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
+                    className={['w-10 h-10 flex items-center justify-center rounded-full transition-colors', isAlreadySaved ? 'text-ember' : 'text-stone-400 hover:text-ember hover:bg-stone-100'].join(' ')}
                   >
                     <Bookmark size={18} weight={isAlreadySaved ? 'fill' : 'regular'} />
                   </motion.button>
@@ -1853,7 +1867,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       onClick={() => changeVerseSize(-1)}
                       disabled={verseSize === VERSE_SIZES[0]}
                       aria-label="Decrease font size"
-                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-base font-bold"
+                      className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-base font-bold"
                     >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">−</span></motion.button>
                     <div className="flex items-center gap-1.5">
                       {VERSE_SIZES.map(s => (
@@ -1865,7 +1879,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       onClick={() => changeVerseSize(1)}
                       disabled={verseSize === VERSE_SIZES[VERSE_SIZES.length - 1]}
                       aria-label="Increase font size"
-                      className="w-9 h-9 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-lg font-bold"
+                      className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30 text-lg font-bold"
                     >A<span className="text-[9px] -ml-0.5 -mb-1 self-end">+</span></motion.button>
                   </div>
                   <div className="flex items-center">
@@ -1874,7 +1888,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum - 1, startVerse: null, endVerse: null }, 'backward')}
                       disabled={openChapter.chapterNum <= 1}
                       aria-label="Previous chapter"
-                      className="w-9 h-9 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                      className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
                     >
                       <CaretLeft size={18} weight="bold" />
                     </motion.button>
@@ -1883,7 +1897,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                       onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum + 1, startVerse: null, endVerse: null }, 'forward')}
                       disabled={openChapter.chapterNum >= maxChapters}
                       aria-label="Next chapter"
-                      className="w-9 h-9 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
+                      className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors disabled:opacity-30"
                     >
                       <CaretRight size={18} weight="bold" />
                     </motion.button>
@@ -1976,6 +1990,10 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                               transition={{ delay: Math.min(idx * 0.018, 0.28), duration: 0.18 }}
                               whileTap={{ scale: 0.99 }}
                               onClick={selectMode ? () => handleVerseTap(v) : undefined}
+                              role={selectMode ? 'button' : undefined}
+                              tabIndex={selectMode ? 0 : undefined}
+                              onKeyDown={selectMode ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleVerseTap(v) } } : undefined}
+                              aria-pressed={selectMode ? (selectionRange !== null && v.number >= selectionRange.start && v.number <= selectionRange.end) : undefined}
                               className={[
                                 'group flex gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
                                 isHighlighted ? 'bg-ember/10 hover:bg-ember/15' : 'hover:bg-stone-50',
@@ -1984,7 +2002,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                               <span className="font-bold text-ember text-xs pt-0.5 w-5 shrink-0 text-right select-none">
                                 {v.number}
                               </span>
-                              <span className={`text-${verseSize} leading-relaxed text-stone-700`}>{v.text}</span>
+                              <span className={`${VERSE_SIZE_CLS[verseSize]} leading-relaxed text-stone-700`}>{v.text}</span>
                               {selectMode && (
                                 <div className={['w-3.5 h-3.5 rounded-sm border-2 shrink-0 mt-1 self-start transition-colors', isHighlighted ? 'bg-ember border-ember' : 'border-stone-300'].join(' ')} />
                               )}
@@ -2141,7 +2159,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               className="bg-white rounded-t-3xl lg:rounded-2xl lg:w-[480px] lg:max-w-full lg:shadow-xl"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-center pt-3 pb-1 lg:hidden">
