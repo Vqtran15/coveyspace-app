@@ -2007,19 +2007,19 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.15 }}
-                  className="px-4 pt-3 pb-4 shrink-0 bg-white border-t border-stone-100"
+                  className="px-4 pb-4 pt-2 shrink-0"
                 >
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 bg-white/85 backdrop-blur-sm rounded-2xl shadow-lg border border-stone-100 p-2">
                     <button
                       onClick={handleCopySelection}
-                      className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-700 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors"
+                      className="flex-1 py-2.5 rounded-xl border border-stone-200 text-stone-700 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors"
                     >
                       <Copy size={16} />
                       Copy
                     </button>
                     <button
                       onClick={handleSaveSelection}
-                      className="flex-1 py-3 rounded-xl bg-ember text-white text-sm font-semibold flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 rounded-xl bg-ember text-white text-sm font-semibold flex items-center justify-center gap-2"
                     >
                       <Bookmark size={16} weight="fill" />
                       Save {selectionRange.start}{selectionRange.start !== selectionRange.end ? `–${selectionRange.end}` : ''}
