@@ -842,6 +842,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   const cardRefs = useRef([])
   const gridRef = useRef(null)
   const highlightRef = useRef(null)
+  const scrollContainerRef = useRef(null)
   const fetchedPreviewsRef = useRef(new Set())
 
   // ── Load user passages ─────────────────────────────────────────────────
@@ -1020,6 +1021,24 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
       }, 120)
     }
   }, [openChapter, chapterLoading, viewMode])
+
+  // ── Restore saved scroll position when returning to a full chapter ─────────
+  useEffect(() => {
+    if (viewMode !== 'chapter' || chapterLoading || !openChapter || !userId) return
+    if (openChapter.startVerse != null) return // highlight scroll handles verse ranges
+    const key = `bible_scroll_${userId}_${openChapter.bookId}_${openChapter.chapterNum}`
+    let t
+    try {
+      const saved = localStorage.getItem(key)
+      if (saved) {
+        // wait for the spring page-turn animation to settle before restoring
+        t = setTimeout(() => {
+          scrollContainerRef.current?.scrollTo({ top: parseInt(saved, 10), behavior: 'instant' })
+        }, 350)
+      }
+    } catch {}
+    return () => clearTimeout(t)
+  }, [openChapter?.bookId, openChapter?.chapterNum, chapterLoading, viewMode, userId])
 
   // ── Grid drag-and-drop (pointer events + fixed ghost card) ──────────────────
   function handleDndStart(idx, e) {
@@ -1949,6 +1968,12 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   exit="exit"
                   transition={{ type: 'spring', stiffness: 350, damping: 36, mass: 0.8 }}
                   className="absolute inset-0 overflow-y-auto pt-4 pb-24 lg:pb-8"
+                  ref={scrollContainerRef}
+                  onScroll={e => {
+                    if (!userId || !openChapter || openChapter.startVerse != null) return
+                    const key = `bible_scroll_${userId}_${openChapter.bookId}_${openChapter.chapterNum}`
+                    try { localStorage.setItem(key, String(Math.round(e.currentTarget.scrollTop))) } catch {}
+                  }}
                 >
                   <div className="max-w-3xl mx-auto px-4">
                   {/* Error */}
@@ -1967,7 +1992,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                   {/* Verse count + list */}
                   {openChapter && !chapterError && (
                     <>
-                      <p className="text-xs text-stone-500 font-medium mb-3">
+                      <p className="text-xs text-stone-500 font-medium mb-2">
                         {openChapter.verses.length} {openChapter.verses.length === 1 ? 'verse' : 'verses'}
                         {openChapter.startVerse != null && (
                           <span>
@@ -1979,6 +2004,17 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
                           </span>
                         )}
                       </p>
+
+                      {/* Read full chapter pill — shown when viewing a verse range */}
+                      {openChapter.startVerse != null && (
+                        <button
+                          onClick={() => openPassage({ bookId: openChapter.bookId, chapter: openChapter.chapterNum, startVerse: null, endVerse: null })}
+                          className="mb-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-ember/30 text-xs font-medium text-ember hover:bg-ember/5 transition-colors"
+                        >
+                          <Books size={12} />
+                          Read full chapter
+                        </button>
+                      )}
 
                       {/* Verse list */}
                       <div className="space-y-1.5">
