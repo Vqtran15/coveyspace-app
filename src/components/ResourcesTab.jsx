@@ -574,7 +574,7 @@ function BibleBrowser({ onSelectChapter, onClose, initialBook = null }) {
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
       onAnimationComplete={() => setBooksReady(true)}
-      className="fixed inset-0 lg:left-56 z-[20] bg-sunrise-50 flex flex-col"
+      className="fixed inset-0 lg:left-56 z-50 bg-sunrise-50 flex flex-col"
       style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
         {/* Header */}
@@ -1098,10 +1098,13 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   }
 
   // ── Recent chapters ────────────────────────────────────────────────────
-  function updateRecentChapters(bookId, chapterNum, bookName) {
-    const item = { bookId, chapterNum, label: `${bookName} ${chapterNum}` }
+  function updateRecentChapters(bookId, chapterNum, bookName, startVerse, endVerse) {
+    const verseLabel = startVerse != null
+      ? `:${startVerse}${endVerse != null && endVerse !== startVerse ? `–${endVerse}` : ''}`
+      : ''
+    const item = { bookId, chapterNum, startVerse: startVerse ?? null, endVerse: endVerse ?? null, label: `${bookName} ${chapterNum}${verseLabel}` }
     setRecentChapters(prev => {
-      const filtered = prev.filter(r => !(r.bookId === bookId && r.chapterNum === chapterNum))
+      const filtered = prev.filter(r => !(r.bookId === bookId && r.chapterNum === chapterNum && (r.startVerse ?? null) === (startVerse ?? null)))
       const next = [item, ...filtered].slice(0, 4)
       if (userId) localStorage.setItem(`bible_recent_${userId}`, JSON.stringify(next))
       return next
@@ -1148,6 +1151,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
     haptic()
     setNavDirection(direction)
     setViewMode('chapter')
+    setSearchOpen(false)
     setChapterLoading(true)
     setChapterError(null)
     try {
@@ -1169,7 +1173,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
         verses,
         allVerses: all,
       })
-      updateRecentChapters(ref.bookId, ref.chapter, bookName)
+      updateRecentChapters(ref.bookId, ref.chapter, bookName, ref.startVerse, ref.endVerse)
     } catch {
       if (id !== openIdRef.current) return
       setChapterError('Could not load that passage. Check your connection.')
@@ -1238,6 +1242,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
   function handleVerseTap(v) {
     if (!selectMode) return
+    haptic()
     if (verseSelectAnchor === null) {
       setVerseSelectAnchor(v.number)
       setVerseSelectEnd(null)
@@ -1647,7 +1652,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               {recentChapters.map(r => (
                 <button
                   key={`${r.bookId}-${r.chapterNum}`}
-                  onClick={() => openPassage({ bookId: r.bookId, chapter: r.chapterNum, startVerse: null, endVerse: null })}
+                  onClick={() => openPassage({ bookId: r.bookId, chapter: r.chapterNum, startVerse: r.startVerse ?? null, endVerse: r.endVerse ?? null })}
                   className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-xs font-medium text-stone-700 shadow-sm hover:border-ember hover:text-ember transition-colors"
                 >
                   <ClockCounterClockwise size={12} className="text-stone-400" />
@@ -1911,7 +1916,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
             {/* Select mode hint */}
             {selectMode && (
               <p className="text-xs text-stone-500 text-center py-2 px-4 bg-stone-50 border-b border-stone-100 shrink-0">
-                Tap verses to select, then save to Quick Access
+                Tap verses to select, then copy or save to Quick Access
               </p>
             )}
 
