@@ -792,6 +792,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
   // hub state
   const [hubOpen, setHubOpen] = useState(true)
+  const hubFromLeftRef = useRef(false)
   // null = not yet fetched (show skeleton); [] = fetched but empty; [...] = real data
   const [allBroadcasts, setAllBroadcasts] = useState(null)
   const [adminBroadcasts, setAdminBroadcasts] = useState(null)
@@ -1230,6 +1231,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
   }
 
   function backToHub() {
+    hubFromLeftRef.current = true
     setHubOpen(true)
   }
 
@@ -1348,7 +1350,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
         <AnimatePresence>
           {hubOpen && (
         <motion.div
-          initial={{ x: '100%' }}
+          initial={{ x: hubFromLeftRef.current ? '-100%' : '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
