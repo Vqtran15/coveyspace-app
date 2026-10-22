@@ -1571,7 +1571,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
           <button
             onClick={() => setShowBrowser(true)}
             aria-label="Browse Bible"
-            className="w-11 h-11 flex items-center justify-center rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-ember transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
           >
             <Books size={22} />
           </button>
