@@ -792,7 +792,6 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
   // hub state
   const [hubOpen, setHubOpen] = useState(true)
-  const [hubClosing, setHubClosing] = useState(false)
   // null = not yet fetched (show skeleton); [] = fetched but empty; [...] = real data
   const [allBroadcasts, setAllBroadcasts] = useState(null)
   const [adminBroadcasts, setAdminBroadcasts] = useState(null)
@@ -1226,13 +1225,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
 
   const openReaderTimer = useRef(null)
   function openReader() {
-    setHubClosing(true)
-    clearTimeout(openReaderTimer.current)
-    openReaderTimer.current = setTimeout(() => {
-      setHubOpen(false)
-      setHubClosing(false)
-      if (lastChapterRef) openPassage(lastChapterRef)
-    }, 200)
+    setHubOpen(false)
+    if (lastChapterRef) openPassage(lastChapterRef)
   }
 
   function backToHub() {
@@ -1350,9 +1344,15 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
            animate-slide-in-right transform doesn't create a containing block
            for this fixed element (which would double-count --sat and cause a
            ~47px positional shift when the transform is removed). ───────────── */}
-      {hubOpen && createPortal(
-        <div
-          className={`fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto ${hubClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+      {createPortal(
+        <AnimatePresence>
+          {hubOpen && (
+        <motion.div
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
+          className="fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto"
           style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'calc(max(16px, var(--sab, env(safe-area-inset-bottom)) + 8px) + 68px)' }}
         >
           <main className="max-w-md lg:max-w-3xl mx-auto px-4 pt-8 pb-12">
@@ -1563,7 +1563,9 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
               </div>
             )}
           </main>
-        </div>,
+        </motion.div>
+          )}
+        </AnimatePresence>,
         document.body
       )}
 
