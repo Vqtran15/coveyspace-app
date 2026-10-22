@@ -1138,6 +1138,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving }) {
     if (!q) return
     const ref = parseRef(q)
     if (!ref) { setSearchError('Try a reference like John 3:16 or Psalm 23'); return }
+    searchInputRef.current?.blur()
     openPassage(ref)
   }
 
