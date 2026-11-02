@@ -14,7 +14,7 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 // NOTE: --dvh is no longer used for any critical layout in the PWA:
 // - Non-chat tabs use position:fixed (top:--sat, bottom:0) — immune to --dvh
 // - Chat container uses 100dvh CSS unit instead of var(--dvh)
-// - Outer wrapper minHeight uses --dvh only as a SAB probe scaffold (harmless if wrong)
+// - Outer wrapper minHeight uses 100dvh directly (immune to the spike — see App.jsx)
 // --dvh is still used for the non-PWA browser chat (html:not(.is-pwa) .chat-container).
 // We still set it on load and resize so it stays correct for that case and for
 // any future use, but we do NOT update it on visibilitychange — iOS WKWebView
