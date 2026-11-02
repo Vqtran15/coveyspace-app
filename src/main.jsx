@@ -35,9 +35,18 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   }
 
   var cached = parseInt(localStorage.getItem(CACHE_KEY) || '0', 10)
-  if (cached > 100) document.documentElement.style.setProperty('--dvh', cached + 'px')
-
-  update()
+  if (cached > 100) {
+    document.documentElement.style.setProperty('--dvh', cached + 'px')
+    // Don't call update() synchronously when a cache exists: on iOS, a SW-triggered
+    // reload during the background→foreground transition causes window.innerHeight to
+    // return the full-screen height (the known WKWebView bug), which would set --dvh
+    // too large, make the document scrollable, and force a viewport recalculation that
+    // briefly shifts the fixed-inset-0 splash screen. The cached value is accurate
+    // enough for the first frame; the double-rAF below corrects it once the viewport
+    // has settled (one frame ≈ 16ms, invisible to the user).
+  } else {
+    update()  // No cache: first-ever launch, safe to read window.innerHeight now.
+  }
   window.addEventListener('resize', update)
   requestAnimationFrame(function () { requestAnimationFrame(update) })
   // No visibilitychange listener — iOS WKWebView returns wrong window.innerHeight
