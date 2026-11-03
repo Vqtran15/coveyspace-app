@@ -103,7 +103,7 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
       if (sab > 0) {
         apply(sab)
       } else {
-        // Retry once at ~2350ms total from page load
+        // Retry once at ~2000ms total from page load
         setTimeout(function () {
           sab = measure()
           if (sab > 0) {
