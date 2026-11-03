@@ -990,28 +990,33 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       .limit(PAGE_SIZE)
     const older = (data ?? []).reverse()
     if (older.length) {
+      // Await reactions before prepending messages so estimateSize has the
+      // correct heights on the first render. React 18 batches setReactions +
+      // setMessages into one render — reactionsRef.current already reflects
+      // the new reactions when estimateSize runs, so no ResizeObserver
+      // correction fires afterward and the scroll position doesn't shift.
+      const { data: rxData } = await supabase
+        .from('reactions')
+        .select('id, message_id, emoji, user_id')
+        .in('message_id', older.map(m => m.id))
+      if (!mountedRef.current) return
+      if (rxData?.length) {
+        setReactions(prev => {
+          const next = { ...prev }
+          for (const r of rxData) {
+            if (!next[r.message_id]) next[r.message_id] = {}
+            if (!next[r.message_id][r.emoji]) next[r.message_id][r.emoji] = []
+            if (!next[r.message_id][r.emoji].some(x => x.id === r.id))
+              next[r.message_id][r.emoji] = [...next[r.message_id][r.emoji], r]
+          }
+          return next
+        })
+      }
       preserveScrollRef.current = { scrollTop: anchorScrollTop, scrollHeight: anchorScrollHeight }
       setMessages(prev => [...older, ...prev])
       fetchPollsForMessages(older)
       fetchEventsForMessages(older)
       fetchPrayerRequestsForMessages(older)
-      supabase
-        .from('reactions')
-        .select('id, message_id, emoji, user_id')
-        .in('message_id', older.map(m => m.id))
-        .then(({ data: rxData }) => {
-          if (!rxData?.length) return
-          setReactions(prev => {
-            const next = { ...prev }
-            for (const r of rxData) {
-              if (!next[r.message_id]) next[r.message_id] = {}
-              if (!next[r.message_id][r.emoji]) next[r.message_id][r.emoji] = []
-              if (!next[r.message_id][r.emoji].some(x => x.id === r.id))
-                next[r.message_id][r.emoji] = [...next[r.message_id][r.emoji], r]
-            }
-            return next
-          })
-        })
     }
     setHasMore(older.length === PAGE_SIZE)
     setLoadingMore(false)
