@@ -54,18 +54,18 @@ function highlightText(text, query) {
   )
 }
 
-function renderTextSegment(text, query, keyPrefix) {
+function renderTextSegment(text, query, keyPrefix, isOwn) {
   const MENTION_RE = /(@\w+)/g
   const segments = text.split(MENTION_RE)
   return segments.map((seg, i) => {
     if (seg.startsWith('@') && seg.length > 1) {
-      return <span key={`${keyPrefix}-m${i}`} className="font-semibold text-ember">{seg}</span>
+      return <span key={`${keyPrefix}-m${i}`} className={`font-semibold ${isOwn ? 'text-white/90' : 'text-ember'}`}>{seg}</span>
     }
     return <span key={`${keyPrefix}-t${i}`}>{query ? highlightText(seg, query) : seg}</span>
   })
 }
 
-function renderMessageBody(body, query) {
+function renderMessageBody(body, query, isOwn) {
   // eslint-disable-next-line no-useless-escape
   const URL_RE = /https?:\/\/[^\s<>'"]+[^\s<>'".,!?;:)\]']*/g
   const parts = []
@@ -76,7 +76,7 @@ function renderMessageBody(body, query) {
     last = m.index + m[0].length
   }
   if (last < body.length) parts.push({ type: 'text', value: body.slice(last) })
-  if (!parts.length) return renderTextSegment(body, query, 'b')
+  if (!parts.length) return renderTextSegment(body, query, 'b', isOwn)
   return parts.map((part, i) =>
     part.type === 'url'
       ? <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
@@ -84,12 +84,12 @@ function renderMessageBody(body, query) {
             className="underline break-all text-inherit opacity-80 active:opacity-60">
             {part.value}
           </a>
-      : renderTextSegment(part.value, query, String(i))
+      : renderTextSegment(part.value, query, String(i), isOwn)
   )
 }
 
-const MessageBody = memo(function MessageBody({ body, query }) {
-  return renderMessageBody(body, query)
+const MessageBody = memo(function MessageBody({ body, query, isOwn }) {
+  return renderMessageBody(body, query, isOwn)
 })
 
 export default function MessageList() {
@@ -863,7 +863,7 @@ export default function MessageList() {
                         </form>
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
-                          <MessageBody body={msg.body} query={searchQuery} />
+                          <MessageBody body={msg.body} query={searchQuery} isOwn={isOwn} />
                         </p>
                       )}
                       {(msg._edited || msg.edited_at) && editingMsgId !== msg.id && (

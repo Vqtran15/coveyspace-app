@@ -171,7 +171,8 @@ export default function MessageInput() {
                   role="option"
                   aria-selected="false"
                   type="button"
-                  onPointerDown={e => { e.preventDefault(); insertMention(member) }}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => insertMention(member)}
                   className="flex items-center gap-3 px-4 py-2.5 w-full text-left hover:bg-stone-50 transition-colors"
                 >
                   <div className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${member.avatar_image_url ? 'bg-stone-200' : avatarColor(member.user_id, member.avatar_color)}`}>
