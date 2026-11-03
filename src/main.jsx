@@ -92,10 +92,10 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   var cached = parseFloat(localStorage.getItem(CACHE_KEY) || '0')
   if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
 
-  // Delay the scroll probe until after the splash screen exits (~1750ms min).
+  // Delay the scroll probe until after the splash screen exits.
   // scrollTo(0,1) can trigger an iOS viewport recalculation that briefly resizes
   // the fixed-inset-0 splash container, shifting justify-center content.
-  // The cached value above handles the first render; accuracy before 2s doesn't matter.
+  // The cached value above handles the first render; accuracy before 1s doesn't matter.
   setTimeout(function () {
     window.scrollTo(0, 1)
     setTimeout(function () {
@@ -117,7 +117,7 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
         }, 350)
       }
     }, 150)
-  }, 2000)
+  }, 1000)
 
 }())
 
