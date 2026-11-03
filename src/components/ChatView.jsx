@@ -733,7 +733,12 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       } else {
         isAtBottomRef.current = true
         initialRevealScrollNeeded.current = false
-        scrollToBottom()
+        // Only re-apply if scroll drifted — prevents a redundant scrollToBottom
+        // from twitching during the opacity transition when scroll is already correct.
+        if (scrollRef.current) {
+          const d = scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight
+          if (d > 4) scrollToBottom()
+        }
         // iOS fires async scroll restoration events after the guard window lifts.
         // Watch for any restoration pull away from bottom and correct once.
         const scrollEl = scrollRef.current

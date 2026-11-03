@@ -367,7 +367,7 @@ export default function MessageList() {
               position: 'relative',
               overflow: visible ? 'visible' : 'hidden',
               opacity: visible ? 1 : 0,
-              transition: 'opacity 350ms ease',
+              transition: 'opacity 300ms ease 50ms',
             }}
           >
             {rowVirtualizer.getVirtualItems().map(virtualRow => {
