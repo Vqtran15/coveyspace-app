@@ -22,10 +22,14 @@ function ConvRow({ conv, myId, members, lastMessages, isUnread, convName, lastPr
   const deletable   = !isMainGroupChat(conv)
   return (
     <motion.div
-      className={`flex items-stretch rounded-2xl border overflow-hidden animate-fade-up ${conv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow'}`}
-      style={{ animationDelay: `${Math.min(i, 8) * 55}ms` }}
+      className={`flex items-stretch rounded-2xl border overflow-hidden ${conv.id === activeConvId ? 'bg-ember/5 border-ember/30' : 'bg-white border-stone-100 shadow'}`}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        default: { duration: 0.5, ease: 'easeOut', delay: Math.min(i, 8) * 0.055 },
+        scale: { type: 'spring', stiffness: 400, damping: 25, delay: 0 },
+      }}
       whileTap={{ scale: 0.975 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
       <button
         onClick={() => onSelect(conv)}
@@ -178,6 +182,10 @@ export default function ConversationList({ session, groupId, members, enterClass
   // One-time flags — captured at mount; do not update so they only fire once.
   const autoOpenGroupChatRef  = useRef(autoOpenGroupChat)
   const autoOpenMainChatRef   = useRef(autoOpenMainChat)
+  // Track mount time so auto-opens wait for the parent tab-slide animation (300ms)
+  // to finish before mounting ChatView. Otherwise both the outer tab container and
+  // ChatView animate in from the right simultaneously, doubling the slide distance.
+  const mountTimeRef = useRef(Date.now())
 
   const myId = session.user.id
   const loadConversations = useCallback(async () => {
@@ -204,7 +212,9 @@ export default function ConversationList({ session, groupId, members, enterClass
             localStorage.setItem(draftKey, "Hey everyone! 👋")
           }
           onAutoOpenConsumedRef.current?.()
-          onSelectRef.current(groupConv)
+          const elapsed = Date.now() - mountTimeRef.current
+          const delay = Math.max(0, 310 - elapsed)
+          setTimeout(() => onSelectRef.current(groupConv), delay)
         }
       }
 
@@ -218,7 +228,9 @@ export default function ConversationList({ session, groupId, members, enterClass
             localStorage.removeItem(draftKey)
           }
           onAutoOpenMainChatConsumedRef.current?.()
-          onSelectRef.current(mainConv)
+          const elapsed = Date.now() - mountTimeRef.current
+          const delay = Math.max(0, 310 - elapsed)
+          setTimeout(() => onSelectRef.current(mainConv), delay)
         }
       }
 

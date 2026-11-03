@@ -739,7 +739,7 @@ export default function ChurchSettingsPage() {
       setTabAnimClass(goingRight ? 'animate-slide-in-right' : 'animate-slide-in-left')
       setTabAnimKey(k => k + 1)
       setActiveTab(id)
-    }, 200)
+    }, 210)
   }
   // Which Coveyspace group to invite PCO members into
   const [selectedCoveyGroupId, setSelectedCoveyGroupId] = useState(null)

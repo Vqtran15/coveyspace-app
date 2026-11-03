@@ -164,13 +164,23 @@ export default function MessageList() {
 
   const [mapsAddress, setMapsAddress] = useState(null)
 
-  // Keep skeleton visible for 150ms after visible=true to cover any iOS async
-  // scroll restoration that would otherwise be seen during the opacity transition.
-  const [skeletonActive, setSkeletonActive] = useState(true)
+  // Skeleton overlay logic:
+  // - skeletonActive=true keeps the skeleton opaque and messages hidden.
+  //   It becomes false 150ms after reveal, starting a crossfade.
+  // - skeletonMounted tracks DOM presence. The skeleton stays mounted for
+  //   150ms + 300ms = 450ms (until its fade-out completes) so the opacity
+  //   transition runs in full rather than being cut by an instant unmount.
+  const [skeletonActive, setSkeletonActive]   = useState(true)
+  const [skeletonMounted, setSkeletonMounted] = useState(true)
   useEffect(() => {
-    if (!visible) { setSkeletonActive(true); return }
-    const t = setTimeout(() => setSkeletonActive(false), 150)
-    return () => clearTimeout(t)
+    if (!visible) {
+      setSkeletonActive(true)
+      setSkeletonMounted(true)
+      return
+    }
+    const fadeOut = setTimeout(() => setSkeletonActive(false), 150)
+    const unmount = setTimeout(() => setSkeletonMounted(false), 450)
+    return () => { clearTimeout(fadeOut); clearTimeout(unmount) }
   }, [visible])
 
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
@@ -281,12 +291,13 @@ export default function MessageList() {
     <div className="relative flex-1 min-h-0">
 
       {/* Skeleton — absolute overlay so scroll container layout is unaffected.
-          Stays visible for 150ms after reveal to cover any iOS async scroll
-          restoration that would otherwise be visible during the opacity transition. */}
-      {skeletonActive && (
+          Crossfades out (300ms) in sync with the messages fading in, starting
+          150ms after reveal to cover any iOS async scroll restoration first. */}
+      {skeletonMounted && (
         <div
           className="absolute inset-0 z-10 bg-sunrise-50 overflow-hidden pointer-events-none"
           aria-hidden="true"
+          style={{ opacity: skeletonActive ? 1 : 0, transition: 'opacity 300ms ease' }}
         >
           <div
             className="flex flex-col py-4 gap-3 px-4 max-w-3xl mx-auto w-full animate-fade-in"

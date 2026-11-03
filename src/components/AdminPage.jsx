@@ -135,7 +135,7 @@ export default function AdminPage() {
       setTabAnimClass(goingRight ? 'animate-slide-in-right' : 'animate-slide-in-left')
       setTabAnimKey(k => k + 1)
       setActiveTab(id)
-    }, 200)
+    }, 210)
   }
 
   useEffect(() => {
