@@ -1,4 +1,5 @@
-import { useMemo, useRef, useEffect, memo } from 'react'
+import { useMemo, useRef, useEffect, memo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -65,31 +66,65 @@ function renderTextSegment(text, query, keyPrefix, isOwn) {
   })
 }
 
-function renderMessageBody(body, query, isOwn) {
+// Matches common US street addresses: "123 Main St", "456 Oak Avenue, Chicago, IL 60601", etc.
+// Requires a street number + at least one word + a recognised street type suffix.
+const ADDRESS_RE = /\b\d{1,5}\s+(?:\w+\s+){0,3}(?:Street|Avenue|Boulevard|Drive|Road|Court|Lane|Way|Place|Circle|Trail|Parkway|Highway|St|Ave|Blvd|Dr|Rd|Ct|Ln|Pl|Cir|Pkwy|Hwy)\.?(?:\s+(?:Apt|Suite|Ste|Unit|#)\s*\S+)?(?:,\s*[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)?(?:,\s*[A-Z]{2})?(?:\s+\d{5}(?:-\d{4})?)?\b/g
+
+function renderMessageBody(body, query, isOwn, onAddressTap) {
   // eslint-disable-next-line no-useless-escape
   const URL_RE = /https?:\/\/[^\s<>'"]+[^\s<>'".,!?;:)\]']*/g
+
+  // Build a combined segment list: urls and addresses in order of appearance.
   const parts = []
-  let last = 0, m
-  while ((m = URL_RE.exec(body)) !== null) {
-    if (m.index > last) parts.push({ type: 'text', value: body.slice(last, m.index) })
-    parts.push({ type: 'url', value: m[0] })
-    last = m.index + m[0].length
+  let last = 0
+
+  // Collect all matches with their type.
+  const matches = []
+  let m
+  ADDRESS_RE.lastIndex = 0
+  URL_RE.lastIndex = 0
+  while ((m = URL_RE.exec(body)) !== null) matches.push({ type: 'url', index: m.index, end: m.index + m[0].length, value: m[0] })
+  while ((m = ADDRESS_RE.exec(body)) !== null) matches.push({ type: 'address', index: m.index, end: m.index + m[0].length, value: m[0] })
+  // Sort by position; if a url and address overlap, the url wins (it's already a link).
+  matches.sort((a, b) => a.index - b.index)
+
+  for (const match of matches) {
+    if (match.index < last) continue // overlapping — skip
+    if (match.index > last) parts.push({ type: 'text', value: body.slice(last, match.index) })
+    parts.push(match)
+    last = match.end
   }
   if (last < body.length) parts.push({ type: 'text', value: body.slice(last) })
   if (!parts.length) return renderTextSegment(body, query, 'b', isOwn)
-  return parts.map((part, i) =>
-    part.type === 'url'
-      ? <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
+
+  return parts.map((part, i) => {
+    if (part.type === 'url') {
+      return (
+        <a key={i} href={part.value} target="_blank" rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
             className="underline break-all text-inherit opacity-80 active:opacity-60">
-            {part.value}
-          </a>
-      : renderTextSegment(part.value, query, String(i), isOwn)
-  )
+          {part.value}
+        </a>
+      )
+    }
+    if (part.type === 'address') {
+      return (
+        <button
+          key={i}
+          type="button"
+          onClick={e => { e.stopPropagation(); onAddressTap(part.value) }}
+          className={`underline text-left active:opacity-60 ${isOwn ? 'text-white/90' : 'text-ember'}`}
+        >
+          {part.value}
+        </button>
+      )
+    }
+    return renderTextSegment(part.value, query, String(i), isOwn)
+  })
 }
 
-const MessageBody = memo(function MessageBody({ body, query, isOwn }) {
-  return renderMessageBody(body, query, isOwn)
+const MessageBody = memo(function MessageBody({ body, query, isOwn, onAddressTap }) {
+  return renderMessageBody(body, query, isOwn, onAddressTap)
 })
 
 export default function MessageList() {
@@ -125,6 +160,8 @@ export default function MessageList() {
     inputH,
     virtualizerRef,
   } = useChatContext()
+
+  const [mapsAddress, setMapsAddress] = useState(null)
 
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
 
@@ -885,7 +922,7 @@ export default function MessageList() {
                         </form>
                       ) : msg.body && (
                         <p className={`px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${editClosingId === msg.id ? 'animate-overlay-in' : ''}`}>
-                          <MessageBody body={msg.body} query={searchQuery} isOwn={isOwn} />
+                          <MessageBody body={msg.body} query={searchQuery} isOwn={isOwn} onAddressTap={setMapsAddress} />
                         </p>
                       )}
                       {(msg._edited || msg.edited_at) && editingMsgId !== msg.id && (
@@ -971,6 +1008,67 @@ export default function MessageList() {
         )}
 
       </div>
+
+      {/* Maps picker sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {mapsAddress && (
+            <>
+              <motion.div
+                key="maps-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="fixed inset-0 z-50 bg-black/40"
+                onClick={() => setMapsAddress(null)}
+              />
+              <motion.div
+                key="maps-sheet"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 380, damping: 36, mass: 0.8 }}
+                className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-xl"
+                style={{ paddingBottom: 'max(16px, var(--sab, env(safe-area-inset-bottom)))' }}
+              >
+                <div className="flex flex-col px-4 pt-4 pb-2">
+                  <p className="text-xs text-stone-400 font-medium uppercase tracking-wide mb-3">Open address in</p>
+                  <p className="text-sm font-semibold text-stone-800 mb-4 leading-snug">{mapsAddress}</p>
+                  <a
+                    href={`https://maps.apple.com/?q=${encodeURIComponent(mapsAddress)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMapsAddress(null)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-stone-50 hover:bg-stone-100 active:bg-stone-200 transition-colors mb-2"
+                  >
+                    <span className="text-xl">🗺️</span>
+                    <span className="text-sm font-semibold text-stone-800">Apple Maps</span>
+                  </a>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsAddress)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMapsAddress(null)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-stone-50 hover:bg-stone-100 active:bg-stone-200 transition-colors mb-3"
+                  >
+                    <span className="text-xl">📍</span>
+                    <span className="text-sm font-semibold text-stone-800">Google Maps</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setMapsAddress(null)}
+                    className="px-4 py-3 rounded-xl text-sm font-semibold text-stone-500 hover:bg-stone-50 active:bg-stone-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Scroll-to-bottom — always in the DOM so there is no mount/unmount flash.
           Visibility is controlled by opacity: visible=false or isAtBottom=true → hidden. */}
