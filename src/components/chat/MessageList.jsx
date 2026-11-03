@@ -284,7 +284,7 @@ export default function MessageList() {
 
         {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
         {!visible && (
-          <div className="flex flex-col py-4 gap-3">
+          <div className="flex flex-col py-4 gap-3 animate-fade-in">
             {[
               { side: 'left',  w: 'w-48' },
               { side: 'right', w: 'w-36' },
@@ -297,8 +297,7 @@ export default function MessageList() {
             ].map((item, i) => (
               <div
                 key={i}
-                className={`flex items-end gap-2 ${item.side === 'right' ? 'justify-end animate-msg-in-right' : 'justify-start animate-msg-in-left'}`}
-                style={{ animationDelay: `${i * 70}ms` }}
+                className={`flex items-end gap-2 ${item.side === 'right' ? 'justify-end' : 'justify-start'}`}
               >
                 {item.side === 'left' && (
                   <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
@@ -306,7 +305,6 @@ export default function MessageList() {
                       background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
                       backgroundSize: '200% 100%',
                       animation: `skeleton-shimmer 1.6s ease-in-out infinite`,
-                      animationDelay: `${i * 70}ms`,
                     }}
                   />
                 )}
@@ -318,20 +316,18 @@ export default function MessageList() {
                       : 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
                     backgroundSize: '200% 100%',
                     animation: `skeleton-shimmer 1.6s ease-in-out infinite`,
-                    animationDelay: `${i * 70 + 80}ms`,
                   }}
                 />
               </div>
             ))}
 
             {/* Typing indicator */}
-            <div className="flex items-end gap-2 animate-msg-in-left" style={{ animationDelay: '620ms' }}>
+            <div className="flex items-end gap-2">
               <div className="w-7 h-7 rounded-full shrink-0 mb-0.5 overflow-hidden"
                 style={{
                   background: 'linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%)',
                   backgroundSize: '200% 100%',
                   animation: 'skeleton-shimmer 1.6s ease-in-out infinite',
-                  animationDelay: '700ms',
                 }}
               />
               <div className="flex items-center gap-1 bg-stone-100 rounded-2xl rounded-bl-sm px-3.5 py-3">
@@ -371,7 +367,7 @@ export default function MessageList() {
               position: 'relative',
               overflow: visible ? 'visible' : 'hidden',
               opacity: visible ? 1 : 0,
-              transition: 'opacity 120ms ease-in',
+              transition: 'opacity 350ms ease',
             }}
           >
             {rowVirtualizer.getVirtualItems().map(virtualRow => {
