@@ -164,6 +164,15 @@ export default function MessageList() {
 
   const [mapsAddress, setMapsAddress] = useState(null)
 
+  // Keep skeleton visible for 150ms after visible=true to cover any iOS async
+  // scroll restoration that would otherwise be seen during the opacity transition.
+  const [skeletonActive, setSkeletonActive] = useState(true)
+  useEffect(() => {
+    if (!visible) { setSkeletonActive(true); return }
+    const t = setTimeout(() => setSkeletonActive(false), 150)
+    return () => clearTimeout(t)
+  }, [visible])
+
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
 
   // Keep refs to items and reactions so estimateSize can read current content
@@ -270,21 +279,19 @@ export default function MessageList() {
 
   return (
     <div className="relative flex-1 min-h-0">
-      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)`, paddingBottom: `${inputH}px` }}>
-        {loadingMore && (
-          <div className="py-1">
-            <div className="h-0.5 rounded-full bg-stone-100 overflow-hidden">
-              <div
-                className="h-full bg-ember/50 rounded-full"
-                style={{ width: '40%', animation: 'skeleton-shimmer 1.2s ease-in-out infinite', backgroundSize: '200% 100%', background: 'linear-gradient(90deg,transparent 0%,rgba(168,82,40,0.5) 50%,transparent 100%)' }}
-              />
-            </div>
-          </div>
-        )}
 
-        {/* Skeleton — shown until images are loaded and we've scrolled to bottom */}
-        {!visible && (
-          <div className="flex flex-col py-4 gap-3 animate-fade-in">
+      {/* Skeleton — absolute overlay so scroll container layout is unaffected.
+          Stays visible for 150ms after reveal to cover any iOS async scroll
+          restoration that would otherwise be visible during the opacity transition. */}
+      {skeletonActive && (
+        <div
+          className="absolute inset-0 z-10 bg-sunrise-50 overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
+          <div
+            className="flex flex-col py-4 gap-3 px-4 max-w-3xl mx-auto w-full animate-fade-in"
+            style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)`, paddingBottom: `${inputH}px` }}
+          >
             {[
               { side: 'left',  w: 'w-48' },
               { side: 'right', w: 'w-36' },
@@ -341,6 +348,19 @@ export default function MessageList() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      <div ref={scrollRef} onScroll={handleScroll} className="h-full overflow-y-auto px-4 max-w-3xl mx-auto w-full" style={{ paddingTop: `calc(env(safe-area-inset-top) + ${headerH}px)`, paddingBottom: `${inputH}px` }}>
+        {loadingMore && (
+          <div className="py-1">
+            <div className="h-0.5 rounded-full bg-stone-100 overflow-hidden">
+              <div
+                className="h-full bg-ember/50 rounded-full"
+                style={{ width: '40%', animation: 'skeleton-shimmer 1.2s ease-in-out infinite', backgroundSize: '200% 100%', background: 'linear-gradient(90deg,transparent 0%,rgba(168,82,40,0.5) 50%,transparent 100%)' }}
+              />
+            </div>
+          </div>
         )}
 
         {/* Messages — rendered hidden when contentReady so images load in background,
@@ -366,8 +386,8 @@ export default function MessageList() {
               height: visible ? rowVirtualizer.getTotalSize() : 0,
               position: 'relative',
               overflow: visible ? 'visible' : 'hidden',
-              opacity: visible ? 1 : 0,
-              transition: 'opacity 300ms ease 50ms',
+              opacity: skeletonActive ? 0 : 1,
+              transition: 'opacity 300ms ease',
             }}
           >
             {rowVirtualizer.getVirtualItems().map(virtualRow => {

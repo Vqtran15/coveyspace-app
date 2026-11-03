@@ -121,6 +121,12 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 
 }())
 
+// Disable browser scroll restoration — the app manages scroll positions itself
+// (chat scrolls to bottom on open, other views restore via React state).
+// Without this, iOS WKWebView will asynchronously override JS-set scrollTop
+// values with a previously saved position, causing the chat to visibly bounce.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+
 // Prevent iOS PWA elastic/rubber-band scroll at the document boundary.
 // overscroll-behavior-y:none is unreliable in WKWebView; touchmove
 // preventDefault is the universal fallback. Skips elements inside
