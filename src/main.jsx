@@ -95,7 +95,7 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   // Delay the scroll probe until after the splash screen exits.
   // scrollTo(0,1) can trigger an iOS viewport recalculation that briefly resizes
   // the fixed-inset-0 splash container, shifting justify-center content.
-  // The cached value above handles the first render; accuracy before 1s doesn't matter.
+  // The cached value above handles the first render; accuracy before 1.5s doesn't matter.
   setTimeout(function () {
     window.scrollTo(0, 1)
     setTimeout(function () {
@@ -117,7 +117,7 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
         }, 350)
       }
     }, 150)
-  }, 1000)
+  }, 1500)
 
 }())
 
