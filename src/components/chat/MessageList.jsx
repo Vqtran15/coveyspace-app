@@ -128,10 +128,13 @@ export default function MessageList() {
 
   const swipeRef = useRef({ startX: 0, startY: 0, el: null, iconEl: null, triggered: false, active: false })
 
-  // Keep a ref to items so estimateSize can read current content without
-  // being a dependency of useVirtualizer (which would recreate it on every render).
+  // Keep refs to items and reactions so estimateSize can read current content
+  // without being a dependency of useVirtualizer (which would recreate it on
+  // every render).
   const itemsRef = useRef(items)
   itemsRef.current = items
+  const reactionsRef = useRef(reactions)
+  reactionsRef.current = reactions
 
   const rowVirtualizer = useVirtualizer({
     count: items.length,
@@ -141,14 +144,21 @@ export default function MessageList() {
       if (!item) return 64
       if (item.type === 'date' || item.type === 'unread') return 40
       const { msg } = item
-      if (msg.image_url) return 240
-      if (msg.poll_id) return 200
-      if (msg.event_id) return 170
-      if (msg.prayer_request_id) return 110
-      const len = msg.body?.length ?? 0
-      if (len > 200) return 96
-      if (len > 80)  return 76
-      return 56
+      // Add reaction-row height when the message already has reactions so the
+      // initial estimate matches the rendered height and avoids a ResizeObserver
+      // correction on the first paint.
+      const rxMap = reactionsRef.current?.[msg.id]
+      const reactionH = rxMap && Object.keys(rxMap).length > 0 ? 36 : 0
+      let base
+      if (msg.image_url) base = 240
+      else if (msg.poll_id) base = 200
+      else if (msg.event_id) base = 170
+      else if (msg.prayer_request_id) base = 110
+      else {
+        const len = msg.body?.length ?? 0
+        base = len > 200 ? 96 : len > 80 ? 76 : 56
+      }
+      return base + reactionH
     },
     overscan: 25,
     paddingStart: 8,
@@ -823,11 +833,23 @@ export default function MessageList() {
                             src={msg.image_url}
                             alt="shared"
                             draggable={false}
-                            {...(msg.image_width && msg.image_height
-                              ? { width: msg.image_width, height: msg.image_height }
-                              : {})}
                             className="block cursor-pointer"
-                            style={{ maxWidth: '100%', maxHeight: 280, width: 'auto', height: 'auto', WebkitTouchCallout: 'none' }}
+                            style={msg.image_width && msg.image_height ? {
+                              // Pre-allocate the correct height before the image loads.
+                              // width: min() constrains to natural size on small images;
+                              // aspect-ratio lets the browser compute height from width;
+                              // max-height caps tall portraits (browser shrinks width too).
+                              width: `min(${msg.image_width}px, 100%)`,
+                              maxHeight: 280,
+                              aspectRatio: `${msg.image_width} / ${msg.image_height}`,
+                              WebkitTouchCallout: 'none',
+                            } : {
+                              maxWidth: '100%',
+                              maxHeight: 280,
+                              width: 'auto',
+                              height: 'auto',
+                              WebkitTouchCallout: 'none',
+                            }}
                             onLoad={onMessageImageLoad}
                             onContextMenu={e => e.preventDefault()}
                             onClick={e => handleImageTap(e, msg.id, isOwn, msg.image_url)}
