@@ -741,19 +741,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
         }
         // iOS fires async scroll restoration events after the guard window lifts.
         // Watch for any restoration pull away from bottom and correct once.
+        // Guard on touchstart: if the user has already touched the screen the
+        // scroll is intentional, not an iOS restoration override — skip the fix.
         const scrollEl = scrollRef.current
         if (scrollEl) {
           let watchDone = false
+          let userTouched = false
+          const onUserTouch = () => { userTouched = true }
+          scrollEl.addEventListener('touchstart', onUserTouch, { passive: true, once: true })
           const clearWatch = setTimeout(() => {
             watchDone = true
             scrollEl.removeEventListener('scroll', onRestoreScroll)
+            scrollEl.removeEventListener('touchstart', onUserTouch)
           }, 1500)
           function onRestoreScroll() {
-            if (watchDone || !mountedRef.current) return
+            if (watchDone || !mountedRef.current || userTouched) return
             const d = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
             if (d > 20) {
               watchDone = true
               scrollEl.removeEventListener('scroll', onRestoreScroll)
+              scrollEl.removeEventListener('touchstart', onUserTouch)
               clearTimeout(clearWatch)
               requestAnimationFrame(() => {
                 if (!mountedRef.current) return
@@ -804,19 +811,26 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       if (!el) return
       scrollToBottom()
       let corrected = false
+      let userTouched = false
+      const onUserTouch = () => { userTouched = true }
+      el.addEventListener('touchstart', onUserTouch, { passive: true, once: true })
       let cleanup
       function onRestorationScroll() {
-        if (corrected) return
+        if (corrected || userTouched) return
         const dist = el.scrollHeight - el.scrollTop - el.clientHeight
         if (dist > 20) {
           corrected = true
           el.removeEventListener('scroll', onRestorationScroll)
+          el.removeEventListener('touchstart', onUserTouch)
           clearTimeout(cleanup)
           requestAnimationFrame(scrollToBottom)
         }
       }
       el.addEventListener('scroll', onRestorationScroll, { passive: true })
-      cleanup = setTimeout(() => el.removeEventListener('scroll', onRestorationScroll), 1500)
+      cleanup = setTimeout(() => {
+        el.removeEventListener('scroll', onRestorationScroll)
+        el.removeEventListener('touchstart', onUserTouch)
+      }, 1500)
     }
 
     function onVisibilityChange() {
