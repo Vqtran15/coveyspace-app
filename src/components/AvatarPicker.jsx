@@ -30,7 +30,7 @@ export default function AvatarPicker({
   const toast = useToast()
   const fileInputRef = useRef(null)
 
-  const [tab,         setTab]         = useState(currentImageUrl ? 'photo' : 'icon')
+  const [tab,         setTab]         = useState(currentImageUrl ? 'photo' : currentIcon ? 'icon' : 'photo')
   const [tabDir,      setTabDir]      = useState(null) // 'left' | 'right' — drives enter animation
   const [icon,        setIcon]        = useState(currentIcon)
   const [colorKey,    setColorKey]    = useState(currentColor)

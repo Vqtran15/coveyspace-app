@@ -2,7 +2,7 @@ import {
   Confetti, DeviceMobile, BoxArrowUp, DotsThreeVertical,
   ShieldCheck, Users, ArrowLeft, ChatCircleDots, ForkKnife,
   HandsPraying, Cake, CalendarCheck, Link, ShareNetwork, Bell, Coins,
-  CalendarHeart, BookOpen,
+  CalendarHeart, BookOpen, DownloadSimple,
 } from '@phosphor-icons/react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,6 +13,7 @@ import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
+import { useInstallPrompt } from '../hooks/useInstallPrompt.js'
 
 const MONTHS    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS      = Array.from({ length: 31 }, (_, i) => i + 1)
@@ -186,6 +187,22 @@ export default function WelcomeSplash({ onDone }) {
   // ── Tour (member) ──────────────────────────────────────────────────────────
   const [tourSlide, setTourSlide] = useState(0)
   const touchStartX = useRef(null)
+
+  // ── Install prompt (install step) ──────────────────────────────────────────
+  const { canPrompt, triggerInstall } = useInstallPrompt()
+  const [androidInstalled, setAndroidInstalled] = useState(false)
+
+  const canShareIOS      = isIOS && !isStandalone && typeof navigator.share === 'function'
+  const canInstallNative = isAndroid && canPrompt
+
+  async function handleIOSShare() {
+    try { await navigator.share({ url: window.location.href, title: 'Coveyspace' }) } catch {}
+  }
+
+  async function handleAndroidInstall() {
+    const outcome = await triggerInstall()
+    if (outcome === 'accepted') setAndroidInstalled(true)
+  }
 
   // ── Notifications (install step) ───────────────────────────────────────────
   const [notifPermission, setNotifPermission] = useState(() =>
@@ -988,30 +1005,71 @@ export default function WelcomeSplash({ onDone }) {
           Get one-tap access and push notifications for your group — no App Store needed.
         </p>
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.38s' }}>
-          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow mb-4">
-            {showIOS && (
-              <div className="flex items-start gap-3 px-4 py-4">
-                <BoxArrowUp size={22} className="shrink-0 text-ember mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
-                  <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                    Open in <span className="font-medium">Safari</span>, tap <span className="font-medium">Share</span> at the bottom, then tap <span className="font-medium">"Add to Home Screen"</span>
-                  </p>
+
+          {/* iOS: open share sheet directly */}
+          {canShareIOS && (
+            <div className="mb-4">
+              <button
+                onClick={handleIOSShare}
+                className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+              >
+                <BoxArrowUp size={18} weight="bold" />
+                Open Share Menu
+              </button>
+              <p className="text-xs text-stone-400 text-center mt-2 leading-relaxed">
+                Tap <span className="font-medium text-stone-500">"Add to Home Screen"</span> in the share menu.
+                {' '}Must be using Safari.
+              </p>
+            </div>
+          )}
+
+          {/* Android: native install prompt */}
+          {canInstallNative && !androidInstalled && (
+            <div className="mb-4">
+              <button
+                onClick={handleAndroidInstall}
+                className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+              >
+                <DownloadSimple size={18} weight="bold" />
+                Add to Home Screen
+              </button>
+            </div>
+          )}
+
+          {/* Android: success state */}
+          {androidInstalled && (
+            <div className="mb-4 bg-sage-50 border border-sage/20 rounded-2xl px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-sage-700">Added to home screen ✓</p>
+            </div>
+          )}
+
+          {/* Fallback text instructions — desktop or no native API available */}
+          {!canShareIOS && !canInstallNative && !androidInstalled && (
+            <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow mb-4">
+              {showIOS && (
+                <div className="flex items-start gap-3 px-4 py-4">
+                  <BoxArrowUp size={22} className="shrink-0 text-ember mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
+                    <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                      Open in <span className="font-medium">Safari</span>, tap <span className="font-medium">Share</span> at the bottom, then tap <span className="font-medium">"Add to Home Screen"</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-            {showAndroid && (
-              <div className="flex items-start gap-3 px-4 py-4">
-                <DotsThreeVertical size={22} className="shrink-0 text-ember mt-0.5" weight="bold" />
-                <div>
-                  <p className="text-sm font-semibold text-stone-700">Android</p>
-                  <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                    Tap the <span className="font-medium">⋮ menu</span> in your browser, then tap <span className="font-medium">"Install app"</span> or <span className="font-medium">"Add to Home Screen"</span>
-                  </p>
+              )}
+              {showAndroid && (
+                <div className="flex items-start gap-3 px-4 py-4">
+                  <DotsThreeVertical size={22} className="shrink-0 text-ember mt-0.5" weight="bold" />
+                  <div>
+                    <p className="text-sm font-semibold text-stone-700">Android</p>
+                    <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                      Tap the <span className="font-medium">⋮ menu</span> in your browser, then tap <span className="font-medium">"Install app"</span> or <span className="font-medium">"Add to Home Screen"</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
           {'Notification' in window && 'PushManager' in window && (
             <div className="bg-white border border-stone-100 rounded-2xl shadow mb-4 animate-fade-up" style={{ animationDelay: '0.48s' }}>
               <div className="flex items-center gap-3 px-4 py-4">
