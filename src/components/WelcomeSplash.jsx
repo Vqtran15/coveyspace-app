@@ -194,12 +194,7 @@ export default function WelcomeSplash({ onDone }) {
   const { canPrompt, triggerInstall } = useInstallPrompt()
   const [androidInstalled, setAndroidInstalled] = useState(false)
 
-  const canShareIOS      = isIOS && !isStandalone && typeof navigator.share === 'function'
   const canInstallNative = isAndroid && canPrompt
-
-  async function handleIOSShare() {
-    try { await navigator.share({ url: window.location.href, title: 'Coveyspace' }) } catch {}
-  }
 
   async function handleAndroidInstall() {
     const outcome = await triggerInstall()
@@ -952,9 +947,6 @@ export default function WelcomeSplash({ onDone }) {
     }
 
     // ── STEP: install ──────────────────────────────────────────────────────────
-    // Show only the platform-relevant instruction row
-    const showIOS     = !isAndroid
-    const showAndroid = !isIOS
     return (
       <div className="flex flex-col items-center justify-center flex-1 p-6 overflow-y-auto overscroll-contain">
         <div className="mb-5 text-ember animate-welcome-pop" style={{ animationDelay: '0.05s' }}>
@@ -968,20 +960,25 @@ export default function WelcomeSplash({ onDone }) {
         </p>
         <div className="w-full max-w-xs animate-fade-up" style={{ animationDelay: '0.38s' }}>
 
-          {/* iOS: open share sheet directly */}
-          {canShareIOS && (
-            <div className="mb-4">
-              <button
-                onClick={handleIOSShare}
-                className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
-              >
-                <BoxArrowUp size={18} weight="bold" />
-                Open Share Menu
-              </button>
-              <p className="text-xs text-stone-400 text-center mt-2 leading-relaxed">
-                Tap <span className="font-medium text-stone-500">"Add to Home Screen"</span> in the share menu.
-                {' '}Must be using Safari.
-              </p>
+          {/* iOS Safari: step-by-step instructions */}
+          {isIOS && !isStandalone && (
+            <div className="mb-4 bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
+              <div className="flex items-center gap-2.5 px-4 py-3 border-b border-stone-100">
+                <BoxArrowUp size={17} weight="bold" className="text-ember shrink-0" />
+                <p className="text-sm font-semibold text-stone-800">How to add to Home Screen</p>
+              </div>
+              <div className="px-4 py-3 space-y-3">
+                {[
+                  <>Tap the <span className="font-semibold text-stone-700">Share</span> button in Safari's toolbar at the bottom of your screen</>,
+                  <>Scroll down and tap <span className="font-semibold text-stone-700">"Add to Home Screen"</span></>,
+                  <>Tap <span className="font-semibold text-stone-700">"Add"</span> to confirm</>,
+                ].map((text, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="text-[11px] font-bold text-white bg-ember rounded-full w-4 h-4 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    <p className="text-xs text-stone-600 leading-relaxed">{text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -1005,31 +1002,18 @@ export default function WelcomeSplash({ onDone }) {
             </div>
           )}
 
-          {/* Fallback text instructions — desktop or no native API available */}
-          {!canShareIOS && !canInstallNative && !androidInstalled && (
+          {/* Fallback text instructions — Android without native prompt, or no API available */}
+          {!isIOS && !canInstallNative && !androidInstalled && (
             <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden divide-y divide-stone-100 shadow mb-4">
-              {showIOS && (
-                <div className="flex items-start gap-3 px-4 py-4">
-                  <BoxArrowUp size={22} className="shrink-0 text-ember mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-stone-700">iPhone / iPad</p>
-                    <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                      Open in <span className="font-medium">Safari</span>, tap <span className="font-medium">Share</span> at the bottom, then tap <span className="font-medium">"Add to Home Screen"</span>
-                    </p>
-                  </div>
+              <div className="flex items-start gap-3 px-4 py-4">
+                <DotsThreeVertical size={22} className="shrink-0 text-ember mt-0.5" weight="bold" />
+                <div>
+                  <p className="text-sm font-semibold text-stone-700">Android</p>
+                  <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                    Tap the <span className="font-medium">⋮ menu</span> in your browser, then tap <span className="font-medium">"Install app"</span> or <span className="font-medium">"Add to Home Screen"</span>
+                  </p>
                 </div>
-              )}
-              {showAndroid && (
-                <div className="flex items-start gap-3 px-4 py-4">
-                  <DotsThreeVertical size={22} className="shrink-0 text-ember mt-0.5" weight="bold" />
-                  <div>
-                    <p className="text-sm font-semibold text-stone-700">Android</p>
-                    <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                      Tap the <span className="font-medium">⋮ menu</span> in your browser, then tap <span className="font-medium">"Install app"</span> or <span className="font-medium">"Add to Home Screen"</span>
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
           {'Notification' in window && 'PushManager' in window && (
