@@ -185,7 +185,7 @@ export default function AuthPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-ember-50 to-white flex items-start justify-center p-4"
+      className="min-h-screen bg-gradient-to-b from-ember-50 to-white flex items-start justify-center p-4 overflow-y-auto"
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2.5rem)' }}
     >
       <div className="w-full max-w-sm">
@@ -455,6 +455,7 @@ export default function AuthPage() {
                     onBlur={() => {
                       if (confirmPassword.length > 0 && confirmPassword !== password) setPwMismatchError(true)
                     }}
+                    onFocus={e => e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' })}
                     placeholder="••••••••"
                     required
                     autoComplete="new-password"

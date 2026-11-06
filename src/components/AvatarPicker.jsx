@@ -44,7 +44,7 @@ export default function AvatarPicker({
 
   function switchTab(t) {
     if (t === tab) return
-    setTabDir(t === 'photo' ? 'right' : 'left')
+    setTabDir(t === 'icon' ? 'right' : 'left')
     setTab(t)
   }
 
@@ -156,7 +156,7 @@ export default function AvatarPicker({
     <div className="space-y-3">
       {/* Tab switcher */}
       <div className="flex gap-1 bg-stone-100 rounded-xl p-1">
-        {['icon', 'photo'].map(t => (
+        {['photo', 'icon'].map(t => (
           <button
             key={t}
             onClick={() => switchTab(t)}

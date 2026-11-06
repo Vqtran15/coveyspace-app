@@ -449,7 +449,7 @@ export default function WelcomeSplash({ onDone }) {
           <div className="w-full max-w-xs mx-auto px-6 pb-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
             <h1 className="text-2xl font-bold text-stone-800 mb-1 animate-fade-up">Make it yours</h1>
             <p className="text-stone-400 text-sm mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-              Pick an avatar and add your birthday so the group can celebrate you.
+              Upload a photo or choose an avatar and add your birthday so the group can celebrate you!
             </p>
 
             <div className="flex justify-center mb-5 animate-fade-up" style={{ animationDelay: '0.15s' }}>
