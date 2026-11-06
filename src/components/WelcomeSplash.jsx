@@ -23,17 +23,22 @@ function ProgressDots({ steps, currentStep }) {
   const idx = steps.indexOf(currentStep)
   return (
     <div
-      className="fixed left-0 right-0 flex justify-center z-[60] gap-1.5 pointer-events-none"
-      style={{ top: 'calc(env(safe-area-inset-top) + 14px)' }}
+      className="fixed left-0 right-0 flex flex-col items-center z-[60] gap-1 pointer-events-none"
+      style={{ top: 'calc(env(safe-area-inset-top) + 10px)' }}
     >
-      {steps.map((s, i) => (
-        <div
-          key={s}
-          className={`rounded-full transition-all duration-300 ${
-            i === idx ? 'w-5 h-2 bg-ember' : i < idx ? 'w-2 h-2 bg-ember/40' : 'w-2 h-2 bg-stone-200'
-          }`}
-        />
-      ))}
+      <div className="flex gap-1.5">
+        {steps.map((s, i) => (
+          <div
+            key={s}
+            className={`rounded-full transition-all duration-300 ${
+              i === idx ? 'w-5 h-2 bg-ember' : i < idx ? 'w-2 h-2 bg-ember/40' : 'w-2 h-2 bg-stone-200'
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-[10px] font-semibold text-stone-400 tracking-wide">
+        {idx + 1} of {steps.length}
+      </span>
     </div>
   )
 }
@@ -184,9 +189,6 @@ export default function WelcomeSplash({ onDone }) {
   const [codeCopied, setCodeCopied] = useState(false)
   const [inviteCodeError, setInviteCodeError] = useState(false)
 
-  // ── Tour (member) ──────────────────────────────────────────────────────────
-  const [tourSlide, setTourSlide] = useState(0)
-  const touchStartX = useRef(null)
 
   // ── Install prompt (install step) ──────────────────────────────────────────
   const { canPrompt, triggerInstall } = useInstallPrompt()
@@ -388,17 +390,6 @@ export default function WelcomeSplash({ onDone }) {
     const url = `${window.location.origin}/login?code=${inviteCode}`
     if (navigator.share) await navigator.share({ title: 'Join my group on Coveyspace', url }).catch(() => {})
     else copyLink()
-  }
-
-  function handleTouchStart(e) { touchStartX.current = e.touches[0].clientX }
-  function handleTouchEnd(e) {
-    if (touchStartX.current === null) return
-    const delta = touchStartX.current - e.changedTouches[0].clientX
-    if (Math.abs(delta) > 40) {
-      if (delta > 0) setTourSlide(s => Math.min(s + 1, visibleTourCards.length - 1))
-      else           setTourSlide(s => Math.max(s - 1, 0))
-    }
-    touchStartX.current = null
   }
 
   const stepIdx = steps.indexOf(step)
@@ -922,67 +913,38 @@ export default function WelcomeSplash({ onDone }) {
 
     // ── STEP: tour (member only) ───────────────────────────────────────────────
     if (step === 'tour') {
-      const isLastSlide = tourSlide === Math.max(0, visibleTourCards.length - 1)
       return (
-        <div className="flex flex-col flex-1" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)' }}>
-          <div className="px-6 mb-6 flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-stone-800 mb-1">What's in here</h1>
-              <p className="text-stone-400 text-sm">Swipe to explore what your group can do.</p>
-            </div>
-            <button
-              onClick={() => skipInstall ? close() : setStep('install')}
-              className="text-stone-400 text-sm font-medium pt-1 shrink-0"
-            >
-              Skip
-            </button>
-          </div>
+        <div className="flex flex-col items-center justify-center flex-1 p-6">
+          <div className="w-full max-w-xs">
+            <h1 className="text-2xl font-bold text-stone-800 text-center mb-2 animate-fade-up">
+              Here's what's in your group
+            </h1>
+            <p className="text-stone-400 text-sm text-center mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+              Explore everything at your own pace.
+            </p>
 
-          <div
-            className="flex-1 overflow-hidden px-6"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            style={{ touchAction: 'pan-y' }}
-          >
-            <div
-              className="flex h-full transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(calc(-${tourSlide * 100}% - ${tourSlide * 24}px))` }}
-            >
-              {visibleTourCards.map(({ Icon, color, title, desc }) => (
-                <div key={title} className="w-full shrink-0 mr-6">
-                  <div className="bg-white border border-stone-100 rounded-2xl p-8 shadow h-full flex flex-col items-center justify-center text-center gap-4">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${color}`}>
-                      <Icon size={32} weight="fill" />
+            {visibleTourCards.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 mb-8 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+                {visibleTourCards.map(({ Icon, color, title }) => (
+                  <div key={title} className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2.5 text-center">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+                      <Icon size={20} weight="fill" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-stone-800 text-lg mb-2">{title}</h3>
-                      <p className="text-stone-400 text-sm leading-relaxed max-w-[220px] mx-auto">{desc}</p>
-                    </div>
+                    <p className="text-sm font-medium text-stone-700 leading-tight">{title}</p>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            )}
 
-          <div className="px-6 py-6 flex flex-col items-center gap-4">
-            <div className="flex gap-1.5">
-              {visibleTourCards.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setTourSlide(i)}
-                  className={`rounded-full transition-all duration-300 ${i === tourSlide ? 'w-5 h-2 bg-ember' : 'w-2 h-2 bg-stone-300'}`}
-                />
-              ))}
-            </div>
             <button
               onClick={() => {
-                if (!isLastSlide) { setTourSlide(s => s + 1); return }
                 if (skipInstall) memberCta ? closeAndNavigate(memberCta.path, memberCta.state) : close()
                 else setStep('install')
               }}
-              className="w-full max-w-xs py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm"
+              className="w-full py-3.5 bg-ember hover:bg-ember-700 active:scale-[0.98] text-white font-semibold rounded-xl transition-all text-sm animate-fade-up"
+              style={{ animationDelay: '0.2s' }}
             >
-              {isLastSlide ? (skipInstall && memberCta ? memberCta.label : 'Got it') : 'Next'}
+              {skipInstall && memberCta ? memberCta.label : "Let's go →"}
             </button>
           </div>
         </div>
