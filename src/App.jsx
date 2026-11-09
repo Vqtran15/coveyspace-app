@@ -338,7 +338,7 @@ function AppContent() {
       setUnreadPrayerCount(0)
       localStorage.setItem('lastSeenPrayerAt', new Date().toISOString())
     }
-    window.scrollTo(0, 0)
+    scrollContainerRef.current?.scrollTo({ top: 0 })
     trackPageView(location.pathname)
   }, [location.pathname])
 
@@ -481,55 +481,56 @@ function AppContent() {
           className="bg-sunrise-50 flex flex-col"
           style={{ height: '100dvh', paddingTop: 'var(--sat)' }}
         >
-          {/* Banners are flex children — they push the scroll area down while the
-              container stays viewport-height. */}
           {showConfetti && (
             <FullScreenConfetti onDone={() => setShowConfetti(false)} />
           )}
-          {(announcement || announcementClosing) && (
-            <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
-          )}
-          {birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
-            <BirthdayBanner
-              upcoming={upcoming}
-              closing={birthdayBannerClosing}
-              onDismiss={dismissBirthdayBanner}
-              onTap={() => { dismissBirthdayBanner(); birthday.setOpen(true) }}
-            />
-          )}
-          {(prayerBanner || prayerBannerClosing) && prayerEnabled && (
-            <PrayerReactionBanner
-              reactorName={prayerBanner?.reactorName}
-              closing={prayerBannerClosing}
-              onDismiss={dismissPrayerBanner}
-              onTap={() => {
-                dismissPrayerBanner()
-                navigate('/prayer', { state: { featuredUserId: userId } })
-              }}
-            />
-          )}
 
-          <div
-            key={location.pathname}
-            className={`lg:pb-0 ${
-              OFF_NAV_PATHS.includes(location.pathname)
-                ? 'animate-slide-in-up'
-                : OFF_NAV_PATHS.includes(locationRef.current)
-                ? 'animate-slide-in-left'
-                : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
-            }`}
-            style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
-          >
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <div
               ref={setScrollRef}
               className="tab-scroll-content"
               style={{
                 height: '100%',
                 overflowY: 'auto',
+                overflowX: 'hidden',
                 overscrollBehavior: 'contain',
                 paddingBottom: 'calc(max(16px, var(--sab) + 8px) + 68px)',
               }}
             >
+              {/* Banners inside scroll area — scroll with content */}
+              {(announcement || announcementClosing) && (
+                <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
+              )}
+              {birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
+                <BirthdayBanner
+                  upcoming={upcoming}
+                  closing={birthdayBannerClosing}
+                  onDismiss={dismissBirthdayBanner}
+                  onTap={() => { dismissBirthdayBanner(); birthday.setOpen(true) }}
+                />
+              )}
+              {(prayerBanner || prayerBannerClosing) && prayerEnabled && (
+                <PrayerReactionBanner
+                  reactorName={prayerBanner?.reactorName}
+                  closing={prayerBannerClosing}
+                  onDismiss={dismissPrayerBanner}
+                  onTap={() => {
+                    dismissPrayerBanner()
+                    navigate('/prayer', { state: { featuredUserId: userId } })
+                  }}
+                />
+              )}
+
+              <div
+                key={location.pathname}
+                className={`lg:pb-0 ${
+                  OFF_NAV_PATHS.includes(location.pathname)
+                    ? 'animate-slide-in-up'
+                    : OFF_NAV_PATHS.includes(locationRef.current)
+                    ? 'animate-slide-in-left'
+                    : enterFromRef.current === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left'
+                }`}
+              >
               <Routes>
                 <Route path="/" element={<Navigate to="/home" replace />} />
                 <Route path="/home"     element={
@@ -562,6 +563,7 @@ function AppContent() {
                 } />
                 <Route path="*" element={<Navigate to="/home" replace />} />
               </Routes>
+              </div>
             </div>
           </div>
         </div>
