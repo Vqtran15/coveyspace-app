@@ -88,14 +88,25 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
     try { localStorage.setItem(CACHE_KEY, String(sab)) } catch (e) {}
   }
 
-  // Apply cached value immediately so first React render uses the right value.
   var cached = parseFloat(localStorage.getItem(CACHE_KEY) || '0')
+
+  // Try measuring env() immediately — no scrollTo(0,1) needed, so no risk of
+  // disturbing the splash screen. Works on most loads: Safari browser, non-cold
+  // PWA relaunches, Android, desktop. If it returns a value, we're done.
+  var immediate = measure()
+  if (immediate > 0) {
+    apply(immediate)
+    return
+  }
+
+  // Immediate read returned 0. Two cases:
+  //   a) Device has no home bar (sab is genuinely 0) — nothing to do.
+  //   b) iOS PWA cold launch — env() returns 0 until a native scroll event fires.
+  // Apply cache now so the first render isn't wrong, then schedule the deferred
+  // scroll probe. Keep the 1500ms delay so scrollTo(0,1) fires after the splash
+  // exits and doesn't trigger the viewport recalculation that shifts splash content.
   if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
 
-  // Delay the scroll probe until after the splash screen exits.
-  // scrollTo(0,1) can trigger an iOS viewport recalculation that briefly resizes
-  // the fixed-inset-0 splash container, shifting justify-center content.
-  // The cached value above handles the first render; accuracy before 1.5s doesn't matter.
   setTimeout(function () {
     window.scrollTo(0, 1)
     setTimeout(function () {
