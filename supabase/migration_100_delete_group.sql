@@ -58,12 +58,20 @@ BEGIN
        AND gm2.community_group_id != v_group_id
      LIMIT 1;
 
-    -- Only update profiles rows whose active group is this one
-    UPDATE profiles
-       SET community_group_id = v_next_group,
-           role               = COALESCE(v_next_role, role)
-     WHERE user_id = v_member.user_id
-       AND community_group_id = v_group_id;
+    -- profiles.community_group_id is NOT NULL, so we can't set it to null.
+    -- Members with no other group get their profiles row deleted (they'll be
+    -- signed out). Members with another group are switched to it.
+    IF v_next_group IS NOT NULL THEN
+      UPDATE profiles
+         SET community_group_id = v_next_group,
+             role               = v_next_role
+       WHERE user_id = v_member.user_id
+         AND community_group_id = v_group_id;
+    ELSE
+      DELETE FROM profiles
+       WHERE user_id = v_member.user_id
+         AND community_group_id = v_group_id;
+    END IF;
   END LOOP;
 
   -- Remember what group the caller was switched to (read after profile update)

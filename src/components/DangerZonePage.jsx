@@ -3,12 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, UserMinus, Trash, Warning } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
-import { useToast } from '../lib/toast.jsx'
 
 export default function DangerZonePage() {
   const navigate = useNavigate()
   const { isAdmin } = useAppContext()
-  const toast = useToast()
 
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
