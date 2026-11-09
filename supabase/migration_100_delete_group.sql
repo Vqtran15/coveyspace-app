@@ -8,7 +8,7 @@
 --       group_memberships, group_settings, conversations, messages, reactions,
 --       polls, events, group_prayer, and other cascade-linked tables.
 --   • Tables without a cascade FK are deleted explicitly first:
---       prayer_friends (cascades → prayer_requests → prayer_reactions),
+--       prayer_requests (cascades → prayer_reactions),
 --       birthdays, meal_pages, signups, serving_pages, serving_signups.
 -- Returns: { switched_to: uuid | null }
 --   switched_to — the caller's new active group_id, or null if they have none.
@@ -84,7 +84,7 @@ BEGIN
   DELETE FROM serving_signups WHERE community_group_id = v_group_id;
   DELETE FROM meal_pages      WHERE community_group_id = v_group_id;
   DELETE FROM serving_pages   WHERE community_group_id = v_group_id;
-  DELETE FROM prayer_friends  WHERE community_group_id = v_group_id;  -- cascades prayer_requests → prayer_reactions
+  DELETE FROM prayer_requests WHERE community_group_id = v_group_id;  -- cascades → prayer_reactions
   DELETE FROM birthdays       WHERE community_group_id = v_group_id;
 
   -- Delete the group — cascades: group_memberships, group_settings,
