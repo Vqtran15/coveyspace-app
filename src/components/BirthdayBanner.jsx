@@ -14,7 +14,7 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
   }
 
   return (
-    <div className={`max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
+    <div className={`w-full max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div
         className="relative overflow-hidden rounded-2xl bg-ember-50 border border-ember/30 shadow px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
         onClick={() => { trackEvent('birthday_banner_tapped'); onTap?.() }}
