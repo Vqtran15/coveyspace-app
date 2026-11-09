@@ -6,7 +6,7 @@ import { useAppContext } from '../contexts/AppContext.jsx'
 
 export default function DangerZonePage() {
   const navigate = useNavigate()
-  const { isAdmin } = useAppContext()
+  const { isAdmin, groupName } = useAppContext()
 
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
@@ -145,7 +145,7 @@ export default function DangerZonePage() {
 
             {deleteGroupConfirm ? (
               <div className="space-y-2 pt-1">
-                <p className="text-xs font-semibold text-red-700 text-center">This will permanently delete the group and all its data.</p>
+                <p className="text-xs font-semibold text-red-700 text-center">This will permanently delete <span className="italic">{groupName}</span> and all its data.</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setDeleteGroupConfirm(false); setDeleteGroupError(null) }}
