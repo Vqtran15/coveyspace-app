@@ -1350,10 +1350,9 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
         <AnimatePresence>
           {hubOpen && (
         <motion.div
-          initial={{ x: hubFromLeftRef.current ? '-100%' : '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.85 }}
+          initial={{ x: hubFromLeftRef.current ? -72 : 72, opacity: 0 }}
+          animate={{ x: 0, opacity: 1, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } }}
+          exit={{ x: -40, opacity: 0, transition: { duration: 0.18, ease: 'easeIn' } }}
           className="fixed inset-0 lg:left-56 z-10 bg-sunrise-50 overflow-y-auto"
           style={{ paddingTop: 'var(--sat, env(safe-area-inset-top))', paddingBottom: 'calc(max(16px, var(--sab, env(safe-area-inset-bottom)) + 8px) + 68px)' }}
         >
