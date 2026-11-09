@@ -16,14 +16,13 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
   return (
     <div className={`w-full max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
       <div
-        className="relative overflow-hidden rounded-2xl bg-ember-50 border border-ember/30 shadow px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
+        className="rounded-2xl bg-ember-50 border border-ember/30 shadow px-5 py-4 cursor-pointer active:opacity-80 transition-opacity"
         onClick={() => { trackEvent('birthday_banner_tapped'); onTap?.() }}
       >
-        <span className="absolute left-0 top-0 h-full w-1.5 bg-ember rounded-l-2xl" />
-        <p className="text-xs font-bold text-ember uppercase tracking-wider mb-2 pl-3">
+        <p className="text-xs font-bold text-ember uppercase tracking-wider mb-2">
           Upcoming {multi ? 'Birthdays' : 'Birthday'}
         </p>
-        <div className="pl-3 flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           {multi ? (
             <p className="font-semibold text-stone-800 flex items-center gap-1.5 min-w-0 truncate">
               <Cake size={16} weight="fill" className="text-ember shrink-0" />
