@@ -7,12 +7,16 @@ import { useToast } from '../lib/toast.jsx'
 
 export default function DangerZonePage() {
   const navigate = useNavigate()
-  const { groupId } = useAppContext()
+  const { isAdmin } = useAppContext()
   const toast = useToast()
 
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
+
+  const [deleteGroupConfirm, setDeleteGroupConfirm] = useState(false)
+  const [deletingGroup, setDeletingGroup] = useState(false)
+  const [deleteGroupError, setDeleteGroupError] = useState(null)
 
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -24,6 +28,18 @@ export default function DangerZonePage() {
     const { error } = await supabase.rpc('leave_group')
     if (error) { setLeaveError(error.message); setLeaving(false); return }
     await supabase.auth.signOut()
+  }
+
+  async function handleDeleteGroup() {
+    setDeletingGroup(true)
+    setDeleteGroupError(null)
+    const { data, error } = await supabase.rpc('delete_current_group')
+    if (error) { setDeleteGroupError(error.message); setDeletingGroup(false); return }
+    if (data?.switched_to) {
+      window.location.reload()
+    } else {
+      await supabase.auth.signOut()
+    }
   }
 
   async function handleDeleteAccount() {
@@ -108,9 +124,61 @@ export default function DangerZonePage() {
         </div>
       </div>
 
+      {/* Delete Group — admin only */}
+      {isAdmin && (
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Delete Group</p>
+          <div className="bg-white border border-red-100 rounded-2xl shadow p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                <Trash size={18} weight="fill" className="text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-red-700">Delete this group</p>
+                <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                  Permanently deletes the group and all its data for every member: messages, prayer, events, and birthdays. This cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {deleteGroupError && (
+              <p className="text-xs text-red-700 bg-red-50 rounded-xl px-3 py-2">{deleteGroupError}</p>
+            )}
+
+            {deleteGroupConfirm ? (
+              <div className="space-y-2 pt-1">
+                <p className="text-xs font-semibold text-red-700 text-center">This will permanently delete the group and all its data.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setDeleteGroupConfirm(false); setDeleteGroupError(null) }}
+                    className="flex-1 py-2.5 text-sm font-medium text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteGroup}
+                    disabled={deletingGroup}
+                    className="flex-1 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-40"
+                  >
+                    {deletingGroup ? 'Deleting…' : 'Delete Forever'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setDeleteGroupConfirm(true)}
+                className="w-full py-2.5 text-sm font-medium text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+              >
+                Delete this group
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Delete Account */}
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Delete Account</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-2">Delete my user account</p>
         <div className="bg-white border border-red-100 rounded-2xl shadow p-4 space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
