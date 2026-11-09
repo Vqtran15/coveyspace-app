@@ -20,6 +20,7 @@ import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 import UpdatePrompt         from './components/UpdatePrompt.jsx'
 import AnnouncementBanner   from './components/AnnouncementBanner.jsx'
 import GroupWelcomeBack     from './components/GroupWelcomeBack.jsx'
+import NoGroupScreen        from './components/NoGroupScreen.jsx'
 
 const ScheduleTab       = lazy(() => import('./components/ScheduleTab.jsx'))
 const BirthdayTab       = lazy(() => import('./components/BirthdayTab.jsx'))
@@ -88,7 +89,7 @@ function AppContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const {
-    session, userId, authLoading, isRecovery, clearRecovery,
+    session, userId, authLoading, isRecovery, clearRecovery, profileLoaded,
     displayName, groupId, groupName, isAdmin, isChurchAdmin,
     avatarIcon, avatarColorKey, avatarImageUrl,
     groupSettings, setGroupSettings,
@@ -451,6 +452,8 @@ function AppContent() {
       </Routes>
     ) : isRecovery ? (
       <ResetPasswordPage onDone={clearRecovery} />
+    ) : profileLoaded && !groupId ? (
+      <NoGroupScreen />
     ) : (
     <div className="bg-sunrise-50 lg:pl-56" style={{ minHeight: 'calc(100dvh + 1px)' }}>
       {!isOnline && (
