@@ -501,7 +501,7 @@ function AppContent() {
               {(announcement || announcementClosing) && (
                 <AnnouncementBanner announcement={announcement} closing={announcementClosing} onDismiss={dismissAnnouncement} />
               )}
-              {birthdaysEnabled && !birthdayBannerDismissed && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
+              {birthdaysEnabled && !birthdayBannerDismissed && location.pathname !== '/bible' && (location.pathname !== '/home' || upcoming.some(b => b.daysUntil === 0)) && (
                 <BirthdayBanner
                   upcoming={upcoming}
                   closing={birthdayBannerClosing}
@@ -543,7 +543,18 @@ function AppContent() {
                 <Route path="/schedule" element={<ScheduleTab mealsConfig={MEALS_CONFIG} servicesConfig={SERVICES_CONFIG} />} />
                 <Route path="/events"   element={<EventsTab />} />
                 <Route path="/prayer"   element={<PrayerTab />} />
-                <Route path="/bible"    element={<ResourcesTab onOpenGuide={() => guide.setOpen(true)} onOpenGiving={() => giving.setOpen(true)} />} />
+                <Route path="/bible"    element={<ResourcesTab
+                  onOpenGuide={() => guide.setOpen(true)}
+                  onOpenGiving={() => giving.setOpen(true)}
+                  birthdayBanner={birthdaysEnabled && !birthdayBannerDismissed && upcoming.length > 0 ? (
+                    <BirthdayBanner
+                      upcoming={upcoming}
+                      closing={birthdayBannerClosing}
+                      onDismiss={dismissBirthdayBanner}
+                      onTap={() => { dismissBirthdayBanner(); birthday.setOpen(true) }}
+                    />
+                  ) : null}
+                />} />
                 <Route path="/admin"           element={<AdminPage />} />
                 <Route path="/church-settings"  element={<ChurchSettingsPage />} />
                 <Route path="/church-analytics" element={isChurchAdmin ? <ChurchAnalyticsPage /> : <Navigate to="/settings" replace />} />
