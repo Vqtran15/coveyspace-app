@@ -1,4 +1,3 @@
-<title>New Message</title>
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, MagnifyingGlass, X, Check } from '@phosphor-icons/react'
@@ -11,12 +10,12 @@ export default function NewMessagePage() {
   const { session, groupId } = useAppContext()
   const myId = session.user.id
 
-  const [members, setMembers]       = useState([])
-  const [mode, setMode]             = useState('dm')
-  const [search, setSearch]         = useState('')
-  const [selected, setSelected]     = useState(new Set())
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState(null)
+  const [members, setMembers]   = useState([])
+  const [mode, setMode]         = useState('dm')
+  const [search, setSearch]     = useState('')
+  const [selected, setSelected] = useState(new Set())
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState(null)
   const searchRef = useRef(null)
 
   useEffect(() => {
@@ -86,62 +85,60 @@ export default function NewMessagePage() {
   }
 
   return (
-    <div
-      className="bg-sunrise-50 flex flex-col"
-      style={{ minHeight: '100dvh', paddingTop: 'var(--sat)', paddingBottom: 'var(--sab)' }}
-    >
-      {/* Header */}
-      <div className="bg-sunrise-50 px-4 pt-4 pb-2 flex items-center gap-1 shrink-0">
-        <button
-          onClick={() => navigate(-1)}
-          aria-label="Back"
-          className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors -ml-2 shrink-0"
-        >
-          <ArrowLeft size={20} weight="bold" />
-        </button>
-        <h1 className="text-3xl font-bold text-stone-800">New Message</h1>
-      </div>
+    <div className="bg-sunrise-50">
+      <div className="max-w-md mx-auto px-4 pt-8 pb-8">
 
-      {/* Mode switcher */}
-      <div className="mx-4 mb-3 flex bg-stone-100 rounded-xl p-1 shrink-0">
-        <button
-          onClick={() => switchMode('dm')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'dm' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-        >
-          Direct message
-        </button>
-        <button
-          onClick={() => switchMode('group')}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'group' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-        >
-          Group chat
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="mx-4 mb-3 relative shrink-0">
-        <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-        <input
-          ref={searchRef}
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search members…"
-          className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-        />
-        {search && (
-          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-            <X size={14} weight="bold" />
+        {/* Header */}
+        <div className="flex items-center gap-1 min-w-0 -ml-2 mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors shrink-0"
+          >
+            <ArrowLeft size={20} weight="bold" />
           </button>
+          <h1 className="text-3xl font-bold text-stone-800">New Message</h1>
+        </div>
+
+        {/* Mode switcher */}
+        <div className="mb-3 flex bg-stone-100 rounded-xl p-1">
+          <button
+            onClick={() => switchMode('dm')}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'dm' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+          >
+            Direct message
+          </button>
+          <button
+            onClick={() => switchMode('group')}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'group' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
+          >
+            Group chat
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="mb-3 relative">
+          <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search members…"
+            className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+              <X size={14} weight="bold" />
+            </button>
+          )}
+        </div>
+
+        {error && (
+          <p className="mb-3 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2 text-center">{error}</p>
         )}
-      </div>
 
-      {error && (
-        <p className="mx-4 mb-3 text-xs text-red-600 bg-red-50 rounded-xl px-3 py-2 text-center shrink-0">{error}</p>
-      )}
-
-      {/* Member list */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+        {/* Member list */}
         {mode === 'dm' ? (
           members.length === 0 ? (
             <p className="text-sm text-stone-500 text-center py-8">No other members in this group yet.</p>
@@ -203,6 +200,7 @@ export default function NewMessagePage() {
             </button>
           </>
         )}
+
       </div>
     </div>
   )
