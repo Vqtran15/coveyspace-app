@@ -2,13 +2,12 @@ import { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, laz
 import { motion } from 'framer-motion'
 const EmojiPicker = lazy(() => import('emoji-picker-react'))
 import {
-  X, MagnifyingGlass, ArrowUp, Trash, ArrowLeft, Notepad,
+  X, MagnifyingGlass, ArrowUp, Trash, ArrowLeft,
   Users, ArrowBendUpLeft, PencilSimple, Copy,
 } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useModalClose } from '../hooks/useModalClose.js'
 import { useToast } from '../lib/toast.jsx'
-import NotesModal from './NotesModal.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, GROUP_TIME_GAP, isVideoUrl } from '../utils/format.js'
 import { trackEvent } from '../lib/analytics.js'
@@ -94,7 +93,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
   const [showMoreEmojis, setShowMoreEmojis] = useState(false)
   const [reactionPickerClosing, setReactionPickerClosing] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [notesOpen, setNotesOpen]           = useState(false)
   const [replyingTo, setReplyingTo]         = useState(null)
   const [infoOpen, setInfoOpen]             = useState(false)
   const [infoClosing, closeInfo]            = useModalClose(() => setInfoOpen(false))
@@ -1530,7 +1528,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     activeMsg, setActiveMsg, menuPos, menuClosing, closeMenu,
     showMoreEmojis, setShowMoreEmojis,
     reactionPickerClosing, setReactionPickerClosing,
-    notesOpen, setNotesOpen,
     setReplyingTo,
     infoOpen, setInfoOpen, infoClosing, closeInfo,
     renamingGroup, setRenamingGroup,
@@ -1568,7 +1565,7 @@ export default function ChatView({ conversation, session, displayName, groupId, 
     messages, loading, visible, contentReady, fetchingFresh, hasMore, loadingMore,
     searchOpen, searchQuery, isAtBottom, typingUsers,
     reactions, justReacted, activeMsg, menuPos, menuClosing, showMoreEmojis,
-    reactionPickerClosing, notesOpen,
+    reactionPickerClosing,
     infoOpen, infoClosing, renamingGroup, renameValue, renameSaving, confirmDeleteMsg,
     editingMsgId, editText, editClosingId, selectedMsgId, confirmDeleteId,
     convName, memberReadTimes, unreadCount, firstUnreadId, openUnreadCount,
@@ -1663,14 +1660,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
           </div>
           <h1 className="text-xl font-bold text-stone-800 truncate">{title}</h1>
         </button>
-        {conversation.type === 'group' && (
-          <button
-            onClick={() => setNotesOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
-          >
-            <Notepad size={20} />
-          </button>
-        )}
         <button
           onClick={toggleSearch}
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${searchOpen ? 'bg-ember text-white' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'}`}
@@ -1884,8 +1873,6 @@ export default function ChatView({ conversation, session, displayName, groupId, 
       )}
 
       <ConversationInfo />
-
-      {notesOpen && <NotesModal groupId={groupId} onClose={() => setNotesOpen(false)} />}
 
       {/* Image / video lightbox */}
       {(lightboxImg || lightboxClosing) && (

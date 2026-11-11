@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife, MagnifyingGlass, X, Church } from '@phosphor-icons/react'
-import { useAppContext } from '../contexts/AppContext.jsx'
-import FeedbackModal from './FeedbackModal.jsx'
 
 const SECTIONS = [
   {
@@ -239,8 +237,6 @@ function FAQItem({ q, a, adminOnly, forceOpen = false }) {
 
 export default function HelpPage() {
   const navigate = useNavigate()
-  const { userId, displayName, session } = useAppContext()
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [query, setQuery] = useState('')
 
   const trimmed = query.trim().toLowerCase()
@@ -335,7 +331,7 @@ export default function HelpPage() {
       {/* Send feedback */}
       <div className="mt-6 bg-white border border-stone-100 rounded-2xl shadow overflow-hidden">
         <button
-          onClick={() => setFeedbackOpen(true)}
+          onClick={() => navigate('/feedback')}
           className="w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-stone-50 transition-colors"
         >
           <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
@@ -350,14 +346,6 @@ export default function HelpPage() {
 
     </main>
 
-    {feedbackOpen && (
-      <FeedbackModal
-        userId={userId}
-        displayName={displayName}
-        email={session?.user?.email}
-        onClose={() => setFeedbackOpen(false)}
-      />
-    )}
     </>
   )
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { ChatTeardropDots, CheckCircle, X } from '@phosphor-icons/react'
-import { useModalClose } from '../hooks/useModalClose.js'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ChatTeardropDots, CheckCircle } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
+import { useAppContext } from '../contexts/AppContext.jsx'
 import { trackEvent } from '../lib/analytics.js'
 
 const TYPES = [
@@ -10,25 +11,17 @@ const TYPES = [
   { key: 'general', label: 'General' },
 ]
 
-export default function FeedbackModal({ userId, displayName, email, onClose }) {
-  const [closing, close] = useModalClose(onClose)
-  const [type, setType]       = useState('general')
-  const [message, setMessage] = useState('')
+export default function FeedbackPage() {
+  const navigate = useNavigate()
+  const { userId, displayName, session } = useAppContext()
+  const email = session?.user?.email
+
+  const [type, setType]           = useState('general')
+  const [message, setMessage]     = useState('')
   const [groupName, setGroupName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const [error, setError]           = useState(null)
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
-
-  useEffect(() => {
-    const vv = window.visualViewport
-    if (!vv) return
-    function onResize() {
-      setKeyboardHeight(Math.max(0, window.innerHeight - vv.height - vv.offsetTop))
-    }
-    vv.addEventListener('resize', onResize)
-    return () => vv.removeEventListener('resize', onResize)
-  }, [])
 
   useEffect(() => {
     supabase
@@ -36,9 +29,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
       .select('community_groups(name)')
       .eq('user_id', userId)
       .single()
-      .then(({ data }) => {
-        setGroupName(data?.community_groups?.name ?? '')
-      })
+      .then(({ data }) => setGroupName(data?.community_groups?.name ?? ''))
   }, [userId])
 
   async function handleSubmit(e) {
@@ -69,59 +60,54 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 ${closing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
-      style={keyboardHeight > 0 ? { paddingBottom: keyboardHeight + 16 } : { paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
-      onClick={close}
+      className="bg-sunrise-50 flex flex-col"
+      style={{ minHeight: '100dvh', paddingTop: 'var(--sat)', paddingBottom: 'var(--sab)' }}
     >
-      <div
-        className={`bg-white rounded-2xl shadow-xl w-full max-w-sm flex flex-col ${closing ? 'animate-sheet-out' : 'animate-modal-in'}`}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 pb-4 shrink-0">
-          <div className="flex items-center gap-2">
-            <ChatTeardropDots size={20} weight="fill" className="text-ember" />
-            <h2 className="text-lg font-bold text-stone-800">Send Feedback</h2>
-          </div>
-          <button
-            onClick={close}
-            aria-label="Close"
-            className="text-stone-400 hover:text-stone-600 w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
-          >
-            <X size={20} />
-          </button>
-        </div>
+      {/* Header */}
+      <div className="bg-sunrise-50 px-4 pt-4 pb-2 flex items-center gap-1 shrink-0">
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Back"
+          className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-700 hover:bg-black/5 transition-colors -ml-2 shrink-0"
+        >
+          <ArrowLeft size={20} weight="bold" />
+        </button>
+        <h1 className="text-3xl font-bold text-stone-800">Feedback</h1>
+      </div>
 
-        <div className="px-5 pb-6">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-md mx-auto px-4 pt-4 pb-10">
           {submitted ? (
-            <div className="flex flex-col items-center text-center py-6 gap-3">
-              <CheckCircle size={44} weight="fill" className="text-ember" />
-              <p className="font-semibold text-stone-800">Thanks for the feedback!</p>
-              <p className="text-sm text-stone-400 leading-relaxed">
-                I read every response and use it to make Coveyspace better.
-              </p>
+            <div className="flex flex-col items-center text-center py-16 gap-4">
+              <CheckCircle size={56} weight="fill" className="text-ember" />
+              <div>
+                <p className="text-xl font-bold text-stone-800">Thanks for the feedback!</p>
+                <p className="text-sm text-stone-500 mt-2 leading-relaxed">
+                  I read every response and use it to make Coveyspace better.
+                </p>
+              </div>
               <button
-                onClick={close}
+                onClick={() => navigate(-1)}
                 className="mt-2 px-6 py-2.5 bg-ember text-white text-sm font-semibold rounded-xl hover:bg-ember-700 transition-colors"
               >
                 Done
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Type selector */}
               <div>
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Type</p>
+                <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Type</p>
                 <div className="flex gap-2">
                   {TYPES.map(({ key, label }) => (
                     <button
                       key={key}
                       type="button"
                       onClick={() => setType(key)}
-                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition-colors ${
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold transition-colors ${
                         type === key
                           ? 'bg-ember text-white'
-                          : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                          : 'bg-white border border-stone-200 text-stone-500 hover:border-ember hover:text-ember'
                       }`}
                     >
                       {label}
@@ -132,7 +118,7 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
 
               {/* Message */}
               <div>
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Message</p>
+                <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-2">Message</p>
                 <textarea
                   autoFocus
                   value={message}
@@ -144,12 +130,12 @@ export default function FeedbackModal({ userId, displayName, email, onClose }) {
                       ? 'Describe the feature and why it would help your group…'
                       : 'Share any thoughts, questions, or suggestions…'
                   }
-                  rows={5}
+                  rows={7}
                   maxLength={2000}
                   required
-                  className="w-full text-sm bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300 resize-none"
+                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent placeholder:text-stone-400 resize-none"
                 />
-                <p className="text-right text-xs text-stone-300 mt-1">{message.length}/2000</p>
+                <p className="text-right text-xs text-stone-400 mt-1">{message.length}/2000</p>
               </div>
 
               {error && (

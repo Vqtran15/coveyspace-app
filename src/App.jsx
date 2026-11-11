@@ -41,6 +41,7 @@ const ChurchAnalyticsPage = lazy(() => import('./components/ChurchAnalyticsPage.
 const DangerZonePage     = lazy(() => import('./components/DangerZonePage.jsx'))
 const HelpPage           = lazy(() => import('./components/HelpPage.jsx'))
 const NewMessagePage     = lazy(() => import('./components/NewMessagePage.jsx'))
+const FeedbackPage       = lazy(() => import('./components/FeedbackPage.jsx'))
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -80,7 +81,7 @@ const TABS = [
 ]
 
 const PATHS = TABS.map(t => t.path)
-const OFF_NAV_PATHS = ['/settings', '/admin', '/church-settings', '/church-analytics', '/danger-zone', '/help', '/new-message']
+const OFF_NAV_PATHS = ['/settings', '/admin', '/church-settings', '/church-analytics', '/danger-zone', '/help', '/new-message', '/feedback']
 
 const IS_PWA =
   window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -565,6 +566,7 @@ function AppContent() {
                 <Route path="/danger-zone"     element={<DangerZonePage />} />
                 <Route path="/help"            element={<HelpPage />} />
                 <Route path="/new-message"     element={<NewMessagePage />} />
+                <Route path="/feedback"        element={<FeedbackPage />} />
                 <Route path="/settings" element={
                   <SettingsPage
                     onClose={() => navigate(-1)}
