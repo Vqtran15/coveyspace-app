@@ -205,17 +205,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
     setJoinGroupLoading(false)
   }
 
-  useEffect(() => {
-    import('./HelpPage.jsx')
-    if (isAdmin) {
-      import('./AdminPage.jsx')
-      import('./DangerZonePage.jsx')
-    }
-    if (isChurchAdmin) {
-      import('./ChurchSettingsPage.jsx')
-      import('./ChurchAnalyticsPage.jsx')
-    }
-  }, [isAdmin, isChurchAdmin])
+  useEffect(() => { import('./HelpPage.jsx') }, [])
 
   useEffect(() => {
     if (!groupId) return

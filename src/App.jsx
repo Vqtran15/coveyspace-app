@@ -358,6 +358,17 @@ function AppContent() {
     }
   }, [hasTodayBirthday, splashVisible])
 
+  useEffect(() => {
+    if (isAdmin) {
+      import('./components/AdminPage.jsx')
+      import('./components/DangerZonePage.jsx')
+    }
+    if (isChurchAdmin) {
+      import('./components/ChurchSettingsPage.jsx')
+      import('./components/ChurchAnalyticsPage.jsx')
+    }
+  }, [isAdmin, isChurchAdmin])
+
   const isChat = location.pathname === '/chat'
   const isFullHeight = isChat
   const [chatViewOpen, setChatViewOpen] = useState(false)
