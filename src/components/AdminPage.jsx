@@ -728,7 +728,8 @@ export default function AdminPage() {
     {/* Member action sheet */}
     {memberSheet && (
       <div
-        className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${memberSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+        className={`fixed inset-x-0 top-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${memberSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+        style={{ height: '100dvh' }}
         onClick={closeMemberSheet}
       >
         <div

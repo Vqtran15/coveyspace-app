@@ -30,7 +30,8 @@ export default function ConversationInfo() {
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+      className={`fixed inset-x-0 top-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+      style={{ height: '100dvh' }}
       onClick={closeInfo}
     >
       <div

@@ -672,14 +672,15 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
             className="fixed inset-0 z-[60] bg-black/50"
             onClick={closeSettingsSheet}
           />
+          <div className="fixed inset-x-0 top-0 z-[60] flex items-end" style={{ height: '100dvh', pointerEvents: 'none' }}>
           <motion.div
             key="sheet-panel"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '110%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-            style={{ y: dragY, paddingBottom: 'env(safe-area-inset-bottom)' }}
-            className="fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-2xl shadow-xl"
+            style={{ y: dragY, paddingBottom: 'env(safe-area-inset-bottom)', pointerEvents: 'auto', width: '100%' }}
+            className="bg-white rounded-t-2xl shadow-xl"
           >
             {/* Drag handle */}
             <div
@@ -785,6 +786,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
               </form>
             )}
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

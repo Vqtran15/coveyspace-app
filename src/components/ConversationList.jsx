@@ -725,7 +725,8 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* Rename modal */}
       {renamingConv && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end z-50 ${renameClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-x-0 top-0 bg-black/50 flex items-end z-50 ${renameClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          style={{ height: '100dvh' }}
           onClick={closeRename}
         >
           <div
@@ -767,7 +768,8 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* New message sheet */}
       {newDmOpen && (
         <div
-          className={`fixed inset-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          className={`fixed inset-x-0 top-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
+          style={{ height: '100dvh' }}
           onClick={closeDm}
         >
           <div
