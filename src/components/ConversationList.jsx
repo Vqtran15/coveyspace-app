@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChatCircleDots, PencilSimple, MagnifyingGlass, X, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, MagnifyingGlass, X, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree, Users } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useModalClose } from '../hooks/useModalClose.js'
