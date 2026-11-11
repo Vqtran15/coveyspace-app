@@ -145,13 +145,13 @@ export default function NewMessagePage() {
           ) : filtered.length === 0 ? (
             <p className="text-sm text-stone-500 text-center py-8">No members match "{search}"</p>
           ) : (
-            <div className="space-y-1">
+            <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden">
               {filtered.map(m => (
                 <button
                   key={m.user_id}
                   onClick={() => startDm(m.user_id)}
                   disabled={loading}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white active:bg-white/80 transition-colors disabled:opacity-40"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors border-b border-stone-100 last:border-0 disabled:opacity-40"
                 >
                   <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
                   <span className="text-sm font-medium text-stone-800">{m.display_name}</span>
@@ -172,14 +172,14 @@ export default function NewMessagePage() {
                 {members.length === 0 ? 'No other members in this group yet.' : `No members match "${search}"`}
               </p>
             ) : (
-              <div className="space-y-0.5 mb-4">
+              <div className="bg-white rounded-2xl border border-stone-100 shadow overflow-hidden mb-4">
                 {filtered.map(m => {
                   const isSelected = selected.has(m.user_id)
                   return (
                     <button
                       key={m.user_id}
                       onClick={() => toggleMember(m.user_id)}
-                      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-white transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 active:bg-stone-100 transition-colors border-b border-stone-100 last:border-0"
                     >
                       <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
                       <span className="flex-1 text-sm font-medium text-stone-800 text-left">{m.display_name}</span>
