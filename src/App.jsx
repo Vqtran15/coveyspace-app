@@ -357,6 +357,8 @@ function AppContent() {
       setShowConfetti(true)
     }
   }, [hasTodayBirthday, splashVisible])
+  // Stable reference so FullScreenConfetti's useEffect([onDone]) never re-fires mid-animation
+  const handleConfettiDone = useCallback(() => setShowConfetti(false), [])
 
   useEffect(() => {
     if (isAdmin) {
@@ -498,7 +500,7 @@ function AppContent() {
           style={{ height: '100dvh', paddingTop: 'var(--sat)' }}
         >
           {showConfetti && (
-            <FullScreenConfetti onDone={() => setShowConfetti(false)} />
+            <FullScreenConfetti onDone={handleConfettiDone} />
           )}
 
           <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

@@ -4,14 +4,19 @@ import { trackEvent } from '../lib/analytics.js'
 export default function BirthdayBanner({ upcoming, closing = false, onDismiss, onTap }) {
   if (!upcoming.length) return null
 
-  const multi   = upcoming.length > 1
-  const maxDays = multi ? Math.max(...upcoming.map(b => b.daysUntil)) : 0
-  const single  = upcoming[0]
+  const multi      = upcoming.length > 1
+  const todayOnes  = upcoming.filter(b => b.daysUntil === 0)
+  const hasToday   = todayOnes.length > 0
+  const single     = upcoming[0]
 
   function singleName(b) {
     const p = (b.name ?? '').trim().split(' ').filter(Boolean)
     return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0] ?? ''
   }
+
+  const label = hasToday
+    ? (todayOnes.length > 1 ? 'Birthdays Today' : 'Birthday Today')
+    : (multi ? 'Upcoming Birthdays' : 'Upcoming Birthday')
 
   return (
     <div className={`w-full max-w-3xl mx-auto px-4 pt-4 ${closing ? 'animate-overlay-out' : 'animate-stack-in'}`}>
@@ -20,15 +25,17 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
         onClick={() => { trackEvent('birthday_banner_tapped'); onTap?.() }}
       >
         <p className="text-xs font-bold text-ember uppercase tracking-wider mb-2">
-          Upcoming {multi ? 'Birthdays' : 'Birthday'}
+          {label}
         </p>
         <div className="flex items-center justify-between gap-3">
           {multi ? (
             <p className="font-semibold text-stone-800 flex items-center gap-1.5 min-w-0 truncate">
               <Cake size={16} weight="fill" className="text-ember shrink-0" />
-              {maxDays === 0
-                ? `${upcoming.length} birthdays today!`
-                : `${upcoming.length} Birthdays to celebrate soon!`}
+              {hasToday
+                ? todayOnes.length > 1
+                  ? `${todayOnes.length} birthdays today!`
+                  : `${singleName(todayOnes[0])}'s birthday is today!`
+                : `${upcoming.length} birthdays coming up soon!`}
             </p>
           ) : (
             <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
