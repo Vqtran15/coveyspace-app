@@ -4,6 +4,7 @@ import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, 
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid.js'
 import { useToast } from '../lib/toast.jsx'
 import BirthdayBanner from './BirthdayBanner.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
@@ -168,6 +169,8 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
   const toast = useToast()
+  const dmSheetRef     = useKeyboardAvoid()
+  const renameSheetRef = useKeyboardAvoid()
 
   // Stable refs for callbacks and one-time flags so loadConversations doesn't
   // rebuild (and tear down the Supabase channel) on every parent re-render.
@@ -725,6 +728,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* Rename modal */}
       {renamingConv && (
         <div
+          ref={renameSheetRef}
           className={`fixed inset-x-0 top-0 bg-black/50 flex items-end z-50 ${renameClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           style={{ height: '100dvh' }}
           onClick={closeRename}
@@ -768,6 +772,7 @@ export default function ConversationList({ session, groupId, members, enterClass
       {/* New message sheet */}
       {newDmOpen && (
         <div
+          ref={dmSheetRef}
           className={`fixed inset-x-0 top-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           style={{ height: '100dvh' }}
           onClick={closeDm}

@@ -7,6 +7,7 @@ import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import { useModalClose } from '../hooks/useModalClose.js'
+import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid.js'
 import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { haptic } from '../lib/haptic.js'
 import PrayerProfile from './PrayerProfile.jsx'
@@ -321,6 +322,7 @@ export default function PrayerTab() {
   // Group prayer creation
   const [showCreate, setShowCreate]               = useState(false)
   const [createClosing, closeCreate, resetCreate] = useModalClose(() => setShowCreate(false))
+  const createSheetRef = useKeyboardAvoid()
   const [selectedMemberIds, setSelectedMemberIds] = useState(new Set())
   const [requestText, setRequestText]             = useState('')
   const [creating, setCreating]                   = useState(false)
@@ -885,6 +887,7 @@ export default function PrayerTab() {
       {/* Group prayer creation sheet */}
       {showCreate && (
         <div
+          ref={createSheetRef}
           className={`fixed inset-x-0 top-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${createClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
           style={{ height: '100dvh' }}
           onClick={closeCreate}

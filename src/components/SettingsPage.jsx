@@ -9,6 +9,7 @@ import { db } from '../lib/db.js'
 import { setCookie } from '../lib/cookies.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { useToast } from '../lib/toast.jsx'
+import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid.js'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import AvatarPicker from './AvatarPicker.jsx'
 import InstallBanner from './InstallBanner.jsx'
@@ -123,6 +124,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
 
   // Sheet state — one sheet open at a time
   const [openSheet, setOpenSheet] = useState(null) // 'profile' | 'password'
+  const settingsSheetRef = useKeyboardAvoid()
 
   // Avatar
   const [avatarIcon, setAvatarIcon] = useState(null)
@@ -672,7 +674,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
             className="fixed inset-0 z-[60] bg-black/50"
             onClick={closeSettingsSheet}
           />
-          <div className="fixed inset-x-0 top-0 z-[60] flex items-end" style={{ height: '100dvh', pointerEvents: 'none' }}>
+          <div ref={settingsSheetRef} className="fixed inset-x-0 top-0 z-[60] flex items-end" style={{ height: '100dvh', pointerEvents: 'none' }}>
           <motion.div
             key="sheet-panel"
             initial={{ y: '100%' }}

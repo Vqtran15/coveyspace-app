@@ -7,6 +7,7 @@ import { useToast } from '../lib/toast.jsx'
 import { AvatarCircle } from '../lib/avatarIcons.jsx'
 import { weekOccToMode } from '../utils/schedule.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
+import { useKeyboardAvoid } from '../hooks/useKeyboardAvoid.js'
 
 function ScheduleFrequencyEditor({ settings, freqMode, onFreqModeChange, dowKey, wkOccKey, onSave }) {
   const dows = settings?.[dowKey] ?? []
@@ -105,6 +106,7 @@ export default function AdminPage() {
   const [memberSheet, setMemberSheet] = useState(null)       // member object
   const [memberSheetClosing, setMemberSheetClosing] = useState(false)
   const [memberSheetConfirm, setMemberSheetConfirm] = useState(null) // 'role' | 'remove' | 'coordinator'
+  const memberSheetRef = useKeyboardAvoid()
   const [coordinatorRoleValue, setCoordinatorRoleValue] = useState('')
   const [savingCoordinator, setSavingCoordinator] = useState(false)
   const [keyboardOffset, setKeyboardOffset] = useState(0)
@@ -728,6 +730,7 @@ export default function AdminPage() {
     {/* Member action sheet */}
     {memberSheet && (
       <div
+        ref={memberSheetRef}
         className={`fixed inset-x-0 top-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${memberSheetClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
         style={{ height: '100dvh' }}
         onClick={closeMemberSheet}

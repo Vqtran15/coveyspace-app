@@ -2,6 +2,7 @@ import { Users, PencilSimple, Camera, Trash, Check, X, ShieldCheck } from '@phos
 import { AvatarIcon, avatarColor } from '../../lib/avatarIcons.jsx'
 import { initials } from '../../utils/format.js'
 import { useChatContext } from './ChatContext.jsx'
+import { useKeyboardAvoid } from '../../hooks/useKeyboardAvoid.js'
 
 export default function ConversationInfo() {
   const {
@@ -15,6 +16,8 @@ export default function ConversationInfo() {
     handleRenameGroup, uploadGroupIcon, removeGroupIcon,
     groupIconFileRef,
   } = useChatContext()
+
+  const infoSheetRef = useKeyboardAvoid()
 
   if (!infoOpen) return null
 
@@ -30,6 +33,7 @@ export default function ConversationInfo() {
 
   return (
     <div
+      ref={infoSheetRef}
       className={`fixed inset-x-0 top-0 bg-black/50 flex items-end z-50 ${infoClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
       style={{ height: '100dvh' }}
       onClick={closeInfo}
