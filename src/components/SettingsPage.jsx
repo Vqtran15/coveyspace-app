@@ -206,6 +206,14 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   }
 
   useEffect(() => {
+    if (isAdmin) import('./AdminPage.jsx')
+    if (isChurchAdmin) {
+      import('./ChurchSettingsPage.jsx')
+      import('./ChurchAnalyticsPage.jsx')
+    }
+  }, [isAdmin, isChurchAdmin])
+
+  useEffect(() => {
     if (!groupId) return
     let mounted = true
     supabase.from('group_memberships')
