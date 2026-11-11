@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CaretDown, UsersThree, ChatCircleDots, HandsPraying, BookOpen, GearSix, ChatTeardropDots, ForkKnife, MagnifyingGlass, X, Church } from '@phosphor-icons/react'
 
@@ -238,6 +238,8 @@ function FAQItem({ q, a, adminOnly, forceOpen = false }) {
 export default function HelpPage() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+
+  useEffect(() => { import('./FeedbackPage.jsx') }, [])
 
   const trimmed = query.trim().toLowerCase()
   const filteredSections = trimmed

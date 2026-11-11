@@ -267,6 +267,8 @@ export default function ConversationList({ session, groupId, members, enterClass
     }
   }, [myId, groupId])
 
+  useEffect(() => { import('./NewMessagePage.jsx') }, [])
+
   useEffect(() => {
     if (!groupId) {
       setLoading(false)

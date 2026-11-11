@@ -206,7 +206,11 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
   }
 
   useEffect(() => {
-    if (isAdmin) import('./AdminPage.jsx')
+    import('./HelpPage.jsx')
+    if (isAdmin) {
+      import('./AdminPage.jsx')
+      import('./DangerZonePage.jsx')
+    }
     if (isChurchAdmin) {
       import('./ChurchSettingsPage.jsx')
       import('./ChurchAnalyticsPage.jsx')
