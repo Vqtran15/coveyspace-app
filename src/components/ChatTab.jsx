@@ -13,6 +13,7 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   const locationState = location.state
   const navigateRouter = useNavigate()
   function onOpenSettings() { navigateRouter('/settings') }
+  const mountTimeRef = useRef(Date.now())
   const tabResetRef = useRef(location.state?.tabReset ?? null)
   const [autoOpenGroupChat, setAutoOpenGroupChat] = useState(!!locationState?.openGroupChat)
   const consumeAutoOpen = useCallback(() => setAutoOpenGroupChat(false), [])
@@ -52,8 +53,13 @@ export default function ChatTab({ upcoming = [], birthdayBannerDismissed, birthd
   }, [])
 
   useEffect(() => {
-    if (locationState?.openGroupChat || locationState?.openMainChat) {
+    if (locationState?.openGroupChat || locationState?.openMainChat || locationState?.openConv) {
       navigateRouter('.', { replace: true, state: null })
+    }
+    if (locationState?.openConv) {
+      const elapsed = Date.now() - mountTimeRef.current
+      const delay = Math.max(0, 310 - elapsed)
+      setTimeout(() => openConv(locationState.openConv), delay)
     }
   }, [])
 

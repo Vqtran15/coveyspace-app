@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChatCircleDots, PencilSimple, Users, MagnifyingGlass, X, Check, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
+import { ChatCircleDots, PencilSimple, MagnifyingGlass, X, Trash, Bell, CaretRight, DotsThreeVertical, UsersThree } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { getCookie, setCookie } from '../lib/cookies.js'
 import { useModalClose } from '../hooks/useModalClose.js'
@@ -146,15 +147,10 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [conversations, setConversations] = useState([])
   const [lastMessages, setLastMessages]   = useState({})
   const [lastReadAt, setLastReadAt]       = useState(null)
+  const navigate = useNavigate()
   const [loading, setLoading]             = useState(true)
-  const [newDmOpen, setNewDmOpen]         = useState(false)
-  const [starting, setStarting]           = useState(false)
-  const [dmClosing, closeDm, resetDm]     = useModalClose(() => setNewDmOpen(false))
   const [searchOpen, setSearchOpen]       = useState(false)
   const [searchQuery, setSearchQuery]     = useState('')
-  const [newChatMode, setNewChatMode]         = useState('dm')
-  const [selectedMembers, setSelectedMembers] = useState(new Set())
-  const [creating, setCreating]               = useState(false)
   const [confirmDeleteConv, setConfirmDeleteConv] = useState(null)
   const [deleteClosing, closeDeleteConfirm, resetDeleteConfirm] = useModalClose(() => setConfirmDeleteConv(null))
   const [deletingConvId, setDeletingConvId]   = useState(null)
@@ -164,12 +160,10 @@ export default function ConversationList({ session, groupId, members, enterClass
   const [renameValue, setRenameValue]         = useState('')
   const [renaming, setRenaming]               = useState(false)
   const [renameClosing, closeRename, resetRename] = useModalClose(() => setRenamingConv(null))
-  const [memberSearchQuery, setMemberSearchQuery] = useState('')
   const [notifDismissed, setNotifDismissed]     = useState(() => getCookie('notifBannerDismissed'))
   const [notifBannerClosing, setNotifBannerClosing] = useState(false)
   const searchInputRef = useRef(null)
   const toast = useToast()
-  const dmSheetRef     = useKeyboardAvoid()
   const renameSheetRef = useKeyboardAvoid()
 
   // Stable refs for callbacks and one-time flags so loadConversations doesn't
@@ -379,20 +373,6 @@ export default function ConversationList({ session, groupId, members, enterClass
     setDeletingConvId(null)
   }
 
-  function openModal() {
-    resetDm()
-    setNewChatMode('dm')
-    setSelectedMembers(new Set())
-    setMemberSearchQuery('')
-    setNewDmOpen(true)
-  }
-
-  function switchMode(mode) {
-    setNewChatMode(mode)
-    setMemberSearchQuery('')
-    if (mode === 'group') setSelectedMembers(new Set())
-  }
-
   async function handleRename() {
     const trimmed = renameValue.trim()
     if (!trimmed) return
@@ -407,71 +387,6 @@ export default function ConversationList({ session, groupId, members, enterClass
     setRenaming(false)
   }
 
-  function toggleMember(userId) {
-    setSelectedMembers(prev => {
-      const next = new Set(prev)
-      if (next.has(userId)) next.delete(userId)
-      else next.add(userId)
-      return next
-    })
-  }
-
-  async function startDm(otherId) {
-    setStarting(true)
-    const { data: convId, error } = await supabase.rpc('find_or_create_dm', { other_user_id: otherId })
-    if (error || !convId) { setStarting(false); return }
-
-    const existing = conversations.find(c => c.id === convId)
-    if (existing) {
-      closeDm()
-      setStarting(false)
-      onSelect(existing)
-      return
-    }
-
-    const { data: conv } = await supabase
-      .from('conversations')
-      .select('*, conversation_members(user_id)')
-      .eq('id', convId)
-      .single()
-
-    closeDm()
-    setStarting(false)
-    if (conv) {
-      setConversations(prev => [conv, ...prev])
-      onSelect(conv)
-    }
-  }
-
-  async function createGroupChat() {
-    if (selectedMembers.size === 0) return
-    setCreating(true)
-    const memberIds = Array.from(selectedMembers)
-    const chatName = memberIds
-      .map(id => members.find(m => m.user_id === id)?.display_name?.split(' ')[0])
-      .filter(Boolean)
-      .join(', ') || 'Group Chat'
-    const { data: convId, error } = await supabase.rpc('create_group_chat', {
-      chat_name: chatName,
-      member_ids: memberIds,
-    })
-    if (error || !convId) { setCreating(false); return }
-
-    const { data: conv } = await supabase
-      .from('conversations')
-      .select('*, conversation_members(user_id)')
-      .eq('id', convId)
-      .single()
-
-    closeDm()
-    setCreating(false)
-    if (conv) {
-      setConversations(prev => [conv, ...prev])
-      onSelect(conv)
-    }
-  }
-
-  const otherMembers = members.filter(m => m.user_id !== myId)
 
   const showNotifBanner = pushSupported && !pushSubscribed && pushPermission !== 'denied' && !notifDismissed
 
@@ -542,7 +457,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             <MagnifyingGlass size={20} weight={searchOpen ? 'fill' : 'regular'} />
           </button>
           <button
-            onClick={openModal}
+            onClick={() => navigate('/new-message')}
             aria-label="New message"
             className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember-700 transition-colors"
           >
@@ -765,175 +680,6 @@ export default function ConversationList({ session, groupId, members, enterClass
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* New message sheet */}
-      {newDmOpen && (
-        <div
-          ref={dmSheetRef}
-          className={`fixed inset-x-0 top-0 bg-black/50 flex items-end lg:items-center lg:justify-center z-50 ${dmClosing ? 'animate-backdrop-out' : 'animate-overlay-in'}`}
-          style={{ height: '100dvh' }}
-          onClick={closeDm}
-        >
-          <div
-            className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-lg mx-auto ${dmClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-4">
-              <h2 className="text-lg font-bold text-stone-800">New Message</h2>
-              <button
-                onClick={closeDm}
-                aria-label="Close"
-                className="text-stone-400 hover:text-stone-600 w-11 h-11 flex items-center justify-center rounded-full hover:bg-stone-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Mode switcher */}
-            <div className="mx-5 mb-4 flex bg-stone-100 rounded-xl p-1">
-              <button
-                onClick={() => switchMode('dm')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${newChatMode === 'dm' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-              >
-                Direct message
-              </button>
-              <button
-                onClick={() => switchMode('group')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${newChatMode === 'group' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
-              >
-                Group chat
-              </button>
-            </div>
-
-            {/* Mode content — keyed so it remounts and animates on tab switch */}
-            <div key={newChatMode} className="animate-fade-up">
-
-            {/* DM mode */}
-            {newChatMode === 'dm' && (
-              <div>
-                {otherMembers.length > 5 && (
-                  <div className="px-4 pb-3">
-                    <div className="relative">
-                      <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={memberSearchQuery}
-                        onChange={e => setMemberSearchQuery(e.target.value)}
-                        placeholder="Search members…"
-                        className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-8 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                      />
-                      {memberSearchQuery && (
-                        <button onClick={() => setMemberSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                          <X size={12} weight="bold" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              <div className="px-4 pb-8 space-y-1 max-h-72 overflow-y-auto">
-                {otherMembers.length === 0 ? (
-                  <p className="text-stone-500 text-sm text-center py-6">
-                    No other members in this group yet.
-                  </p>
-                ) : otherMembers.filter(m => !memberSearchQuery || m.display_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())).map(m => (
-                  <button
-                    key={m.user_id}
-                    onClick={() => startDm(m.user_id)}
-                    disabled={starting}
-                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-stone-50 transition-colors disabled:opacity-40"
-                  >
-                    <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${m.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(m.user_id, m.avatar_color)}`}>
-                      {m.avatar_image_url
-                        ? <img src={m.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                        : m.avatar_icon
-                          ? <AvatarIcon name={m.avatar_icon} size={20} />
-                          : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
-                      }
-                    </div>
-                    <span className="text-sm font-medium text-stone-800">{m.display_name}</span>
-                  </button>
-                ))}
-              </div>
-              </div>
-            )}
-
-            {/* Group chat mode */}
-            {newChatMode === 'group' && (
-              <div className="px-5 pb-8">
-                {otherMembers.length === 0 ? (
-                  <p className="text-stone-500 text-sm text-center py-4">
-                    No other members in this group yet.
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">
-                      Add members
-                      {selectedMembers.size > 0 && (
-                        <span className="ml-2 text-ember normal-case font-semibold">
-                          {selectedMembers.size} selected
-                        </span>
-                      )}
-                    </p>
-                    {otherMembers.length > 5 && (
-                      <div className="relative mb-3">
-                        <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-                        <input
-                          type="text"
-                          value={memberSearchQuery}
-                          onChange={e => setMemberSearchQuery(e.target.value)}
-                          placeholder="Search members…"
-                          className="w-full bg-stone-50 border border-stone-200 rounded-xl pl-8 pr-8 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-                        />
-                        {memberSearchQuery && (
-                          <button onClick={() => setMemberSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                            <X size={12} weight="bold" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <div className="space-y-0.5 max-h-48 overflow-y-auto mb-4">
-                      {otherMembers.filter(m => !memberSearchQuery || m.display_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())).map(m => {
-                        const selected = selectedMembers.has(m.user_id)
-                        return (
-                          <button
-                            key={m.user_id}
-                            onClick={() => toggleMember(m.user_id)}
-                            className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-stone-50 transition-colors"
-                          >
-                            <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${m.avatar_image_url ? 'bg-stone-200 shadow-md' : avatarColor(m.user_id, m.avatar_color)}`}>
-                              {m.avatar_image_url
-                                ? <img src={m.avatar_image_url} alt="" className="w-full h-full object-cover" />
-                                : m.avatar_icon
-                                  ? <AvatarIcon name={m.avatar_icon} size={20} />
-                                  : <span className="text-white text-sm font-bold">{initials(m.display_name)}</span>
-                              }
-                            </div>
-                            <span className="flex-1 text-sm font-medium text-stone-800 text-left">{m.display_name}</span>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-ember border-ember' : 'border-stone-300'}`}>
-                              {selected && <Check size={11} weight="bold" className="text-white" />}
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
-                <button
-                  onClick={createGroupChat}
-                  disabled={creating || selectedMembers.size === 0}
-                  className="w-full py-3 rounded-xl bg-ember text-white font-semibold text-sm hover:bg-ember-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {creating ? 'Creating…' : 'Create group chat'}
-                </button>
-              </div>
-            )}
-
-            </div>{/* end keyed animation wrapper */}
           </div>
         </div>
       )}
