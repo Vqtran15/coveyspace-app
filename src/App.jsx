@@ -44,6 +44,7 @@ const NewMessagePage     = lazy(() => import('./components/NewMessagePage.jsx'))
 const FeedbackPage       = lazy(() => import('./components/FeedbackPage.jsx'))
 const AddEventPage       = lazy(() => import('./components/AddEventPage.jsx'))
 const SignupPage         = lazy(() => import('./components/SignupPage.jsx'))
+const AddPassagePage     = lazy(() => import('./components/AddPassagePage.jsx'))
 
 const MEALS_CONFIG = {
   label: 'Meal Signup',
@@ -588,8 +589,9 @@ function AppContent() {
                 <Route path="/danger-zone"     element={<DangerZonePage />} />
                 <Route path="/help"            element={<HelpPage />} />
                 <Route path="/new-message"     element={<NewMessagePage />} />
-                <Route path="/events/new"      element={<AddEventPage />} />
-                <Route path="/schedule/signup" element={<SignupPage />} />
+                <Route path="/events/new"       element={<AddEventPage />} />
+                <Route path="/schedule/signup"  element={<SignupPage />} />
+                <Route path="/bible/add-passage" element={<AddPassagePage />} />
                 <Route path="/feedback"        element={<FeedbackPage />} />
                 <Route path="/settings" element={
                   <SettingsPage

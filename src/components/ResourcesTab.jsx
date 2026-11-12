@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, Books, MagnifyingGlass, Copy, X, ArrowLeft,
@@ -13,6 +13,7 @@ import { haptic } from '../lib/haptic.js'
 import { useToast } from '../lib/toast.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import ChurchBroadcastView from './ChurchBroadcastView.jsx'
+import { OT_BOOKS, NT_BOOKS, ALL_BOOKS, TRANSLATION, newId, fetchChapter, parseVerses } from '../lib/bibleData.js'
 
 function stripHtml(html) {
   try {
@@ -23,9 +24,6 @@ function stripHtml(html) {
     return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim()
   } catch { return '' }
 }
-
-const BIBLE_API = 'https://bible.helloao.org/api'
-const TRANSLATION = 'BSB'
 
 const BOOKS = {
   'genesis': 'GEN', 'gen': 'GEN',
@@ -96,80 +94,6 @@ const BOOKS = {
   'revelation': 'REV', 'rev': 'REV', 'apoc': 'REV',
 }
 
-const OT_BOOKS = [
-  { id: 'GEN', name: 'Genesis', chapters: 50 },
-  { id: 'EXO', name: 'Exodus', chapters: 40 },
-  { id: 'LEV', name: 'Leviticus', chapters: 27 },
-  { id: 'NUM', name: 'Numbers', chapters: 36 },
-  { id: 'DEU', name: 'Deuteronomy', chapters: 34 },
-  { id: 'JOS', name: 'Joshua', chapters: 24 },
-  { id: 'JDG', name: 'Judges', chapters: 21 },
-  { id: 'RUT', name: 'Ruth', chapters: 4 },
-  { id: '1SA', name: '1 Samuel', chapters: 31 },
-  { id: '2SA', name: '2 Samuel', chapters: 24 },
-  { id: '1KI', name: '1 Kings', chapters: 22 },
-  { id: '2KI', name: '2 Kings', chapters: 25 },
-  { id: '1CH', name: '1 Chronicles', chapters: 29 },
-  { id: '2CH', name: '2 Chronicles', chapters: 36 },
-  { id: 'EZR', name: 'Ezra', chapters: 10 },
-  { id: 'NEH', name: 'Nehemiah', chapters: 13 },
-  { id: 'EST', name: 'Esther', chapters: 10 },
-  { id: 'JOB', name: 'Job', chapters: 42 },
-  { id: 'PSA', name: 'Psalms', chapters: 150 },
-  { id: 'PRO', name: 'Proverbs', chapters: 31 },
-  { id: 'ECC', name: 'Ecclesiastes', chapters: 12 },
-  { id: 'SNG', name: 'Song of Solomon', chapters: 8 },
-  { id: 'ISA', name: 'Isaiah', chapters: 66 },
-  { id: 'JER', name: 'Jeremiah', chapters: 52 },
-  { id: 'LAM', name: 'Lamentations', chapters: 5 },
-  { id: 'EZK', name: 'Ezekiel', chapters: 48 },
-  { id: 'DAN', name: 'Daniel', chapters: 12 },
-  { id: 'HOS', name: 'Hosea', chapters: 14 },
-  { id: 'JOL', name: 'Joel', chapters: 3 },
-  { id: 'AMO', name: 'Amos', chapters: 9 },
-  { id: 'OBA', name: 'Obadiah', chapters: 1 },
-  { id: 'JON', name: 'Jonah', chapters: 4 },
-  { id: 'MIC', name: 'Micah', chapters: 7 },
-  { id: 'NAH', name: 'Nahum', chapters: 3 },
-  { id: 'HAB', name: 'Habakkuk', chapters: 3 },
-  { id: 'ZEP', name: 'Zephaniah', chapters: 3 },
-  { id: 'HAG', name: 'Haggai', chapters: 2 },
-  { id: 'ZEC', name: 'Zechariah', chapters: 14 },
-  { id: 'MAL', name: 'Malachi', chapters: 4 },
-]
-
-const NT_BOOKS = [
-  { id: 'MAT', name: 'Matthew', chapters: 28 },
-  { id: 'MRK', name: 'Mark', chapters: 16 },
-  { id: 'LUK', name: 'Luke', chapters: 24 },
-  { id: 'JHN', name: 'John', chapters: 21 },
-  { id: 'ACT', name: 'Acts', chapters: 28 },
-  { id: 'ROM', name: 'Romans', chapters: 16 },
-  { id: '1CO', name: '1 Corinthians', chapters: 16 },
-  { id: '2CO', name: '2 Corinthians', chapters: 13 },
-  { id: 'GAL', name: 'Galatians', chapters: 6 },
-  { id: 'EPH', name: 'Ephesians', chapters: 6 },
-  { id: 'PHP', name: 'Philippians', chapters: 4 },
-  { id: 'COL', name: 'Colossians', chapters: 4 },
-  { id: '1TH', name: '1 Thessalonians', chapters: 5 },
-  { id: '2TH', name: '2 Thessalonians', chapters: 3 },
-  { id: '1TI', name: '1 Timothy', chapters: 6 },
-  { id: '2TI', name: '2 Timothy', chapters: 4 },
-  { id: 'TIT', name: 'Titus', chapters: 3 },
-  { id: 'PHM', name: 'Philemon', chapters: 1 },
-  { id: 'HEB', name: 'Hebrews', chapters: 13 },
-  { id: 'JAS', name: 'James', chapters: 5 },
-  { id: '1PE', name: '1 Peter', chapters: 5 },
-  { id: '2PE', name: '2 Peter', chapters: 3 },
-  { id: '1JN', name: '1 John', chapters: 5 },
-  { id: '2JN', name: '2 John', chapters: 1 },
-  { id: '3JN', name: '3 John', chapters: 1 },
-  { id: 'JUD', name: 'Jude', chapters: 1 },
-  { id: 'REV', name: 'Revelation', chapters: 22 },
-]
-
-const ALL_BOOKS = [...OT_BOOKS, ...NT_BOOKS]
-
 const DEFAULT_PASSAGES = [
   { id: 'dft-1', label: 'Psalm 23',        bookId: 'PSA', chapter: 23, startVerse: null, endVerse: null },
   { id: 'dft-2', label: 'Romans 8:28-39',  bookId: 'ROM', chapter: 8,  startVerse: 28,   endVerse: 39   },
@@ -178,29 +102,6 @@ const DEFAULT_PASSAGES = [
   { id: 'dft-5', label: '1 Cor 13:4-7',    bookId: '1CO', chapter: 13, startVerse: 4,    endVerse: 7    },
   { id: 'dft-6', label: 'Phil 4:6-7',      bookId: 'PHP', chapter: 4,  startVerse: 6,    endVerse: 7    },
 ]
-
-function newId() {
-  return Math.random().toString(36).slice(2, 9)
-}
-
-function extractText(content) {
-  const parts = []
-  for (const c of content) {
-    if (typeof c === 'string') parts.push(c)
-    else if (c?.text) parts.push(c.text)
-  }
-  return parts.reduce((acc, part) => {
-    if (!acc) return part
-    if (/^["'“”‘’,.;:!?)\]\}\s]+$/.test(part)) return acc + part
-    return acc + String.fromCharCode(32) + part
-  }, [].join(String.fromCharCode())).trim()
-}
-
-function parseVerses(data) {
-  return (data?.chapter?.content ?? [])
-    .filter(item => item.type === 'verse')
-    .map(item => ({ number: item.number, text: extractText(item.content) }))
-}
 
 function parseRef(input) {
   const s = input.trim()
@@ -217,327 +118,6 @@ function parseRef(input) {
     startVerse: m[4] ? parseInt(m[4], 10) : null,
     endVerse: m[5] ? parseInt(m[5], 10) : null,
   }
-}
-
-async function fetchChapter(bookId, chapter) {
-  const res = await fetch(`${BIBLE_API}/${TRANSLATION}/${bookId}/${chapter}.json`)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json()
-}
-
-// ─── AddEditSheet ──────────────────────────────────────────────────────────
-
-function AddEditSheet({ initial, onSave, onClose }) {
-  const [bookId, setBookId] = useState(initial?.bookId ?? '')
-  const [chapterStr, setChapterStr] = useState(initial?.chapter ? String(initial.chapter) : '')
-  const [startVerseStr, setStartVerseStr] = useState(initial?.startVerse ? String(initial.startVerse) : '')
-  const [endVerseStr, setEndVerseStr] = useState(
-    initial?.endVerse && initial.endVerse !== initial.startVerse ? String(initial.endVerse) : ''
-  )
-  const [label, setLabel] = useState(initial?.label ?? '')
-  const [labelEdited, setLabelEdited] = useState(!!initial?.id)
-  const [errors, setErrors] = useState({})
-  const [saving, setSaving] = useState(false)
-  const [verseExistsError, setVerseExistsError] = useState(null)
-
-  const overlayRef = useRef(null)
-  const sheetRef = useRef(null)
-
-  const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
-
-  function buildAutoLabel(bid, ch, sv, ev) {
-    const book = ALL_BOOKS.find(b => b.id === bid)
-    if (!book || !ch) return ''
-    const chNum = parseInt(ch, 10)
-    if (isNaN(chNum)) return ''
-    const base = `${book.name} ${chNum}`
-    if (!sv) return base
-    const svNum = parseInt(sv, 10)
-    if (isNaN(svNum)) return base
-    if (!ev) return `${base}:${svNum}`
-    const evNum = parseInt(ev, 10)
-    if (isNaN(evNum) || evNum <= svNum) return `${base}:${svNum}`
-    return `${base}:${svNum}–${evNum}`
-  }
-
-  useEffect(() => {
-    const vv = window.visualViewport
-    if (!vv) return
-    function update() {
-      if (!overlayRef.current || !sheetRef.current) return
-      const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
-      if (offset > 0) {
-        overlayRef.current.style.paddingBottom = `${offset}px`
-        sheetRef.current.style.maxHeight = `${vv.height - 16}px`
-      } else {
-        overlayRef.current.style.paddingBottom = ''
-        sheetRef.current.style.maxHeight = ''
-      }
-    }
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-    }
-  }, [])
-
-  function handleBookChange(bid) {
-    setBookId(bid)
-    setErrors(e => ({ ...e, book: false }))
-    setVerseExistsError(null)
-    const book = ALL_BOOKS.find(b => b.id === bid)
-    const ch = parseInt(chapterStr, 10)
-    const shouldResetChapter = book && !isNaN(ch) && ch > book.chapters
-    if (shouldResetChapter) setChapterStr('')
-    if (!labelEdited) setLabel(buildAutoLabel(bid, shouldResetChapter ? '' : chapterStr, startVerseStr, endVerseStr))
-  }
-
-  function handleChapterChange(val) {
-    setChapterStr(val)
-    setErrors(e => ({ ...e, chapter: false }))
-    setVerseExistsError(null)
-    if (!labelEdited) setLabel(buildAutoLabel(bookId, val, startVerseStr, endVerseStr))
-  }
-
-  function handleStartVerseChange(val) {
-    setStartVerseStr(val)
-    setErrors(e => ({ ...e, startVerse: false }))
-    setVerseExistsError(null)
-    if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, val, endVerseStr))
-  }
-
-  function handleEndVerseChange(val) {
-    setEndVerseStr(val)
-    setErrors(e => ({ ...e, endVerse: false }))
-    setVerseExistsError(null)
-    if (!labelEdited) setLabel(buildAutoLabel(bookId, chapterStr, startVerseStr, val))
-  }
-
-  function handleLabelChange(val) {
-    setLabel(val)
-    setLabelEdited(true)
-    setVerseExistsError(null)
-  }
-
-  async function handleSave() {
-    setVerseExistsError(null)
-    const newErrors = {}
-    const book = ALL_BOOKS.find(b => b.id === bookId)
-    if (!book) newErrors.book = true
-    const ch = parseInt(chapterStr, 10)
-    if (!book || isNaN(ch) || ch < 1 || ch > (book?.chapters ?? 0)) newErrors.chapter = true
-    let startVerse = null, endVerse = null
-    if (startVerseStr.trim()) {
-      const sv = parseInt(startVerseStr, 10)
-      if (isNaN(sv) || sv < 1) {
-        newErrors.startVerse = true
-      } else {
-        startVerse = sv
-      }
-    }
-    if (endVerseStr.trim()) {
-      const ev = parseInt(endVerseStr, 10)
-      if (isNaN(ev) || ev < 1) {
-        newErrors.endVerse = true
-      } else if (startVerse !== null && ev <= startVerse) {
-        newErrors.endVerse = true
-      } else {
-        endVerse = ev
-      }
-    }
-    if (Object.values(newErrors).some(Boolean)) { setErrors(newErrors); return }
-
-    if (startVerse !== null) {
-      setSaving(true)
-      try {
-        const data = await fetchChapter(bookId, ch)
-        const all = parseVerses(data)
-        const lastVerseNum = all.length > 0 ? all[all.length - 1].number : 0
-        if (!all.find(v => v.number === startVerse)) {
-          setVerseExistsError(`Verse ${startVerse} doesn't exist in ${book.name} ${ch}`)
-          return
-        }
-        if (endVerse !== null && endVerse > lastVerseNum) {
-          setVerseExistsError(`Verse ${endVerse} doesn't exist in ${book.name} ${ch}`)
-          return
-        }
-      } catch {
-        setVerseExistsError('Could not verify the verse — check your connection')
-        return
-      } finally {
-        setSaving(false)
-      }
-    }
-
-    const finalLabel = label.trim() || buildAutoLabel(bookId, chapterStr, startVerseStr, endVerseStr)
-    onSave({ id: initial?.id ?? newId(), label: finalLabel, bookId, chapter: ch, startVerse, endVerse })
-  }
-
-  return (
-    <motion.div
-      ref={overlayRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
-      className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <motion.div
-        ref={sheetRef}
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-        className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden lg:w-[480px] lg:max-w-full lg:shadow-xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex justify-center pt-3 pb-1 lg:hidden">
-          <div className="w-9 h-1 rounded-full bg-stone-200" />
-        </div>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-stone-100">
-          <h3 className="font-bold text-stone-800 text-base">
-            {initial?.id ? 'Edit Passage' : 'Add to Quick Access'}
-          </h3>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <div className="px-5 pt-4 pb-5 space-y-4 overflow-y-auto" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}>
-          {/* Book */}
-          <div>
-            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-              Book
-            </label>
-            <select
-              value={bookId}
-              onChange={e => handleBookChange(e.target.value)}
-              className={[
-                'w-full px-4 py-2.5 rounded-xl border text-sm bg-white appearance-none',
-                'focus:outline-none focus:ring-2 transition',
-                errors.book ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
-                !bookId ? 'text-stone-400' : 'text-stone-800',
-              ].join(' ')}
-            >
-              <option value="" disabled>Select a book…</option>
-              <optgroup label="Old Testament">
-                {OT_BOOKS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </optgroup>
-              <optgroup label="New Testament">
-                {NT_BOOKS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </optgroup>
-            </select>
-            {errors.book && <p className="text-xs text-red-500 mt-1">Please select a book</p>}
-          </div>
-
-          {/* Chapter + From verse + To verse */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-                Chapter
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={selectedBook?.chapters ?? 999}
-                value={chapterStr}
-                onChange={e => handleChapterChange(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSave()}
-                placeholder="1"
-                className={[
-                  'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
-                  'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.chapter ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
-                ].join(' ')}
-              />
-              {errors.chapter && (
-                <p className="text-xs text-red-500 mt-1">
-                  {selectedBook ? `1–${selectedBook.chapters}` : 'Required'}
-                </p>
-              )}
-            </div>
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-                From <span className="font-normal normal-case text-stone-400">(opt)</span>
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={startVerseStr}
-                onChange={e => handleStartVerseChange(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSave()}
-                placeholder="16"
-                className={[
-                  'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
-                  'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.startVerse || verseExistsError ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
-                ].join(' ')}
-              />
-              {(errors.startVerse || verseExistsError) && (
-                <p className="text-xs text-red-500 mt-1">{verseExistsError ?? 'Invalid'}</p>
-              )}
-            </div>
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-                To <span className="font-normal normal-case text-stone-400">(opt)</span>
-              </label>
-              <input
-                type="number"
-                min={startVerseStr ? parseInt(startVerseStr, 10) + 1 : 2}
-                value={endVerseStr}
-                onChange={e => handleEndVerseChange(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSave()}
-                placeholder="39"
-                className={[
-                  'w-full px-3 py-2.5 rounded-xl border text-sm text-stone-800',
-                  'placeholder:text-stone-400 focus:outline-none focus:ring-2 transition',
-                  errors.endVerse ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-ember/20',
-                ].join(' ')}
-              />
-              {errors.endVerse && (
-                <p className="text-xs text-red-500 mt-1">Must be &gt; From</p>
-              )}
-            </div>
-          </div>
-
-          {/* Label */}
-          <div>
-            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5 block">
-              Label <span className="font-normal normal-case text-stone-400">(optional)</span>
-            </label>
-            <input
-              value={label}
-              onChange={e => handleLabelChange(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSave()}
-              placeholder="Custom name for this passage"
-              className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember/20 transition"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-1">
-            <button
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex-1 py-2.5 rounded-xl bg-ember text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
-            >
-              {saving ? 'Checking…' : 'Save'}
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
 }
 
 // ─── BibleBrowser ─────────────────────────────────────────────────────────
@@ -756,6 +336,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
   const { userId, churchId, groupChurchId, churchName, churchConversations, guideEnabled, givingEnabled, groupSettings, isAdmin, profileLoaded } = useAppContext()
   const toast = useToast()
   const location = useLocation()
+  const navigate = useNavigate()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
 
   // navigation: 'home' | 'chapter'
@@ -776,7 +357,6 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
   // user passages
   const [userPassages, setUserPassages] = useState(null)
   const [editMode, setEditMode] = useState(false)
-  const [addEditSheet, setAddEditSheet] = useState(null)
 
   const [dndState, setDndState] = useState(null)
   const [deleteConfirmIdx, setDeleteConfirmIdx] = useState(null)
@@ -987,16 +567,6 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
     clearTimeout(openReaderTimer.current)
   }, [])
 
-  // ── Scroll to top when Add/Edit sheet closes ───────────────────────────
-  // iOS scrolls the body when the keyboard appears inside a fixed overlay.
-  // When the sheet closes we undo that drift so newly-added cards are
-  // visible at the top of the page. Using scrollTo(0,0) — the two-arg
-  // form is reliable on all iOS versions including 15.0–15.3.
-  useEffect(() => {
-    if (!addEditSheet) return
-    return () => window.scrollTo(0, 0)
-  }, [addEditSheet])
-
   // ── Fetch first-verse previews for quick access cards ──────────────────
   useEffect(() => {
     if (!userPassages?.length) return
@@ -1131,14 +701,8 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
   }
 
   // ── Passage CRUD ───────────────────────────────────────────────────────
-  function handleSavePassage(passage) {
-    const next = addEditSheet?.mode === 'edit' && addEditSheet.index != null
-      ? userPassages.map((p, i) => i === addEditSheet.index ? passage : p)
-      : [...(userPassages ?? []), passage]
-    setUserPassages(next)
-    setAddEditSheet(null)
-    clearTimeout(saveTimerRef.current)
-    persistPassages(next)
+  function openAddEditPage(mode, index, passage) {
+    navigate('/bible/add-passage', { state: { mode, index: index ?? null, initial: passage ?? null } })
   }
 
   function handleDeletePassage(index) {
@@ -1280,10 +844,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
     const baseLabel = hi !== null && hi !== lo
       ? `${openChapter.bookName} ${openChapter.chapterNum}:${lo}–${hi}`
       : `${openChapter.bookName} ${openChapter.chapterNum}:${lo}`
-    setAddEditSheet({
-      mode: 'add',
-      passage: { bookId: openChapter.bookId, chapter: openChapter.chapterNum, startVerse: lo, endVerse: hi, label: baseLabel },
-    })
+    openAddEditPage('add', null, { bookId: openChapter.bookId, chapter: openChapter.chapterNum, startVerse: lo, endVerse: hi, label: baseLabel })
     setSelectMode(false)
     setVerseSelectAnchor(null)
     setVerseSelectEnd(null)
@@ -1705,7 +1266,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
                 </button>
               )}
               <button
-                onClick={() => setAddEditSheet({ mode: 'add' })}
+                onClick={() => openAddEditPage('add', null, null)}
                 aria-label="Add passage to Quick Access"
                 className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:text-ember hover:bg-stone-100 transition-colors"
               >
@@ -1740,7 +1301,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
               </div>
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setAddEditSheet({ mode: 'add' })}
+                onClick={() => openAddEditPage('add', null, null)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold"
               >
                 <Plus size={16} weight="bold" />
@@ -1812,7 +1373,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
                             />
                             <div className="absolute right-0 top-8 z-[13] bg-white rounded-xl shadow-lg border border-stone-100 overflow-hidden w-32">
                               <button
-                                onClick={e => { e.stopPropagation(); setCardMenuIdx(null); setAddEditSheet({ mode: 'edit', index: i, passage: p }) }}
+                                onClick={e => { e.stopPropagation(); setCardMenuIdx(null); openAddEditPage('edit', i, p) }}
                                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
                               >
                                 <PencilSimple size={14} />
@@ -2134,7 +1695,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
               <button
                 onClick={() => {
                   setShowChapterMenu(false)
-                  if (!isAlreadySaved) setAddEditSheet({ mode: 'add', passage: {
+                  if (!isAlreadySaved) openAddEditPage('add', null, {
                     bookId: openChapter.bookId,
                     chapter: openChapter.chapterNum,
                     startVerse: openChapter.startVerse,
@@ -2142,7 +1703,7 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
                     label: openChapter.startVerse != null
                       ? `${openChapter.bookName} ${openChapter.chapterNum}:${openChapter.startVerse}${openChapter.endVerse && openChapter.endVerse !== openChapter.startVerse ? '-' + openChapter.endVerse : ''}`
                       : `${openChapter.bookName} ${openChapter.chapterNum}`,
-                  }})
+                  })
                 }}
                 disabled={isAlreadySaved}
                 className="flex items-center gap-3 w-full px-3 py-3.5 rounded-xl text-left transition-colors disabled:opacity-50 hover:bg-stone-50"
@@ -2174,19 +1735,6 @@ export default function ResourcesTab({ onOpenGuide, onOpenGiving, birthdayBanner
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ── Add / Edit sheet ───────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {addEditSheet && (
-          <AddEditSheet
-            key={addEditSheet.mode + (addEditSheet.index ?? 'new')}
-            initial={addEditSheet.passage}
-            onSave={handleSavePassage}
-            onClose={() => setAddEditSheet(null)}
-          />
-        )}
-      </AnimatePresence>
-
 
       {/* ── Delete confirmation sheet ─────────────────────────────────────── */}
       <AnimatePresence>
