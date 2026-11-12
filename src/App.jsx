@@ -115,11 +115,15 @@ function AppContent() {
   const navRef          = useRef(null)
   const pillInitialized = useRef(false)
   const [pillStyle, setPillStyle] = useState(null)
+  const [navMounted, setNavMounted] = useState(0)
 
   // Callback ref: reset pill when nav unmounts (chat opens) so it snaps on next mount.
+  // Increment navMounted when the nav element appears so the pill effect re-runs and
+  // snaps the indicator into place before the user's first tap.
   const setNavRef = useCallback(el => {
     navRef.current = el
     if (!el) { pillInitialized.current = false; setPillStyle(null) }
+    else { setNavMounted(n => n + 1) }
   }, [])
 
   const setScrollRef = useCallback(el => {
@@ -519,7 +523,7 @@ function AppContent() {
     } else {
       setPillStyle({ ...next, transition: 'left .42s cubic-bezier(.34,1.56,.64,1), top .42s cubic-bezier(.34,1.56,.64,1), width .25s ease, height .25s ease, border-radius .2s ease' })
     }
-  }, [location.pathname, chatViewOpen, visibleTabs.length])
+  }, [location.pathname, chatViewOpen, visibleTabs.length, navMounted])
 
   // ── Desktop keyboard shortcuts ─────────────────────────────────────────────
   useEffect(() => {
