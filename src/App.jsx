@@ -224,6 +224,23 @@ function AppContent() {
     return () => { clearTimeout(stableTimer); clearInterval(poll) }
   }, [authLoading, splashMinDone, resumeKey])
 
+  // ── Stale-chunk reload — fires when old SW serves index.html for a new JS chunk ──
+  useEffect(() => {
+    function onUnhandledRejection(e) {
+      const msg = String(e.reason?.message ?? e.reason ?? '')
+      if (
+        msg.includes('MIME type') ||
+        msg.includes('dynamically imported module') ||
+        msg.includes('Failed to fetch dynamically') ||
+        msg.includes('Importing a module script failed')
+      ) {
+        window.location.reload()
+      }
+    }
+    window.addEventListener('unhandledrejection', onUnhandledRejection)
+    return () => window.removeEventListener('unhandledrejection', onUnhandledRejection)
+  }, [])
+
   // ── Network status ─────────────────────────────────────────────────────────
   useEffect(() => {
     const up   = () => setIsOnline(true)
