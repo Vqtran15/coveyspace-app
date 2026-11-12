@@ -156,39 +156,31 @@ function AppContent() {
 
   useEffect(() => {
     if (authLoading || !splashMinDone) return
-    setSplashExiting(true)
 
-    // Hide the nav only after both:
-    //  a) the 350ms splash-out animation has finished, AND
-    //  b) window.innerHeight has been stable for 300ms
-    // iOS PWA launch: the viewport gradually expands for ~700ms after launch
-    // while the system zoom animation runs; showing the fixed nav mid-expansion
-    // causes visible downward drift as it tracks win.h - nav.h - bottom.
-    let minDone = false
-    let viewportDone = false
-    function maybeHide() { if (minDone && viewportDone) setSplashVisible(false) }
-
-    const minTimer = setTimeout(() => { minDone = true; maybeHide() }, 350)
-
-    // iOS PWA: window.innerHeight expands silently (no resize events) during the
-    // launch zoom animation. Poll every 50ms and debounce 300ms of stability.
+    // iOS PWA launch: window.innerHeight expands silently (no resize events) for
+    // ~700ms while the system zoom animation runs. Wait for it to settle BEFORE
+    // starting the splash fade-out so the nav never appears mid-expansion.
     let lastH = window.innerHeight
     let stableTimer = null
+    let poll = null
+
+    function onStable() {
+      clearInterval(poll)
+      setSplashExiting(true)
+      setTimeout(() => setSplashVisible(false), 350)
+    }
     function resetStable() {
       clearTimeout(stableTimer)
-      stableTimer = setTimeout(() => { viewportDone = true; maybeHide() }, 300)
+      stableTimer = setTimeout(onStable, 300)
     }
+
     resetStable()
-    const poll = setInterval(() => {
+    poll = setInterval(() => {
       const h = window.innerHeight
       if (h !== lastH) { lastH = h; resetStable() }
     }, 50)
 
-    return () => {
-      clearTimeout(minTimer)
-      clearTimeout(stableTimer)
-      clearInterval(poll)
-    }
+    return () => { clearTimeout(stableTimer); clearInterval(poll) }
   }, [authLoading, splashMinDone])
 
   // ── Network status ─────────────────────────────────────────────────────────
