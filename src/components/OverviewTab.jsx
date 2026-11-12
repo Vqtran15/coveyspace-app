@@ -181,6 +181,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
   const [cardsReady, setCardsReady] = useState(false)
   const [soloAdmin, setSoloAdmin] = useState(false)
   const realtimeDebounceRef = useRef(null)
+  const loadRef = useRef(null)
   const [shouldAnimate]  = useState(() => !greetingDone)
   const greetingControls = useAnimation()
   const pathControls     = useAnimation()
@@ -282,6 +283,8 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
     setLoaded(true)
   }
 
+  useEffect(() => { loadRef.current = load })
+
   const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !editingAnnouncement)
 
   useEffect(() => { load() }, [groupId, prayerEnabled, isAdmin, eventsEnabled, chatEnabled])
@@ -297,7 +300,7 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
     if (!groupId) return
     function debouncedLoad() {
       clearTimeout(realtimeDebounceRef.current)
-      realtimeDebounceRef.current = setTimeout(load, 300)
+      realtimeDebounceRef.current = setTimeout(() => loadRef.current?.(), 300)
     }
     const channel = supabase
       .channel(`overview-pages:${groupId}`)
@@ -490,14 +493,14 @@ export default function OverviewTab({ onOpenBirthdays, onOpenSettings, greetingR
                         <Megaphone size={24} weight="fill" className="text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-white/70 uppercase tracking-wide mb-1">Announcement</p>
+                        <p className="text-xs font-semibold text-white/90 uppercase tracking-wide mb-1">Announcement</p>
                         <p className="text-sm text-white leading-relaxed font-medium whitespace-pre-wrap">{announcement}</p>
                       </div>
                       {isAdmin && (
                         <button
                           onClick={() => setEditingAnnouncement(true)}
                           aria-label="Edit announcement"
-                          className="text-white/60 hover:text-white transition-colors shrink-0 p-1"
+                          className="text-white/80 hover:text-white transition-colors shrink-0 p-1"
                         >
                           <PencilSimple size={15} />
                         </button>

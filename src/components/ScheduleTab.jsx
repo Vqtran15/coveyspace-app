@@ -172,6 +172,22 @@ export default function ScheduleTab({ mealsConfig, servicesConfig }) {
         )}
       </div>
 
+      {/* Loading skeleton while segment is being determined (both enabled, mobile, no nav hint) */}
+      {!segment && bothEnabled && !isDesktop && (
+        <div className="max-w-3xl mx-auto px-4 py-2 space-y-3">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="animate-pulse bg-white rounded-2xl border border-stone-100 shadow p-4 flex gap-4" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="w-14 h-14 rounded-xl bg-stone-100 shrink-0" />
+              <div className="flex-1 space-y-2 py-1">
+                <div className="h-3 bg-stone-100 rounded w-1/4" />
+                <div className="h-4 bg-stone-200 rounded w-3/5" />
+                <div className="h-3 bg-stone-100 rounded w-2/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Single panel: mobile always, desktop only when not showing both side-by-side */}
       {segment && (!bothEnabled || !isDesktop) && (
         <div className={animClass}>

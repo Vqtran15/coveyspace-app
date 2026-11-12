@@ -296,7 +296,7 @@ function AppContent() {
   // ── Prayer unread — initial load + realtime ────────────────────────────────
   useEffect(() => {
     if (!groupId || !userId) return
-    const since = localStorage.getItem('lastSeenPrayerAt') ?? new Date(0).toISOString()
+    const since = localStorage.getItem('lastSeenPrayerAt') ?? new Date().toISOString()
     Promise.all([
       supabase.from('prayer_requests')
         .select('id', { count: 'exact', head: true })
@@ -361,6 +361,12 @@ function AppContent() {
   const handleConfettiDone = useCallback(() => setShowConfetti(false), [])
 
   useEffect(() => {
+    import('./components/BirthdayTab.jsx')
+    import('./components/GuideTab.jsx')
+    import('./components/GivingTab.jsx')
+  }, [])
+
+  useEffect(() => {
     if (isAdmin) {
       import('./components/AdminPage.jsx')
       import('./components/DangerZonePage.jsx')
@@ -389,6 +395,7 @@ function AppContent() {
     function onKeyDown(e) {
       const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable
       if (e.key === 'Escape' && !inInput) {
+        if (welcomeBackGroupName) { setWelcomeBackGroupName(null); return }
         if (guide.open) guide.close()
         else if (giving.open) giving.close()
         else if (birthday.open) birthday.close()
@@ -402,7 +409,7 @@ function AppContent() {
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [guide.open, giving.open, birthday.open, visibleTabs])
+  }, [guide.open, giving.open, birthday.open, welcomeBackGroupName, visibleTabs])
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   function dismissBirthdayBanner() {
@@ -666,8 +673,10 @@ function AppContent() {
               >
                 <t.Icon size={20} weight={active ? 'fill' : 'regular'} />
                 {t.shortLabel}
-                {(t.path === '/chat' && unreadChatCount > 0) || (t.path === '/prayer' && unreadPrayerCount > 0)
-                  ? <span className="ml-auto w-2 h-2 bg-coral rounded-full" />
+                {t.path === '/chat' && unreadChatCount > 0
+                  ? <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-coral text-white text-[11px] font-bold rounded-full flex items-center justify-center tabular-nums">{unreadChatCount > 99 ? '99+' : unreadChatCount}</span>
+                  : t.path === '/prayer' && unreadPrayerCount > 0
+                  ? <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-coral text-white text-[11px] font-bold rounded-full flex items-center justify-center tabular-nums">{unreadPrayerCount > 99 ? '99+' : unreadPrayerCount}</span>
                   : <span className={`ml-auto text-[10px] font-medium tabular-nums ${active ? 'text-white/50' : 'text-stone-300'}`}>{i + 1}</span>
                 }
               </button>

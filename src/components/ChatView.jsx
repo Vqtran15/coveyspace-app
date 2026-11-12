@@ -10,6 +10,7 @@ import { useModalClose } from '../hooks/useModalClose.js'
 import { useToast } from '../lib/toast.jsx'
 import { AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { initials, GROUP_TIME_GAP, isVideoUrl } from '../utils/format.js'
+import { SHORT_MONTHS } from '../utils/dates.js'
 import { trackEvent } from '../lib/analytics.js'
 import { ChatContext, ChatInputContext } from './chat/ChatContext.jsx'
 import MessageList from './chat/MessageList.jsx'
@@ -66,8 +67,7 @@ function typingLabel(users) {
 
 function formatEventDate(dateStr, timeStr) {
   const d = new Date(dateStr + 'T00:00:00')
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  const mon = months[d.getMonth()]
+  const mon = SHORT_MONTHS[d.getMonth()]
   const day = d.getDate()
   if (!timeStr) return `${mon} ${day}`
   const [h, m] = timeStr.split(':').map(Number)

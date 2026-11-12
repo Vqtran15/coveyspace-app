@@ -73,6 +73,11 @@ export default function InstallBanner() {
 
   return (
     <div
+      className="grid"
+      style={{ gridTemplateRows: closing ? '0fr' : '1fr', transition: 'grid-template-rows 250ms cubic-bezier(0.4,0,0.2,1)' }}
+    >
+    <div className="overflow-hidden min-h-0">
+    <div
       className={`rounded-2xl border border-ember/30 bg-ember/5 p-4 mb-3 animate-stack-in transition-opacity duration-[250ms] ${closing ? 'opacity-0' : 'opacity-100'}`}
     >
       <div className="flex items-center gap-3">
@@ -132,6 +137,8 @@ export default function InstallBanner() {
           </ol>
         </div>
       )}
+    </div>
+    </div>
     </div>
   )
 }

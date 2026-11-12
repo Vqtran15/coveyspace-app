@@ -508,7 +508,7 @@ export default function SettingsPage({ onClose, onRevisitGuide, onGroupSwitch })
             {leadershipMembers.map((m, idx) => (
               <div
                 key={m.user_id}
-                className={`flex items-center gap-3 px-4 py-3.5 ${idx < leadershipMembers.length - 1 ? 'border-b border-stone-100' : ''}`}
+                className="flex items-center gap-3 px-4 py-3.5 border-b border-stone-100 last:border-0"
               >
                 <AvatarCircle icon={m.avatar_icon} name={m.display_name} userId={m.user_id} colorKey={m.avatar_color} imageUrl={m.avatar_image_url} />
                 <div className="flex-1 min-w-0">

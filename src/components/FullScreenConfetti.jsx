@@ -6,6 +6,10 @@ export default function FullScreenConfetti({ onDone }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      onDone?.()
+      return
+    }
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')

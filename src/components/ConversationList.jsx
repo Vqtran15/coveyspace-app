@@ -119,7 +119,7 @@ function ConversationListBody({ conversations, searchQuery, pinnedGroupId, membe
         </>
       )}
       {otherConvs.length > 0 && mainConv && (
-        <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide pt-2 pb-1 px-1">Messages</p>
+        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide pt-2 pb-1 px-1">Messages</p>
       )}
       {otherConvs.map((conv, i) => (
         <ConvRow
@@ -414,7 +414,7 @@ export default function ConversationList({ session, groupId, members, enterClass
             <Bell size={18} weight="fill" className="text-ember shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-stone-700">Chat notifications are off</p>
-              <p className="text-xs text-stone-400 mt-0.5">Tap Enable to get notified of new messages</p>
+              <p className="text-xs text-stone-500 mt-0.5">Tap Enable to get notified of new messages</p>
             </div>
             <button
               onClick={onPushToggle}
@@ -432,7 +432,8 @@ export default function ConversationList({ session, groupId, members, enterClass
                   setNotifBannerClosing(false)
                 }, 260)
               }}
-              className="text-stone-400 hover:text-stone-600 transition-colors shrink-0 p-0.5"
+              aria-label="Dismiss notification banner"
+              className="w-10 h-10 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 transition-colors shrink-0"
             >
               <X size={16} />
             </button>
@@ -481,20 +482,25 @@ export default function ConversationList({ session, groupId, members, enterClass
           style={{ opacity: searchOpen ? 1 : 0, transition: 'opacity 250ms', padding: '2px', margin: '-2px' }}
         >
         <div className="max-w-3xl mx-auto w-full px-4 pb-3">
-          <div className="relative">
-            <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search conversations…"
-              className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search conversations…"
+                className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                  <X size={14} weight="bold" />
+                </button>
+              )}
+            </div>
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                <X size={14} weight="bold" />
-              </button>
+              <button className="text-sm text-ember font-medium shrink-0" onClick={() => setSearchQuery('')}>Cancel</button>
             )}
           </div>
         </div>

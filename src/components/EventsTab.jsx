@@ -11,7 +11,7 @@ import { AvatarCircle, AvatarIcon, avatarColor } from '../lib/avatarIcons.jsx'
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js'
 import AnimatedCount from '../lib/AnimatedCount.jsx'
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+import { SHORT_MONTHS } from '../utils/dates.js'
 const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
 const RSVP_OPTIONS = [
@@ -26,13 +26,13 @@ function today() {
 
 function formatDateBadge(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')
-  return { month: MONTHS[d.getMonth()], day: d.getDate(), year: d.getFullYear() }
+  return { month: SHORT_MONTHS[d.getMonth()], day: d.getDate(), year: d.getFullYear() }
 }
 
 function formatDateFull(dateStr, timeStr) {
   const d = new Date(dateStr + 'T00:00:00')
   const dow = DAYS_FULL[d.getDay()]
-  const mon = MONTHS[d.getMonth()]
+  const mon = SHORT_MONTHS[d.getMonth()]
   const day = d.getDate()
   const year = d.getFullYear()
   if (!timeStr) return `${dow}, ${mon} ${day}, ${year}`
@@ -45,7 +45,7 @@ function formatDateFull(dateStr, timeStr) {
 
 function formatDateShort(dateStr, timeStr) {
   const d = new Date(dateStr + 'T00:00:00')
-  const mon = MONTHS[d.getMonth()]
+  const mon = SHORT_MONTHS[d.getMonth()]
   const day = d.getDate()
   if (!timeStr) return `${mon} ${day}`
   const [h, m] = timeStr.split(':').map(Number)

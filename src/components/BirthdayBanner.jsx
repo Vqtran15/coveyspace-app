@@ -50,7 +50,8 @@ export default function BirthdayBanner({ upcoming, closing = false, onDismiss, o
           )}
           <button
             onClick={e => { e.stopPropagation(); trackEvent('birthday_banner_dismissed'); onDismiss?.() }}
-            className="shrink-0 text-stone-400 hover:text-stone-600 transition-colors p-0.5"
+            aria-label="Dismiss birthday banner"
+            className="shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-stone-400 hover:text-stone-600 transition-colors -mr-2"
           >
             <X size={16} weight="bold" />
           </button>

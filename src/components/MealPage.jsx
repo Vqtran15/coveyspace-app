@@ -243,7 +243,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
           )}
           <div className="flex-1 min-w-0 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-stone-800 leading-snug truncate">{page.title}</h1>
+              <h1 className="text-xl font-bold text-stone-800 leading-snug">{page.title}</h1>
               <p className="text-stone-500 text-sm mt-0.5">{headerShortDate}</p>
               {page.location && (
                 <p className="flex items-center gap-1 text-xs text-stone-400 mt-0.5">

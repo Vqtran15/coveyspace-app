@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Cake, ArrowLeft, X } from '@phosphor-icons/react'
+import { Cake, ArrowLeft, X, MagnifyingGlass } from '@phosphor-icons/react'
 import { daysUntilNext, formatBirthdayDate } from '../utils/birthdays.js'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import { supabase } from '../lib/supabase.js'
@@ -16,6 +16,10 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
   const toast = useToast()
 
   const sorted = [...birthdays].sort((a, b) => daysUntilNext(a.birthday) - daysUntilNext(b.birthday))
+  const [searchQuery, setSearchQuery] = useState('')
+  const filtered = searchQuery
+    ? sorted.filter(b => (b.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()))
+    : sorted
 
   // Selected birthday drives action sheet
   const [selected, setSelected] = useState(null)
@@ -135,14 +139,41 @@ export default function BirthdayTab({ birthdays, revealKey, onClose }) {
           </p>
         </div>
 
+        {sorted.length > 0 && (
+          <div className="mb-4 flex items-center gap-2">
+            <div className="relative flex-1">
+              <MagnifyingGlass size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search birthdays…"
+                className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-9 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-ember focus:border-transparent"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                  <X size={14} weight="bold" />
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <button className="text-sm text-ember font-medium shrink-0" onClick={() => setSearchQuery('')}>Cancel</button>
+            )}
+          </div>
+        )}
+
         {sorted.length === 0 ? (
           <div className="text-center py-16">
             <div className="flex justify-center mb-3"><Cake size={40} weight="fill" className="text-stone-300" /></div>
             <p className="text-sm text-stone-500">Birthdays appear here once members add them to their profile.</p>
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-sm text-stone-500">No birthdays match "{searchQuery}"</p>
+          </div>
         ) : (
           <div className="space-y-2">
-            {sorted.map((b, i) => (
+            {filtered.map((b, i) => (
               <BirthdayCard
                 key={b.id}
                 index={i}
