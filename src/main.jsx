@@ -56,18 +56,20 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   // load-bearing for any PWA layout so there is nothing to gain by re-reading it.
 }())
 
-// iOS PWA safe-area-inset-bottom probe — runs synchronously before React mounts
-// so that the first render already has the correct --sab value.
+// iOS PWA safe-area-inset-bottom — two-phase approach:
 //
-// Two failure modes we guard against:
-// 1. Cold launch: env() returns 0 until iOS processes a native scroll event.
-//    We do scrollTo(0,1) then wait 150ms. Retry at 500ms if still 0.
-// 2. SW-triggered reload while ChatView had body.overflow='hidden': iOS can
-//    carry that overflow state into the new page's initialization window,
-//    making env() return 0 even after the scroll. We clear body.overflow
-//    here (before any React effect can re-set it) and also cache the last
-//    good measurement in localStorage so a post-reload probe failure falls
-//    back to a known-good value.
+// Phase 1 (this IIFE, before React mounts): try to measure env() immediately.
+//   Works on warm relaunches, Safari browser, Android, desktop. If it returns
+//   > 0 we're done. If 0, restore from localStorage cache so the first render
+//   isn't wrong.
+//
+// Phase 2 (useEffect in App.jsx, after React mounts): React has rendered the
+//   +1px minHeight that makes env() return correctly on iOS without needing
+//   scrollTo(0,1). The useEffect re-measures and applies the final value.
+//   No scrollTo = no viewport recalculation that shifts fixed elements.
+//
+// SW-triggered reload guard: clear any body.overflow iOS may have carried from
+// the previous page load before React can re-set it.
 ;(function setSAB() {
   var CACHE_KEY = 'covey_sab'
 
@@ -101,35 +103,11 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
 
   // Immediate read returned 0. Two cases:
   //   a) Device has no home bar (sab is genuinely 0) — nothing to do.
-  //   b) iOS PWA cold launch — env() returns 0 until a native scroll event fires.
-  // Apply cache now so the first render isn't wrong, then schedule the deferred
-  // scroll probe. Fire at 200ms (while the splash is fully opaque) so --sab is
-  // correct before the nav pill ever appears. The 1px viewport shift from
-  // scrollTo(0,1) is invisible under the full-screen splash overlay.
+  //   b) iOS PWA cold launch — env() returns 0 before React mounts.
+  // Apply cache now so the first render isn't wrong. The React useEffect in
+  // App.jsx re-measures after mount (when +1px minHeight makes env() correct)
+  // without needing scrollTo(0,1).
   if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
-
-  setTimeout(function () {
-    window.scrollTo(0, 1)
-    setTimeout(function () {
-      var sab = measure()
-      if (sab > 0) {
-        apply(sab)
-      } else {
-        // Retry once at ~2000ms total from page load
-        setTimeout(function () {
-          sab = measure()
-          if (sab > 0) {
-            apply(sab)
-          } else if (cached > 0) {
-            // Both probes returned 0 (e.g. SW reload with delayed viewport init).
-            // Re-affirm cached value — it was applied above but the CSS env()
-            // default may have overwritten it since then.
-            apply(cached)
-          }
-        }, 350)
-      }
-    }, 150)
-  }, 200)
 
 }())
 

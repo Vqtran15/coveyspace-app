@@ -187,9 +187,31 @@ function AppContent() {
     if (IS_PWA) document.documentElement.classList.add('is-pwa')
   }, [])
 
-  // --sab is measured and cached in main.jsx (setSAB IIFE) before React mounts,
-  // so it's already set correctly by the time this component renders.
-  // ChatView has its own measurement before it sets body.overflow=hidden.
+  // Phase 2 SAB measurement: by the time this effect runs, the +1px minHeight
+  // is in the DOM, so env(safe-area-inset-bottom) returns the correct value on
+  // iOS without needing scrollTo(0,1). No forced scroll = no viewport shift.
+  useEffect(() => {
+    function measureSAB() {
+      const el = document.createElement('div')
+      el.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;opacity:0'
+      document.body.appendChild(el)
+      const h = el.getBoundingClientRect().height
+      document.body.removeChild(el)
+      return h
+    }
+    function applySAB(h) {
+      document.documentElement.style.setProperty('--sab', h + 'px')
+      try { localStorage.setItem('covey_sab', String(h)) } catch {}
+    }
+    const h = measureSAB()
+    if (h > 0) { applySAB(h); return }
+    // env() still 0 — retry once after a short delay
+    const id = setTimeout(() => {
+      const h2 = measureSAB()
+      if (h2 > 0) applySAB(h2)
+    }, 300)
+    return () => clearTimeout(id)
+  }, [])
 
   // ── Announcement banner ────────────────────────────────────────────────────
   useEffect(() => {
