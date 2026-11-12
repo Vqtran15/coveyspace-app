@@ -38,8 +38,8 @@ export default function DebugSAB() {
       const scrollY     = Math.round(window.scrollY)
 
       // Track the pill-active indicator's bounding rect
-      // Framer Motion renders layoutId elements with a data-projection-id attr
-      const pillActive  = navEl ? navEl.querySelector('[data-projection-id]') : null
+      // Find by class — data-projection-id selector is unreliable across FM versions
+      const pillActive  = navEl ? navEl.querySelector('.bg-ember.absolute') : null
       const pillRect    = pillActive ? pillActive.getBoundingClientRect() : null
       const pillPos     = pillRect ? `y=${Math.round(pillRect.top)}` : '—'
       const pillTY      = pillActive ? matrixTY(getComputedStyle(pillActive).transform) : '—'
@@ -59,7 +59,7 @@ export default function DebugSAB() {
     }
 
     tick()
-    const id = setInterval(tick, 100)
+    const id = setInterval(tick, 50)
     return () => { clearInterval(id); document.body.removeChild(probe) }
   }, [])
 
