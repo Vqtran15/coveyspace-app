@@ -761,6 +761,7 @@ function AppContent() {
                   key={t.path}
                   onClick={() => handleTabChange(t.path)}
                   className={`relative flex flex-col items-center justify-center touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5 rounded-2xl' : 'w-14 h-12 rounded-full'}`}
+                  style={{ contain: 'layout' }}
                 >
                   {active && (
                     <span className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`} />
