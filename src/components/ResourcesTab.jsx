@@ -13,7 +13,7 @@ import { haptic } from '../lib/haptic.js'
 import { useToast } from '../lib/toast.jsx'
 import { useAppContext } from '../contexts/AppContext.jsx'
 import ChurchBroadcastView from './ChurchBroadcastView.jsx'
-import { OT_BOOKS, NT_BOOKS, ALL_BOOKS, TRANSLATION, newId, fetchChapter, parseVerses } from '../lib/bibleData.js'
+import { OT_BOOKS, NT_BOOKS, ALL_BOOKS, TRANSLATION, fetchChapter, parseVerses } from '../lib/bibleData.js'
 
 function stripHtml(html) {
   try {

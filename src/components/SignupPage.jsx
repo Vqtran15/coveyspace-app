@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -23,24 +23,20 @@ export default function SignupPage() {
   const toast     = useToast()
 
   const state = location.state
-  if (!state?.pageId) {
-    navigate('/schedule', { replace: true })
-    return null
-  }
-
   const {
     slot, itemNoun, noun, dishName: initialDish, category: initialCategory = '',
     signup, supportsCategories = false,
     pageId, pageDishes, pageCategories, pageSlotCount,
     tablesPages, tablesSignups,
-  } = state
+  } = state ?? {}
 
   const isEdit    = !!signup
   const hasName   = !!initialDish
   const pageTitle = isEdit ? 'Edit Sign-Up' : !hasName ? 'Add Item' : 'Sign Up'
 
+  // All hooks before any early return
   const [dish,            setDish]            = useState(initialDish ?? '')
-  const [category,        setCategory]        = useState(initialCategory)
+  const [category,        setCategory]        = useState(initialCategory ?? '')
   const [name,            setName]            = useState(signup?.name ?? '')
   const [notes,           setNotes]           = useState(signup?.notes ?? '')
   const [saving,          setSaving]          = useState(false)
@@ -49,6 +45,12 @@ export default function SignupPage() {
   const [removing,        setRemoving]        = useState(false)
   const [confirmDelete,   setConfirmDelete]   = useState(false)
   const [deletingItem,    setDeletingItem]    = useState(false)
+
+  useEffect(() => {
+    if (!state?.pageId) navigate('/schedule', { replace: true })
+  }, []) // eslint-disable-line
+
+  if (!state?.pageId) return null
 
   async function handleSave() {
     setSaving(true)

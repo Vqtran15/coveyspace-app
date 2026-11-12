@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
@@ -16,14 +16,28 @@ export default function AddPassagePage() {
   const { userId } = useAppContext()
 
   const state = location.state
-  if (!userId || state === null) {
-    navigate('/bible', { replace: true })
-    return null
-  }
-
-  const { mode = 'add', index = null, initial = null } = state
+  const { mode = 'add', index = null, initial = null } = state ?? {}
   const isEdit = mode === 'edit'
   const pageTitle = isEdit ? 'Edit Passage' : 'Add to Quick Access'
+
+  // All hooks must come before any early return
+  const [bookId,         setBookId]         = useState(initial?.bookId ?? '')
+  const [chapterStr,     setChapterStr]     = useState(initial?.chapter ? String(initial.chapter) : '')
+  const [startVerseStr,  setStartVerseStr]  = useState(initial?.startVerse ? String(initial.startVerse) : '')
+  const [endVerseStr,    setEndVerseStr]    = useState(
+    initial?.endVerse && initial.endVerse !== initial.startVerse ? String(initial.endVerse) : ''
+  )
+  const [label,          setLabel]          = useState(initial?.label ?? '')
+  const [labelEdited,    setLabelEdited]    = useState(!!initial?.id)
+  const [errors,         setErrors]         = useState({})
+  const [saving,         setSaving]         = useState(false)
+  const [verseError,     setVerseError]     = useState(null)
+
+  useEffect(() => {
+    if (!userId || !state) navigate('/bible', { replace: true })
+  }, []) // eslint-disable-line
+
+  if (!userId || !state) return null
 
   function readPassages() {
     try {
@@ -52,18 +66,6 @@ export default function AddPassagePage() {
     if (isNaN(evNum) || evNum <= svNum) return `${base}:${svNum}`
     return `${base}:${svNum}–${evNum}`
   }
-
-  const [bookId,         setBookId]         = useState(initial?.bookId ?? '')
-  const [chapterStr,     setChapterStr]     = useState(initial?.chapter ? String(initial.chapter) : '')
-  const [startVerseStr,  setStartVerseStr]  = useState(initial?.startVerse ? String(initial.startVerse) : '')
-  const [endVerseStr,    setEndVerseStr]    = useState(
-    initial?.endVerse && initial.endVerse !== initial.startVerse ? String(initial.endVerse) : ''
-  )
-  const [label,          setLabel]          = useState(initial?.label ?? '')
-  const [labelEdited,    setLabelEdited]    = useState(!!initial?.id)
-  const [errors,         setErrors]         = useState({})
-  const [saving,         setSaving]         = useState(false)
-  const [verseError,     setVerseError]     = useState(null)
 
   const selectedBook = ALL_BOOKS.find(b => b.id === bookId) ?? null
 
@@ -281,12 +283,6 @@ export default function AddPassagePage() {
               className={inputCls}
             />
           </div>
-
-          {verseError && !errors.startVerse && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              {verseError}
-            </p>
-          )}
 
         </div>
 
