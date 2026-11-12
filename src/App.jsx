@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck, Church } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
@@ -112,6 +112,9 @@ function AppContent() {
   const locationRef        = useRef(location.pathname)
   const enterFromRef       = useRef('right')
   const scrollContainerRef = useRef(null)
+  const navRef             = useRef(null)
+  const pillInitialized    = useRef(false)
+  const [pillStyle, setPillStyle] = useState(null)
 
   const setScrollRef = useCallback(el => {
     scrollContainerRef.current = el
@@ -181,6 +184,36 @@ function AppContent() {
 
     return () => { clearTimeout(stableTimer); clearInterval(poll) }
   }, [authLoading, splashMinDone])
+
+  // ── Sliding nav pill indicator ─────────────────────────────────────────────
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const btn = nav.querySelector('[data-active]')
+    if (!btn) { setPillStyle(null); return }
+    const nr = nav.getBoundingClientRect()
+    const br = btn.getBoundingClientRect()
+    const inset = visibleTabs.length <= 3 ? 0 : 4
+    const next = {
+      position: 'absolute',
+      left:   br.left - nr.left + inset,
+      top:    br.top  - nr.top  + inset,
+      width:  br.width  - inset * 2,
+      height: br.height - inset * 2,
+      borderRadius: visibleTabs.length <= 3 ? '1rem' : '9999px',
+    }
+    if (!pillInitialized.current) {
+      setPillStyle({ ...next, transition: 'none' })
+      pillInitialized.current = true
+    } else {
+      setPillStyle({ ...next, transition: 'left .42s cubic-bezier(.34,1.56,.64,1), top .42s cubic-bezier(.34,1.56,.64,1), width .25s ease, height .25s ease, border-radius .2s ease' })
+    }
+  }, [location.pathname, visibleTabs.length])
+
+  // Reset pill when nav unmounts (chat opens) so it snaps on next mount.
+  useEffect(() => {
+    if (chatViewOpen) { pillInitialized.current = false; setPillStyle(null) }
+  }, [chatViewOpen])
 
   // ── Network status ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -771,9 +804,11 @@ function AppContent() {
 
       {!chatViewOpen && !splashVisible && (
           <nav
+            ref={navRef}
             className={`pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 flex items-center py-1.5 ${visibleTabs.length <= 3 ? 'rounded-3xl px-3 gap-2' : 'rounded-full px-2'}`}
             style={{ bottom: 'max(16px, calc(var(--sab) + 8px))' }}
           >
+            {pillStyle && <span className="bg-ember pointer-events-none" style={pillStyle} />}
             {visibleTabs.map(t => {
               const active = location.pathname === t.path
               const showLabel = visibleTabs.length <= 3
@@ -783,10 +818,8 @@ function AppContent() {
                   onClick={() => handleTabChange(t.path)}
                   className={`relative flex flex-col items-center justify-center touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5 rounded-2xl' : 'w-14 h-12 rounded-full'}`}
                   style={{ contain: 'layout' }}
+                  {...(active ? { 'data-active': '' } : {})}
                 >
-                  {active && (
-                    <span className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`} />
-                  )}
                   <span
                     key={active ? `${t.path}-on` : `${t.path}-off`}
                     className={`relative z-10${active ? ' animate-icon-bounce' : ''}`}
