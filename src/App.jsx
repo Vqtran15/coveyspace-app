@@ -157,8 +157,33 @@ function AppContent() {
   useEffect(() => {
     if (authLoading || !splashMinDone) return
     setSplashExiting(true)
-    const t = setTimeout(() => setSplashVisible(false), 350)
-    return () => clearTimeout(t)
+
+    // Hide the nav only after both:
+    //  a) the 350ms splash-out animation has finished, AND
+    //  b) window.innerHeight has been stable for 300ms
+    // iOS PWA launch: the viewport gradually expands for ~700ms after launch
+    // while the system zoom animation runs; showing the fixed nav mid-expansion
+    // causes visible downward drift as it tracks win.h - nav.h - bottom.
+    let minDone = false
+    let viewportDone = false
+    function maybeHide() { if (minDone && viewportDone) setSplashVisible(false) }
+
+    const minTimer = setTimeout(() => { minDone = true; maybeHide() }, 350)
+
+    let lastH = window.innerHeight
+    let stableTimer = setTimeout(() => { viewportDone = true; maybeHide() }, 300)
+    function onResize() {
+      lastH = window.innerHeight
+      clearTimeout(stableTimer)
+      stableTimer = setTimeout(() => { viewportDone = true; maybeHide() }, 300)
+    }
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      clearTimeout(minTimer)
+      clearTimeout(stableTimer)
+      window.removeEventListener('resize', onResize)
+    }
   }, [authLoading, splashMinDone])
 
   // ── Network status ─────────────────────────────────────────────────────────
