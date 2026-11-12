@@ -30,26 +30,25 @@ export default function DebugSAB() {
     function snap() {
       const root = document.documentElement
       const sabComputed = getComputedStyle(root).getPropertyValue('--sab').trim() || '—'
-      const sabInline   = root.style.getPropertyValue('--sab') || '—'
-      const envPx       = Math.round(probe.getBoundingClientRect().height)
       const navEl       = document.querySelector('nav.pill-nav')
+      const navRect     = navEl ? navEl.getBoundingClientRect() : null
+      const navH        = navRect ? Math.round(navRect.height) : '—'
+      const navTop      = navRect ? Math.round(navRect.top) : '—'
       const navBottom   = navEl ? Math.round(parseFloat(getComputedStyle(navEl).bottom)) + 'px' : '(no nav)'
       const navTY       = navEl ? matrixTY(getComputedStyle(navEl).transform) : '—'
+      const winH        = Math.round(window.innerHeight)
       const scrollY     = Math.round(window.scrollY)
 
-      // Track the pill-active indicator and its containing button
       const pillActive  = navEl ? navEl.querySelector('.bg-ember.absolute') : null
       const pillRect    = pillActive ? pillActive.getBoundingClientRect() : null
       const pillPos     = pillRect ? `y=${Math.round(pillRect.top)}` : '—'
       const pillTY      = pillActive ? matrixTY(getComputedStyle(pillActive).transform) : '—'
 
-      // Check the button that contains the indicator and its direct parent
       const activeBtn    = pillActive ? pillActive.closest('button') : null
       const btnY         = activeBtn ? Math.round(activeBtn.getBoundingClientRect().top) : '—'
       const btnTY        = activeBtn ? matrixTY(getComputedStyle(activeBtn).transform) : '—'
-      const pillParentTag = pillActive ? pillActive.parentElement?.tagName?.toLowerCase() : '—'
 
-      return { sabComputed, sabInline, envPx, navBottom, navTY, scrollY, pillPos, pillTY, btnY, btnTY, pillParentTag }
+      return { sabComputed, navH, navTop, navBottom, navTY, winH, scrollY, pillPos, pillTY, btnY, btnTY }
     }
 
     function tick() {
@@ -58,9 +57,9 @@ export default function DebugSAB() {
       if (key === prev) return
       prev = key
       const line =
-        `[${ts()}] sab=${s.sabComputed} bot=${s.navBottom} nav.ty=${s.navTY} ` +
-        `pill.y=${s.pillPos} pill.ty=${s.pillTY} btn.y=${s.btnY} btn.ty=${s.btnTY} par=${s.pillParentTag} scrollY=${s.scrollY}`
-      setLog(l => [...l.slice(-12), line])
+        `[${ts()}] sab=${s.sabComputed} win.h=${s.winH} nav.h=${s.navH} nav.top=${s.navTop} bot=${s.navBottom} nav.ty=${s.navTY} ` +
+        `btn.y=${s.btnY} btn.ty=${s.btnTY} pill.y=${s.pillPos} scrollY=${s.scrollY}`
+      setLog(l => [...l.slice(-14), line])
     }
 
     tick()
