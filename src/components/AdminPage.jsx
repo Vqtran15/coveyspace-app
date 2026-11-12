@@ -336,9 +336,14 @@ export default function AdminPage() {
   async function handleDeleteGroup() {
     setDeletingGroup(true)
     setDeleteGroupError(null)
-    const { data, error } = await supabase.rpc('delete_current_group')
-    if (error) { setDeleteGroupError(error.message); setDeletingGroup(false); return }
-    if (data?.switched_to) { window.location.reload() } else { await supabase.auth.signOut() }
+    try {
+      const { data, error } = await supabase.rpc('delete_current_group')
+      if (error) { setDeleteGroupError(error.message); setDeletingGroup(false); return }
+      if (data?.switched_to) { window.location.reload() } else { await supabase.auth.signOut() }
+    } catch {
+      setDeleteGroupError('Something went wrong. Please try again.')
+      setDeletingGroup(false)
+    }
   }
 
   return (

@@ -28,19 +28,24 @@ export default function AddEventPage() {
   async function handleSave() {
     if (!title.trim() || !date) return
     setSaving(true)
-    const { error } = await db.events.insert({
-      community_group_id: groupId,
-      created_by: userId,
-      title:       title.trim(),
-      event_date:  date,
-      event_time:  time || null,
-      location:    location.trim() || null,
-      description: description.trim() || null,
-    })
-    setSaving(false)
-    if (error) { toast('Failed to create event', 'error'); return }
-    haptic()
-    navigate('/events', { replace: true })
+    try {
+      const { error } = await db.events.insert({
+        community_group_id: groupId,
+        created_by: userId,
+        title:       title.trim(),
+        event_date:  date,
+        event_time:  time || null,
+        location:    location.trim() || null,
+        description: description.trim() || null,
+      })
+      if (error) { toast('Failed to create event', 'error'); return }
+      haptic()
+      navigate('/events', { replace: true })
+    } catch {
+      toast('Failed to create event', 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (

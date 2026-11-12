@@ -21,7 +21,7 @@ export default function DangerZonePage() {
     await supabase.auth.signOut()
   }
 
-async function handleDeleteAccount() {
+  async function handleDeleteAccount() {
     setDeleting(true)
     setDeleteError(null)
     const { error } = await supabase.rpc('delete_current_user')

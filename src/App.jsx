@@ -384,7 +384,7 @@ function AppContent() {
   // ── Prayer unread — initial load + realtime ────────────────────────────────
   useEffect(() => {
     if (!groupId || !userId) return
-    const since = localStorage.getItem('lastSeenPrayerAt') ?? new Date().toISOString()
+    const since = localStorage.getItem('lastSeenPrayerAt') ?? new Date(0).toISOString()
     Promise.all([
       supabase.from('prayer_requests')
         .select('id', { count: 'exact', head: true })
