@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { CalendarHeart, Plus, CaretDown, CaretUp, CaretRight, MapPin, CheckCircle, Minus, X as XIcon, DotsThreeVertical, ArrowLeft, PencilSimple, Trash, ChatCircleDots, ArrowsClockwise } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase.js'
@@ -525,6 +525,7 @@ function EventCard({ event, isFeatured, eventRsvps = [], userId, onOpenDetail, o
 export default function EventsTab() {
   const { groupId, userId, isAdmin, displayName, avatarIcon, avatarColorKey, avatarImageUrl } = useAppContext()
   const toast = useToast()
+  const navigate = useNavigate()
   const location = useLocation()
   const tabResetRef = useRef(location.state?.tabReset ?? null)
   const [events,       setEvents]       = useState([])
@@ -533,7 +534,6 @@ export default function EventsTab() {
   const [fetchError,   setFetchError]   = useState(false)
   const [hasFetched,   setHasFetched]   = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
-  const [showForm,     setShowForm]     = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [pastExpanded, setPastExpanded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -544,12 +544,12 @@ export default function EventsTab() {
       if (e.key !== 'Escape') return
       if (selectedEvent) { setSelectedEvent(null); return }
       if (showConvPicker) { setShowConvPicker(false); return }
-      if (showForm || editingEvent) { setShowForm(false); setEditingEvent(null); return }
+      if (editingEvent) { setEditingEvent(null); return }
       if (deleteTarget) { setDeleteTarget(null); return }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [selectedEvent, showConvPicker, showForm, editingEvent, deleteTarget])
+  }, [selectedEvent, showConvPicker, editingEvent, deleteTarget])
   const [pickerConvs,    setPickerConvs]    = useState([])
   const [pickerLoading,  setPickerLoading]  = useState(false)
   const [sendingToConv,  setSendingToConv]  = useState(null)
@@ -645,7 +645,7 @@ export default function EventsTab() {
     return () => supabase.removeChannel(channel)
   }, [groupId])
 
-  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedEvent && !showForm && !editingEvent)
+  const { pullDistance, refreshing, threshold } = usePullToRefresh(load, !selectedEvent && !editingEvent)
 
   async function handleRsvp(eventId, status, currentStatus) {
     haptic()
@@ -713,7 +713,7 @@ export default function EventsTab() {
         <div className="flex items-center gap-1">
           {isAdmin && (
             <button
-              onClick={() => { haptic(); setShowForm(true) }}
+              onClick={() => { haptic(); navigate('/events/new') }}
               aria-label="Create event"
               className="w-11 h-11 flex items-center justify-center rounded-xl bg-ember text-white hover:bg-ember/90 transition-colors"
             >
@@ -775,7 +775,7 @@ export default function EventsTab() {
               </p>
               {isAdmin && (
                 <button
-                  onClick={() => { haptic(); setShowForm(true) }}
+                  onClick={() => { haptic(); navigate('/events/new') }}
                   className="mt-4 px-4 py-2 rounded-xl bg-ember text-white text-sm font-semibold hover:bg-ember/90 transition-colors"
                 >
                   Create an event
@@ -914,16 +914,16 @@ export default function EventsTab() {
         )}
       </AnimatePresence>
 
-      {/* Create / Edit form sheet */}
+      {/* Edit form sheet */}
       <AnimatePresence>
-        {(showForm || editingEvent) && (
+        {editingEvent && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             className="fixed inset-0 lg:left-56 z-50 flex flex-col justify-end lg:items-center lg:justify-center bg-black/50"
-            onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingEvent(null) } }}
+            onClick={e => { if (e.target === e.currentTarget) setEditingEvent(null) }}
           >
             <div className="bg-white rounded-t-3xl lg:rounded-2xl overflow-hidden max-h-[90dvh] lg:w-[480px] lg:max-w-full lg:shadow-xl" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
               <div className="flex justify-center pt-3 pb-0 lg:hidden" style={{ touchAction: 'none' }}>
@@ -931,8 +931,8 @@ export default function EventsTab() {
               </div>
               <div className="overflow-y-auto max-h-[90dvh] p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-stone-800 text-base">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
-                  <button onClick={() => { setShowForm(false); setEditingEvent(null) }} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
+                  <h2 className="font-bold text-stone-800 text-base">Edit Event</h2>
+                  <button onClick={() => setEditingEvent(null)} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100">
                     <XIcon size={18} />
                   </button>
                 </div>
@@ -940,8 +940,8 @@ export default function EventsTab() {
                   event={editingEvent}
                   groupId={groupId}
                   userId={userId}
-                  onSave={() => { setShowForm(false); setEditingEvent(null); load() }}
-                  onClose={() => { setShowForm(false); setEditingEvent(null) }}
+                  onSave={() => { setEditingEvent(null); load() }}
+                  onClose={() => setEditingEvent(null)}
                 />
               </div>
             </div>
