@@ -346,7 +346,7 @@ function AppContent() {
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
-  }, [groupId])
+  }, [groupId, userId])
 
   // ── Prayer unread — initial load + realtime ────────────────────────────────
   useEffect(() => {

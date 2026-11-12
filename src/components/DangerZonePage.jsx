@@ -9,7 +9,7 @@ export default function DangerZonePage() {
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
 
-const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
 

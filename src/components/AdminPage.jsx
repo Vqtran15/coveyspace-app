@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ShieldCheck, ArrowLeft, PencilSimple, X, CaretDown, ShareNetwork, Church, DotsThreeVertical, IdentificationBadge, Trash } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { db } from '../lib/db.js'
@@ -94,7 +94,6 @@ function sortMembers(list) {
 export default function AdminPage() {
   const { groupId, isAdmin, groupName, userId, groupSettings, onGroupSettingsChange, onGroupNameChange, churchId, churchName, refreshProfile } = useAppContext()
   const navigate = useNavigate()
-  const location = useLocation()
   const toast = useToast()
 
   const [inviteCode, setInviteCode] = useState(null)
@@ -128,6 +127,7 @@ export default function AdminPage() {
   const [tabAnimKey, setTabAnimKey]     = useState(0)
   const [tabAnimClass, setTabAnimClass] = useState('')
 
+  const [dangerZoneOpen, setDangerZoneOpen]         = useState(false)
   const [deleteGroupConfirm, setDeleteGroupConfirm] = useState(false)
   const [deletingGroup, setDeletingGroup]           = useState(false)
   const [deleteGroupError, setDeleteGroupError]     = useState(null)
@@ -355,7 +355,7 @@ export default function AdminPage() {
         </button>
         <div className="flex items-center gap-2">
           <ShieldCheck size={20} weight="fill" className="text-ember" />
-          <h1 className="text-2xl font-bold text-stone-800">
+          <h1 className="text-3xl font-bold text-stone-800">
             <span className="lg:hidden">Admin</span>
             <span className="hidden lg:inline">Group Settings</span>
           </h1>
@@ -439,7 +439,7 @@ export default function AdminPage() {
                   onChange={e => setGroupNameValue(e.target.value)}
                   maxLength={60}
                   placeholder="Group name"
-                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-300"
+                  className="w-full text-sm bg-white border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ember placeholder:text-stone-400"
                 />
                 <div className="flex gap-2">
                   <button
@@ -500,7 +500,7 @@ export default function AdminPage() {
                 onKeyDown={e => e.key === 'Enter' && handleLinkChurch()}
                 placeholder="Enter church code"
                 maxLength={6}
-                className={`w-full text-sm bg-white border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 placeholder:text-stone-300 font-mono tracking-widest uppercase ${churchCodeError ? 'border-red-300 focus:ring-red-400' : 'border-stone-200 focus:ring-ember'}`}
+                className={`w-full text-sm bg-white border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 placeholder:text-stone-400 font-mono tracking-widest uppercase ${churchCodeError ? 'border-red-300 focus:ring-red-400' : 'border-stone-200 focus:ring-ember'}`}
               />
               {churchCodeError && <p className="text-xs text-red-500 px-1">{churchCodeError}</p>}
               <div className="flex gap-2">
@@ -740,7 +740,22 @@ export default function AdminPage() {
 
       {/* ── Danger Zone ──────────────────────────────────────────── */}
       <div className="mt-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-red-400 mb-3">Danger Zone</p>
+        <button
+          onClick={() => { setDangerZoneOpen(o => !o); setDeleteGroupConfirm(false); setDeleteGroupError(null) }}
+          className="w-full flex items-center justify-between mb-3"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-red-400">Danger Zone</p>
+          <CaretDown
+            size={14}
+            weight="bold"
+            className={`text-red-300 transition-transform ${dangerZoneOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+        <div
+          className="grid"
+          style={{ gridTemplateRows: dangerZoneOpen ? '1fr' : '0fr', transition: 'grid-template-rows 220ms cubic-bezier(0.4,0,0.2,1)' }}
+        >
+        <div className="overflow-hidden min-h-0">
         <div className="bg-white border border-red-100 rounded-2xl shadow p-4 space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
@@ -786,6 +801,8 @@ export default function AdminPage() {
             </button>
           )}
         </div>
+        </div>
+        </div>
       </div>
 
     </div>
@@ -799,7 +816,7 @@ export default function AdminPage() {
         onClick={closeMemberSheet}
       >
         <div
-          className={`bg-white rounded-t-2xl lg:rounded-2xl w-full max-w-sm mx-auto overflow-hidden max-h-[90dvh] flex flex-col transition-[margin] duration-200 ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
+          className={`bg-white rounded-t-2xl lg:rounded-2xl shadow-xl w-full max-w-sm mx-auto overflow-hidden max-h-[90dvh] flex flex-col transition-[margin] duration-200 ${memberSheetClosing ? 'animate-sheet-out' : 'animate-modal-in'}`}
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', marginBottom: keyboardOffset }}
           onClick={e => e.stopPropagation()}
         >
