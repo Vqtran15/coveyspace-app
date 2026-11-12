@@ -131,7 +131,8 @@ function AppContent() {
   const [splashExiting, setSplashExiting] = useState(false)
   const [splashMinDone, setSplashMinDone] = useState(false)
   const [resumeKey,     setResumeKey]     = useState(0)
-  const hiddenAtRef = useRef(null)
+  const hiddenAtRef      = useRef(null)
+  const splashShownAtRef = useRef(Date.now())
   const [showWelcome, setShowWelcome] = useState(false)
   const [welcomeBackGroupName, setWelcomeBackGroupName] = useState(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -177,6 +178,7 @@ function AppContent() {
       const ms = Date.now() - hiddenAtRef.current
       hiddenAtRef.current = null
       if (ms < THRESHOLD_MS) return
+      splashShownAtRef.current = Date.now()
       setSplashVisible(true)
       setSplashExiting(false)
       setResumeKey(k => k + 1)
@@ -195,10 +197,18 @@ function AppContent() {
     let stableTimer = null
     let poll = null
 
+    // Guarantee the splash is visible long enough for its content animations to
+    // complete (~680ms) plus a brief settle. 1400ms from when the splash was
+    // shown covers both cold launch (splashMinDone fires at 1200ms) and resume
+    // (shown immediately, viewport may already be stable within 300ms).
+    const MIN_SHOW_MS = 1400
     function onStable() {
       clearInterval(poll)
-      setSplashExiting(true)
-      setTimeout(() => setSplashVisible(false), 350)
+      const delay = Math.max(0, MIN_SHOW_MS - (Date.now() - splashShownAtRef.current))
+      setTimeout(() => {
+        setSplashExiting(true)
+        setTimeout(() => setSplashVisible(false), 350)
+      }, delay)
     }
     function resetStable() {
       clearTimeout(stableTimer)
