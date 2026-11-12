@@ -18,6 +18,7 @@ import BirthdayBanner       from './components/BirthdayBanner.jsx'
 import FullScreenConfetti   from './components/FullScreenConfetti.jsx'
 import PrayerReactionBanner from './components/PrayerReactionBanner.jsx'
 import UpdatePrompt         from './components/UpdatePrompt.jsx'
+import DebugSAB             from './components/DebugSAB.jsx'
 import AnnouncementBanner   from './components/AnnouncementBanner.jsx'
 import GroupWelcomeBack     from './components/GroupWelcomeBack.jsx'
 import NoGroupScreen        from './components/NoGroupScreen.jsx'
@@ -883,6 +884,7 @@ function AppContent() {
       )}
 
       <UpdatePrompt />
+      <DebugSAB />
     </div>
     )}
     </Suspense>
