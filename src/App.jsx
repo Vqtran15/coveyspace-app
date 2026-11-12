@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck, Church } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
@@ -763,30 +762,19 @@ function AppContent() {
                   onClick={() => handleTabChange(t.path)}
                   className={`relative flex flex-col items-center justify-center touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5 rounded-2xl' : 'w-14 h-12 rounded-full'}`}
                 >
-                  <AnimatePresence>
-                    {active && (
-                      <motion.span
-                        key={t.path}
-                        className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                      />
-                    )}
-                  </AnimatePresence>
-                  <motion.span
-                    className="relative z-10"
-                    initial={false}
-                    animate={active ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                  {active && (
+                    <span className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`} />
+                  )}
+                  <span
+                    key={active ? `${t.path}-on` : `${t.path}-off`}
+                    className={`relative z-10${active ? ' animate-icon-bounce' : ''}`}
                   >
                     <t.Icon
                       size={26}
                       weight={active ? 'fill' : 'regular'}
                       className={active ? 'text-white' : 'text-stone-500'}
                     />
-                  </motion.span>
+                  </span>
                   {showLabel && (
                     <span className={`relative z-10 text-[13px] font-medium leading-none ${active ? 'text-white' : 'text-stone-500'}`}>
                       {t.shortLabel}

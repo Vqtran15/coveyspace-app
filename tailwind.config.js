@@ -101,6 +101,11 @@ export default {
           '45%':  { transform: 'scale(1.5)' },
           '100%': { transform: 'scale(1)' },
         },
+        'icon-bounce': {
+          '0%':   { transform: 'scale(1)' },
+          '50%':  { transform: 'scale(1.2)' },
+          '100%': { transform: 'scale(1)' },
+        },
         'stack-in': {
           '0%':   { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -263,6 +268,7 @@ export default {
         'card-pulse':       'card-pulse 0.65s ease-out',
         'send-pulse':       'send-pulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'stack-in':         'stack-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards',
+        'icon-bounce':      'icon-bounce 0.32s cubic-bezier(0.16, 1, 0.3, 1) both',
         'reaction-pop':     'reaction-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'welcome-pop':      'welcome-pop 0.6s cubic-bezier(0.16,1,0.3,1) both',
         'fade-in':          'fade-in 0.3s ease-out both',

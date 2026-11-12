@@ -37,14 +37,19 @@ export default function DebugSAB() {
       const navTY       = navEl ? matrixTY(getComputedStyle(navEl).transform) : '—'
       const scrollY     = Math.round(window.scrollY)
 
-      // Track the pill-active indicator's bounding rect
-      // Find by class — data-projection-id selector is unreliable across FM versions
+      // Track the pill-active indicator and its containing button
       const pillActive  = navEl ? navEl.querySelector('.bg-ember.absolute') : null
       const pillRect    = pillActive ? pillActive.getBoundingClientRect() : null
       const pillPos     = pillRect ? `y=${Math.round(pillRect.top)}` : '—'
       const pillTY      = pillActive ? matrixTY(getComputedStyle(pillActive).transform) : '—'
 
-      return { sabComputed, sabInline, envPx, navBottom, navTY, scrollY, pillPos, pillTY }
+      // Check the button that contains the indicator and its direct parent
+      const activeBtn    = pillActive ? pillActive.closest('button') : null
+      const btnY         = activeBtn ? Math.round(activeBtn.getBoundingClientRect().top) : '—'
+      const btnTY        = activeBtn ? matrixTY(getComputedStyle(activeBtn).transform) : '—'
+      const pillParentTag = pillActive ? pillActive.parentElement?.tagName?.toLowerCase() : '—'
+
+      return { sabComputed, sabInline, envPx, navBottom, navTY, scrollY, pillPos, pillTY, btnY, btnTY, pillParentTag }
     }
 
     function tick() {
@@ -54,7 +59,7 @@ export default function DebugSAB() {
       prev = key
       const line =
         `[${ts()}] sab=${s.sabComputed} bot=${s.navBottom} nav.ty=${s.navTY} ` +
-        `pill.y=${s.pillPos} pill.ty=${s.pillTY} scrollY=${s.scrollY}`
+        `pill.y=${s.pillPos} pill.ty=${s.pillTY} btn.y=${s.btnY} btn.ty=${s.btnTY} par=${s.pillParentTag} scrollY=${s.scrollY}`
       setLog(l => [...l.slice(-12), line])
     }
 
