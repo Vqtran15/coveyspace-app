@@ -16,6 +16,17 @@ export default function DebugSAB() {
 
     let prev = null
 
+    function matrixTY(transform) {
+      // Extract translateY from matrix(a,b,c,d,tx,ty) or matrix3d(...)
+      if (!transform || transform === 'none') return '0'
+      const m = transform.match(/matrix(?:3d)?\(([^)]+)\)/)
+      if (!m) return transform
+      const vals = m[1].split(',').map(v => parseFloat(v.trim()))
+      // matrix(a,b,c,d,tx,ty) → ty is index 5; matrix3d → ty is index 13
+      const ty = vals.length >= 16 ? vals[13] : vals[5]
+      return ty != null ? Math.round(ty) + 'px' : '?'
+    }
+
     function snap() {
       const root = document.documentElement
       const sabComputed = getComputedStyle(root).getPropertyValue('--sab').trim() || '—'
@@ -23,9 +34,17 @@ export default function DebugSAB() {
       const envPx       = Math.round(probe.getBoundingClientRect().height)
       const navEl       = document.querySelector('nav.pill-nav')
       const navBottom   = navEl ? Math.round(parseFloat(getComputedStyle(navEl).bottom)) + 'px' : '(no nav)'
-      const navXform    = navEl ? getComputedStyle(navEl).transform : '—'
+      const navTY       = navEl ? matrixTY(getComputedStyle(navEl).transform) : '—'
       const scrollY     = Math.round(window.scrollY)
-      return { sabComputed, sabInline, envPx, navBottom, navXform, scrollY }
+
+      // Track the pill-active indicator's bounding rect
+      // Framer Motion renders layoutId elements with a data-projection-id attr
+      const pillActive  = navEl ? navEl.querySelector('[data-projection-id]') : null
+      const pillRect    = pillActive ? pillActive.getBoundingClientRect() : null
+      const pillPos     = pillRect ? `y=${Math.round(pillRect.top)}` : '—'
+      const pillTY      = pillActive ? matrixTY(getComputedStyle(pillActive).transform) : '—'
+
+      return { sabComputed, sabInline, envPx, navBottom, navTY, scrollY, pillPos, pillTY }
     }
 
     function tick() {
@@ -34,9 +53,8 @@ export default function DebugSAB() {
       if (key === prev) return
       prev = key
       const line =
-        `[${ts()}] --sab computed=${s.sabComputed} inline=${s.sabInline} ` +
-        `env=${s.envPx}px nav.bottom=${s.navBottom} scrollY=${s.scrollY} ` +
-        `xform=${s.navXform.startsWith('matrix') ? 'matrix(…)' : s.navXform}`
+        `[${ts()}] sab=${s.sabComputed} bot=${s.navBottom} nav.ty=${s.navTY} ` +
+        `pill.y=${s.pillPos} pill.ty=${s.pillTY} scrollY=${s.scrollY}`
       setLog(l => [...l.slice(-12), line])
     }
 
