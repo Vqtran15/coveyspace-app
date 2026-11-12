@@ -130,6 +130,8 @@ function AppContent() {
   const [splashVisible, setSplashVisible] = useState(true)
   const [splashExiting, setSplashExiting] = useState(false)
   const [splashMinDone, setSplashMinDone] = useState(false)
+  const [resumeKey,     setResumeKey]     = useState(0)
+  const hiddenAtRef = useRef(null)
   const [showWelcome, setShowWelcome] = useState(false)
   const [welcomeBackGroupName, setWelcomeBackGroupName] = useState(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -162,6 +164,27 @@ function AppContent() {
     return () => clearTimeout(t)
   }, [])
 
+  // Re-show splash when the app resumes from a long background session so the
+  // viewport stability polling can run again before the nav appears.
+  useEffect(() => {
+    const THRESHOLD_MS = 10_000
+    function onVisibility() {
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now()
+        return
+      }
+      if (hiddenAtRef.current === null) return
+      const ms = Date.now() - hiddenAtRef.current
+      hiddenAtRef.current = null
+      if (ms < THRESHOLD_MS) return
+      setSplashVisible(true)
+      setSplashExiting(false)
+      setResumeKey(k => k + 1)
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
   useEffect(() => {
     if (authLoading || !splashMinDone) return
 
@@ -189,7 +212,7 @@ function AppContent() {
     }, 50)
 
     return () => { clearTimeout(stableTimer); clearInterval(poll) }
-  }, [authLoading, splashMinDone])
+  }, [authLoading, splashMinDone, resumeKey])
 
   // ── Network status ─────────────────────────────────────────────────────────
   useEffect(() => {
