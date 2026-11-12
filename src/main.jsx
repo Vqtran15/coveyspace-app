@@ -103,8 +103,9 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
   //   a) Device has no home bar (sab is genuinely 0) — nothing to do.
   //   b) iOS PWA cold launch — env() returns 0 until a native scroll event fires.
   // Apply cache now so the first render isn't wrong, then schedule the deferred
-  // scroll probe. Keep the 1500ms delay so scrollTo(0,1) fires after the splash
-  // exits and doesn't trigger the viewport recalculation that shifts splash content.
+  // scroll probe. Fire at 200ms (while the splash is fully opaque) so --sab is
+  // correct before the nav pill ever appears. The 1px viewport shift from
+  // scrollTo(0,1) is invisible under the full-screen splash overlay.
   if (cached > 0) document.documentElement.style.setProperty('--sab', cached + 'px')
 
   setTimeout(function () {
@@ -128,7 +129,7 @@ import { GlobalErrorListeners, ErrorBoundary } from './components/ErrorReporter.
         }, 350)
       }
     }, 150)
-  }, 1500)
+  }, 200)
 
 }())
 
