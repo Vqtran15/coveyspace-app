@@ -837,7 +837,7 @@ function AppContent() {
         </div>
       </aside>
 
-      {!chatViewOpen && !splashVisible && (
+      {!chatViewOpen && (splashExiting || !splashVisible) && (
           <nav
             ref={setNavRef}
             className={`pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 flex items-center py-1.5 ${visibleTabs.length <= 3 ? 'rounded-3xl px-3 gap-2' : 'rounded-full px-2'}`}
