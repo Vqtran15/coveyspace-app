@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, PauseCircle, PlayCircle, PencilSimple, MapPin, DotsThreeVertical, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import { useToast } from '../lib/toast.jsx'
@@ -6,7 +7,6 @@ import { trackEvent } from '../lib/analytics.js'
 import { formatDate } from '../utils/dates.js'
 import { useEntranceAnimation } from '../hooks/useEntranceAnimation.js'
 import SlotCard from './SlotCard.jsx'
-import SignupModal from './SignupModal.jsx'
 import EditDishesModal from './EditDishesModal.jsx'
 
 const CATEGORY_ORDER  = ['Main', 'Side', 'Dessert']
@@ -14,9 +14,9 @@ const CATEGORY_LABELS = { Main: 'Main Dish', Side: 'Side', Dessert: 'Dessert' }
 const CATEGORY_COLORS = { Main: 'text-coral-600', Side: 'text-lagoon-600', Dessert: 'text-amber-600' }
 
 export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, tables, revealKey, pageCount, canGoPrev, canGoNext, onPrevPage, onNextPage, onPageUpdate, onPageDelete, editOpen, onEditClose, onEditOpen, isAdmin = false, supportsCategories = false, Icon = null }) {
+  const navigate = useNavigate()
   const [signups, setSignups]           = useState([])
   const [loading, setLoading]           = useState(true)
-  const [selectedSlot, setSelectedSlot] = useState(null)
   const [justAddedSlot, setJustAddedSlot] = useState(null)
   const [pausing, setPausing]           = useState(false)
   const toast = useToast()
@@ -61,99 +61,6 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
 
     return () => supabase.removeChannel(channel)
   }, [page?.id])
-
-  async function handleSave(slotNumber, { dish, category, ...signupData }) {
-    const currentDish     = page.slot_dishes?.[slotNumber - 1] ?? ''
-    const currentCategory = page.slot_categories?.[slotNumber - 1] ?? ''
-    if (dish !== currentDish || category !== currentCategory) {
-      const newDishes = [...(page.slot_dishes ?? [])]
-      while (newDishes.length < slotNumber) newDishes.push('')
-      newDishes[slotNumber - 1] = dish
-
-      const newCategories = [...(page.slot_categories ?? [])]
-      while (newCategories.length < slotNumber) newCategories.push('')
-      newCategories[slotNumber - 1] = category
-
-      const { data: updatedPage, error: dishErr } = await supabase
-        .from(tables.pages)
-        .update({ slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
-        .eq('id', page.id)
-        .select()
-        .single()
-      if (dishErr) throw new Error(dishErr.message)
-      onPageUpdate(updatedPage)
-    }
-
-    const existing = signups.find(s => s.slot_number === slotNumber)
-    if (existing) {
-      // Editing an existing signup — always update (name may change, notes may change)
-      const { error } = await supabase
-        .from(tables.signups)
-        .update({ ...signupData, updated_at: new Date().toISOString() })
-        .eq('id', existing.id)
-      if (error) throw new Error(error.message)
-      trackEvent('schedule_signup', { page_type: pageNoun.toLowerCase() })
-    } else if (signupData.name) {
-      // New signup — only insert if a name was provided
-      const { error } = await supabase
-        .from(tables.signups)
-        .insert({ meal_page_id: page.id, slot_number: slotNumber, ...signupData })
-      if (error) {
-        if (error.code === '23505') throw new Error(`That ${noun.toLowerCase()} was just taken — try another!`)
-        throw new Error(error.message)
-      }
-      trackEvent('schedule_signup', { page_type: pageNoun.toLowerCase() })
-    }
-    setSelectedSlot(null)
-  }
-
-  async function handleRemove(slotNumber) {
-    const existing = signups.find(s => s.slot_number === slotNumber)
-    if (!existing) return
-    const { error } = await supabase.from(tables.signups).delete().eq('id', existing.id)
-    if (error) throw new Error(error.message)
-    trackEvent('schedule_cancel', { page_type: pageNoun.toLowerCase() })
-    setSignups(s => s.filter(r => r.id !== existing.id))
-    setSelectedSlot(null)
-  }
-
-  async function handleDeleteItem(slotNumber) {
-    const { error: delErr } = await supabase
-      .from(tables.signups)
-      .delete()
-      .eq('meal_page_id', page.id)
-      .eq('slot_number', slotNumber)
-    if (delErr) throw new Error(delErr.message)
-
-    const toShift = signups
-      .filter(s => s.slot_number > slotNumber)
-      .sort((a, b) => a.slot_number - b.slot_number)
-    for (const s of toShift) {
-      const { error } = await supabase
-        .from(tables.signups)
-        .update({ slot_number: s.slot_number - 1 })
-        .eq('id', s.id)
-      if (error) throw new Error(error.message)
-    }
-
-    const newDishes     = (page.slot_dishes ?? []).filter((_, i) => i !== slotNumber - 1)
-    const newCategories = (page.slot_categories ?? []).filter((_, i) => i !== slotNumber - 1)
-    const { data, error } = await supabase
-      .from(tables.pages)
-      .update({ slot_count: page.slot_count - 1, slot_dishes: newDishes, ...(supportsCategories && { slot_categories: newCategories }) })
-      .eq('id', page.id)
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-
-    onPageUpdate(data)
-    setSignups(s =>
-      s
-        .filter(r => r.slot_number !== slotNumber)
-        .map(r => (r.slot_number > slotNumber ? { ...r, slot_number: r.slot_number - 1 } : r))
-    )
-    setSelectedSlot(null)
-  }
 
   async function handleAddSlot() {
     const newSlotNumber = page.slot_count + 1
@@ -208,9 +115,27 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
     setPausing(false)
   }
 
+  function openSlot(slotNumber) {
+    navigate('/schedule/signup', {
+      state: {
+        slot:              slotNumber,
+        itemNoun,
+        noun,
+        dishName:          page.slot_dishes?.[slotNumber - 1] ?? '',
+        category:          page.slot_categories?.[slotNumber - 1] ?? '',
+        signup:            signups.find(s => s.slot_number === slotNumber) ?? null,
+        supportsCategories,
+        pageId:            page.id,
+        pageDishes:        page.slot_dishes ?? [],
+        pageCategories:    page.slot_categories ?? [],
+        pageSlotCount:     page.slot_count,
+        tablesPages:       tables.pages,
+        tablesSignups:     tables.signups,
+      },
+    })
+  }
+
   const slots = Array.from({ length: page.slot_count }, (_, i) => i + 1)
-  const selectedDishName     = selectedSlot != null ? (page.slot_dishes?.[selectedSlot - 1] ?? '')     : ''
-  const selectedCategory     = selectedSlot != null ? (page.slot_categories?.[selectedSlot - 1] ?? '') : ''
 
   // Build category groups — only show headers if at least one slot has a category
   // 'Other' and uncategorized ('') are merged into the same trailing bucket
@@ -311,7 +236,7 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
                     signup={signups.find(s => s.slot_number === n)}
                     revealKey={`${revealKey}-${page.id}`}
                     isNew={n === justAddedSlot}
-                    onClick={() => setSelectedSlot(n)}
+                    onClick={() => openSlot(n)}
                   />
                 ))}
               </div>
@@ -326,21 +251,6 @@ export default function MealPage({ page, noun, itemNoun, pageNoun, editLabel, ta
             <span className="text-sm font-medium">Add {noun}</span>
           </button>
         </>
-      )}
-
-      {selectedSlot !== null && (
-        <SignupModal
-          slot={selectedSlot}
-          itemNoun={itemNoun}
-          dishName={selectedDishName}
-          category={selectedCategory}
-          signup={signups.find(s => s.slot_number === selectedSlot)}
-          onClose={() => setSelectedSlot(null)}
-          onSave={data => handleSave(selectedSlot, data)}
-          onRemove={() => handleRemove(selectedSlot)}
-          onDeleteItem={() => handleDeleteItem(selectedSlot)}
-          supportsCategories={supportsCategories}
-        />
       )}
 
       {editOpen && (
