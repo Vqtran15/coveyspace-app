@@ -170,19 +170,24 @@ function AppContent() {
 
     const minTimer = setTimeout(() => { minDone = true; maybeHide() }, 350)
 
+    // iOS PWA: window.innerHeight expands silently (no resize events) during the
+    // launch zoom animation. Poll every 50ms and debounce 300ms of stability.
     let lastH = window.innerHeight
-    let stableTimer = setTimeout(() => { viewportDone = true; maybeHide() }, 300)
-    function onResize() {
-      lastH = window.innerHeight
+    let stableTimer = null
+    function resetStable() {
       clearTimeout(stableTimer)
       stableTimer = setTimeout(() => { viewportDone = true; maybeHide() }, 300)
     }
-    window.addEventListener('resize', onResize)
+    resetStable()
+    const poll = setInterval(() => {
+      const h = window.innerHeight
+      if (h !== lastH) { lastH = h; resetStable() }
+    }, 50)
 
     return () => {
       clearTimeout(minTimer)
       clearTimeout(stableTimer)
-      window.removeEventListener('resize', onResize)
+      clearInterval(poll)
     }
   }, [authLoading, splashMinDone])
 
