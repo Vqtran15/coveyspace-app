@@ -822,6 +822,10 @@ function AppContent() {
                   style={{ contain: 'layout' }}
                   {...(active ? { 'data-active': '' } : {})}
                 >
+                  {/* Static fallback until the shared sliding indicator is positioned */}
+                  {active && !pillStyle && (
+                    <span className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`} />
+                  )}
                   <span
                     key={active ? `${t.path}-on` : `${t.path}-off`}
                     className={`relative z-10${active ? ' animate-icon-bounce' : ''}`}
