@@ -191,16 +191,19 @@ function AppContent() {
     if (!nav) return
     const btn = nav.querySelector('[data-active]')
     if (!btn) { setPillStyle(null); return }
-    const nr = nav.getBoundingClientRect()
-    const br = btn.getBoundingClientRect()
-    const inset = visibleTabs.length <= 3 ? 0 : 4
+    const nr  = nav.getBoundingClientRect()
+    const br  = btn.getBoundingClientRect()
+    // Derive tab count from DOM so this effect has no dependency on visibleTabs
+    // (visibleTabs is declared later in the component, causing a TDZ in the deps array).
+    const tabCount = nav.querySelectorAll('button').length
+    const inset = tabCount <= 3 ? 0 : 4
     const next = {
       position: 'absolute',
       left:   br.left - nr.left + inset,
       top:    br.top  - nr.top  + inset,
       width:  br.width  - inset * 2,
       height: br.height - inset * 2,
-      borderRadius: visibleTabs.length <= 3 ? '1rem' : '9999px',
+      borderRadius: tabCount <= 3 ? '1rem' : '9999px',
     }
     if (!pillInitialized.current) {
       setPillStyle({ ...next, transition: 'none' })
@@ -208,7 +211,7 @@ function AppContent() {
     } else {
       setPillStyle({ ...next, transition: 'left .42s cubic-bezier(.34,1.56,.64,1), top .42s cubic-bezier(.34,1.56,.64,1), width .25s ease, height .25s ease, border-radius .2s ease' })
     }
-  }, [location.pathname, visibleTabs.length])
+  }, [location.pathname])
 
   // Reset pill when nav unmounts (chat opens) so it snaps on next mount.
   useEffect(() => {
