@@ -876,7 +876,7 @@ export default function EventsTab() {
                   <XIcon size={18} />
                 </button>
               </div>
-              <div className="px-4 py-3 max-h-80 overflow-y-auto">
+              <div className="px-4 py-3 max-h-80 overflow-y-auto" style={{ touchAction: 'pan-y' }}>
                 {pickerLoading ? (
                   <div className="space-y-2">
                     {[0, 1, 2].map(i => (
