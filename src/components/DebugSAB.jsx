@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 // Temporary debug overlay — remove after root cause is identified
 const T0 = performance.now()
@@ -6,6 +6,15 @@ const ts = () => ((performance.now() - T0) / 1000).toFixed(2) + 's'
 
 export default function DebugSAB() {
   const [log, setLog] = useState([])
+  const [copied, setCopied] = useState(false)
+  const logRef = useRef([])
+
+  function handleCopy() {
+    navigator.clipboard.writeText(logRef.current.join('\n')).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
 
   useEffect(() => {
     // Probe element reads env() directly (not via --sab)
@@ -59,7 +68,11 @@ export default function DebugSAB() {
       const line =
         `[${ts()}] sab=${s.sabComputed} win.h=${s.winH} nav.h=${s.navH} nav.top=${s.navTop} bot=${s.navBottom} nav.ty=${s.navTY} ` +
         `btn.y=${s.btnY} btn.ty=${s.btnTY} pill.y=${s.pillPos} scrollY=${s.scrollY}`
-      setLog(l => [...l.slice(-14), line])
+      setLog(l => {
+        const next = [...l.slice(-14), line]
+        logRef.current = next
+        return next
+      })
     }
 
     tick()
@@ -86,6 +99,12 @@ export default function DebugSAB() {
         wordBreak: 'break-all',
       }}
     >
+      <button
+        onClick={handleCopy}
+        style={{ pointerEvents: 'auto', background: copied ? '#39ff88' : '#fff3', color: copied ? '#000' : '#39ff88', border: '1px solid #39ff88', borderRadius: 4, padding: '2px 8px', marginBottom: 4, fontSize: 10, cursor: 'pointer' }}
+      >
+        {copied ? 'Copied!' : 'Copy all'}
+      </button>
       {log.length === 0 ? 'watching…' : log.map((l, i) => <div key={i}>{l}</div>)}
     </div>
   )
