@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { motion, LayoutGroup } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ForkKnife, HandHeart, ChatCircleDots, HandsPraying, House, WifiSlash, NotePencil, GearSix, CalendarHeart, Books, ShieldCheck, Church } from '@phosphor-icons/react'
 import { haptic } from './lib/haptic.js'
 import { trackEvent, trackPageView } from './lib/analytics.js'
@@ -750,13 +750,9 @@ function AppContent() {
       </aside>
 
       {!chatViewOpen && !splashVisible && (
-        <LayoutGroup id="floating-pill">
-          <motion.nav
+          <nav
             className={`pill-nav fixed left-1/2 -translate-x-1/2 z-40 lg:hidden bg-white/90 backdrop-blur-sm shadow-lg border border-stone-100 flex items-center py-1.5 ${visibleTabs.length <= 3 ? 'rounded-3xl px-3 gap-2' : 'rounded-full px-2'}`}
             style={{ bottom: 'max(16px, calc(var(--sab) + 8px))' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             {visibleTabs.map(t => {
               const active = location.pathname === t.path
@@ -767,13 +763,18 @@ function AppContent() {
                   onClick={() => handleTabChange(t.path)}
                   className={`relative flex flex-col items-center justify-center touch-manipulation ${showLabel ? 'w-16 h-16 gap-0.5 rounded-2xl' : 'w-14 h-12 rounded-full'}`}
                 >
-                  {active && (
-                    <motion.span
-                      layoutId="pill-active"
-                      className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`}
-                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                    />
-                  )}
+                  <AnimatePresence>
+                    {active && (
+                      <motion.span
+                        key={t.path}
+                        className={`absolute bg-ember ${showLabel ? 'rounded-2xl inset-0' : 'rounded-full inset-1'}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      />
+                    )}
+                  </AnimatePresence>
                   <motion.span
                     className="relative z-10"
                     initial={false}
@@ -800,8 +801,7 @@ function AppContent() {
                 </button>
               )
             })}
-          </motion.nav>
-        </LayoutGroup>
+          </nav>
       )}
 
       {guide.open && (
